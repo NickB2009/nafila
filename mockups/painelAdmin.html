@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Mineiro Barbearia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 2rem;
+            color: #212529;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        h1 {
+            color: #212529;
+            font-weight: 600;
+            font-size: 2rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background-color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 1.2rem;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background-color: white;
+            padding: 1.8rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-primary {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .icon-success {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #198754;
+        }
+
+        .icon-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .card-title {
+            color: #6c757d;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .card-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #212529;
+            line-height: 1;
+        }
+
+        .card-value-sm {
+            font-size: 2rem;
+        }
+
+        .card-description {
+            color: #6c757d;
+            margin-top: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .card-trend {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.3rem 0.6rem;
+            border-radius: 50px;
+        }
+
+        .trend-up {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #198754;
+        }
+
+        .trend-down {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: #212529;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .section-icon {
+            color: #0d6efd;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .status-icon {
+            font-size: 1.5rem;
+        }
+
+        .icon-online {
+            color: #198754;
+        }
+
+        .icon-offline {
+            color: #6c757d;
+        }
+
+        .icon-warning {
+            color: #ffc107;
+        }
+
+        .status-text {
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .status-subtext {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        .table-section {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .badge-primary {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .badge-success {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #198754;
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            color: white;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-back {
+            display: block;
+            margin: 2rem auto;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background-color: #6c757d;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .time-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            justify-content: flex-end;
+        }
+
+        .time-filter {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e9ecef;
+            font-weight: 500;
+        }
+
+        .time-filter.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        .barbershop-selector {
+            position: relative;
+        }
+
+        .barbershop-dropdown {
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .barbershop-dropdown:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .barbershop-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .barbershop-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .barbershop-info {
+            flex: 1;
+        }
+
+        .barbershop-name {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .barbershop-location {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .dropdown-icon {
+            color: #6c757d;
+            transition: transform 0.3s;
+        }
+
+        .dropdown-open .dropdown-icon {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .user-info {
+                align-self: flex-start;
+            }
+            
+            .status-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .time-filters {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+            
+            .time-filter {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">
+                <h1>Painel Administrativo</h1>
+                <div class="barbershop-selector">
+                    <div class="barbershop-dropdown">
+                        <div class="barbershop-logo">
+                            <img src="https://via.placeholder.com/40?text=MB" alt="Mineiro Barbearia">
+                        </div>
+                        <div class="barbershop-info">
+                            <div class="barbershop-name">Mineiro Barbearia</div>
+                            <div class="barbershop-location">Belo Horizonte, MG</div>
+                        </div>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">
+                    <img src="https://via.placeholder.com/40?text=AB" alt="Admin">
+                </div>
+                <div class="user-name">André Barbosa</div>
+                <i class="fas fa-cog"></i>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="card-title">Clientes na Fila</div>
+                </div>
+                <div class="card-content">
+                    <div>
+                        <div class="card-value">8</div>
+                        <div class="card-description">Tempo médio de espera: 17min</div>
+                    </div>
+                    <div class="card-trend trend-down">
+                        <i class="fas fa-arrow-down"></i> 12%
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="card-title">Atendimentos Hoje</div>
+                </div>
+                <div class="card-content">
+                    <div>
+                        <div class="card-value">24</div>
+                        <div class="card-description">+8 vs. mesma hora ontem</div>
+                    </div>
+                    <div class="card-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 15%
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-title">Tempo Médio</div>
+                </div>
+                <div class="card-content">
+                    <div>
+                        <div class="card-value card-value-sm">15min</div>
+                        <div class="card-description">Redução de 2min vs. semana passada</div>
+                    </div>
+                    <div class="card-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 11%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-chart-line section-icon"></i>
+                Atendimentos por Dia
+            </div>
+            
+            <div class="time-filters">
+                <button class="time-filter">Hoje</button>
+                <button class="time-filter active">Esta Semana</button>
+                <button class="time-filter">Este Mês</button>
+                <button class="time-filter">Último Trimestre</button>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+
+            <div class="status-info">
+                <div class="status-item">
+                    <i class="fas fa-wifi status-icon icon-online"></i>
+                    <div>
+                        <div class="status-text">Sistema Online</div>
+                        <div class="status-subtext">Última verificação: 2min atrás</div>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-user-clock status-icon icon-online"></i>
+                    <div>
+                        <div class="status-text">3 Barbeiros Ativos</div>
+                        <div class="status-subtext">1 em pausa</div>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-exclamation-triangle status-icon icon-warning"></i>
+                    <div>
+                        <div class="status-text">Fila acima da média</div>
+                        <div class="status-subtext">+15% vs. média semanal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-scissors section-icon"></i>
+                Serviços por Tipo
+            </div>
+            <div class="chart-container">
+                <canvas id="servicesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-user-tie section-icon"></i>
+                Barbeiros
+            </div>
+            <div class="table-section">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Status</th>
+                            <th>Atendimentos</th>
+                            <th>Tempo Médio</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>João Ferreira</td>
+                            <td><span class="badge badge-success">Disponível</span></td>
+                            <td>12 hoje</td>
+                            <td>18min</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Carlos Mendes</td>
+                            <td><span class="badge badge-warning">Em Pausa</span></td>
+                            <td>8 hoje</td>
+                            <td>15min</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Pedro Alves</td>
+                            <td><span class="badge badge-primary">Atendendo</span></td>
+                            <td>10 hoje</td>
+                            <td>17min</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Bruno Santos</td>
+                            <td><span class="badge badge-danger">Ausente</span></td>
+                            <td>0 hoje</td>
+                            <td>--</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <a href="telaInicial.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar para o Sistema
+        </a>
+    </div>
+
+    <script src="utils.js"></script>
+    <script>
+        // Attendance Chart
+        const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+        new Chart(attendanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+                datasets: [{
+                    label: 'Atendimentos',
+                    data: [28, 32, 36, 29, 45, 56, 18],
+                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                    borderColor: '#0d6efd',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Services Chart
+        const servicesCtx = document.getElementById('servicesChart').getContext('2d');
+        new Chart(servicesCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Corte de Cabelo', 'Barba', 'Corte + Barba', 'Outros'],
+                datasets: [{
+                    label: 'Serviços',
+                    data: [45, 25, 25, 5],
+                    backgroundColor: [
+                        'rgba(13, 110, 253, 0.7)',
+                        'rgba(25, 135, 84, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(108, 117, 125, 0.7)'
+                    ],
+                    borderColor: [
+                        '#0d6efd',
+                        '#198754',
+                        '#ffc107',
+                        '#6c757d'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addMockupsNavBar();
+        });
+    </script>
+</body>
+</html> 

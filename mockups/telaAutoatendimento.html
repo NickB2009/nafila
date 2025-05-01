@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal do Cliente - Mineiro Barbearia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --dark-blue: #0f172a;
+            --light-blue: #1e40af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --text-light: #f8fafc;
+            --text-dark: #0f172a;
+            --text-muted: #94a3b8;
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-image: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            padding-top: 5rem;
+            color: var(--text-light);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            background-color: var(--dark-blue);
+            padding: 0.8rem 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .header-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 2px solid var(--accent-blue);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        .back-button {
+            color: var(--text-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            transition: var(--transition);
+        }
+
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(-3px);
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-image: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+        }
+
+        .tab-container {
+            display: flex;
+            width: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1.2rem;
+            text-align: center;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            background-color: transparent;
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .tab.active {
+            color: var(--text-light);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-image: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+        }
+
+        .tab-content {
+            padding: 2rem;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-section {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--accent-blue);
+            box-shadow: var(--shadow-md);
+            flex-shrink: 0;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .profile-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ticket-section {
+            background-color: rgba(59, 130, 246, 0.1);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            text-align: center;
+        }
+
+        .ticket-label {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .wait-time {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            color: var(--accent-yellow);
+            font-weight: 600;
+            font-size: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .wait-time i {
+            font-size: 2.2rem;
+        }
+
+        .wait-info {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .notifications-button {
+            width: 100%;
+            padding: 1rem;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .notifications-button:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .notifications-button i {
+            font-size: 1.2rem;
+        }
+
+        .cancel-button {
+            width: 100%;
+            padding: 1rem;
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .cancel-button:hover {
+            background-color: rgba(239, 68, 68, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .service-section {
+            margin-bottom: 2rem;
+        }
+
+        .service-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .service-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .service-card:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .service-card.selected {
+            background-color: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+        }
+
+        .service-icon {
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            margin-bottom: 0.8rem;
+        }
+
+        .service-name {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .service-price {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .service-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .confirm-button {
+            width: 100%;
+            padding: 1.2rem;
+            background-image: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 2rem;
+        }
+
+        .confirm-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .confirm-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-box {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            padding: 1.2rem;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+        }
+
+        .info-icon {
+            flex-shrink: 0;
+            font-size: 1.5rem;
+            color: var(--accent-green);
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-size: 1rem;
+        }
+
+        .info-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 1rem;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-light);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .action-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-blue {
+            background-color: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-blue:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-blue .action-icon {
+            color: var(--accent-blue);
+        }
+
+        .btn-red {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-red:hover {
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-red .action-icon {
+            color: var(--accent-red);
+        }
+
+        .notification-item {
+            padding: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        .notification-blue {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .notification-green {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .notification-yellow {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--accent-yellow);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            font-size: 1rem;
+        }
+
+        .notification-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .history-item {
+            padding: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .history-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .history-service {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .service-details {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .service-barber {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .service-price {
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .history-empty, .notification-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .mock-links-bar {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: transparent;
+            padding: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .mock-links-toggle {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(43, 43, 43, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .mock-links-toggle:hover {
+            transform: scale(1.1);
+            background-color: rgba(43, 43, 43, 1);
+        }
+
+        .mock-links-content {
+            display: none;
+            position: fixed;
+            bottom: 5rem;
+            right: 1rem;
+            background-color: rgba(43, 43, 43, 0.95);
+            padding: 1rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.8rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .mock-links-content.active {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .mock-links-title {
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            color: #ffc107;
+            font-size: 0.9rem;
+        }
+        
+        .mock-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .mock-link {
+            color: white;
+            text-decoration: none;
+            background-color: rgba(255,255,255,0.1);
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .mock-link:hover {
+            background-color: rgba(255,255,255,0.2);
+            transform: translateX(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                width: auto;
+                margin-bottom: 0;
+            }
+            
+            body {
+                padding-top: 4rem;
+            }
+            
+            .container {
+                padding-bottom: 1rem;
+                margin-top: 1rem;
+            }
+            
+            .tab {
+                padding: 1rem 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .tab-content {
+                padding: 1.5rem;
+            }
+            
+            .profile-section {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+            
+            .profile-avatar {
+                margin: 0 auto;
+            }
+            
+            .ticket-number {
+                font-size: 3rem;
+            }
+            
+            .mock-links {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Mineiro Barbearia">
+            </div>
+            <div class="header-title">Mineiro Barbearia</div>
+        </div>
+        <a href="/telaInicial.html" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Voltar
+        </a>
+    </header>
+
+    <div class="container">
+        <div class="ticket-section">
+            <div class="ticket-label">Tempo de Espera Estimado</div>
+            <div class="wait-time">
+                <i class="far fa-clock"></i>
+                25 minutos
+            </div>
+            <div class="wait-info">
+                Você receberá uma notificação quando for sua vez.
+            </div>
+        </div>
+
+        <button class="notifications-button" onclick="toggleNotifications()">
+            <i class="fas fa-bell"></i>
+            Configurar Notificações
+        </button>
+
+        <button class="cancel-button" onclick="confirmCancelCheckIn()">
+            <i class="fas fa-times"></i>
+            Sair da Fila
+        </button>
+    </div>
+    
+    <div class="mock-links-bar">
+        <div class="mock-links-toggle" onclick="toggleMockLinks()">
+            <i class="fas fa-code"></i>
+        </div>
+        <div class="mock-links-content" id="mockLinksContent">
+            <div class="mock-links-title">Acessar Mockups (Desenvolvedor)</div>
+            <div class="mock-links">
+                <a href="/telaInicial.html" class="mock-link"><i class="fas fa-home"></i> Tela Inicial</a>
+                <a href="/checkIn.html" class="mock-link"><i class="fas fa-clipboard-list"></i> Check-in</a>
+                <a href="/telaAutoatendimento.html" class="mock-link"><i class="fas fa-tablet-alt"></i> Autoatendimento</a>
+                <a href="/painelFila.html" class="mock-link"><i class="fas fa-users"></i> Painel da Fila</a>
+                <a href="/loginBarbeiro.html" class="mock-link"><i class="fas fa-user-lock"></i> Login Barbeiro</a>
+                <a href="/painelAdmin.html" class="mock-link"><i class="fas fa-cogs"></i> Painel Admin</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add cancel confirmation modal -->
+    <div class="modal" id="cancelModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px);">
+        <div class="modal-content" style="background-color: var(--dark-blue); border-radius: var(--border-radius); width: 90%; max-width: 500px; padding: 2.5rem; position: relative; box-shadow: var(--shadow-lg); border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Cancelar Check-in</h3>
+            <p style="margin-bottom: 2rem; line-height: 1.6; color: var(--text-muted);">
+                Tem certeza que deseja sair da fila? Você terá que fazer check-in novamente se quiser retornar.
+            </p>
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="cancelCheckIn()" style="flex: 1; padding: 1rem; border: none; border-radius: var(--border-radius); font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1rem; cursor: pointer; transition: var(--transition); background-color: var(--accent-red); color: white;">
+                    Sim, Cancelar
+                </button>
+                <button onclick="hideModal()" style="flex: 1; padding: 1rem; border: none; border-radius: var(--border-radius); font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 1rem; cursor: pointer; transition: var(--transition); background-color: rgba(255, 255, 255, 0.1); color: var(--text-light);">
+                    Não, Voltar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function confirmCancelCheckIn() {
+            document.getElementById('cancelModal').style.display = 'flex';
+        }
+
+        function hideModal() {
+            document.getElementById('cancelModal').style.display = 'none';
+        }
+
+        function cancelCheckIn() {
+            // Here would be the API call to cancel the check-in
+            // For demo purposes, redirect to initial page
+            window.location.href = '/telaInicial.html';
+        }
+
+        function toggleNotifications() {
+            // Here would be the notification settings logic
+            alert('Configurações de notificação serão implementadas em breve.');
+        }
+
+        function toggleMockLinks() {
+            const content = document.getElementById('mockLinksContent');
+            content.classList.toggle('active');
+        }
+
+        // Close mock links when clicking outside
+        document.addEventListener('click', function(event) {
+            const content = document.getElementById('mockLinksContent');
+            const toggle = document.querySelector('.mock-links-toggle');
+            
+            if (content.classList.contains('active') && !toggle.contains(event.target) && !content.contains(event.target)) {
+                content.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html> 

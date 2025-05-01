@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Mineiro Barbearia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+            padding: 2rem;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(33, 37, 41, 0.7);
+            z-index: -1;
+        }
+
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            position: relative;
+        }
+
+        .login-header {
+            background-color: #212529;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, #0d6efd, #198754);
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 3px solid white;
+        }
+
+        .login-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .login-form {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+            background-color: #f8f9fa;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 1rem;
+            color: #6c757d;
+        }
+
+        .input-with-icon {
+            padding-left: 2.8rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 1rem;
+            color: #6c757d;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: #0d6efd;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background-color: #198754;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3);
+        }
+
+        .btn-login:hover {
+            background-color: #157347;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(25, 135, 84, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6c757d;
+        }
+
+        .forgot-password {
+            color: #0d6efd;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .forgot-password:hover {
+            color: #0a58ca;
+            text-decoration: underline;
+        }
+
+        .login-footer {
+            text-align: center;
+            padding: 0 2rem 2rem;
+        }
+
+        .back-to-home {
+            color: #6c757d;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-to-home:hover {
+            color: #0d6efd;
+            transform: translateX(-3px);
+        }
+
+        .barber-select {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .barber-option {
+            padding: 0.5rem;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .barber-option:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+
+        .barber-option.selected {
+            border-color: #198754;
+            background-color: rgba(25, 135, 84, 0.1);
+        }
+
+        .barber-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .barber-avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .barber-name-small {
+            font-size: 0.8rem;
+            color: #495057;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                max-width: 100%;
+            }
+            
+            .login-header {
+                padding: 1.5rem;
+            }
+            
+            .login-logo {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .login-form {
+                padding: 1.5rem;
+            }
+            
+            .barber-select {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">
+                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Mineiro Barbearia Logo">
+            </div>
+            <h1 class="login-title">Painel do Barbeiro</h1>
+            <p class="login-subtitle">Faça login para acessar seu painel de controle</p>
+        </div>
+        
+        <div class="login-form">
+            <div class="form-group">
+                <label for="barberSelect" class="form-label">Selecione seu perfil:</label>
+                <div class="barber-select" id="barberSelect">
+                    <div class="barber-option" onclick="selectBarber(this, 'joao')">
+                        <div class="barber-avatar-small">
+                            <img src="https://images.unsplash.com/photo-1567894340794-d6d7a5e68be6?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&q=80" alt="João">
+                        </div>
+                        <div class="barber-name-small">João</div>
+                    </div>
+                    <div class="barber-option" onclick="selectBarber(this, 'pedro')">
+                        <div class="barber-avatar-small">
+                            <img src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&q=80" alt="Pedro">
+                        </div>
+                        <div class="barber-name-small">Pedro</div>
+                    </div>
+                    <div class="barber-option" onclick="selectBarber(this, 'carlos')">
+                        <div class="barber-avatar-small">
+                            <img src="https://images.unsplash.com/photo-1534308143481-c55f00be8bd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&q=80" alt="Carlos">
+                        </div>
+                        <div class="barber-name-small">Carlos</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Senha:</label>
+                <div class="input-group">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="password" class="form-control input-with-icon" placeholder="Digite sua senha">
+                    <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                </div>
+            </div>
+            
+            <div class="remember-forgot">
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Lembrar acesso</label>
+                </div>
+                <a href="#" class="forgot-password">Esqueceu a senha?</a>
+            </div>
+            
+            <button class="btn-login" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i>
+                Entrar
+            </button>
+        </div>
+        
+        <div class="login-footer">
+            <a href="/telaInicial.html" class="back-to-home">
+                <i class="fas fa-arrow-left"></i>
+                Voltar para página inicial
+            </a>
+        </div>
+    </div>
+
+    <script src="utils.js"></script>
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+        
+        // Selected barber
+        let selectedBarber = '';
+        
+        function selectBarber(element, barberId) {
+            // Remove selected class from all options
+            document.querySelectorAll('.barber-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            
+            // Save selected barber
+            selectedBarber = barberId;
+        }
+        
+        function login() {
+            const password = document.getElementById('password').value;
+            
+            if (!selectedBarber) {
+                alert('Por favor, selecione um barbeiro.');
+                return;
+            }
+            
+            if (!password) {
+                alert('Por favor, digite sua senha.');
+                return;
+            }
+            
+            // In a real app, you would validate credentials against a server
+            // For this mockup, any password will work
+            window.location.href = `/painelBarbeiro.html?barbeiro=${selectedBarber}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addMockupsNavBar();
+        });
+    </script>
+</body>
+</html> 
