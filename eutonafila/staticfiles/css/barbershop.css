@@ -1,0 +1,428 @@
+/* Barbershop Premium Theme
+-------------------------------------------------- */
+
+:root {
+    --primary-color: #1a2536;
+    --secondary-color: #b89f65;
+    --light-color: #f5f5f5;
+    --dark-color: #121212;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+}
+
+/* Typography */
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: var(--dark-color);
+    background-color: var(--light-color);
+    line-height: 1.6;
+}
+
+.premium-heading {
+    font-weight: 700;
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.premium-heading:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.5rem;
+    width: 50px;
+    height: 3px;
+    background-color: var(--secondary-color);
+}
+
+.section-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    color: var(--primary-color);
+}
+
+/* Cards */
+.main-card {
+    border: none;
+    border-radius: 0.8rem;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.main-card .card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.info-card {
+    border: none;
+    border-radius: 0.8rem;
+    background-color: white;
+}
+
+.service-card {
+    display: block;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.8rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.service-card:hover {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0.25rem 0.75rem var(--shadow-color);
+}
+
+.service-card.selected {
+    border-color: var(--secondary-color);
+    background-color: rgba(184, 159, 101, 0.05);
+}
+
+.custom-radio-card {
+    margin-bottom: 1rem;
+}
+
+.custom-radio-card input {
+    position: absolute;
+    opacity: 0;
+}
+
+/* Service Details */
+.service-details {
+    padding: 0.5rem;
+}
+
+.service-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.service-desc {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.75rem;
+}
+
+.service-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.service-price {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.service-duration {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Status Indicators */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-badge.open {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge.closed {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}
+
+.status-badge-large {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+}
+
+.status-badge-large.open {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge-large.closed {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}
+
+/* Hero Section */
+.hero-section {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.hero-small {
+    padding: 2rem 0;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.15;
+    z-index: 1;
+}
+
+/* Queue Status */
+.queue-card {
+    padding: 1.5rem;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.queue-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.waiting-time {
+    display: flex;
+    align-items: baseline;
+}
+
+.time-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-right: 0.5rem;
+}
+
+.time-unit {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.progress {
+    height: 0.5rem;
+    border-radius: 1rem;
+    margin-top: 1rem;
+}
+
+.progress-bar {
+    background-color: var(--secondary-color);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #141c29;
+    border-color: #141c29;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-secondary:hover {
+    background-color: #a08b59;
+    border-color: #a08b59;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.checkin-button {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.checkin-button:hover {
+    background-color: #a08b59;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Form Styling */
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e0e0e0;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.2rem rgba(184, 159, 101, 0.25);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+/* About Section */
+.about-info {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.about-info li {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+}
+
+.about-info i {
+    margin-right: 0.75rem;
+    margin-top: 0.35rem;
+    color: var(--secondary-color);
+}
+
+/* Barber Cards */
+.barber-card {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.barber-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    border: 3px solid var(--secondary-color);
+}
+
+.barber-name {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.barber-title {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.75rem;
+}
+
+/* Call to Action */
+.cta-section {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 3rem 0;
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.cta-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+/* Status Card */
+.status-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    height: 100%;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+}
+
+.status-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0.5rem 0;
+}
+
+.status-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Premium Form */
+.premium-form .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.premium-form .form-check-label {
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+    
+    .cta-section {
+        padding: 2rem 0;
+    }
+    
+    .queue-number {
+        font-size: 2rem;
+    }
+    
+    .time-value {
+        font-size: 1.5rem;
+    }
+    
+    .status-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .status-value {
+        font-size: 2rem;
+    }
+} 

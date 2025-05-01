@@ -1,0 +1,277 @@
+{% load static %}
+
+<section class="team-section py-5" id="team">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">{{ config.title|default:"Nossa Equipe" }}</h2>
+            <p class="section-subtitle">{{ config.subtitle|default:"Conheça os profissionais que farão você se sentir um novo homem" }}</p>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            {% if team_members %}
+                {% for member in team_members %}
+                    <div class="col-lg-3 col-md-6">
+                        <div class="team-member">
+                            <div class="member-img">
+                                {% if member.image %}
+                                    <img src="{{ member.image.url }}" alt="{{ member.name }}" class="img-fluid">
+                                {% else %}
+                                    <div class="member-img-placeholder bg-dark">
+                                        <i class="fas fa-user-tie fa-4x text-light"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="social-icons">
+                                    {% if member.instagram %}
+                                        <a href="{{ member.instagram }}" class="social-icon" target="_blank"><i class="fab fa-instagram"></i></a>
+                                    {% endif %}
+                                    {% if member.facebook %}
+                                        <a href="{{ member.facebook }}" class="social-icon" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                                    {% endif %}
+                                    {% if member.whatsapp %}
+                                        <a href="https://wa.me/{{ member.whatsapp }}" class="social-icon" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="member-info">
+                                <h4 class="member-name">{{ member.name }}</h4>
+                                <p class="member-position">{{ member.position }}</p>
+                                <p class="member-bio">{{ member.bio }}</p>
+                                <div class="member-specialties">
+                                    {% for specialty in member.specialties %}
+                                        <span class="specialty-badge">{{ specialty }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% if member.booking_url %}
+                                    <a href="{{ member.booking_url }}" class="btn btn-primary btn-sm mt-2">Agendar com {{ member.name.split|first }}</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <!-- Default team members if none provided -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="team-member">
+                        <div class="member-img">
+                            <div class="member-img-placeholder">
+                                <img src="{% static 'barbershop/images/defaults/barber1.jpg' %}" alt="Carlos Silva" class="img-fluid">
+                            </div>
+                            <div class="social-icons">
+                                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                        <div class="member-info">
+                            <h4 class="member-name">Carlos Silva</h4>
+                            <p class="member-position">Barbeiro Master</p>
+                            <p class="member-bio">Mais de 15 anos de experiência em cortes masculinos. Especialista em degradês e barbas.</p>
+                            <div class="member-specialties">
+                                <span class="specialty-badge">Degradê</span>
+                                <span class="specialty-badge">Barba</span>
+                                <span class="specialty-badge">Cortes Clássicos</span>
+                            </div>
+                            <a href="#booking" class="btn btn-primary btn-sm mt-2">Agendar com Carlos</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="team-member">
+                        <div class="member-img">
+                            <div class="member-img-placeholder">
+                                <img src="{% static 'barbershop/images/defaults/barber2.jpg' %}" alt="André Santos" class="img-fluid">
+                            </div>
+                            <div class="social-icons">
+                                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                        <div class="member-info">
+                            <h4 class="member-name">André Santos</h4>
+                            <p class="member-position">Barbeiro Estilista</p>
+                            <p class="member-bio">Especializado em cortes modernos e designs complexos. Campeão regional de barbearia.</p>
+                            <div class="member-specialties">
+                                <span class="specialty-badge">Desenhos</span>
+                                <span class="specialty-badge">Cortes Modernos</span>
+                                <span class="specialty-badge">Coloração</span>
+                            </div>
+                            <a href="#booking" class="btn btn-primary btn-sm mt-2">Agendar com André</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="team-member">
+                        <div class="member-img">
+                            <div class="member-img-placeholder">
+                                <img src="{% static 'barbershop/images/defaults/barber3.jpg' %}" alt="Marcos Oliveira" class="img-fluid">
+                            </div>
+                            <div class="social-icons">
+                                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                        <div class="member-info">
+                            <h4 class="member-name">Marcos Oliveira</h4>
+                            <p class="member-position">Barbeiro Sênior</p>
+                            <p class="member-bio">Especialista em cortes clássicos e tratamentos capilares. Atende clientes há mais de 10 anos.</p>
+                            <div class="member-specialties">
+                                <span class="specialty-badge">Cortes Clássicos</span>
+                                <span class="specialty-badge">Tratamentos</span>
+                                <span class="specialty-badge">Barba Tradicional</span>
+                            </div>
+                            <a href="#booking" class="btn btn-primary btn-sm mt-2">Agendar com Marcos</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="team-member">
+                        <div class="member-img">
+                            <div class="member-img-placeholder">
+                                <img src="{% static 'barbershop/images/defaults/barber4.jpg' %}" alt="Felipe Costa" class="img-fluid">
+                            </div>
+                            <div class="social-icons">
+                                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                        <div class="member-info">
+                            <h4 class="member-name">Felipe Costa</h4>
+                            <p class="member-position">Barbeiro Júnior</p>
+                            <p class="member-bio">O mais novo talento da nossa equipe. Apaixonado por técnicas inovadoras e tendências atuais.</p>
+                            <div class="member-specialties">
+                                <span class="specialty-badge">Tendências</span>
+                                <span class="specialty-badge">Fade</span>
+                                <span class="specialty-badge">Styling</span>
+                            </div>
+                            <a href="#booking" class="btn btn-primary btn-sm mt-2">Agendar com Felipe</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if config.show_join_team %}
+        <div class="join-team-cta mt-5 text-center">
+            <h3 class="mb-3">{{ config.join_team_title|default:"Junte-se a Nossa Equipe" }}</h3>
+            <p class="mb-4">{{ config.join_team_text|default:"Você é um barbeiro talentoso e gostaria de fazer parte do nosso time? Entre em contato conosco!" }}</p>
+            <a href="{{ config.join_team_url|default:'#contact' }}" class="btn btn-outline-primary">
+                {{ config.join_team_button|default:"Enviar Currículo" }}
+                <i class="fas fa-paper-plane ms-2"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+    .team-member {
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .team-member:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .member-img {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .member-img img, .member-img-placeholder {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+        object-position: center top;
+    }
+    
+    .member-img-placeholder {
+        background-color: #212529;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .social-icons {
+        position: absolute;
+        bottom: -50px;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 0;
+        display: flex;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .team-member:hover .social-icons {
+        bottom: 0;
+    }
+    
+    .social-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: white;
+        color: #212529;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 5px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .social-icon:hover {
+        background-color: var(--bs-primary, #0d6efd);
+        color: white;
+    }
+    
+    .member-info {
+        padding: 20px;
+    }
+    
+    .member-name {
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    
+    .member-position {
+        color: var(--bs-primary, #0d6efd);
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+    
+    .member-bio {
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        color: #6c757d;
+    }
+    
+    .member-specialties {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+    
+    .specialty-badge {
+        background-color: #f8f9fa;
+        color: #212529;
+        font-size: 0.75rem;
+        padding: 5px 10px;
+        border-radius: 30px;
+        display: inline-block;
+    }
+</style> 

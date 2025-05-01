@@ -1,0 +1,338 @@
+{% extends "barbershop/admin_layout.html" %}
+{% load static %}
+
+{% block title %}Editor de Seção - {{ section.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .color-preview {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+        border: 1px solid #ddd;
+    }
+    
+    .preview-area {
+        min-height: 200px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f9f9f9;
+    }
+    
+    .hero-preview {
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+        padding: 60px 20px;
+        text-align: center;
+        color: #fff;
+        background-size: cover;
+        background-position: center;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    #gradient-preview {
+        background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+    }
+    
+    /* Additional styles */
+    .bg-color-preview {
+        background-color: #000000;
+    }
+    
+    .text-color-preview {
+        background-color: #ffffff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h2 mb-0">Editor de Seção: {{ section.name }}</h1>
+                <div>
+                    <a href="{% url 'barbershop:website_builder' barbershop.slug %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-chevron-left"></i> Voltar ao Editor
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Editor Column -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Personalizar Banner</h5>
+                </div>
+                <div class="card-body">
+                    <form id="heroForm">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                value="{{ config.title|default:'' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subtitle" class="form-label">Subtítulo</label>
+                            <textarea class="form-control" id="subtitle" name="subtitle" rows="2">{{ config.subtitle|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="button_text" class="form-label">Texto do Botão</label>
+                                    <input type="text" class="form-control" id="button_text" name="button_text" 
+                                        value="{{ config.button_text|default:'Agendar Agora' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="button_url" class="form-label">Link do Botão</label>
+                                    <input type="text" class="form-control" id="button_url" name="button_url" 
+                                        value="{{ config.button_url|default:'' }}" placeholder="/{{ barbershop.slug }}/checkin">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Estilo de Fundo</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="background_type" id="bg_gradient" 
+                                    value="gradient" {% if config.background_type == 'gradient' or not config.background_type %}checked{% endif %}>
+                                <label class="form-check-label" for="bg_gradient">
+                                    Gradiente
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="background_type" id="bg_image" 
+                                    value="image" {% if config.background_type == 'image' %}checked{% endif %}>
+                                <label class="form-check-label" for="bg_image">
+                                    Imagem de Fundo
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="gradient-options" class="mb-3 {% if config.background_type == 'image' %}d-none{% endif %}">
+                            <label for="background_color" class="form-label">Cor Principal</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <span class="color-preview bg-color-preview" id="color-preview"></span>
+                                </span>
+                                <input type="color" class="form-control form-control-color" id="background_color" 
+                                    value="{{ config.background_color|default:'#000000' }}" name="background_color">
+                            </div>
+                        </div>
+                        
+                        <div id="image-options" class="mb-3 {% if config.background_type != 'image' %}d-none{% endif %}">
+                            <label for="background_image" class="form-label">URL da Imagem de Fundo</label>
+                            <input type="text" class="form-control" id="background_image" name="background_image" 
+                                value="{{ config.background_image|default:'' }}" placeholder="https://exemplo.com/imagem.jpg">
+                            <small class="text-muted">Use uma URL externa ou escolha uma imagem da galeria</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="text_color" class="form-label">Cor do Texto</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <span class="color-preview text-color-preview" id="text-color-preview"></span>
+                                </span>
+                                <input type="color" class="form-control form-control-color" id="text_color" 
+                                    value="{{ config.text_color|default:'#ffffff' }}" name="text_color">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Preview Column -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Pré-visualização</h5>
+                </div>
+                <div class="card-body">
+                    <div class="preview-area">
+                        <div id="hero-preview" class="hero-preview">
+                            <div class="hero-overlay"></div>
+                            <div class="hero-content">
+                                <h2 id="preview-title">{{ config.title|default:"Bem-vindo à Barbearia" }}</h2>
+                                <p id="preview-subtitle">{{ config.subtitle|default:"Cortes e serviços de qualidade" }}</p>
+                                <button class="btn btn-light" id="preview-button">{{ config.button_text|default:"Agendar Agora" }}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-muted small">
+                        <p>Esta é apenas uma visualização simplificada. O resultado final pode variar com base no layout geral do site.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('heroForm');
+        const previewTitle = document.getElementById('preview-title');
+        const previewSubtitle = document.getElementById('preview-subtitle');
+        const previewButton = document.getElementById('preview-button');
+        const heroPreview = document.getElementById('hero-preview');
+        const colorPreview = document.getElementById('color-preview');
+        const textColorPreview = document.getElementById('text-color-preview');
+        
+        // Set initial colors
+        colorPreview.style.backgroundColor = "{{ config.background_color|default:'#000000' }}";
+        textColorPreview.style.backgroundColor = "{{ config.text_color|default:'#ffffff' }}";
+        
+        // Background type toggle
+        const bgGradient = document.getElementById('bg_gradient');
+        const bgImage = document.getElementById('bg_image');
+        const gradientOptions = document.getElementById('gradient-options');
+        const imageOptions = document.getElementById('image-options');
+        
+        bgGradient.addEventListener('change', function() {
+            if (this.checked) {
+                gradientOptions.classList.remove('d-none');
+                imageOptions.classList.add('d-none');
+                updatePreview();
+            }
+        });
+        
+        bgImage.addEventListener('change', function() {
+            if (this.checked) {
+                gradientOptions.classList.add('d-none');
+                imageOptions.classList.remove('d-none');
+                updatePreview();
+            }
+        });
+        
+        // Live preview updates
+        document.getElementById('title').addEventListener('input', updatePreview);
+        document.getElementById('subtitle').addEventListener('input', updatePreview);
+        document.getElementById('button_text').addEventListener('input', updatePreview);
+        document.getElementById('background_color').addEventListener('input', updatePreview);
+        document.getElementById('background_image').addEventListener('input', updatePreview);
+        document.getElementById('text_color').addEventListener('input', updatePreview);
+        
+        function updatePreview() {
+            // Update content
+            previewTitle.textContent = document.getElementById('title').value || "Bem-vindo à Barbearia";
+            previewSubtitle.textContent = document.getElementById('subtitle').value || "Cortes e serviços de qualidade";
+            previewButton.textContent = document.getElementById('button_text').value || "Agendar Agora";
+            
+            // Update colors
+            const textColor = document.getElementById('text_color').value;
+            previewTitle.style.color = textColor;
+            previewSubtitle.style.color = textColor;
+            textColorPreview.style.backgroundColor = textColor;
+            
+            // Update background
+            if (bgGradient.checked) {
+                const bgColor = document.getElementById('background_color').value;
+                colorPreview.style.backgroundColor = bgColor;
+                
+                // Create a gradient using the selected color
+                const r = parseInt(bgColor.substr(1, 2), 16);
+                const g = parseInt(bgColor.substr(3, 2), 16);
+                const b = parseInt(bgColor.substr(5, 2), 16);
+                
+                // Darken for second gradient color
+                const darken = 30;
+                const r2 = Math.max(0, r - darken);
+                const g2 = Math.max(0, g - darken);
+                const b2 = Math.max(0, b - darken);
+                
+                const secondColor = `rgb(${r2}, ${g2}, ${b2})`;
+                heroPreview.style.backgroundImage = `linear-gradient(135deg, ${bgColor} 0%, ${secondColor} 100%)`;
+                heroPreview.style.backgroundImage = `linear-gradient(135deg, ${bgColor} 0%, ${secondColor} 100%)`;
+                heroPreview.style.backgroundSize = '';
+                heroPreview.style.backgroundPosition = '';
+            } else {
+                const bgImage = document.getElementById('background_image').value;
+                if (bgImage) {
+                    heroPreview.style.backgroundImage = `url(${bgImage})`;
+                    heroPreview.style.backgroundSize = 'cover';
+                    heroPreview.style.backgroundPosition = 'center';
+                }
+            }
+        }
+        
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = {
+                title: document.getElementById('title').value,
+                subtitle: document.getElementById('subtitle').value,
+                button_text: document.getElementById('button_text').value,
+                button_url: document.getElementById('button_url').value,
+                background_type: document.querySelector('input[name="background_type"]:checked').value,
+                text_color: document.getElementById('text_color').value
+            };
+            
+            if (formData.background_type === 'gradient') {
+                formData.background_color = document.getElementById('background_color').value;
+            } else {
+                formData.background_image = document.getElementById('background_image').value;
+            }
+            
+            // Send via fetch API
+            fetch('{% url "barbershop:section_editor" barbershop.slug section.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    config: formData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert('Alterações salvas com sucesso!');
+                } else {
+                    // Show error
+                    alert('Erro ao salvar alterações: ' + (data.error || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao salvar alterações');
+            });
+        });
+        
+        // Initial preview update
+        updatePreview();
+    });
+</script>
+{% endblock %} 

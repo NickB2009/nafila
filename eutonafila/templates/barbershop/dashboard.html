@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ barbershop.nome }}{% endblock %}
+
+{% block extra_css %}
+.queue-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-aguardando {
+    border-left: 5px solid #ffc107;
+}
+
+.status-em_atendimento {
+    border-left: 5px solid #17a2b8;
+}
+
+.status-finalizado {
+    border-left: 5px solid #28a745;
+}
+
+.status-cancelado {
+    border-left: 5px solid #dc3545;
+}
+
+.queue-controls {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-panel {
+    margin-bottom: 20px;
+}
+
+.client-info {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.service-info {
+    color: #6c757d;
+}
+
+.timer {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.action-buttons {
+    margin-top: 10px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card dashboard-panel">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">Painel de Controle - {{ barbershop.nome }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="queue-controls">
+                        <div class="alert alert-info">
+                            <h4 id="queue-count">Clientes na fila: {{ entradas_aguardando|length }}</h4>
+                            <p id="estimated-time">
+                                {% if entradas_aguardando %}
+                                    Tempo estimado total: {{ tempo_estimado_total }}
+                                {% else %}
+                                    Nenhum cliente na fila
+                                {% endif %}
+                            </p>
+                        </div>
+                        <button id="refresh-queue" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Atualizar Fila
+                        </button>
+                    </div>
+                    
+                    <h3>Próximos Atendimentos</h3>
+                    <div id="queue-container">
+                        {% if entradas_aguardando %}
+                            {% for entrada in entradas_aguardando %}
+                                <div class="queue-item status-{{ entrada.status }}" data-entry-id="{{ entrada.id }}">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="client-info">{{ entrada.cliente.nome }}</div>
+                                            <div class="service-info">{{ entrada.servico.nome }} ({{ entrada.servico.duracao }} min)</div>
+                                            <div class="timer">Na fila desde: {{ entrada.created_at|time:"H:i" }}</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="action-buttons">
+                                                <button class="btn btn-success btn-sm start-service" data-entry-id="{{ entrada.id }}">
+                                                    Iniciar Atendimento
+                                                </button>
+                                                <button class="btn btn-danger btn-sm cancel-service" data-entry-id="{{ entrada.id }}">
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-light">Nenhum cliente aguardando atendimento</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card dashboard-panel">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title mb-0">Em Atendimento</h3>
+                </div>
+                <div class="card-body">
+                    <div id="in-service-container">
+                        {% if entradas_em_atendimento %}
+                            {% for entrada in entradas_em_atendimento %}
+                                <div class="queue-item status-{{ entrada.status }}" data-entry-id="{{ entrada.id }}">
+                                    <div class="client-info">{{ entrada.cliente.nome }}</div>
+                                    <div class="service-info">{{ entrada.servico.nome }}</div>
+                                    <div class="timer">
+                                        Início: {{ entrada.horario_atendimento|time:"H:i" }}
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-primary btn-sm finish-service" data-entry-id="{{ entrada.id }}">
+                                            Finalizar Atendimento
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-light">Nenhum cliente em atendimento</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card dashboard-panel">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Barbeiros Disponíveis</h3>
+                </div>
+                <div class="card-body">
+                    <div id="barbers-container">
+                        {% if barbeiros %}
+                            {% for barbeiro in barbeiros %}
+                                <div class="queue-item">
+                                    <div class="client-info">{{ barbeiro.nome }}</div>
+                                    <div class="service-info">Status: {{ barbeiro.get_status_display }}</div>
+                                    {% if barbeiro.status == 'available' %}
+                                        <span class="badge bg-success">Disponível</span>
+                                    {% elif barbeiro.status == 'busy' %}
+                                        <span class="badge bg-warning">Ocupado</span>
+                                    {% elif barbeiro.status == 'on_break' %}
+                                        <span class="badge bg-secondary">Em pausa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Offline</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-light">Nenhum barbeiro cadastrado</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card dashboard-panel">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">Concluídos Hoje</h3>
+                </div>
+                <div class="card-body">
+                    <div id="completed-container">
+                        {% if entradas_finalizadas %}
+                            {% for entrada in entradas_finalizadas %}
+                                <div class="queue-item status-{{ entrada.status }}">
+                                    <div class="client-info">{{ entrada.cliente.nome }}</div>
+                                    <div class="service-info">{{ entrada.servico.nome }}</div>
+                                    <div class="timer">
+                                        Término: {{ entrada.horario_finalizacao|time:"H:i" }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-light">Nenhum atendimento concluído hoje</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Website Management Card -->
+            <div class="card main-card shadow-sm mb-4">
+                <div class="card-header">
+                    <h2 class="card-title h5 mb-0">
+                        <i class="fas fa-globe me-2"></i> Site da Barbearia
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p>Personalize a página da sua barbearia para seus clientes.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'barbershop:website_builder' barbershop.slug %}" class="btn btn-primary">
+                            <i class="fas fa-pencil-alt me-2"></i> Editor de Site
+                        </a>
+                        <a href="{% url 'barbershop:barbershop_detail' slug=barbershop.slug %}" target="_blank" class="btn btn-outline-secondary">
+                            <i class="fas fa-eye me-2"></i> Visualizar Site
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // WebSocket Connection
+        const barbershopSlug = '{{ barbershop.slug }}';
+        
+        // Create WebSocket connection for real-time queue updates
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const socket = new WebSocket(
+            protocol + window.location.host + '/ws/barbershop/' + barbershopSlug + '/'
+        );
+        
+        // Connection opened
+        socket.addEventListener('open', function(event) {
+            console.log('Connected to WebSocket');
+        });
+        
+        // Listen for messages
+        socket.addEventListener('message', function(event) {
+            const data = JSON.parse(event.data);
+            console.log('Message from server:', data);
+            
+            if (data.action === 'queue_changed') {
+                // Refresh the queue data
+                refreshQueueData();
+            }
+        });
+        
+        // Connection closed
+        socket.addEventListener('close', function(event) {
+            console.log('Connection closed');
+            // Reconnect after a short delay
+            setTimeout(function() {
+                window.location.reload();
+            }, 5000);
+        });
+        
+        // Handle queue actions
+        document.getElementById('refresh-queue').addEventListener('click', function() {
+            refreshQueueData();
+        });
+        
+        // Event delegation for dynamically created buttons
+        document.addEventListener('click', function(event) {
+            // Start service button
+            if (event.target.classList.contains('start-service')) {
+                const entryId = event.target.getAttribute('data-entry-id');
+                startService(entryId);
+            }
+            
+            // Finish service button
+            if (event.target.classList.contains('finish-service')) {
+                const entryId = event.target.getAttribute('data-entry-id');
+                finishService(entryId);
+            }
+            
+            // Cancel service button
+            if (event.target.classList.contains('cancel-service')) {
+                const entryId = event.target.getAttribute('data-entry-id');
+                cancelService(entryId);
+            }
+        });
+        
+        // Function to refresh queue data via AJAX
+        function refreshQueueData() {
+            fetch(`/api/barbershops/${barbershopSlug}/queue/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the UI with new data
+                    updateQueueUI(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching queue data:', error);
+                });
+        }
+        
+        // Functions to handle queue actions
+        function startService(entryId) {
+            if (confirm('Iniciar atendimento para este cliente?')) {
+                fetch(`/api/queue-status/${entryId}/start/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        refreshQueueData();
+                    } else {
+                        alert('Erro ao iniciar atendimento');
+                    }
+                });
+            }
+        }
+        
+        function finishService(entryId) {
+            if (confirm('Finalizar este atendimento?')) {
+                fetch(`/api/queue-status/${entryId}/finish/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        refreshQueueData();
+                    } else {
+                        alert('Erro ao finalizar atendimento');
+                    }
+                });
+            }
+        }
+        
+        function cancelService(entryId) {
+            if (confirm('Cancelar este atendimento?')) {
+                fetch(`/api/cancel-queue/${entryId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        refreshQueueData();
+                    } else {
+                        alert('Erro ao cancelar atendimento');
+                    }
+                });
+            }
+        }
+        
+        // Helper function to get CSRF token from cookies
+        function getCsrfToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return value;
+                }
+            }
+            return '';
+        }
+        
+        // Function to update UI with new queue data
+        function updateQueueUI(data) {
+            // Implementation would depend on the structure of the response data
+            // This is a placeholder for actual implementation
+            console.log('Updating UI with new data:', data);
+            window.location.reload(); // Simpler but less efficient approach
+        }
+    });
+</script>
+{% endblock %} 

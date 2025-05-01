@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}EuTôNaFila - Gerenciamento de Filas{% endblock %}
+
+{% block extra_css %}
+.jumbotron {
+    padding: 4rem 2rem;
+    background-color: var(--light-color);
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.card-feature {
+    transition: transform 0.3s ease;
+    height: 100%;
+}
+
+.card-feature:hover {
+    transform: translateY(-5px);
+}
+
+.steps-container {
+    margin-top: 2rem;
+    padding: 20px;
+    background-color: rgba(52, 152, 219, 0.1);
+    border-radius: 10px;
+}
+
+.step {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 3px solid var(--primary-color);
+    background-color: white;
+}
+
+.step h5 {
+    color: var(--primary-color);
+}
+
+.instruction-note {
+    padding: 10px 15px;
+    margin: 15px 0;
+    background-color: #f8d7da;
+    border-left: 3px solid #dc3545;
+    border-radius: 5px;
+}
+
+.help-tip {
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    padding: 10px 15px;
+    margin: 15px 0;
+    border-radius: 5px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Welcome Banner -->
+    <div class="col-md-12">
+        <div class="jumbotron">
+            <h1 class="display-4">Bem-vindo ao EuTôNaFila</h1>
+            <p class="lead">Sistema de gerenciamento de filas para barbearias e salões de beleza.</p>
+            <hr class="my-4">
+            <p>Gerencie filas de espera, notifique clientes e aumente a eficiência do seu negócio.</p>
+            
+            <!-- Important Instructions Panel -->
+            <div class="instruction-note">
+                <h4>⚠️ Como Executar o Sistema Corretamente</h4>
+                <p>Se você está tentando iniciar o servidor e encontrou erros, siga as instruções abaixo:</p>
+                <pre class="bg-dark text-light p-3 rounded"><code>cd C:\repos\nafila\eutonafila
+python manage.py runserver</code></pre>
+                <p><strong>IMPORTANTE:</strong> O arquivo manage.py está dentro da pasta <code>eutonafila</code>, então você precisa executar todos os comandos a partir deste diretório.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Getting Started Steps -->
+    <div class="col-md-12">
+        <h2>Como Começar</h2>
+        <div class="steps-container">
+            <div class="step">
+                <h5>1. Configure sua Barbearia</h5>
+                <p>Acesse o <a href="/admin/" class="btn btn-sm btn-primary">Painel de Administração</a> e faça login com seu usuário administrador.</p>
+                <p>No painel, clique em "Barbearias" e então "Adicionar Barbearia" para criar seu perfil.</p>
+                <div class="help-tip">
+                    <p><i class="fas fa-lightbulb"></i> <strong>Dica:</strong> Ao criar uma barbearia, adicione serviços na mesma tela usando o formulário na parte inferior.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h5>2. Acesse sua Barbearia</h5>
+                <p>Após criar sua barbearia, você pode acessá-la em:</p>
+                <p><code>/b/&lt;slug-da-barbearia&gt;/</code></p>
+                <p>Por exemplo: <code><a href="/b/minha-barbearia/">http://127.0.0.1:8000/b/minha-barbearia/</a></code></p>
+            </div>
+            
+            <div class="step">
+                <h5>3. Experimente o Dashboard</h5>
+                <p>Para ver e gerenciar a fila em tempo real, acesse o dashboard da barbearia:</p>
+                <p><code>/b/&lt;slug-da-barbearia&gt;/dashboard/</code></p>
+                <p>Por exemplo: <code><a href="/b/minha-barbearia/dashboard/">http://127.0.0.1:8000/b/minha-barbearia/dashboard/</a></code></p>
+            </div>
+            
+            <div class="step">
+                <h5>4. Teste o Sistema de Filas</h5>
+                <p>Para simular um cliente entrando na fila:</p>
+                <ol>
+                    <li>Acesse a página da barbearia <code>/b/&lt;slug-da-barbearia&gt;/</code></li>
+                    <li>Clique em "Entrar na Fila"</li>
+                    <li>Preencha seus dados e selecione um serviço</li>
+                    <li>Após confirmar, você verá a tela de status da fila com sua posição</li>
+                </ol>
+                <div class="help-tip">
+                    <p><i class="fas fa-lightbulb"></i> <strong>Dica:</strong> Abra duas janelas do navegador - uma com o dashboard da barbearia e outra com a tela de status do cliente - para ver as atualizações em tempo real.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barbearias Disponíveis -->
+    <div class="col-md-12 mt-5">
+        <h2>Barbearias Disponíveis</h2>
+        {% if barbershops %}
+            <div class="row">
+                {% for barbershop in barbershops %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card card-feature">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ barbershop.nome }}</h5>
+                                <p class="card-text">
+                                    {% if barbershop.esta_aberto %}
+                                        <span class="badge bg-success">Aberto</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Fechado</span>
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'barbershop:barbershop_detail' slug=barbershop.slug %}" class="btn btn-primary">Ver Detalhes</a>
+                                <a href="{% url 'barbershop:checkin' slug=barbershop.slug %}" class="btn btn-success">Entrar na Fila</a>
+                                <a href="{% url 'barbershop:dashboard' slug=barbershop.slug %}" class="btn btn-info">Dashboard</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <h4>Nenhuma barbearia encontrada</h4>
+                <p>Para começar, acesse o <a href="/admin/" class="alert-link">Painel de Administração</a> e adicione sua primeira barbearia.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
