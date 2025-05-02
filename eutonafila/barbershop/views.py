@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from uuid import UUID
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -13,9 +13,11 @@ from infrastructure.repositories import (
     DjangoClienteRepository,
     DjangoFilaRepository,
     DjangoBarbeariaRepository,
-    DjangoServicoRepository
+    DjangoServicoRepository,
+    DjangoBarbeiroRepository
 )
 from .services import notify_queue_status_change
+from domain.entities import FilaStatus
 
 # Create your views here.
 
@@ -323,5 +325,279 @@ class CancelQueueEntryView(APIView):
         except (ValueError, TypeError):
             return Response(
                 {'error': 'ID inválido'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class StartServiceView(APIView):
+    """
+    API view for starting service for a queue entry
+    """
+    permission_classes = [AllowAny]  # In production, should be [IsAuthenticated]
+    
+    @swagger_auto_schema(
+        operation_description="Start service for a client in the queue",
+        operation_summary="Start service",
+        manual_parameters=[
+            openapi.Parameter(
+                name='queue_id',
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                description='Queue entry UUID',
+                required=True
+            ),
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'barbeiro_id': openapi.Schema(type=openapi.TYPE_STRING, description='Barber UUID (optional)'),
+                'notes': openapi.Schema(type=openapi.TYPE_STRING, description='Service notes (optional)'),
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Service started",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message'),
+                        'id': openapi.Schema(type=openapi.TYPE_STRING, description='Queue entry UUID'),
+                        'status': openapi.Schema(type=openapi.TYPE_STRING, description='Queue entry status'),
+                        'barbeiro': openapi.Schema(type=openapi.TYPE_STRING, description='Barber name'),
+                        'horario_atendimento': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, 
+                                                             description='Service start timestamp'),
+                    }
+                )
+            ),
+            404: openapi.Response(
+                description="Queue entry not found",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING, description='Error message'),
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description="Bad request",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING, description='Error message'),
+                    }
+                )
+            )
+        }
+    )
+    def post(self, request, queue_id, format=None):
+        """Start service for a queue entry"""
+        try:
+            # Initialize repositories
+            fila_repository = DjangoFilaRepository()
+            barbeiro_repository = DjangoBarbeiroRepository()
+            
+            # Get queue entry
+            entrada_id = UUID(str(queue_id))
+            entrada = fila_repository.get_by_id(entrada_id)
+            
+            if not entrada:
+                return Response(
+                    {'error': 'Entrada na fila não encontrada'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Check if entry is in waiting state
+            if entrada.status != FilaStatus.AGUARDANDO.value:
+                return Response(
+                    {'error': 'Só é possível iniciar atendimento para clientes em espera'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get barber if provided
+            barbeiro = None
+            if 'barbeiro_id' in request.data and request.data['barbeiro_id']:
+                barbeiro_id = request.data['barbeiro_id']
+                barbeiro = barbeiro_repository.get_by_id(UUID(str(barbeiro_id)))
+                
+                if not barbeiro:
+                    return Response(
+                        {'error': 'Barbeiro não encontrado'},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                
+                # Check if barber belongs to the same barbershop
+                if barbeiro.barbearia.id != entrada.barbearia.id:
+                    return Response(
+                        {'error': 'Barbeiro não pertence à mesma barbearia'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            # Try to start service with the given barber
+            if barbeiro:
+                success = entrada.iniciar_atendimento(barbeiro)
+            else:
+                # If no barber specified, try to find one automatically
+                barbeiros = barbeiro_repository.get_available_barbers(entrada.barbearia.id)
+                if not barbeiros:
+                    return Response(
+                        {'error': 'Não há barbeiros disponíveis no momento'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                success = entrada.iniciar_atendimento(barbeiros[0])
+            
+            if not success:
+                return Response(
+                    {'error': 'Não foi possível iniciar o atendimento'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Add notes if provided
+            if 'notes' in request.data and request.data['notes']:
+                entrada.observacoes = request.data['notes']
+                entrada.save()
+            
+            # Get updated entry after status change
+            entrada = fila_repository.get_by_id(entrada_id)
+            
+            # Format response
+            response_data = {
+                'message': 'Atendimento iniciado com sucesso',
+                'id': str(entrada.id),
+                'status': entrada.get_status_display(),
+                'horario_atendimento': entrada.horario_atendimento,
+            }
+            
+            if entrada.barbeiro:
+                response_data['barbeiro'] = entrada.barbeiro.nome
+            
+            # Update WebSocket if implemented
+            try:
+                notify_queue_status_change(queue_id, 'em_atendimento')
+            except ImportError:
+                pass  # WebSocket notification not implemented
+            
+            return Response(response_data)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Erro ao iniciar atendimento: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class FinishServiceView(APIView):
+    """
+    API view for finishing service for a queue entry
+    """
+    permission_classes = [AllowAny]  # In production, should be [IsAuthenticated]
+    
+    @swagger_auto_schema(
+        operation_description="Finish service for a client in the queue",
+        operation_summary="Finish service",
+        manual_parameters=[
+            openapi.Parameter(
+                name='queue_id',
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                description='Queue entry UUID',
+                required=True
+            ),
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'notes': openapi.Schema(type=openapi.TYPE_STRING, description='Service notes (optional)'),
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Service finished",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message'),
+                        'id': openapi.Schema(type=openapi.TYPE_STRING, description='Queue entry UUID'),
+                        'status': openapi.Schema(type=openapi.TYPE_STRING, description='Queue entry status'),
+                        'horario_finalizacao': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, 
+                                                            description='Service end timestamp'),
+                    }
+                )
+            ),
+            404: openapi.Response(
+                description="Queue entry not found",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING, description='Error message'),
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description="Bad request",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING, description='Error message'),
+                    }
+                )
+            )
+        }
+    )
+    def post(self, request, queue_id, format=None):
+        """Finish service for a queue entry"""
+        try:
+            # Initialize repository
+            fila_repository = DjangoFilaRepository()
+            
+            # Get queue entry
+            entrada_id = UUID(str(queue_id))
+            entrada = fila_repository.get_by_id(entrada_id)
+            
+            if not entrada:
+                return Response(
+                    {'error': 'Entrada na fila não encontrada'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Check if entry is in the correct state
+            if entrada.status != FilaStatus.ATENDIMENTO.value:
+                return Response(
+                    {'error': 'Só é possível finalizar um atendimento em andamento'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Add notes if provided
+            if 'notes' in request.data and request.data['notes']:
+                entrada.observacoes = request.data['notes']
+                entrada.save()
+            
+            # Finish service
+            success = entrada.finalizar_atendimento()
+            
+            if not success:
+                return Response(
+                    {'error': 'Não foi possível finalizar o atendimento'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get updated entry after status change
+            entrada = fila_repository.get_by_id(entrada_id)
+            
+            # Update WebSocket if implemented
+            try:
+                notify_queue_status_change(queue_id, 'finalizado')
+            except ImportError:
+                pass  # WebSocket notification not implemented
+            
+            return Response({
+                'message': 'Atendimento finalizado com sucesso',
+                'id': str(entrada.id),
+                'status': entrada.get_status_display(),
+                'horario_finalizacao': entrada.horario_finalizacao,
+            })
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Erro ao finalizar atendimento: {str(e)}'},
                 status=status.HTTP_400_BAD_REQUEST
             )

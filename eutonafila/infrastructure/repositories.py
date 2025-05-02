@@ -1,5 +1,7 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
+import logging
+from django.db import models
 from django.db.models import Count, F, Q, Min, Sum, Avg
 from django.utils import timezone
 
@@ -187,7 +189,22 @@ class DjangoBarbeariaRepository(IBarbeariaRepository):
     def get_by_slug(self, slug: str) -> Optional[Barbearia]:
         """Get barbershop by slug"""
         try:
-            return Barbearia.objects.get(slug=slug)
+            # Ensure slug is a string
+            if slug is None:
+                clean_slug = ""
+            elif isinstance(slug, (int, float)):
+                clean_slug = str(slug)
+            elif isinstance(slug, str):
+                clean_slug = slug
+            else:
+                # Handle any other type by converting to string
+                clean_slug = str(slug)
+                
+            # Clean the slug - remove any @eutonafila suffix if present
+            if '@' in clean_slug:
+                clean_slug = clean_slug.split('@')[0]
+                
+            return Barbearia.objects.get(slug=clean_slug)
         except Barbearia.DoesNotExist:
             return None
     
@@ -249,9 +266,23 @@ class DjangoBarbeiroRepository(IBarbeiroRepository):
     
     def get_available(self, barbearia_id: UUID) -> List[Barbeiro]:
         """Get available barbers for a barbershop"""
+        from domain.domain_models import Barbeiro as DomainBarbeiro
+        
         return list(Barbeiro.objects.filter(
             barbearia_id=barbearia_id,
-            status=Barbeiro.STATUS_AVAILABLE
+            status__in=[
+                DomainBarbeiro.Status.STATUS_AVAILABLE.value,
+                # Include OFFLINE barbers but they'll be ranked lower in selection
+                DomainBarbeiro.Status.STATUS_OFFLINE.value
+            ]
+        ).order_by(
+            # Order by status to prioritize available barbers over offline ones
+            models.Case(
+                models.When(status=DomainBarbeiro.Status.STATUS_AVAILABLE.value, then=0),
+                models.When(status=DomainBarbeiro.Status.STATUS_OFFLINE.value, then=1),
+                default=2,
+                output_field=models.IntegerField()
+            )
         ))
     
     def update(self, barbeiro: Barbeiro) -> Barbeiro:
@@ -266,6 +297,32 @@ class DjangoBarbeiroRepository(IBarbeiroRepository):
             return barbeiro.set_status(status)
         except Barbeiro.DoesNotExist:
             return False 
+
+    def get_available_barbers(self, barbearia_id: UUID) -> List[Barbeiro]:
+        """Get available barbers for a barbershop"""
+        from domain.domain_models import Barbeiro as DomainBarbeiro
+        from barbershop.models import Barbeiro  # Import here to avoid circular imports
+        
+        try:
+            return list(Barbeiro.objects.filter(
+                barbearia_id=barbearia_id,
+                status__in=[
+                    DomainBarbeiro.Status.STATUS_AVAILABLE.value, 
+                    DomainBarbeiro.Status.STATUS_OFFLINE.value
+                ]
+            ).order_by(
+                # Order by status to prioritize available barbers over offline ones
+                models.Case(
+                    models.When(status=DomainBarbeiro.Status.STATUS_AVAILABLE.value, then=0),
+                    models.When(status=DomainBarbeiro.Status.STATUS_OFFLINE.value, then=1),
+                    default=2,
+                    output_field=models.IntegerField()
+                )
+            ))
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error getting available barbers: {str(e)}")
+            return []
 
 class DjangoPageSectionRepository(IPageSectionRepository):
     """Repository implementation for PageSection using Django ORM"""

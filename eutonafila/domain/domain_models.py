@@ -14,12 +14,14 @@ class Barbeiro:
         
         @classmethod
         def choices(cls):
-            return [(status.value, status.name.replace('STATUS_', '').title()) 
+            return [(status.value, status.name.replace('STATUS_', '').title() if isinstance(status.name, str) else str(status.name).replace('STATUS_', '').title()) 
                     for status in cls]
                     
         @classmethod
         def is_active(cls, status):
             """Check if status counts as active for wait time calculation"""
+            if isinstance(status, int):
+                status = str(status)
             return status in [cls.STATUS_AVAILABLE.value, cls.STATUS_BUSY.value]
 
 
@@ -35,7 +37,7 @@ class EntradaFila:
         
         @classmethod
         def choices(cls):
-            return [(status.value, status.name.replace('STATUS_', '').title()) 
+            return [(status.value, status.name.replace('STATUS_', '').title() if isinstance(status.name, str) else str(status.name).replace('STATUS_', '').title()) 
                     for status in cls]
     
     # Priority levels for queue sorting
@@ -75,6 +77,10 @@ class OpeningHoursValidator:
         Returns:
             Boolean indicating if business is open
         """
+        # Ensure weekdays is a list
+        if not weekdays or not isinstance(weekdays, (list, tuple)):
+            weekdays = []
+        
         # PRODUCTION OVERRIDE: Force shops to be open during Brazil business hours
         # This ensures shops appear open during expected hours in Brasilia time (America/Sao_Paulo)
         # Remove this in a proper production environment with correct timezone configuration

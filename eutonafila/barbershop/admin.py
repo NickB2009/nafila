@@ -9,6 +9,8 @@ class ServicoInline(admin.TabularInline):
     model = Servico
     extra = 1  # Number of empty forms to display
     fields = ('nome', 'preco', 'duracao', 'descricao')
+    # Ensure we don't use columns that might be missing
+    exclude = ('complexity', 'popularity')
 
 # Website Builder Admin Classes
 class ActivePageSectionInline(admin.TabularInline):
@@ -71,6 +73,15 @@ class ServicoAdmin(admin.ModelAdmin):
     list_display = ('nome', 'barbearia', 'preco', 'duracao')
     list_filter = ('barbearia',)
     search_fields = ('nome',)
+    
+    # Exclude fields that are missing from the database
+    exclude = ('complexity', 'popularity')
+    
+    def get_queryset(self, request):
+        """Override to avoid accessing missing columns"""
+        qs = super().get_queryset(request)
+        # Use defer to avoid loading non-existent columns
+        return qs.defer('complexity', 'popularity')
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):

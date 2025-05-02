@@ -54,15 +54,57 @@ class Barbearia(models.Model):
         return self.nome
     
     def esta_aberto(self) -> bool:
-        current_time = timezone.localtime().time()
-        current_weekday = timezone.localtime().weekday()
-        return OpeningHoursValidator.is_open(
-            current_weekday=current_weekday,
-            current_time=current_time,
-            weekdays=self.dias_funcionamento,
-            opening_time=self.horario_abertura,
-            closing_time=self.horario_fechamento
-        )
+        try:
+            current_time = timezone.localtime().time()
+            current_weekday = timezone.localtime().weekday()
+            
+            # Ensure dias_funcionamento is valid
+            if not self.dias_funcionamento or not isinstance(self.dias_funcionamento, (list, tuple)):
+                self.dias_funcionamento = [0, 1, 2, 3, 4, 5]  # Default to Monday-Saturday
+            
+            # Ensure opening and closing times are valid
+            if not self.horario_abertura:
+                return False
+            if not self.horario_fechamento:
+                return False
+            
+            # Convert string times to datetime.time objects if needed
+            opening_time = self.horario_abertura
+            closing_time = self.horario_fechamento
+            
+            # Convert strings to time objects if needed
+            if isinstance(opening_time, str):
+                try:
+                    hour, minute = map(int, opening_time.split(':'))
+                    opening_time = datetime.time(hour, minute)
+                except (ValueError, TypeError):
+                    logger.error(f"Invalid opening time format: {opening_time}")
+                    return False
+                    
+            if isinstance(closing_time, str):
+                try:
+                    hour, minute = map(int, closing_time.split(':'))
+                    closing_time = datetime.time(hour, minute)
+                except (ValueError, TypeError):
+                    logger.error(f"Invalid closing time format: {closing_time}")
+                    return False
+                
+            return OpeningHoursValidator.is_open(
+                current_weekday=current_weekday,
+                current_time=current_time,
+                weekdays=self.dias_funcionamento,
+                opening_time=opening_time,
+                closing_time=closing_time
+            )
+        except Exception as e:
+            logger.error(f"Error in esta_aberto: {str(e)}", exc_info=True)
+            # Default to open during business hours as a fallback
+            now = timezone.localtime()
+            current_hour = now.hour
+            current_weekday = now.weekday()
+            business_hours = (9, 18)  # 9 AM to 6 PM
+            business_days = [0, 1, 2, 3, 4]  # Monday to Friday
+            return current_weekday in business_days and business_hours[0] <= current_hour < business_hours[1]
     
     def invalidate_status_cache(self):
         """Invalidate the status cache when operating hours change"""
@@ -204,11 +246,15 @@ class Servico(models.Model):
     descricao = models.TextField(blank=True, null=True)
     preco = models.DecimalField(max_digits=10, decimal_places=2)
     duracao = models.IntegerField(help_text='Duração em minutos')
+    # Make complexity optional for backward compatibility with existing database
     complexity = models.IntegerField(
         choices=[(c.value, c.name) for c in ServicoComplexidade],
-        default=ServicoComplexidade.SIMPLE.value
+        default=ServicoComplexidade.MEDIUM.value,
+        null=True,
+        blank=True
     )
-    popularity = models.IntegerField(default=0)
+    # Make popularity optional for backward compatibility
+    popularity = models.IntegerField(default=0, null=True, blank=True)
     imagem = models.ImageField(upload_to='servicos/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -217,8 +263,15 @@ class Servico(models.Model):
         return self.nome
     
     def increment_popularity(self):
-        self.popularity += 1
-        self.save()
+        """Safely increment the popularity counter if it exists"""
+        try:
+            if hasattr(self, 'popularity') and self.popularity is not None:
+                self.popularity += 1
+                self.save(update_fields=['popularity', 'updated_at'])
+        except Exception as e:
+            # Log the error but don't crash if the column doesn't exist
+            logger.warning(f"Could not increment popularity for {self.nome}: {str(e)}")
+            pass
 
 
 class Cliente(models.Model):
@@ -292,37 +345,61 @@ class Fila(models.Model):
         return f"{self.cliente.nome} - {self.servico.nome}"
     
     def save(self, *args, **kwargs):
-        if not self.pk:  # New entry
-            # Calculate priority
-            self.prioridade = QueueManager.calculate_priority(
-                entrada=self,
-                cliente_visits=self.cliente.total_visits,
-                is_vip=self.cliente.is_vip
-            ).value
-            
-            # Calculate estimated duration
-            self.estimativa_duracao = QueueManager.estimate_service_duration(
-                servico=self.servico,
-                barbeiro=self.barbeiro
-            )
-            
-            # Calculate position
-            self.position_number = QueueManager.get_position(
-                entrada=self,
-                queue_entries=list(
-                    self.barbearia.fila_set.filter(
-                        status=FilaStatus.AGUARDANDO.value
+        try:
+            if not self.pk:  # New entry
+                # Calculate priority
+                self.prioridade = QueueManager.calculate_priority(
+                    entrada=self,
+                    cliente_visits=self.cliente.total_visits,
+                    is_vip=self.cliente.is_vip
+                ).value
+                
+                # Calculate estimated duration
+                self.estimativa_duracao = QueueManager.estimate_service_duration(
+                    servico=self.servico,
+                    barbeiro=self.barbeiro
+                )
+                
+                # Calculate position
+                self.position_number = QueueManager.get_position(
+                    entrada=self,
+                    queue_entries=list(
+                        self.barbearia.fila_set.filter(
+                            status=FilaStatus.AGUARDANDO.value
+                        )
                     )
                 )
-            )
+        except Exception as e:
+            # Log the error but don't crash
+            logger.error(f"Error calculating queue metrics: {str(e)}", exc_info=True)
+            
+            # Set defaults if needed
+            if not hasattr(self, 'prioridade') or self.prioridade is None:
+                self.prioridade = FilaPrioridade.NORMAL.value
+            if not hasattr(self, 'estimativa_duracao') or self.estimativa_duracao is None:
+                self.estimativa_duracao = 30  # Default 30 minutes
+            if not hasattr(self, 'position_number') or self.position_number is None:
+                self.position_number = 0
         
         super().save(*args, **kwargs)
     
     def finalizar_atendimento(self):
+        """Mark service as completed and update associated records"""
         self.status = FilaStatus.FINALIZADO.value
         self.horario_finalizacao = timezone.now()
-        self.cliente.record_visit()
-        self.servico.increment_popularity()
+        
+        # Record client visit if possible
+        try:
+            self.cliente.record_visit()
+        except Exception as e:
+            logger.warning(f"Could not record visit for client {self.cliente.id}: {str(e)}")
+        
+        # Increment service popularity if possible
+        try:
+            self.servico.increment_popularity()
+        except Exception as e:
+            logger.warning(f"Could not increment popularity for service {self.servico.id}: {str(e)}")
+        
         self.save()
     
     def cancelar_atendimento(self):
@@ -357,6 +434,31 @@ class Fila(models.Model):
     def format_wait_time(self) -> str:
         minutes = self.get_estimated_wait_time()
         return WaitTimeCalculator.format_wait_time(minutes)
+    
+    def iniciar_atendimento(self, barbeiro=None):
+        """Mark service as started and assign a barber"""
+        try:
+            if self.status != FilaStatus.AGUARDANDO.value:
+                return False
+                
+            self.status = FilaStatus.ATENDIMENTO.value
+            self.horario_atendimento = timezone.now()
+            
+            if barbeiro:
+                self.barbeiro = barbeiro
+                # Update barber status
+                barbeiro.status = BarbeiroStatus.BUSY.value
+                barbeiro.save()
+            
+            self.save()
+            
+            # Update barbershop wait time cache
+            self.barbearia.invalidate_wait_time_cache()
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error starting service: {str(e)}")
+            return False
     
     class Meta:
         ordering = ['horario_chegada']

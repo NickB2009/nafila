@@ -9,6 +9,16 @@ class ClienteStatus(Enum):
     SILVER = "silver"
     GOLD = "gold"
     VIP = "vip"
+    
+    @classmethod
+    def choices(cls):
+        """Return choices with proper string handling for all value types"""
+        result = []
+        for status in cls:
+            # Safely convert name to string and then format
+            name = str(status.name) if status.name is not None else ""
+            result.append((status.value, name.title()))
+        return result
 
 @dataclass
 class Cliente:
@@ -42,8 +52,26 @@ class BarbeiroStatus(Enum):
     OFFLINE = "offline"
     
     @classmethod
-    def is_active(cls, status: 'BarbeiroStatus') -> bool:
-        return status in [cls.AVAILABLE, cls.BUSY]
+    def is_active(cls, status):
+        # Handle integer status
+        if isinstance(status, int):
+            return False  # Invalid status
+        
+        # Handle the status object itself
+        if isinstance(status, cls):
+            status = status.value
+            
+        return status in [cls.AVAILABLE.value, cls.BUSY.value]
+    
+    @classmethod
+    def choices(cls):
+        """Return choices with proper string handling for all value types"""
+        result = []
+        for status in cls:
+            # Safely convert name to string and then format
+            name = str(status.name) if status.name is not None else ""
+            result.append((status.value, name.title()))
+        return result
 
 @dataclass
 class Barbeiro:
@@ -60,6 +88,16 @@ class FilaStatus(Enum):
     FINALIZADO = "completed"
     CANCELADO = "cancelled"
     AUSENTE = "no_show"
+    
+    @classmethod
+    def choices(cls):
+        """Return choices with proper string handling for all value types"""
+        result = []
+        for status in cls:
+            # Safely convert name to string and then format
+            name = str(status.name) if status.name is not None else ""
+            result.append((status.value, name.title()))
+        return result
 
 class FilaPrioridade(Enum):
     NORMAL = 1
@@ -67,6 +105,16 @@ class FilaPrioridade(Enum):
     SILVER = 3
     GOLD = 4
     VIP = 5
+    
+    @classmethod
+    def choices(cls):
+        """Return choices with proper string handling for all value types"""
+        result = []
+        for status in cls:
+            # Safely convert name to string and then format
+            name = str(status.name) if status.name is not None else ""
+            result.append((status.value, name.title()))
+        return result
 
 @dataclass
 class EntradaFila:
@@ -96,6 +144,16 @@ class ServicoComplexidade(Enum):
     SIMPLE = 1
     MEDIUM = 2
     COMPLEX = 3
+    
+    @classmethod
+    def choices(cls):
+        """Return choices with proper string handling for all value types"""
+        result = []
+        for status in cls:
+            # Safely convert name to string and then format
+            name = str(status.name) if status.name is not None else ""
+            result.append((status.value, name.title()))
+        return result
 
 @dataclass
 class Servico:

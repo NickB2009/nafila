@@ -55,7 +55,7 @@ class BarbershopView(View):
             # If there's a ValueError (which suggests a name might be used instead of a slug)
             # Try to find by name with case-insensitive matching
             try:
-                barbershop = Barbearia.objects.filter(nome__icontains=slug.replace('-', ' ')).first()
+                barbershop = Barbearia.objects.filter(nome__icontains=isinstance(slug, str) and slug.replace('-', ' ')).first()
                 if not barbershop:
                     raise Http404("Barbershop not found")
             except Exception as e:
