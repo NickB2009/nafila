@@ -1,0 +1,75 @@
+/* Custom CSS Overrides for EuTôNaFila */
+
+/* Hero section background fallback */
+.hero-section {
+    position: relative;
+    background-color: #1a2536;
+}
+
+.hero-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.2;
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Fix for progress bar */
+.progress-bar {
+    background-color: #b89f65;
+}
+
+/* Fix styling for badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-badge.open {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.closed {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+/* Ensuring proper spacing */
+.container.py-5 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+/* Form adjustments */
+.premium-form .form-control,
+.premium-form .form-select {
+    margin-bottom: 1rem;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767.98px) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.75rem;
+    }
+    
+    .status-card {
+        margin-bottom: 1rem;
+    }
+} 

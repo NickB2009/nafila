@@ -5,6 +5,7 @@ from django.core.cache import cache
 import datetime
 import uuid
 import logging
+from django.db.models import Avg, F, ExpressionWrapper, DurationField
 from domain.entities import (
     BarbeiroStatus, FilaStatus, FilaPrioridade,
     ServicoComplexidade, ClienteStatus
@@ -272,6 +273,29 @@ class Servico(models.Model):
             # Log the error but don't crash if the column doesn't exist
             logger.warning(f"Could not increment popularity for {self.nome}: {str(e)}")
             pass
+    
+    def get_median_wait_time(self):
+        """Calculate median wait time for this service"""
+        completed_services = Fila.objects.filter(
+            servico=self,
+            status='completed'
+        ).order_by('created_at')
+        
+        if not completed_services:
+            return self.duracao  # Return service duration as default
+            
+        wait_times = []
+        for service in completed_services:
+            if service.completed_at and service.created_at:
+                wait_time = (service.completed_at - service.created_at).total_seconds() / 60
+                wait_times.append(wait_time)
+        
+        if not wait_times:
+            return self.duracao
+            
+        wait_times.sort()
+        mid = len(wait_times) // 2
+        return (wait_times[mid] + wait_times[~mid]) / 2
 
 
 class Cliente(models.Model):
@@ -306,13 +330,20 @@ class Cliente(models.Model):
 
 class Fila(models.Model):
     """ORM model for EntradaFila that implements domain.entities.EntradaFila interface"""
+    STATUS_CHOICES = [
+        ('waiting', 'Waiting'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled')
+    ]
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     barbearia = models.ForeignKey(Barbearia, on_delete=models.CASCADE)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     servico = models.ForeignKey(Servico, on_delete=models.CASCADE)
     barbeiro = models.ForeignKey(
         Barbeiro, 
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='atendimentos'
     )
@@ -322,11 +353,7 @@ class Fila(models.Model):
         null=True, blank=True,
         related_name='clientes_preferenciais'
     )
-    status = models.CharField(
-        max_length=20,
-        choices=[(s.value, s.name) for s in FilaStatus],
-        default=FilaStatus.AGUARDANDO.value
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
     prioridade = models.IntegerField(
         choices=[(p.value, p.name) for p in FilaPrioridade],
         default=FilaPrioridade.NORMAL.value
@@ -340,48 +367,62 @@ class Fila(models.Model):
     observacoes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    estimated_wait_time = models.IntegerField(default=0, help_text='Estimated wait time in minutes')
     
     def __str__(self):
         return f"{self.cliente.nome} - {self.servico.nome}"
     
     def save(self, *args, **kwargs):
-        try:
-            if not self.pk:  # New entry
-                # Calculate priority
-                self.prioridade = QueueManager.calculate_priority(
-                    entrada=self,
-                    cliente_visits=self.cliente.total_visits,
-                    is_vip=self.cliente.is_vip
-                ).value
-                
-                # Calculate estimated duration
-                self.estimativa_duracao = QueueManager.estimate_service_duration(
-                    servico=self.servico,
-                    barbeiro=self.barbeiro
-                )
-                
-                # Calculate position
-                self.position_number = QueueManager.get_position(
-                    entrada=self,
-                    queue_entries=list(
-                        self.barbearia.fila_set.filter(
-                            status=FilaStatus.AGUARDANDO.value
-                        )
-                    )
-                )
-        except Exception as e:
-            # Log the error but don't crash
-            logger.error(f"Error calculating queue metrics: {str(e)}", exc_info=True)
-            
-            # Set defaults if needed
-            if not hasattr(self, 'prioridade') or self.prioridade is None:
-                self.prioridade = FilaPrioridade.NORMAL.value
-            if not hasattr(self, 'estimativa_duracao') or self.estimativa_duracao is None:
-                self.estimativa_duracao = 30  # Default 30 minutes
-            if not hasattr(self, 'position_number') or self.position_number is None:
-                self.position_number = 0
-        
+        if not self.estimated_wait_time:
+            self.estimated_wait_time = self.servico.get_median_wait_time()
         super().save(*args, **kwargs)
+    
+    def assign_barber(self, barbeiro):
+        """Assign a barber to this queue entry"""
+        if self.status != 'waiting':
+            raise ValueError("Can only assign barber to waiting entries")
+        if self.position_number != 0:
+            raise ValueError("Can only assign barber to first position")
+            
+        self.barbeiro = barbeiro
+        self.status = 'in_progress'
+        self.started_at = timezone.now()
+        self.save()
+        
+        # Update barber status
+        barbeiro.status = BarbeiroStatus.BUSY.value
+        barbeiro.status_since = timezone.now()
+        barbeiro.save()
+    
+    def complete_service(self):
+        """Mark the service as completed"""
+        if self.status != 'in_progress':
+            raise ValueError("Can only complete in-progress services")
+            
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.save()
+        
+        # Update barber status
+        if self.barbeiro:
+            self.barbeiro.status = BarbeiroStatus.AVAILABLE.value
+            self.barbeiro.status_since = timezone.now()
+            self.barbeiro.save()
+        
+        # Update queue positions
+        Fila.objects.filter(
+            barbearia=self.barbearia,
+            status='waiting',
+            position_number__gt=self.position_number
+        ).update(position_number=F('position_number') - 1)
+    
+    def get_wait_time(self):
+        """Get current wait time in minutes"""
+        if self.status != 'waiting':
+            return 0
+        return (timezone.now() - self.created_at).total_seconds() / 60
     
     def finalizar_atendimento(self):
         """Mark service as completed and update associated records"""
@@ -461,4 +502,4 @@ class Fila(models.Model):
             return False
     
     class Meta:
-        ordering = ['horario_chegada']
+        ordering = ['position_number', 'created_at']

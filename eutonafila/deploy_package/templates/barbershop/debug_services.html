@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Debug Services - {{ barbershop.nome }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Services for {{ barbershop.nome }}</h3>
+                    <a href="{% url 'barbershop:barbershop_detail' slug=barbershop.slug %}" class="btn btn-sm btn-light">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Barbershop
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <a href="{% url 'barbershop:debug_add_service' slug=barbershop.slug %}?name=Corte%20Simples&price=20.00&duration=25" class="btn btn-sm btn-success me-2">
+                            <i class="fas fa-plus-circle me-1"></i> Add Simple Cut
+                        </a>
+                        <a href="{% url 'barbershop:debug_add_service' slug=barbershop.slug %}?name=Corte%20e%20Barba&price=45.00&duration=45" class="btn btn-sm btn-success me-2">
+                            <i class="fas fa-plus-circle me-1"></i> Add Cut and Beard
+                        </a>
+                        <a href="{% url 'barbershop:debug_add_service' slug=barbershop.slug %}?name=Design%20de%20Sobrancelha&price=15.00&duration=15" class="btn btn-sm btn-success">
+                            <i class="fas fa-plus-circle me-1"></i> Add Eyebrow Design
+                        </a>
+                    </div>
+                    
+                    <h4>Available Services ({{ services.count }})</h4>
+                    {% if services %}
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Duration</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for service in services %}
+                                <tr>
+                                    <td><code>{{ service.id }}</code></td>
+                                    <td>{{ service.nome }}</td>
+                                    <td>R$ {{ service.preco }}</td>
+                                    <td>{{ service.duracao }} min</td>
+                                    <td>{{ service.descricao|default:"No description" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="alert alert-warning">No services found for this barbershop. Use the buttons above to add services.</div>
+                    {% endif %}
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{% url 'barbershop:checkin' slug=barbershop.slug %}" class="btn btn-primary">
+                            <i class="fas fa-clock me-1"></i> Go to Check-in
+                        </a>
+                        <a href="{% url 'barbershop:debug_create_entry' slug=barbershop.slug %}?debug=secret123" class="btn btn-warning">
+                            <i class="fas fa-user-plus me-1"></i> Create Test Entry
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

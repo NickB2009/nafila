@@ -3,6 +3,8 @@ from django.utils import timezone
 from .models import Barbearia, Barbeiro, Servico, Cliente, Fila
 from domain.domain_models import EntradaFila as DomainEntradaFila
 from domain.models import ActivePageSection, PageLayout, PageSection, BarbeariaCustomPage, GalleryImage, Testimonial
+from django import forms
+from django.shortcuts import render
 
 # Inline classes for related models
 class ServicoInline(admin.TabularInline):
@@ -58,30 +60,59 @@ class TestimonialInline(admin.TabularInline):
 
 @admin.register(Barbearia)
 class BarbeariaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'slug', 'telefone', 'created_at')
-    search_fields = ('nome', 'slug')
+    list_display = ('nome', 'slug', 'endereco', 'telefone', 'horario_abertura', 'horario_fechamento')
+    list_filter = ('enable_priority_queue',)
+    search_fields = ('nome', 'endereco', 'telefone')
     prepopulated_fields = {'slug': ('nome',)}
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('nome', 'slug', 'descricao_curta', 'user')
+        }),
+        ('Contact Information', {
+            'fields': ('endereco', 'telefone')
+        }),
+        ('Operating Hours', {
+            'fields': ('horario_abertura', 'horario_fechamento', 'dias_funcionamento')
+        }),
+        ('Settings', {
+            'fields': ('max_capacity', 'enable_priority_queue', 'cores')
+        }),
+    )
 
 @admin.register(Barbeiro)
 class BarbeiroAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'barbearia', 'status')
-    list_filter = ('barbearia', 'status')
+    list_display = ('nome', 'barbearia', 'status', 'get_current_client')
+    list_filter = ('status', 'barbearia')
     search_fields = ('nome',)
+    filter_horizontal = ('especialidades',)
+    actions = ['mark_available', 'mark_on_break']
+    
+    def get_current_client(self, obj):
+        current_service = Fila.objects.filter(
+            barbeiro=obj,
+            status='in_progress'
+        ).first()
+        return current_service.cliente.nome if current_service else '-'
+    get_current_client.short_description = 'Current Client'
+    
+    def mark_available(self, request, queryset):
+        queryset.update(status='available')
+    mark_available.short_description = "Mark selected barbers as available"
+    
+    def mark_on_break(self, request, queryset):
+        queryset.update(status='on_break')
+    mark_on_break.short_description = "Mark selected barbers as on break"
 
 @admin.register(Servico)
 class ServicoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'barbearia', 'preco', 'duracao')
-    list_filter = ('barbearia',)
+    list_display = ('nome', 'barbearia', 'preco', 'duracao', 'complexity', 'popularity', 'get_median_wait_time')
+    list_filter = ('barbearia', 'complexity')
     search_fields = ('nome',)
+    list_editable = ('preco', 'duracao', 'complexity')
     
-    # Exclude fields that are missing from the database
-    exclude = ('complexity', 'popularity')
-    
-    def get_queryset(self, request):
-        """Override to avoid accessing missing columns"""
-        qs = super().get_queryset(request)
-        # Use defer to avoid loading non-existent columns
-        return qs.defer('complexity', 'popularity')
+    def get_median_wait_time(self, obj):
+        return f"{obj.get_median_wait_time():.1f} min"
+    get_median_wait_time.short_description = 'Median Wait Time'
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
@@ -91,19 +122,79 @@ class ClienteAdmin(admin.ModelAdmin):
 
 @admin.register(Fila)
 class FilaAdmin(admin.ModelAdmin):
-    list_display = ['cliente', 'servico', 'status', 'created_at', 'get_position']
-    list_filter = ['status', 'barbearia']
-    search_fields = ['cliente__nome', 'servico__nome']
-    readonly_fields = ['get_position', 'get_estimated_wait_time']
+    list_display = ('barbearia', 'cliente', 'servico', 'barbeiro', 'status', 'get_position', 'get_wait_time', 'created_at')
+    list_filter = ('status', 'barbearia', 'barbeiro')
+    search_fields = ('cliente__nome', 'servico__nome')
+    date_hierarchy = 'created_at'
+    actions = ['assign_barber', 'complete_service']
     
     def get_position(self, obj):
-        if obj.status == DomainEntradaFila.Status.STATUS_AGUARDANDO.value:
+        if obj.status == 'waiting':
             return obj.get_position()
         return '-'
     get_position.short_description = 'Position'
     
-    def get_estimated_wait_time(self, obj):
-        if obj.status == DomainEntradaFila.Status.STATUS_AGUARDANDO.value:
-            return obj.get_estimated_wait_time()
+    def get_wait_time(self, obj):
+        if obj.status == 'waiting':
+            return f"{obj.get_wait_time():.1f} min"
         return '-'
-    get_estimated_wait_time.short_description = 'Estimated Wait Time'
+    get_wait_time.short_description = 'Current Wait Time'
+    
+    def assign_barber(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Please select exactly one waiting client to assign a barber.")
+            return
+            
+        queue_entry = queryset.first()
+        if queue_entry.status != 'waiting':
+            self.message_user(request, "Can only assign barber to waiting clients.")
+            return
+            
+        if queue_entry.get_position() != 0:
+            self.message_user(request, "Can only assign barber to first position.")
+            return
+            
+        # Get available barbers
+        available_barbers = Barbeiro.objects.filter(
+            barbearia=queue_entry.barbearia,
+            status='available'
+        )
+        
+        if not available_barbers:
+            self.message_user(request, "No available barbers found.")
+            return
+            
+        # Show barber selection form
+        class BarberForm(forms.Form):
+            barber = forms.ModelChoiceField(
+                queryset=available_barbers,
+                label="Select Barber"
+            )
+        
+        if 'apply' in request.POST:
+            form = BarberForm(request.POST)
+            if form.is_valid():
+                barber = form.cleaned_data['barber']
+                queue_entry.assign_barber(barber)
+                self.message_user(request, f"Assigned {barber.nome} to {queue_entry.cliente.nome}")
+                return
+        else:
+            form = BarberForm()
+        
+        return render(
+            request,
+            'admin/assign_barber.html',
+            context={
+                'form': form,
+                'queue_entry': queue_entry,
+                'title': 'Assign Barber'
+            }
+        )
+    assign_barber.short_description = "Assign barber to selected client"
+    
+    def complete_service(self, request, queryset):
+        for queue_entry in queryset:
+            if queue_entry.status == 'in_progress':
+                queue_entry.complete_service()
+                self.message_user(request, f"Completed service for {queue_entry.cliente.nome}")
+    complete_service.short_description = "Mark selected services as completed"

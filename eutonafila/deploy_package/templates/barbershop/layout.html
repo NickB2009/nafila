@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ barbershop.nome }}{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+    <link rel="stylesheet" href="/static/css/barbershop.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    
+    {% block extra_css %}{% endblock %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .fixed-top {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1030;
+        }
+        
+        .navbar {
+            transition: all 0.3s ease-in-out;
+            padding: 15px 0;
+            background-color: rgba(17, 17, 17, 0.7);
+        }
+        
+        .navbar.bg-dark {
+            background-color: rgba(17, 17, 17, 0.98) !important;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            padding: 10px 0;
+        }
+        
+        main {
+            padding-top: 0; /* Remove padding */
+        }
+        
+        .hero-section {
+            margin-top: 0; /* Remove margin */
+        }
+        
+        /* Only add padding to pages without hero section */
+        .container.mt-5 {
+            padding-top: 80px;
+        }
+        
+        /* Message container styling */
+        .messages-container {
+            position: fixed;
+            top: 75px;
+            left: 0;
+            right: 0;
+            z-index: 1040;
+            padding: 0 15px;
+        }
+        
+        .messages-container .alert {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        
+        .alert-error {
+            color: #fff;
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barbershop Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'barbershop:barbershop_detail' slug=barbershop.slug %}">
+                {% if barbershop.logo %}
+                    <img src="{{ barbershop.logo.url }}" alt="{{ barbershop.nome }}" height="40" />
+                {% else %}
+                    <i class="fas fa-cut me-2"></i> {{ barbershop.nome }}
+                {% endif %}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'barbershop:barbershop_detail' slug=barbershop.slug %}">
+                            <i class="fas fa-home"></i> Início
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'barbershop:checkin' slug=barbershop.slug %}">
+                            <i class="fas fa-user-plus"></i> Entrar na Fila
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'barbershop:home' %}">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages container - fixed position -->
+    {% if messages %}
+    <div class="messages-container">
+        <div class="container">
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h4>{{ barbershop.nome }}</h4>
+                    <p><i class="fas fa-map-marker-alt me-2"></i> {{ barbershop.endereco }}</p>
+                    <p><i class="fas fa-phone me-2"></i> {{ barbershop.telefone }}</p>
+                    
+                    <div class="social-icons">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h4>Horário de Funcionamento</h4>
+                    <p>
+                        {% for dia in barbershop.dias_funcionamento %}
+                            {% if dia == 0 %}Segunda-feira{% endif %}
+                            {% if dia == 1 %}Terça-feira{% endif %}
+                            {% if dia == 2 %}Quarta-feira{% endif %}
+                            {% if dia == 3 %}Quinta-feira{% endif %}
+                            {% if dia == 4 %}Sexta-feira{% endif %}
+                            {% if dia == 5 %}Sábado{% endif %}
+                            {% if dia == 6 %}Domingo{% endif %}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            Segunda a Sábado
+                        {% endfor %}
+                    </p>
+                    <p>{{ barbershop.horario_abertura }} - {{ barbershop.horario_fechamento }}</p>
+                </div>
+                <div class="col-md-4">
+                    <h4>Links Rápidos</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'barbershop:checkin' slug=barbershop.slug %}" class="text-light text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Agendar Horário</a></li>
+                        <li class="mb-2"><a href="{% url 'barbershop:home' %}" class="text-light text-decoration-none"><i class="fas fa-chevron-right me-2"></i>Página Inicial</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row footer-copyright text-center">
+                <div class="col-12">
+                    <p class="mb-0">&copy; {% now "Y" %} {{ barbershop.nome }} - <span class="text-white-50">Powered by <a href="/" class="text-decoration-none" style="color: var(--accent-color);">EuTôNaFila</a></span></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize AOS animations
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true
+            });
+            
+            // Make navbar change on scroll
+            const navbar = document.querySelector('.navbar');
+            
+            function toggleNavbarClass() {
+                if (window.scrollY > 100) {
+                    navbar.classList.add('bg-dark');
+                    navbar.classList.add('shadow');
+                } else {
+                    navbar.classList.remove('bg-dark');
+                    navbar.classList.remove('shadow');
+                }
+            }
+            
+            window.addEventListener('scroll', toggleNavbarClass);
+            toggleNavbarClass(); // Initial check
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

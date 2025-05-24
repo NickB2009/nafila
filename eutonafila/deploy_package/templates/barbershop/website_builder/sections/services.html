@@ -1,0 +1,482 @@
+{% load static %}
+
+<section class="services-section py-5" id="services">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">{{ config.title|default:"Nossos Serviços" }}</h2>
+            <p class="section-subtitle">{{ config.subtitle|default:"Conheça os serviços que oferecemos para você" }}</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="services-nav mb-4">
+                    <ul class="nav nav-pills nav-fill" id="servicesTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="haircuts-tab" data-bs-toggle="pill" data-bs-target="#haircuts" type="button" role="tab">
+                                <i class="fas fa-cut me-2"></i> Cortes
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="beard-tab" data-bs-toggle="pill" data-bs-target="#beard" type="button" role="tab">
+                                <i class="fas fa-user-tie me-2"></i> Barba
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="combo-tab" data-bs-toggle="pill" data-bs-target="#combo" type="button" role="tab">
+                                <i class="fas fa-tags me-2"></i> Combos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="treatments-tab" data-bs-toggle="pill" data-bs-target="#treatments" type="button" role="tab">
+                                <i class="fas fa-magic me-2"></i> Tratamentos
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="tab-content" id="servicesTabContent">
+                    <!-- Haircuts Tab -->
+                    <div class="tab-pane fade show active" id="haircuts" role="tabpanel" aria-labelledby="haircuts-tab">
+                        <div class="accordion" id="haircutsAccordion">
+                            {% if services.haircuts %}
+                                {% for service in services.haircuts %}
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="haircut-heading-{{ forloop.counter }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#haircut-collapse-{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">{{ service.name }}</span>
+                                                <span class="service-price badge bg-primary">R$ {{ service.price }}</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="haircut-collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="haircut-heading-{{ forloop.counter }}" data-bs-parent="#haircutsAccordion">
+                                        <div class="accordion-body">
+                                            <p>{{ service.description }}</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: {{ service.duration|default:"30 min" }}
+                                            </div>
+                                            <a href="{{ service.booking_url|default:'#booking' }}" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Default haircuts if none provided -->
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="haircut-heading-1">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#haircut-collapse-1" aria-expanded="true">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Corte Masculino Tradicional</span>
+                                                <span class="service-price badge bg-primary">R$ 40,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="haircut-collapse-1" class="accordion-collapse collapse show" aria-labelledby="haircut-heading-1" data-bs-parent="#haircutsAccordion">
+                                        <div class="accordion-body">
+                                            <p>Corte tradicional masculino com tesoura e máquina, finalizado com produtos de qualidade.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 30 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="haircut-heading-2">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#haircut-collapse-2" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Degradê</span>
+                                                <span class="service-price badge bg-primary">R$ 45,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="haircut-collapse-2" class="accordion-collapse collapse" aria-labelledby="haircut-heading-2" data-bs-parent="#haircutsAccordion">
+                                        <div class="accordion-body">
+                                            <p>Corte com transição gradual de comprimento, criando um efeito degradê perfeito e moderno.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 40 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="haircut-heading-3">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#haircut-collapse-3" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Corte + Design</span>
+                                                <span class="service-price badge bg-primary">R$ 55,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="haircut-collapse-3" class="accordion-collapse collapse" aria-labelledby="haircut-heading-3" data-bs-parent="#haircutsAccordion">
+                                        <div class="accordion-body">
+                                            <p>Corte personalizado com design exclusivo nas laterais ou nuca, para quem quer um estilo único.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 50 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Beard Tab -->
+                    <div class="tab-pane fade" id="beard" role="tabpanel" aria-labelledby="beard-tab">
+                        <div class="accordion" id="beardAccordion">
+                            {% if services.beard %}
+                                {% for service in services.beard %}
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="beard-heading-{{ forloop.counter }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#beard-collapse-{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">{{ service.name }}</span>
+                                                <span class="service-price badge bg-primary">R$ {{ service.price }}</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="beard-collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="beard-heading-{{ forloop.counter }}" data-bs-parent="#beardAccordion">
+                                        <div class="accordion-body">
+                                            <p>{{ service.description }}</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: {{ service.duration|default:"20 min" }}
+                                            </div>
+                                            <a href="{{ service.booking_url|default:'#booking' }}" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Default beard services if none provided -->
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="beard-heading-1">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#beard-collapse-1" aria-expanded="true">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Aparar Barba</span>
+                                                <span class="service-price badge bg-primary">R$ 30,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="beard-collapse-1" class="accordion-collapse collapse show" aria-labelledby="beard-heading-1" data-bs-parent="#beardAccordion">
+                                        <div class="accordion-body">
+                                            <p>Acabamento e modelagem da barba com tesoura e máquina para um visual alinhado.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 20 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="beard-heading-2">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#beard-collapse-2" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Barba Completa</span>
+                                                <span class="service-price badge bg-primary">R$ 40,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="beard-collapse-2" class="accordion-collapse collapse" aria-labelledby="beard-heading-2" data-bs-parent="#beardAccordion">
+                                        <div class="accordion-body">
+                                            <p>Serviço completo de barba com toalha quente, hidratação e finalização com óleo específico.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 30 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="beard-heading-3">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#beard-collapse-3" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Pézinho + Barba</span>
+                                                <span class="service-price badge bg-primary">R$ 35,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="beard-collapse-3" class="accordion-collapse collapse" aria-labelledby="beard-heading-3" data-bs-parent="#beardAccordion">
+                                        <div class="accordion-body">
+                                            <p>Manutenção do pézinho do cabelo com acabamento na barba para quem precisa de um retoque rápido.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 25 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Combo Tab -->
+                    <div class="tab-pane fade" id="combo" role="tabpanel" aria-labelledby="combo-tab">
+                        <div class="accordion" id="comboAccordion">
+                            {% if services.combo %}
+                                {% for service in services.combo %}
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="combo-heading-{{ forloop.counter }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#combo-collapse-{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">{{ service.name }}</span>
+                                                <span class="service-price badge bg-primary">R$ {{ service.price }}</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="combo-collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="combo-heading-{{ forloop.counter }}" data-bs-parent="#comboAccordion">
+                                        <div class="accordion-body">
+                                            <p>{{ service.description }}</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: {{ service.duration|default:"50 min" }}
+                                            </div>
+                                            <a href="{{ service.booking_url|default:'#booking' }}" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Default combo services if none provided -->
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="combo-heading-1">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#combo-collapse-1" aria-expanded="true">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Combo Tradicional</span>
+                                                <span class="service-price badge bg-primary">R$ 65,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="combo-collapse-1" class="accordion-collapse collapse show" aria-labelledby="combo-heading-1" data-bs-parent="#comboAccordion">
+                                        <div class="accordion-body">
+                                            <p>Corte tradicional + barba completa com toalha quente e produtos especiais.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 50 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="combo-heading-2">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#combo-collapse-2" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Combo Premium</span>
+                                                <span class="service-price badge bg-primary">R$ 85,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="combo-collapse-2" class="accordion-collapse collapse" aria-labelledby="combo-heading-2" data-bs-parent="#comboAccordion">
+                                        <div class="accordion-body">
+                                            <p>Corte + barba completa + hidratação facial + massagem relaxante nos ombros.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 70 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="combo-heading-3">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#combo-collapse-3" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Combo Pai e Filho</span>
+                                                <span class="service-price badge bg-primary">R$ 80,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="combo-collapse-3" class="accordion-collapse collapse" aria-labelledby="combo-heading-3" data-bs-parent="#comboAccordion">
+                                        <div class="accordion-body">
+                                            <p>Corte para pai e filho (até 12 anos) em um único agendamento. Uma experiência perfeita para fortalecer laços.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 60 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Treatments Tab -->
+                    <div class="tab-pane fade" id="treatments" role="tabpanel" aria-labelledby="treatments-tab">
+                        <div class="accordion" id="treatmentsAccordion">
+                            {% if services.treatments %}
+                                {% for service in services.treatments %}
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="treatment-heading-{{ forloop.counter }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#treatment-collapse-{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">{{ service.name }}</span>
+                                                <span class="service-price badge bg-primary">R$ {{ service.price }}</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="treatment-collapse-{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="treatment-heading-{{ forloop.counter }}" data-bs-parent="#treatmentsAccordion">
+                                        <div class="accordion-body">
+                                            <p>{{ service.description }}</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: {{ service.duration|default:"30 min" }}
+                                            </div>
+                                            <a href="{{ service.booking_url|default:'#booking' }}" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Default treatments if none provided -->
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="treatment-heading-1">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#treatment-collapse-1" aria-expanded="true">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Hidratação Capilar</span>
+                                                <span class="service-price badge bg-primary">R$ 35,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="treatment-collapse-1" class="accordion-collapse collapse show" aria-labelledby="treatment-heading-1" data-bs-parent="#treatmentsAccordion">
+                                        <div class="accordion-body">
+                                            <p>Tratamento de hidratação profunda para cabelos secos ou danificados, devolvendo a vitalidade.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 30 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="treatment-heading-2">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#treatment-collapse-2" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Limpeza de Pele Masculina</span>
+                                                <span class="service-price badge bg-primary">R$ 50,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="treatment-collapse-2" class="accordion-collapse collapse" aria-labelledby="treatment-heading-2" data-bs-parent="#treatmentsAccordion">
+                                        <div class="accordion-body">
+                                            <p>Limpeza facial profunda específica para o homem, removendo impurezas e cravos.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 40 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item service-item">
+                                    <h2 class="accordion-header" id="treatment-heading-3">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#treatment-collapse-3" aria-expanded="false">
+                                            <div class="d-flex justify-content-between w-100 me-3">
+                                                <span class="service-name">Coloração e Camuflagem de Grisalhos</span>
+                                                <span class="service-price badge bg-primary">R$ 60,00</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="treatment-collapse-3" class="accordion-collapse collapse" aria-labelledby="treatment-heading-3" data-bs-parent="#treatmentsAccordion">
+                                        <div class="accordion-body">
+                                            <p>Coloração natural que camufla os fios brancos, deixando um aspecto jovem e natural.</p>
+                                            <div class="service-duration small text-muted">
+                                                <i class="far fa-clock me-1"></i> Duração aproximada: 45 min
+                                            </div>
+                                            <a href="#booking" class="btn btn-sm btn-primary mt-2">Agendar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if config.show_booking_button %}
+        <div class="text-center mt-5">
+            <a href="{{ config.booking_url|default:'#booking' }}" class="btn btn-lg btn-primary">
+                {{ config.booking_button_text|default:"Agendar Agora" }}
+                <i class="fas fa-calendar-alt ms-2"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+    .services-section {
+        background-color: var(--bs-light, #f8f9fa);
+    }
+    
+    .services-nav .nav-link {
+        border-radius: 0;
+        border-bottom: 3px solid transparent;
+        color: var(--bs-dark, #212529);
+        background-color: transparent;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .services-nav .nav-link.active {
+        color: var(--bs-primary, #0d6efd);
+        background-color: transparent;
+        border-bottom: 3px solid var(--bs-primary, #0d6efd);
+    }
+    
+    .service-item {
+        margin-bottom: 0.5rem;
+        border: none;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .accordion-button {
+        padding: 1rem 1.25rem;
+        background-color: white;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: var(--bs-light, #f8f9fa);
+        color: var(--bs-dark, #212529);
+        box-shadow: none;
+    }
+    
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(13, 110, 253, 0.25);
+    }
+    
+    .accordion-button::after {
+        margin-left: 0;
+    }
+    
+    .service-name {
+        font-weight: 600;
+    }
+    
+    .service-price {
+        font-weight: bold;
+        font-size: 0.9rem;
+        padding: 0.4em 0.8em;
+    }
+    
+    .accordion-body {
+        padding: 1.25rem;
+        background-color: white;
+    }
+    
+    @media (max-width: 767.98px) {
+        .services-nav .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+    }
+</style> 

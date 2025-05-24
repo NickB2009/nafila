@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <form method="post">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <h2>Assign Barber to {{ queue_entry.cliente.nome }}</h2>
+            <div class="form-row">
+                <label>Service:</label>
+                <div class="readonly">{{ queue_entry.servico.nome }}</div>
+            </div>
+            <div class="form-row">
+                <label>Wait Time:</label>
+                <div class="readonly">{{ queue_entry.get_wait_time }} minutes</div>
+            </div>
+            <div class="form-row">
+                {{ form.as_p }}
+            </div>
+        </fieldset>
+        <div class="submit-row">
+            <input type="submit" name="apply" value="Assign Barber" class="default" />
+        </div>
+    </form>
+</div>
+{% endblock %} 

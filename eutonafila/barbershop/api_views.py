@@ -40,6 +40,7 @@ class BarbershopListView(APIView):
     def get(self, request, format=None):
         """List all barbershops"""
         try:
+            logger = logging.getLogger(__name__)
             logger.debug("Listing all barbershops")
             
             # Use direct SQL to avoid ORM issues
@@ -65,6 +66,7 @@ class BarbershopListView(APIView):
                 
             return Response(barbershops, status=status.HTTP_200_OK)
         except Exception as e:
+            logger = logging.getLogger(__name__)
             logger.error(f"ERROR: {str(e)}\n", exc_info=True)
             return Response({"error": f"Erro ao listar barbearias: {str(e)}"}, 
                           status=status.HTTP_500_INTERNAL_SERVER_ERROR)

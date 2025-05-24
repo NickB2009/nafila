@@ -1,0 +1,219 @@
+{% load static %}
+
+<section class="about-section py-5" id="about">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="about-image-container">
+                    {% if config.image %}
+                        <img src="{{ config.image.url }}" alt="Sobre a Barbearia" class="img-fluid rounded-3 about-image">
+                    {% else %}
+                        <img src="{% static 'barbershop/images/defaults/about-barbershop.jpg' %}" alt="Sobre a Barbearia" class="img-fluid rounded-3 about-image" onerror="this.src='https://via.placeholder.com/600x400/343a40/ffffff?text=Sobre+a+Barbearia'">
+                    {% endif %}
+                    
+                    <div class="experience-badge">
+                        <span class="years">{{ config.years_experience|default:"10+" }}</span>
+                        <span class="text">Anos de Experiência</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="about-content">
+                    <h2 class="section-title mb-3">{{ config.title|default:"Sobre Nossa Barbearia" }}</h2>
+                    
+                    <div class="about-description mb-4">
+                        {% if config.description %}
+                            {{ config.description|safe }}
+                        {% else %}
+                            <p>Bem-vindo à nossa barbearia, onde tradição e modernidade se encontram para oferecer o melhor em cuidados masculinos.</p>
+                            <p>Fundada com a missão de proporcionar uma experiência única, nossa barbearia combina técnicas tradicionais com tendências contemporâneas para garantir que cada cliente saia com um visual impecável.</p>
+                            <p>Nossa equipe de barbeiros altamente qualificados está comprometida em oferecer cortes de cabelo, aparos de barba e tratamentos especiais que atendam às suas necessidades individuais.</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if config.show_features %}
+                    <div class="about-features mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-cut"></i>
+                                    </div>
+                                    <div class="feature-text">
+                                        <h5>{{ config.feature1_title|default:"Cortes Premium" }}</h5>
+                                        <p>{{ config.feature1_text|default:"Técnicas modernas e tradicionais para o seu estilo" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="feature-text">
+                                        <h5>{{ config.feature2_title|default:"Profissionais Qualificados" }}</h5>
+                                        <p>{{ config.feature2_text|default:"Barbeiros experientes e atualizados com as tendências" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-spa"></i>
+                                    </div>
+                                    <div class="feature-text">
+                                        <h5>{{ config.feature3_title|default:"Ambiente Agradável" }}</h5>
+                                        <p>{{ config.feature3_text|default:"Um espaço pensado para o seu conforto e relaxamento" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="feature-text">
+                                        <h5>{{ config.feature4_title|default:"Agendamento Fácil" }}</h5>
+                                        <p>{{ config.feature4_text|default:"Marque seu horário online ou por telefone" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if config.show_button %}
+                    <div class="about-action">
+                        <a href="{{ config.button_url|default:'#services' }}" class="btn btn-primary">{{ config.button_text|default:"Nossos Serviços" }}</a>
+                        
+                        {% if config.show_secondary_button %}
+                        <a href="{{ config.secondary_button_url|default:'#contact' }}" class="btn btn-outline-dark ms-2">{{ config.secondary_button_text|default:"Fale Conosco" }}</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .about-section {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .about-image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
+    .about-image {
+        transition: transform 0.5s ease;
+        width: 100%;
+        height: auto;
+    }
+    
+    .about-image-container:hover .about-image {
+        transform: scale(1.05);
+    }
+    
+    .experience-badge {
+        position: absolute;
+        bottom: 30px;
+        right: -20px;
+        background: var(--bs-primary, #0d6efd);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        text-align: center;
+        transform: rotate(-5deg);
+    }
+    
+    .experience-badge .years {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    
+    .experience-badge .text {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .about-content {
+        padding: 20px;
+    }
+    
+    .section-title {
+        position: relative;
+        font-weight: 700;
+        margin-bottom: 25px;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -10px;
+        width: 50px;
+        height: 3px;
+        background-color: var(--bs-primary, #0d6efd);
+    }
+    
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        padding: 15px;
+        background-color: rgba(0,0,0,0.02);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-item:hover {
+        background-color: rgba(0,0,0,0.05);
+        transform: translateY(-3px);
+    }
+    
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        background-color: var(--bs-primary, #0d6efd);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .feature-text h5 {
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    
+    .feature-text p {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .about-action {
+        margin-top: 30px;
+    }
+    
+    @media (max-width: 991.98px) {
+        .experience-badge {
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+        }
+    }
+</style> 

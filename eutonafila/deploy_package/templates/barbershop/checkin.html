@@ -1,0 +1,159 @@
+{% extends "barbershop/layout.html" %}
+{% load static %}
+
+{% block title %}Check-in - {{ barbershop.nome }} - EuToNaFila{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Checkin Card -->
+            <div class="card main-card shadow-sm mb-4">
+                <div class="card-header">
+                    <h2 class="section-title mb-0">Reservar meu lugar na fila</h2>
+                </div>
+                <div class="card-body">
+                    {% if mensagem %}
+                    <div class="alert alert-{{ mensagem.tipo }} mb-4">
+                        {{ mensagem.texto }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if not barbershop.esta_aberto %}
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Esta barbearia está fechada no momento. O check-in está desabilitado.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="queue-status mb-4">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="status-card">
+                                    <h3>Fila Atual</h3>
+                                    <div class="status-value">{{ barbershop.fila_atual }}</div>
+                                    <div class="status-label">pessoas na fila</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="status-card">
+                                    <h3>Tempo de Espera</h3>
+                                    <div class="status-value">{{ barbershop.tempo_espera_estimado }}</div>
+                                    <div class="status-label">minutos aprox.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="status-card">
+                                    <h3>Status</h3>
+                                    <div class="status-badge-large {% if barbershop.esta_aberto %}open{% else %}closed{% endif %}">
+                                        {% if barbershop.esta_aberto %}Aberto{% else %}Fechado{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post" class="premium-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="name" class="form-label">Nome completo</label>
+                            <input type="text" class="form-control" id="name" name="name" required{% if not barbershop.esta_aberto %} disabled{% endif %}>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="phone" class="form-label">Telefone (com código internacional se necessário)</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required{% if not barbershop.esta_aberto %} disabled{% endif %}>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="service" class="form-label">Serviço desejado</label>
+                            <select class="form-select" id="service" name="service" required{% if not barbershop.esta_aberto %} disabled{% endif %}>
+                                <option value="">Selecione um serviço</option>
+                                {% for servico in servicos %}
+                                <option value="{{ servico.id }}">{{ servico.nome }} - R$ {{ servico.preco }} ({{ servico.duracao }} min)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="notificacao" name="notificacao" checked{% if not barbershop.esta_aberto %} disabled{% endif %}>
+                            <label class="form-check-label" for="notificacao">
+                                Quero receber notificações por SMS sobre minha posição na fila
+                            </label>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn action-button checkin-button {% if not barbershop.esta_aberto %}disabled{% endif %}" {% if not barbershop.esta_aberto %}disabled{% endif %}>
+                                <i class="fas fa-check-circle me-2"></i> Confirmar Check-in
+                            </button>
+                            
+                            <a href="{% url 'barbershop:barbershop_detail' slug=barbershop.slug %}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- International Telephone Input CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/css/intlTelInput.css">
+
+<!-- International Telephone Input JS -->
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/intlTelInput.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // More flexible phone number handling
+        const phoneInput = document.getElementById('phone');
+        
+        // Initialize with minimal options to ensure compatibility
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: "br",
+            preferredCountries: ["br", "us", "pt"],
+            utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/utils.js",
+            separateDialCode: true,
+            nationalMode: false
+        });
+        
+        // Form submission - service ID validation and debugging
+        const form = phoneInput.closest('form');
+        const servicoSelect = document.getElementById('service');
+        
+        form.addEventListener('submit', function(e) {
+            // Validate service selection
+            if (!servicoSelect.value) {
+                e.preventDefault();
+                alert('Por favor, selecione um serviço antes de continuar.');
+                return false;
+            }
+            
+            // Log service ID for debugging
+            console.log('Submitting form with service ID:', servicoSelect.value);
+        });
+    });
+    
+    // Form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            const forms = document.getElementsByClassName('needs-validation');
+            
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %} 

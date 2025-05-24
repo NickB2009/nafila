@@ -1,0 +1,170 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        Eu Tô Na Fila - Admin
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<!-- Help Button -->
+<button id="helpBtn" class="help-button" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #417690; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">?</button>
+
+<!-- Help Modal -->
+<div id="helpModal" style="display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+  <div style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 70%; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    <span id="closeModal" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+    <h2>Ajuda - Admin EuTôNaFila</h2>
+    
+    <div id="generalHelp">
+      <h3>Instruções Gerais</h3>
+      <p>Bem-vindo ao painel administrativo do EuTôNaFila. Aqui você pode gerenciar barbearias, serviços, clientes e filas.</p>
+      
+      <h4>Como Começar:</h4>
+      <ol>
+        <li><strong>Crie uma Barbearia</strong> - Acesse "Barbearias" no menu e adicione uma nova</li>
+        <li><strong>Adicione Serviços</strong> - Dentro da barbearia, adicione os serviços oferecidos</li>
+        <li><strong>Gerencie a Fila</strong> - Use "Entradas Filas" para visualizar e gerenciar atendimentos</li>
+      </ol>
+      
+      <h4>Dicas Rápidas:</h4>
+      <ul>
+        <li>Todos os campos marcados em <strong>negrito</strong> são obrigatórios</li>
+        <li>O slug da barbearia será usado na URL (exemplo: minha-barbearia)</li>
+        <li>Configure os dias de funcionamento como uma lista de números (0=Segunda, 6=Domingo)</li>
+        <li>Você pode usar as ações em massa para atualizar vários atendimentos de uma vez</li>
+      </ul>
+    </div>
+    
+    <div id="barbeariaHelp" style="display: none;">
+      <h3>Gerenciando Barbearias</h3>
+      <p>Ao criar uma barbearia, preste atenção aos seguintes campos:</p>
+      <ul>
+        <li><strong>Nome</strong> - Nome da barbearia que será exibido aos clientes</li>
+        <li><strong>Slug</strong> - Identificador único para URLs (gerado automaticamente, mas pode ser editado)</li>
+        <li><strong>Dias de Funcionamento</strong> - Informe como lista JSON: [0,1,2,3,4,5] (0=Segunda, 6=Domingo)</li>
+        <li><strong>Cores</strong> - Formato JSON para personalizar a aparência: ["#primary", "#secondary"]</li>
+      </ul>
+      <p>Após criar a barbearia, adicione os serviços oferecidos na seção inferior da página.</p>
+    </div>
+    
+    <div id="servicoHelp" style="display: none;">
+      <h3>Gerenciando Serviços</h3>
+      <p>Ao adicionar serviços, lembre-se:</p>
+      <ul>
+        <li><strong>Duração</strong> - Tempo médio em minutos, usado para calcular tempos de espera</li>
+        <li><strong>Preço</strong> - Use ponto como separador decimal (exemplo: 50.00)</li>
+        <li>Você pode adicionar serviços diretamente na página da barbearia</li>
+      </ul>
+    </div>
+    
+    <div id="filaHelp" style="display: none;">
+      <h3>Gerenciando Filas</h3>
+      <p>Para gerenciar atendimentos:</p>
+      <ul>
+        <li>Use as <strong>ações em massa</strong> para atualizar o status de vários atendimentos</li>
+        <li>Os status disponíveis são: Aguardando, Em Atendimento, Finalizado e Cancelado</li>
+        <li>As atualizações de status são enviadas em tempo real para os clientes via WebSockets</li>
+        <li>Filtre por barbearia e status para facilitar a visualização</li>
+      </ul>
+      <p>Alternativamente, acesse o Dashboard da barbearia em: <code>/b/&lt;slug&gt;/dashboard/</code></p>
+    </div>
+    
+    <button id="showHelp" data-section="generalHelp" style="margin-top: 20px; padding: 8px 15px; background-color: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">Instruções Gerais</button>
+    <button id="showHelp" data-section="barbeariaHelp" style="margin-top: 20px; padding: 8px 15px; background-color: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">Barbearias</button>
+    <button id="showHelp" data-section="servicoHelp" style="margin-top: 20px; padding: 8px 15px; background-color: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">Serviços</button>
+    <button id="showHelp" data-section="filaHelp" style="margin-top: 20px; padding: 8px 15px; background-color: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">Filas</button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    const closeModal = document.getElementById('closeModal');
+    const helpSections = ['generalHelp', 'barbeariaHelp', 'servicoHelp', 'filaHelp'];
+    
+    // Show contextual help based on current page
+    const currentUrl = window.location.pathname;
+    
+    if (currentUrl.includes('/admin/domain/barbearia/')) {
+      document.getElementById('barbeariaHelp').style.display = 'block';
+      document.getElementById('generalHelp').style.display = 'none';
+    } else if (currentUrl.includes('/admin/domain/servico/')) {
+      document.getElementById('servicoHelp').style.display = 'block';
+      document.getElementById('generalHelp').style.display = 'none';
+    } else if (currentUrl.includes('/admin/domain/entradafila/')) {
+      document.getElementById('filaHelp').style.display = 'block';
+      document.getElementById('generalHelp').style.display = 'none';
+    }
+    
+    helpBtn.onclick = function() {
+      helpModal.style.display = 'block';
+    }
+    
+    closeModal.onclick = function() {
+      helpModal.style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+      if (event.target == helpModal) {
+        helpModal.style.display = 'none';
+      }
+    }
+    
+    // Handle section buttons
+    const sectionButtons = document.querySelectorAll('button[data-section]');
+    sectionButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const sectionToShow = this.getAttribute('data-section');
+        
+        helpSections.forEach(section => {
+          document.getElementById(section).style.display = 'none';
+        });
+        
+        document.getElementById(sectionToShow).style.display = 'block';
+      });
+    });
+    
+    // Add field tooltips on change list pages
+    if (document.querySelector('.field-help')) {
+      return; // Already added
+    }
+    
+    const fieldRows = document.querySelectorAll('.form-row');
+    fieldRows.forEach(row => {
+      const fieldName = row.classList[1];
+      if (!fieldName) return;
+      
+      let helpText = '';
+      
+      // Add specific help text based on field name
+      if (fieldName.includes('slug')) {
+        helpText = 'Usado na URL da barbearia. Ex: "minha-barbearia"';
+      } else if (fieldName.includes('dias_funcionamento')) {
+        helpText = 'Lista de dias: [0,1,2,3,4,5] (0=Segunda, 6=Domingo)';
+      } else if (fieldName.includes('cores')) {
+        helpText = 'Lista de cores em formato JSON: ["#primary", "#secondary"]';
+      } else if (fieldName.includes('duracao')) {
+        helpText = 'Tempo em minutos usado para calcular espera';
+      }
+      
+      if (helpText) {
+        const helpSpan = document.createElement('span');
+        helpSpan.className = 'field-help';
+        helpSpan.style.display = 'block';
+        helpSpan.style.color = '#666';
+        helpSpan.style.fontSize = '12px';
+        helpSpan.style.marginTop = '5px';
+        helpSpan.innerHTML = '<i>ℹ️ ' + helpText + '</i>';
+        row.querySelector('.field-box').appendChild(helpSpan);
+      }
+    });
+  });
+</script>
+{% endblock %} 
