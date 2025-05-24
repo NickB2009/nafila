@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.cache import cache
+from django.utils.text import slugify
 import datetime
 import uuid
 import logging
@@ -105,7 +106,16 @@ class Barbearia(models.Model):
             # Ensure slug is a string
             if not isinstance(self.slug, str):
                 self.slug = str(self.slug)
-            
+
+            # Ensure slug is unique
+            base_slug = slugify(self.nome)
+            slug_candidate = base_slug
+            counter = 1
+            while Barbearia.objects.filter(slug=slug_candidate).exclude(id=self.id).exists():
+                slug_candidate = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug_candidate
+
             # Invalidate caches
             self.invalidate_status_cache()
             self.invalidate_wait_time_cache()
