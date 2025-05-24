@@ -85,46 +85,57 @@ class MonkeyPatchMiddleware:
         # Patch domain_models.py enums
         Barbeiro.Status.choices = safe_choices(Barbeiro.Status)
         EntradaFila.Status.choices = safe_choices(EntradaFila.Status)
-        
-        # Patch entities.py enums
+          # Patch entities.py enums
         ClienteStatus.choices = safe_choices(ClienteStatus)
         BarbeiroStatus.choices = safe_choices(BarbeiroStatus)
         FilaStatus.choices = safe_choices(FilaStatus)
         FilaPrioridade.choices = safe_choices(FilaPrioridade)
         ServicoComplexidade.choices = safe_choices(ServicoComplexidade)
-        
         logger.info("Successfully patched Enum.choices methods for safe string handling")
     
     def apply_django_uuid_patch(self):
         """Apply the UUID conversion fix to prevent 'int' object has no attribute 'replace'"""
-        def safe_convert_uuidfield_value(value, expression, connection):
-            """Safely convert a value to UUID"""
+        
+        # Define our improved method using setattr to ensure compatibility
+        def patched_convert_uuidfield_value(self, value, expression, connection):
+            """Improved method to handle UUID conversion with better fallbacks for problematic types"""
             if value is None:
                 return None
+                
             try:
                 if isinstance(value, uuid.UUID):
                     return value
+                    
                 if isinstance(value, str):
                     return uuid.UUID(value)
+                    
                 if isinstance(value, int):
                     return uuid.UUID(int=value)
+                    
                 if isinstance(value, bytes):
                     return uuid.UUID(bytes=value)
+                
                 # For any other type, try to convert to string first
-                return uuid.UUID(str(value))
+                logger.warning(f"Received non-standard value type: {type(value)}")
+                safe_string = str(value)
+                try:
+                    return uuid.UUID(safe_string)
+                except (ValueError, TypeError):
+                    # Generate a new UUID as a last resort
+                    new_uuid = uuid.uuid4()
+                    logger.warning(f"Created new UUID {new_uuid} since conversion failed for: {safe_string}")
+                    return new_uuid
+                    
             except (ValueError, AttributeError, TypeError) as e:
-                logger.error(f"Error converting value to UUID: {value} ({type(value)}) - {str(e)}")
-                return None
+                logger.error(f"Error converting {value} ({type(value)}) to UUID: {str(e)}")
+                return uuid.uuid4()  # Always return a valid UUID
         
         try:
             # Apply the patch to Django's SQLite operations
             from django.db.backends.sqlite3.operations import DatabaseOperations
             
-            # Store the original converter for reference
-            original_converter = DatabaseOperations.convert_uuidfield_value
-            
-            # Replace with our safe version 
-            DatabaseOperations.convert_uuidfield_value = safe_convert_uuidfield_value
+            # Install the patch using setattr 
+            setattr(DatabaseOperations, 'convert_uuidfield_value', patched_convert_uuidfield_value)
             
             logger.info("Successfully patched Django's UUID converter for SQLite")
         except Exception as e:

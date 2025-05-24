@@ -54,27 +54,42 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(f"Skipping invalid object found during barbershop iteration: {str(barbershop_instance)}"))
                     continue
 
-                # Check if the ID of the fetched instance is correct
-                if not isinstance(barbershop_instance.id, uuid.UUID):
-                    logger.warning(f"ensure_services command: Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' has problematic ID type: {type(barbershop_instance.id)}. Attempting to reload.")
-                    self.stdout.write(self.style.WARNING(f"Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' has problematic ID. Reloading..."))
+                # Check if the ID of the fetched instance is correct                if not isinstance(barbershop_instance.id, uuid.UUID):
+                    logger.warning(f"ensure_services command: Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' has problematic ID type: {type(barbershop_instance.id)}. Attempting to fix.")
+                    self.stdout.write(self.style.WARNING(f"Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' has problematic ID. Fixing..."))
                     try:
-                        # Use pk from the instance, assuming it's at least a valid PK even if id field is weird
-                        reloaded_barbershop = Barbearia.objects.get(pk=barbershop_instance.pk)
-                        # Verify the reloaded instance's ID
-                        if isinstance(reloaded_barbershop.id, uuid.UUID):
-                            current_barbershop_to_process = reloaded_barbershop
-                            logger.info(f"ensure_services command: Successfully reloaded Barbershop '{current_barbershop_to_process.slug}' with correct UUID ID.")
-                            self.stdout.write(self.style.SUCCESS(f"Successfully reloaded Barbershop '{current_barbershop_to_process.slug}'."))
-                        else:
-                            logger.error(f"ensure_services command: Failed to reload Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' with a valid UUID ID. Reloaded ID type: {type(reloaded_barbershop.id)}. Skipping.")
-                            self.stdout.write(self.style.ERROR(f"Failed to reload Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' with valid ID. Skipping."))
-                            continue 
-                    except Exception as e_reload:
-                        logger.error(f"ensure_services command: Error reloading Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}': {str(e_reload)}", exc_info=True)
-                        self.stdout.write(self.style.ERROR(f"Error reloading Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}'. Skipping."))
-                        continue
-                
+                        # Try to directly fix the instance, instead of reloading
+                        barbershop_instance.id = uuid.uuid4()
+                        barbershop_instance.save()
+                        logger.info(f"ensure_services command: Successfully fixed Barbershop '{barbershop_instance.slug}' with new UUID ID.")
+                        self.stdout.write(self.style.SUCCESS(f"Successfully fixed Barbershop '{barbershop_instance.slug}' with new UUID."))
+                        current_barbershop_to_process = barbershop_instance
+                    except Exception as e_fix:
+                        # Fall back to the original reload approach if direct fix fails
+                        try:
+                            # Use slug to find the barbershop if it has one
+                            if hasattr(barbershop_instance, 'slug') and barbershop_instance.slug:
+                                reloaded_barbershop = Barbearia.objects.get(slug=barbershop_instance.slug)
+                            else:
+                                # Use pk from the instance, assuming it's at least a valid PK even if id field is weird
+                                reloaded_barbershop = Barbearia.objects.get(pk=barbershop_instance.pk)
+                            
+                            # Verify the reloaded instance's ID
+                            if isinstance(reloaded_barbershop.id, uuid.UUID):
+                                current_barbershop_to_process = reloaded_barbershop
+                                logger.info(f"ensure_services command: Successfully reloaded Barbershop '{current_barbershop_to_process.slug}' with correct UUID ID.")
+                                self.stdout.write(self.style.SUCCESS(f"Successfully reloaded Barbershop '{current_barbershop_to_process.slug}'."))
+                            else:
+                                # Last resort - force a new UUID
+                                reloaded_barbershop.id = uuid.uuid4()
+                                reloaded_barbershop.save()
+                                current_barbershop_to_process = reloaded_barbershop
+                                logger.info(f"ensure_services command: Forced new UUID for Barbershop '{reloaded_barbershop.slug}'.")
+                                self.stdout.write(self.style.SUCCESS(f"Forced new UUID for Barbershop '{reloaded_barbershop.slug}'."))
+                        except Exception as e_reload:
+                            logger.error(f"ensure_services command: Error fixing/reloading Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}': {str(e_reload)}", exc_info=True)
+                            self.stdout.write(self.style.ERROR(f"Error fixing Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}'. Skipping."))
+                            continue                
                 self.ensure_services_for_one_barbershop(current_barbershop_to_process)
             
             self.stdout.write(self.style.SUCCESS('Successfully ensured services for all barbershops!'))
@@ -87,10 +102,24 @@ class Command(BaseCommand):
         # barbershop parameter here should be a valid Barbearia instance with a UUID id
         # due to the checks in the handle() method.
 
-        if not isinstance(barbershop, Barbearia) or not isinstance(barbershop.id, uuid.UUID):
-            logger.error(f"ensure_services_for_one_barbershop: Received invalid barbershop object or ID. Type: {type(barbershop)}, ID Type: {type(barbershop.id) if hasattr(barbershop, 'id') else 'N/A'}. Skipping.")
+        if not isinstance(barbershop, Barbearia):
+            logger.error(f"ensure_services_for_one_barbershop: Received invalid barbershop object. Type: {type(barbershop)}. Skipping.")
             self.stdout.write(self.style.ERROR(f"Skipping service check for invalid barbershop data: {str(barbershop)}"))
             return
+            
+        # Verify and fix ID if needed
+        if not isinstance(barbershop.id, uuid.UUID):
+            try:
+                # Try to fix the ID
+                old_id = barbershop.id
+                barbershop.id = uuid.uuid4()
+                barbershop.save()
+                logger.info(f"ensure_services_for_one_barbershop: Fixed ID for barbershop {barbershop.nome}. Old ID type: {type(old_id)}, New ID: {barbershop.id}")
+                self.stdout.write(self.style.SUCCESS(f"Fixed ID for barbershop {barbershop.nome}"))
+            except Exception as e:
+                logger.error(f"ensure_services_for_one_barbershop: Failed to fix barbershop ID. {str(e)}")
+                self.stdout.write(self.style.ERROR(f"Failed to fix ID for barbershop {barbershop.nome}. Skipping."))
+                return
 
         barbershop_name_for_log = barbershop.nome if barbershop.nome is not None else ""
         

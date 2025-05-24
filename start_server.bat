@@ -25,6 +25,10 @@ call venv\Scripts\activate.bat
 echo Instalando dependencias...
 pip install -r requirements.txt
 
+:: Run the UUID fix to solve DB-related issues
+echo Aplicando correcoes de UUID...
+python fix_uuid.py
+
 :: Change to the correct directory
 echo Mudando para o diretorio correto...
 cd eutonafila
@@ -37,6 +41,16 @@ echo.
 echo Aplicando migracoes...
 python manage.py migrate
 
+:: Apply patches to fix UUID and enum issues
+echo.
+echo Aplicando patches...
+python -c "from middleware import MonkeyPatchMiddleware; patch = MonkeyPatchMiddleware(lambda x: x); patch.apply_patches()"
+
+:: Run ensure_services to make sure all services are created properly
+echo.
+echo Verificando servicos padroes...
+python manage.py ensure_services
+
 :: Start the Django server
 echo.
 echo Iniciando o servidor Django...
@@ -48,5 +62,6 @@ echo.
 python manage.py runserver
 
 :: Deactivate virtual environment when done
+cd ..
 call deactivate
 pause 
