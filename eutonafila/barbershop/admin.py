@@ -60,22 +60,28 @@ class TestimonialInline(admin.TabularInline):
 
 @admin.register(Barbearia)
 class BarbeariaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'slug', 'endereco', 'telefone', 'horario_abertura', 'horario_fechamento')
-    list_filter = ('enable_priority_queue',)
-    search_fields = ('nome', 'endereco', 'telefone')
-    prepopulated_fields = {'slug': ('nome',)}
+    list_display = ('nome', 'display_uuid', 'slug', 'endereco', 'telefone', 'esta_aberto', 'created_at')
+    list_filter = ('created_at', 'enable_priority_queue')
+    search_fields = ('nome', 'slug', 'id', 'endereco', 'telefone')
+    readonly_fields = ('id', 'created_at', 'updated_at')
+    
+    def display_uuid(self, obj):
+        """Display UUID in a more visible format"""
+        return f"🔑 {obj.id}"
+    display_uuid.short_description = 'UUID'
+    display_uuid.admin_order_field = 'id'
+    
     fieldsets = (
-        ('Basic Information', {
-            'fields': ('nome', 'slug', 'descricao_curta', 'user')
+        ('Informações Básicas', {
+            'fields': ('id', 'nome', 'slug', 'telefone', 'endereco', 'descricao_curta'),
+            'description': '🔑 Use o UUID acima para acessar a barbearia via URL: /b/uuid/{uuid}/'
         }),
-        ('Contact Information', {
-            'fields': ('endereco', 'telefone')
+        ('Configurações', {
+            'fields': ('cores', 'logo', 'horario_abertura', 'horario_fechamento', 'dias_funcionamento', 'max_capacity', 'enable_priority_queue')
         }),
-        ('Operating Hours', {
-            'fields': ('horario_abertura', 'horario_fechamento', 'dias_funcionamento')
-        }),
-        ('Settings', {
-            'fields': ('max_capacity', 'enable_priority_queue', 'cores')
+        ('Informações do Sistema', {
+            'fields': ('created_at', 'updated_at', 'user'),
+            'classes': ('collapse',)
         }),
     )
 

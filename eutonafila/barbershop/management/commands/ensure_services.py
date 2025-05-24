@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from barbershop.models import Barbearia, Servico
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -38,60 +39,89 @@ class Command(BaseCommand):
         self.stdout.write('Checking and ensuring default services for all barbershops...')
         
         try:
-            # Get all barbershops
             barbershops = Barbearia.objects.all()
             
             if not barbershops.exists():
                 self.stdout.write(self.style.WARNING('No barbershops found.'))
                 return
             
-            for barbershop in barbershops:
-                self.ensure_services(barbershop)
+            for barbershop_instance in barbershops:
+                current_barbershop_to_process = barbershop_instance
+
+                # Defensive check for the iterated object itself
+                if not isinstance(barbershop_instance, Barbearia):
+                    logger.error(f"ensure_services command: Item in Barbearia.objects.all() is not a Barbearia instance. Type: {type(barbershop_instance)}. Value: {str(barbershop_instance)}. Skipping.")
+                    self.stdout.write(self.style.ERROR(f"Skipping invalid object found during barbershop iteration: {str(barbershop_instance)}"))
+                    continue
+
+                # Check if the ID of the fetched instance is correct
+                if not isinstance(barbershop_instance.id, uuid.UUID):
+                    logger.warning(f"ensure_services command: Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' has problematic ID type: {type(barbershop_instance.id)}. Attempting to reload.")
+                    self.stdout.write(self.style.WARNING(f"Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' has problematic ID. Reloading..."))
+                    try:
+                        # Use pk from the instance, assuming it's at least a valid PK even if id field is weird
+                        reloaded_barbershop = Barbearia.objects.get(pk=barbershop_instance.pk)
+                        # Verify the reloaded instance's ID
+                        if isinstance(reloaded_barbershop.id, uuid.UUID):
+                            current_barbershop_to_process = reloaded_barbershop
+                            logger.info(f"ensure_services command: Successfully reloaded Barbershop '{current_barbershop_to_process.slug}' with correct UUID ID.")
+                            self.stdout.write(self.style.SUCCESS(f"Successfully reloaded Barbershop '{current_barbershop_to_process.slug}'."))
+                        else:
+                            logger.error(f"ensure_services command: Failed to reload Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' with a valid UUID ID. Reloaded ID type: {type(reloaded_barbershop.id)}. Skipping.")
+                            self.stdout.write(self.style.ERROR(f"Failed to reload Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}' with valid ID. Skipping."))
+                            continue 
+                    except Exception as e_reload:
+                        logger.error(f"ensure_services command: Error reloading Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}': {str(e_reload)}", exc_info=True)
+                        self.stdout.write(self.style.ERROR(f"Error reloading Barbershop '{barbershop_instance.slug if hasattr(barbershop_instance, 'slug') else 'N/A'}'. Skipping."))
+                        continue
+                
+                self.ensure_services_for_one_barbershop(current_barbershop_to_process)
             
             self.stdout.write(self.style.SUCCESS('Successfully ensured services for all barbershops!'))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'Error: {str(e)}'))
-            logger.exception("Error in ensure_services command")
+            self.stdout.write(self.style.ERROR(f'Error in ensure_services command handle: {str(e)}'))
+            logger.exception("Error in ensure_services command handle")
     
-    def ensure_services(self, barbershop):
-        """Ensure the barbershop has all default services"""
+    def ensure_services_for_one_barbershop(self, barbershop):
+        """Ensure THE GIVEN barbershop has all default services"""
+        # barbershop parameter here should be a valid Barbearia instance with a UUID id
+        # due to the checks in the handle() method.
+
+        if not isinstance(barbershop, Barbearia) or not isinstance(barbershop.id, uuid.UUID):
+            logger.error(f"ensure_services_for_one_barbershop: Received invalid barbershop object or ID. Type: {type(barbershop)}, ID Type: {type(barbershop.id) if hasattr(barbershop, 'id') else 'N/A'}. Skipping.")
+            self.stdout.write(self.style.ERROR(f"Skipping service check for invalid barbershop data: {str(barbershop)}"))
+            return
+
+        barbershop_name_for_log = barbershop.nome if barbershop.nome is not None else ""
+        
         try:
-            # Ensure barbershop nome is a string to prevent 'replace' errors
-            # This is a defensive check for all string fields
-            barbershop_name = str(barbershop.nome) if barbershop.nome is not None else ""
-            
+            self.stdout.write(f"Processing services for Barbershop: '{barbershop_name_for_log}' (ID: {barbershop.id})")
             existing_services = Servico.objects.filter(barbearia=barbershop)
-            existing_service_names = []
+            existing_service_names = [str(s.nome) for s in existing_services if s.nome is not None]
             
-            # Safely get service names, ensuring we convert any non-string values
-            for service in existing_services:
-                if service.nome is not None:
-                    existing_service_names.append(str(service.nome))
+            self.stdout.write(f"  Barbershop: '{barbershop_name_for_log}' currently has {len(existing_service_names)} services: {existing_service_names}")
             
-            # Log current status
-            self.stdout.write(f'Barbershop: {barbershop_name} has {len(existing_service_names)} services')
-            
-            # Check for missing services
-            services_created = 0
+            services_created_count = 0
             for service_data in DEFAULT_SERVICES:
-                service_name = str(service_data['nome']) if service_data['nome'] is not None else ""
-                
+                service_name = str(service_data['nome'])
                 if service_name not in existing_service_names:
-                    # Create the missing service
                     Servico.objects.create(
                         barbearia=barbershop,
                         nome=service_name,
                         preco=service_data['preco'],
                         duracao=service_data['duracao'],
-                        descricao=str(service_data['descricao']) if service_data['descricao'] is not None else ""
+                        descricao=str(service_data['descricao'])
                     )
-                    services_created += 1
-                    self.stdout.write(f'  - Created service: {service_name}')
+                    services_created_count += 1
+                    self.stdout.write(f"    - Created service: '{service_name}' for '{barbershop_name_for_log}'")
             
-            if services_created > 0:
-                self.stdout.write(self.style.SUCCESS(f'  Added {services_created} missing services to {barbershop_name}'))
+            if services_created_count > 0:
+                self.stdout.write(self.style.SUCCESS(f"  Added {services_created_count} missing services to '{barbershop_name_for_log}'"))
             else:
-                self.stdout.write(f'  All default services already exist for {barbershop_name}')
+                self.stdout.write(f"  All default services already exist for '{barbershop_name_for_log}'")
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'Error processing barbershop: {str(e)}'))
-            logger.exception(f"Error ensuring services for barbershop {getattr(barbershop, 'id', 'unknown')}") 
+            # This is the exception caught in your traceback
+            # Log which barbershop caused it, using its already validated/reloaded ID.
+            error_msg = f"Error processing services for barbershop ID {barbershop.id} ('{barbershop_name_for_log}'): {str(e)}"
+            self.stdout.write(self.style.ERROR(error_msg))
+            logger.exception(error_msg) # This will include the full traceback for this specific error. 

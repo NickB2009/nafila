@@ -54,9 +54,6 @@ INSTALLED_APPS = [
     
     # Apps
     'barbershop',
-    
-    # Task queue
-    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -192,7 +189,7 @@ CHANNEL_LAYERS = {
 
 # Celery Configuration
 CELERY_BROKER_URL = 'memory://'  # Use in-memory broker for development - simplest option
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_BACKEND = 'cache'  # Use cache backend instead of django-db
 CELERY_CACHE_BACKEND = 'django-cache'
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}  # 1 hour
 CELERY_TASK_ALWAYS_EAGER = True  # Execute tasks immediately without actual queue

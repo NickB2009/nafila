@@ -3,6 +3,7 @@ Middleware for monkey patching and other application-wide fixes
 """
 import logging
 import uuid
+from django.urls import resolve
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,10 @@ class MonkeyPatchMiddleware:
         self.apply_patches()
     
     def __call__(self, request):
+        # Skip patching for admin URLs
+        if request.path.startswith('/admin/'):
+            return self.get_response(request)
+            
         # If somehow it wasn't patched on startup, try again
         if not self.is_patched:
             self.apply_patches()
@@ -32,6 +37,7 @@ class MonkeyPatchMiddleware:
         try:
             self.apply_enum_patches()
             self.apply_django_uuid_patch()
+            self.apply_i18n_patch()
             self.is_patched = True
             logger.info("Successfully applied monkey patches")
             
@@ -39,6 +45,38 @@ class MonkeyPatchMiddleware:
             self.run_ensure_services()
         except Exception as e:
             logger.error(f"Error applying monkey patches: {str(e)}")
+            # Don't raise the exception - allow the app to continue without patches
+            self.is_patched = False
+    
+    def apply_i18n_patch(self):
+        """Apply patch to Django's i18n template tag handling"""
+        try:
+            from django.templatetags.i18n import BlockTranslateNode
+            
+            def safe_render_token_list(self, tokens):
+                """A safe version of render_token_list that handles token contents properly"""
+                result = []
+                vars = []
+                for token in tokens:
+                    contents = token.contents
+                    if isinstance(contents, str):
+                        # Handle variable interpolation
+                        if contents.startswith('%') and contents.endswith('%'):
+                            var_name = contents[1:-1].strip()
+                            vars.append(var_name)
+                            result.append(f"%%({var_name})s")
+                        else:
+                            result.append(contents.replace("%", "%%"))
+                    else:
+                        result.append(str(contents))
+                return "".join(result), vars
+            
+            # Patch the render_token_list method
+            BlockTranslateNode.render_token_list = safe_render_token_list
+            logger.info("Successfully patched Django's i18n template tag handling")
+        except Exception as e:
+            logger.error(f"Error patching Django's i18n template tag handling: {str(e)}")
+            raise
     
     def apply_enum_patches(self):
         """Apply the enum.choices() fixes to prevent 'int' object has no attribute 'replace'"""

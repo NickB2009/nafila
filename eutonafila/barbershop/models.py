@@ -52,60 +52,23 @@ class Barbearia(models.Model):
         return f'tempo_espera:{self.id}'
     
     def __str__(self):
-        return self.nome
+        return f"{self.nome} ({self.id})"
     
-    def esta_aberto(self) -> bool:
+    def esta_aberto(self):
+        """Check if the barbershop is currently open"""
         try:
-            current_time = timezone.localtime().time()
             current_weekday = timezone.localtime().weekday()
+            current_time = timezone.localtime().time()
             
-            # Ensure dias_funcionamento is valid
-            if not self.dias_funcionamento or not isinstance(self.dias_funcionamento, (list, tuple)):
-                self.dias_funcionamento = [0, 1, 2, 3, 4, 5]  # Default to Monday-Saturday
-            
-            # Ensure opening and closing times are valid
-            if not self.horario_abertura:
+            # Check if current day is a working day
+            if current_weekday not in self.dias_funcionamento:
                 return False
-            if not self.horario_fechamento:
-                return False
-            
-            # Convert string times to datetime.time objects if needed
-            opening_time = self.horario_abertura
-            closing_time = self.horario_fechamento
-            
-            # Convert strings to time objects if needed
-            if isinstance(opening_time, str):
-                try:
-                    hour, minute = map(int, opening_time.split(':'))
-                    opening_time = datetime.time(hour, minute)
-                except (ValueError, TypeError):
-                    logger.error(f"Invalid opening time format: {opening_time}")
-                    return False
-                    
-            if isinstance(closing_time, str):
-                try:
-                    hour, minute = map(int, closing_time.split(':'))
-                    closing_time = datetime.time(hour, minute)
-                except (ValueError, TypeError):
-                    logger.error(f"Invalid closing time format: {closing_time}")
-                    return False
                 
-            return OpeningHoursValidator.is_open(
-                current_weekday=current_weekday,
-                current_time=current_time,
-                weekdays=self.dias_funcionamento,
-                opening_time=opening_time,
-                closing_time=closing_time
-            )
+            # Check if current time is within opening hours
+            return self.horario_abertura <= current_time < self.horario_fechamento
         except Exception as e:
-            logger.error(f"Error in esta_aberto: {str(e)}", exc_info=True)
-            # Default to open during business hours as a fallback
-            now = timezone.localtime()
-            current_hour = now.hour
-            current_weekday = now.weekday()
-            business_hours = (9, 18)  # 9 AM to 6 PM
-            business_days = [0, 1, 2, 3, 4]  # Monday to Friday
-            return current_weekday in business_days and business_hours[0] <= current_hour < business_hours[1]
+            logger.error(f"Error checking if barbershop is open: {str(e)}")
+            return False
     
     def invalidate_status_cache(self):
         """Invalidate the status cache when operating hours change"""
@@ -116,11 +79,43 @@ class Barbearia(models.Model):
         cache.delete(self._wait_time_cache_key)
     
     def save(self, *args, **kwargs):
-        """Override save to invalidate caches when model changes"""
-        # Invalidate caches whenever the model is saved
-        self.invalidate_status_cache()
-        self.invalidate_wait_time_cache()
-        super().save(*args, **kwargs)
+        """Override save to handle UUIDs and invalidate caches"""
+        try:
+            # Ensure id is a valid UUID
+            if not self.id:
+                self.id = uuid.uuid4()
+            elif isinstance(self.id, str):
+                try:
+                    self.id = uuid.UUID(self.id)
+                except ValueError:
+                    logger.error(f"Invalid UUID string: {self.id}")
+                    self.id = uuid.uuid4()
+            elif not isinstance(self.id, uuid.UUID):
+                logger.error(f"Invalid ID type: {type(self.id)}")
+                self.id = uuid.uuid4()
+            
+            # Ensure dias_funcionamento is a list
+            if not isinstance(self.dias_funcionamento, list):
+                self.dias_funcionamento = []
+            
+            # Ensure cores is a list
+            if not isinstance(self.cores, list):
+                self.cores = []
+            
+            # Ensure slug is a string
+            if not isinstance(self.slug, str):
+                self.slug = str(self.slug)
+            
+            # Invalidate caches
+            self.invalidate_status_cache()
+            self.invalidate_wait_time_cache()
+            
+            # Call parent save
+            super().save(*args, **kwargs)
+            
+        except Exception as e:
+            logger.error(f"Error saving Barbearia: {str(e)}", exc_info=True)
+            raise
     
     def calcular_tempo_espera(self):
         """Calculate average wait time based on current queue using domain service"""
@@ -175,6 +170,43 @@ class Barbearia(models.Model):
             status=FilaStatus.AGUARDANDO.value
         ).count()
         return waiting_count >= self.max_capacity
+
+    def reordenar_posicoes(self):
+        """Reorder queue positions"""
+        try:
+            entries = self.entradas.filter(status=DomainEntradaFila.Status.AGUARDANDO).order_by('data_entrada')
+            for i, entry in enumerate(entries, 1):
+                entry.posicao = i
+                entry.save()
+        except Exception as e:
+            logger.error(f"Error reordering queue positions: {str(e)}")
+
+    def adicionar_cliente(self, cliente_nome, servico, phone=None, email=None):
+        """Add client to queue"""
+        try:
+            # Check if queue is full
+            if self.esta_cheia():
+                raise ValueError("Queue is full")
+            
+            # Get current position
+            last_position = self.entradas.filter(status=DomainEntradaFila.Status.AGUARDANDO).count()
+            new_position = last_position + 1
+            
+            # Create new entry
+            entry = EntradaFila.objects.create(
+                fila=self,
+                cliente_nome=cliente_nome,
+                servico=servico,
+                posicao=new_position,
+                status=DomainEntradaFila.Status.AGUARDANDO,
+                telefone=phone,
+                email=email
+            )
+            
+            return entry
+        except Exception as e:
+            logger.error(f"Error adding client to queue: {str(e)}")
+            raise
 
 
 class Barbeiro(models.Model):

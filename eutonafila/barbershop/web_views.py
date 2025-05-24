@@ -13,6 +13,7 @@ import json
 import traceback
 import time
 import uuid as uuid_module
+from django.core.exceptions import ValidationError
 
 # Import domain models and classes
 from domain.models import EntradaFila as DomainEntradaFila
@@ -44,130 +45,99 @@ class HomeView(View):
         })
 
 class BarbershopView(View):
-    """
-    Unified barbershop detail page combining standard and custom templates
-    """
-    def get(self, request, slug):
+    """View for displaying barbershop details"""
+    template_name = 'barbershop/detail.html'
+    
+    def get(self, request, slug=None, *args, **kwargs):
+        """Get barbershop details by slug"""
+        barbershop = None # Initialize barbershop
         try:
-            # First attempt to get by slug - use the barbershop.models Barbearia
-            barbershop = get_object_or_404(Barbearia, slug=slug)
-        except ValueError:
-            # If there's a ValueError (which suggests a name might be used instead of a slug)
-            # Try to find by name with case-insensitive matching
-            try:
-                barbershop = Barbearia.objects.filter(nome__icontains=isinstance(slug, str) and slug.replace('-', ' ')).first()
-                if not barbershop:
-                    raise Http404("Barbershop not found")
-            except Exception as e:
-                # Log the error for debugging
-                print(f"Error finding barbershop: {e}")
-                raise Http404("Barbershop not found")
-        
-        # Debug - Force cache invalidation and ensure wait time is calculated
-        barbershop.invalidate_wait_time_cache()
-        wait_time = barbershop.calcular_tempo_espera()
-        wait_time_formatted = barbershop.tempo_espera_estimado
-        
-        # Log wait time for debugging
-        print(f"DEBUG: Wait time for {barbershop.nome}: {wait_time} minutes ({wait_time_formatted})")
-        
-        # Add debug info to request context for template
-        services = Servico.objects.filter(barbearia=barbershop)
-        
-        # Count clients in queue
-        queue_count = Fila.objects.filter(
-            barbearia=barbershop,
-            status=DomainEntradaFila.Status.STATUS_AGUARDANDO.value,
-        ).count()
-        
-        # Get active barbers
-        active_barbers = Barbeiro.objects.filter(
-            barbearia=barbershop, 
-            status__in=[
-                DomainBarbeiro.Status.STATUS_AVAILABLE.value, 
-                DomainBarbeiro.Status.STATUS_BUSY.value
-            ]
-        ).count()
-        
-        # Check if a custom page exists - explicitly get by primary key to avoid model confusion
-        try:
-            # Use the barbershop's ID to find the custom page
-            custom_page = BarbeariaCustomPage.objects.filter(barbearia_id=barbershop.id).first()
-            has_custom_page = custom_page is not None
+            # Clean the slug - remove any @eutonafila suffix if present
+            if slug and '@' in slug:
+                slug = slug.split('@')[0]
             
-            if has_custom_page:
-                # Get active sections ordered by the order field
-                active_sections = ActivePageSection.objects.filter(
-                    page=custom_page,
-                    is_enabled=True
-                ).order_by('order')
-                
-                # Check if there are any active sections
-                if active_sections.exists():
-                    # Get a list of section types for navigation
-                    active_sections_types = list(active_sections.values_list('section__section_type', flat=True))
-                    
-                    # Get testimonials if testimonials section is active
-                    testimonials = []
-                    if 'testimonials' in active_sections_types:
-                        try:
-                            from domain.models import Testimonial
-                            testimonials = Testimonial.objects.filter(
-                                barbearia_id=barbershop.id,
-                                is_active=True
-                            ).order_by('-created_at')[:10]  # Get the 10 most recent testimonials
-                            
-                            # Add rating range for star rendering
-                            for testimonial in testimonials:
-                                testimonial.rating_range = range(testimonial.rating)
-                        except:
-                            # In case Testimonial model doesn't exist or there's an error
-                            pass
-                    
-                    # Prepare context for custom page
-                    custom_context = {
-                        'barbershop': barbershop,
-                        'page': custom_page,
-                        'active_sections': active_sections,
-                        'active_sections_types': active_sections_types,
-                        'testimonials': testimonials,
-                        'debug_wait_time': wait_time,
-                        'debug_wait_time_formatted': wait_time_formatted,
-                        'debug_queue_count': queue_count,
-                        'debug_active_barbers': active_barbers,
-                        'servicos': services
-                    }
-                    
-                    try:
-                        return render(request, 'barbershop/website_builder/custom_page.html', custom_context)
-                    except Exception as e:
-                        # Log the template error
-                        logger.error(f"Error rendering custom page for {barbershop.nome}: {str(e)}")
-                        messages.warning(request, "Erro ao renderizar a página personalizada. Usando a página padrão.")
-                        has_custom_page = False
-                else:
-                    has_custom_page = False
-                    messages.info(request, "A página personalizada não tem seções ativas. Usando a página padrão.")
-            else:
-                has_custom_page = False
-        except Exception as e:
-            # Log any errors with the custom page lookup
-            logger.error(f"Error finding custom page: {str(e)}")
-            has_custom_page = False
-        
-        # If no custom page or error, fall back to standard page
-        if not has_custom_page:
-            # Debug context data for standard page
+            # Convert numeric slug to string
+            if isinstance(slug, (int, float)):
+                slug = str(slug)
+            
+            logger.info(f"Attempting to fetch Barbearia with slug: '{slug}'")
+            try:
+                barbershop = Barbearia.objects.get(slug=slug)
+                logger.info(f"Successfully fetched Barbearia by slug: {barbershop.id if barbershop else 'None'}")
+            except Barbearia.DoesNotExist:
+                logger.warning(f"Barbearia with slug '{slug}' not found. Trying by name.")
+                try:
+                    logger.info(f"Attempting to fetch Barbearia with name: '{slug}'")
+                    barbershop = Barbearia.objects.get(nome=slug)
+                    logger.info(f"Successfully fetched Barbearia by name: {barbershop.id if barbershop else 'None'}")
+                except Barbearia.DoesNotExist:
+                    logger.error(f"No barbershop found with slug or name: {slug}")
+                    raise Http404(f"Barbearia com slug '{slug}' não encontrada")
+                except ValidationError as ve_name:
+                    logger.error(f"ValidationError fetching Barbearia by name '{slug}': {ve_name.messages}", exc_info=True)
+                    # Propagate the original validation error message structure if possible
+                    error_message = f"Erro de validação ao buscar barbearia por nome: {ve_name.messages}"
+                    if hasattr(ve_name, 'message_dict'):
+                         error_message = f"Erro de validação ao buscar barbearia por nome: {ve_name.message_dict}"
+                    raise Http404(error_message)
+
+            except ValidationError as ve_slug:
+                logger.error(f"ValidationError fetching Barbearia by slug '{slug}': {ve_slug.messages}", exc_info=True)
+                # Propagate the original validation error message structure if possible
+                error_message = f"Erro de validação ao buscar barbearia por slug: {ve_slug.messages}"
+                if hasattr(ve_slug, 'message_dict'):
+                    error_message = f"Erro de validação ao buscar barbearia por slug: {ve_slug.message_dict}"
+                raise Http404(error_message)
+            except Exception as ex_fetch: # Catch other exceptions during fetch
+                logger.error(f"Unexpected error fetching Barbearia '{slug}': {type(ex_fetch).__name__} - {str(ex_fetch)}", exc_info=True)
+                raise Http404(f"Erro inesperado ao buscar barbearia: {str(ex_fetch)}")
+
+            if not barbershop: # Should be caught by DoesNotExist, but as a safeguard
+                logger.error(f"Barbershop is None after attempting fetch for slug/name: {slug}")
+                raise Http404(f"Barbearia não encontrada (inesperado): {slug}")
+
+            # Calculate wait times
+            tempo_espera = 0 # barbershop.calcular_tempo_espera() # Temporarily commented out
+            
+            # Get services
+            services = [] # Servico.objects.filter(barbearia=barbershop) # Temporarily commented out
+            
+            # Count clients in queue
+            clientes_na_fila = 0 # Fila.objects.filter(
+            #     barbearia=barbershop,
+            #     status=DomainEntradaFila.Status.AGUARDANDO.value
+            # ).count() # Temporarily commented out
+            
+            # Check if there's a custom page
+            # try:
+            #     custom_page = barbershop.custom_page
+            #     if custom_page and custom_page.active_sections.exists():
+            #         self.template_name = 'barbershop/custom.html'
+            # except BarbeariaCustomPage.DoesNotExist:
+            #     pass
+            
             context = {
                 'barbershop': barbershop,
-                'servicos': services,
-                'debug_wait_time': wait_time,
-                'debug_wait_time_formatted': wait_time_formatted,
-                'debug_queue_count': queue_count,
-                'debug_active_barbers': active_barbers
+                'services': services,
+                'tempo_espera': tempo_espera,
+                'clientes_na_fila': clientes_na_fila,
             }
             
-            return render(request, 'barbershop/detail.html', context)
+            return render(request, self.template_name, context)
+            
+        except Http404 as http_e: # Re-raise Http404 to let Django handle it
+            logger.warning(f"Http404 raised for slug '{slug}': {str(http_e)}")
+            raise 
+        except Exception as e:
+            logger.error(f"Outer catch: Error getting barbershop details for slug '{slug}'. Type: {type(e).__name__}, Args: {e.args}, Str: {str(e)}", exc_info=True)
+            # The original error message indicates a list, so we try to replicate that if e.args is suitable
+            error_detail = str(e)
+            if e.args and isinstance(e.args[0], list):
+                error_detail = e.args[0]
+            elif isinstance(e.args, tuple) and len(e.args) > 0: # ValidationError often has messages in args[0]
+                error_detail = e.args[0]
+
+            raise Http404(f"Erro ao obter detalhes da barbearia: {error_detail}")
 
 # Keep this class for backward compatibility but modify it to redirect
 class BarbershopCustomPageView(View):

@@ -96,40 +96,25 @@ class MonkeyPatchMiddleware:
         logger.info("Successfully patched Enum.choices methods for safe string handling")
     
     def apply_django_uuid_patch(self):
-        """Apply patch to Django's UUID converter to handle integers safely"""
-        # Define a safe UUID converter
-        def safe_convert_uuidfield_value(value, expression, connection, context=None):
-            """
-            A safe version of the SQLite UUID converter that handles integers properly
-            Added context parameter to match Django's expected signature
-            """
+        """Apply the UUID conversion fix to prevent 'int' object has no attribute 'replace'"""
+        def safe_convert_uuidfield_value(value, expression, connection):
+            """Safely convert a value to UUID"""
             if value is None:
                 return None
-            
-            # Handle integer values by converting them to strings
-            if isinstance(value, int):
-                logger.debug(f"Converting integer {value} to UUID")
-                try:
-                    # Try to use it as a UUID integer representation
-                    return uuid.UUID(int=value)
-                except (ValueError, TypeError):
-                    # If that fails, convert to string and use as a UUID string
-                    return uuid.UUID(str(value))
-            
-            # Handle string values that might contain ints
-            if isinstance(value, str) and value.isdigit():
-                try:
-                    # First try to parse as an integer UUID
-                    int_val = int(value)
-                    return uuid.UUID(int=int_val)
-                except (ValueError, TypeError):
-                    pass
-            
-            # Original behavior
             try:
-                return uuid.UUID(value)
-            except (ValueError, TypeError):
-                return value
+                if isinstance(value, uuid.UUID):
+                    return value
+                if isinstance(value, str):
+                    return uuid.UUID(value)
+                if isinstance(value, int):
+                    return uuid.UUID(int=value)
+                if isinstance(value, bytes):
+                    return uuid.UUID(bytes=value)
+                # For any other type, try to convert to string first
+                return uuid.UUID(str(value))
+            except (ValueError, AttributeError, TypeError) as e:
+                logger.error(f"Error converting value to UUID: {value} ({type(value)}) - {str(e)}")
+                return None
         
         try:
             # Apply the patch to Django's SQLite operations
