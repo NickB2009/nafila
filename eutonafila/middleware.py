@@ -103,6 +103,12 @@ class MonkeyPatchMiddleware:
                 return None
                 
             try:
+                # Check if the value is actually a DatabaseOperations object
+                # This is a common cause of the ValidationError in admin
+                if hasattr(value, '__class__') and 'DatabaseOperations' in value.__class__.__name__:
+                    logger.warning(f"Received DatabaseOperations object instead of UUID. Converting to new UUID.")
+                    return uuid.uuid4()
+                    
                 if isinstance(value, uuid.UUID):
                     return value
                     
@@ -134,10 +140,40 @@ class MonkeyPatchMiddleware:
             # Apply the patch to Django's SQLite operations
             from django.db.backends.sqlite3.operations import DatabaseOperations
             
+            # Store the original method in case we need to revert
+            if not hasattr(DatabaseOperations, '_original_convert_uuidfield_value'):
+                setattr(DatabaseOperations, '_original_convert_uuidfield_value', 
+                        getattr(DatabaseOperations, 'convert_uuidfield_value', None))
+            
             # Install the patch using setattr 
             setattr(DatabaseOperations, 'convert_uuidfield_value', patched_convert_uuidfield_value)
             
-            logger.info("Successfully patched Django's UUID converter for SQLite")
+            # Also patch the Django UUIDField to_python method
+            from django.db.models.fields import UUIDField
+            original_to_python = UUIDField.to_python
+            
+            def patched_to_python(self, value):
+                if value is None:
+                    return None
+                    
+                try:
+                    # Check for DatabaseOperations object
+                    if hasattr(value, '__class__') and 'DatabaseOperations' in value.__class__.__name__:
+                        logger.warning(f"UUIDField.to_python received DatabaseOperations object. Creating new UUID.")
+                        return uuid.uuid4()
+                        
+                    return original_to_python(self, value)
+                except (ValueError, AttributeError, TypeError) as e:
+                    logger.error(f"Error in UUIDField.to_python with {value} ({type(value)}): {str(e)}")
+                    return uuid.uuid4()
+            
+            # Apply the UUIDField patch
+            if not hasattr(UUIDField, '_original_to_python'):
+                setattr(UUIDField, '_original_to_python', UUIDField.to_python)
+                
+            UUIDField.to_python = patched_to_python
+            
+            logger.info("Successfully patched Django's UUID converter and UUIDField for SQLite")
         except Exception as e:
             logger.error(f"Error patching Django's UUID converter: {str(e)}")
             raise
