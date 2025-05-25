@@ -14,6 +14,13 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
+# Apply UUID patch early to prevent validation errors
+try:
+    from eutonafila.uuid_early_patch import patch_uuid_field
+    # patch_uuid_field is called automatically when the module is imported
+except Exception as e:
+    print(f"Warning: Could not apply early UUID patch: {e}")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

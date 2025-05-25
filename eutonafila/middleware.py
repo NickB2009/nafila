@@ -6,6 +6,9 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
+# Import the UUID field patch to apply it at startup
+from eutonafila.uuid_patch import apply_uuid_field_patch
+
 class MonkeyPatchMiddleware:
     """
     Apply monkey patches to the application at runtime
