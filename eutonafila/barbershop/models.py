@@ -47,13 +47,19 @@ class Barbearia(models.Model):
     def _status_cache_key(self):
         return f'barbearia_status:{self.id}'
     
-    # Wait time cache key
-    @property
+    # Wait time cache key    @property
     def _wait_time_cache_key(self):
         return f'tempo_espera:{self.id}'
     
     def __str__(self):
-        return f"{self.nome} ({self.id})"
+        try:
+            # Format UUID as string correctly
+            id_str = str(self.id) if self.id is not None else "None"
+            return f"{self.nome} ({id_str})"
+        except Exception as e:
+            # Fallback in case of any error
+            logger.error(f"Error in __str__: {str(e)}")
+            return self.nome
     
     def esta_aberto(self):
         """Check if the barbershop is currently open"""
