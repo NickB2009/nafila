@@ -1,0 +1,6 @@
+@GrandeTech.QueueHub.API_HostAddress = http://localhost:5098
+
+GET {{GrandeTech.QueueHub.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
