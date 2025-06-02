@@ -157,6 +157,58 @@ az appservice plan update --name asp-p-queuehub-core-001 --resource-group rg-p-q
 
 ## Architecture Documentation
 
+## Container Deployment
+
+The QueueHub API is deployed as a containerized application to Azure App Service. Below is the process for deploying container updates:
+
+### Container Registry Setup
+```powershell
+# Create Azure Container Registry
+az acr create --name acrqueuehubapi001 --resource-group rg-p-queuehub-core-001 --sku Basic --admin-enabled true --location brazilsouth --tags Project=EuToNaFila Environment=Production CreatedBy=DevTeam
+```
+
+### Building and Pushing Container Images
+
+```powershell
+# Build the Docker image locally
+docker build -t acrqueuehubapi001.azurecr.io/queuehub-api:v1 -f GrandeTech.QueueHub.API\GrandeTech.QueueHub.API\Dockerfile GrandeTech.QueueHub.API
+
+# Log in to Azure Container Registry
+az acr login --name acrqueuehubapi001
+
+# Push the image to Azure Container Registry
+docker push acrqueuehubapi001.azurecr.io/queuehub-api:v1
+```
+
+### Configuring App Service for Container Deployment
+
+```powershell
+# Get ACR credentials (username and password)
+$acrUsername=$(az acr credential show --name acrqueuehubapi001 --query username --output tsv)
+$acrPassword=$(az acr credential show --name acrqueuehubapi001 --query passwords[0].value --output tsv)
+
+# Configure the App Service to use the container image
+az webapp config container set --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-core-001 --docker-custom-image-name acrqueuehubapi001.azurecr.io/queuehub-api:v1 --docker-registry-server-url https://acrqueuehubapi001.azurecr.io --docker-registry-server-user $acrUsername --docker-registry-server-password $acrPassword
+
+# Restart the App Service to apply changes
+az webapp restart --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-core-001
+```
+
+### Security Considerations
+
+- The ACR admin credentials should be stored securely in Key Vault
+- For production environments, consider using Managed Identity authentication between App Service and ACR:
+  ```powershell
+  # Assign the AcrPull role to the App Service's managed identity
+  az role assignment create --assignee $(az webapp identity show --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-core-001 --query principalId --output tsv) --scope $(az acr show --name acrqueuehubapi001 --query id --output tsv) --role AcrPull
+  ```
+
+### Note on Credentials
+
+- Docker registry credentials (including `--docker-registry-server-password`) are automatically encrypted by Azure App Service
+- These credentials are not exposed in the App Service configuration
+- For added security, rotate ACR admin passwords periodically and update the App Service configuration
+
 ### Backend For Frontend (BFF) Pattern
 
 The QueueHub/EuToNaFila platform uses a Backend For Frontend (BFF) pattern with:
