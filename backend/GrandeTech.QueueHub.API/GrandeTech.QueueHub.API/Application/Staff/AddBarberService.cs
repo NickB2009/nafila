@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Staff;
 using GrandeTech.QueueHub.API.Domain.ServiceProviders;
 using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using GrandeTech.QueueHub.API.Domain.AuditLogs;
 
 namespace GrandeTech.QueueHub.API.Application.Staff
 {
@@ -12,11 +13,13 @@ namespace GrandeTech.QueueHub.API.Application.Staff
     {
         private readonly IStaffMemberRepository _staffRepo;
         private readonly IServiceProviderRepository _spRepo;
+        private readonly IAuditLogRepository _auditLogRepo;
 
-        public AddBarberService(IStaffMemberRepository staffRepo, IServiceProviderRepository spRepo)
+        public AddBarberService(IStaffMemberRepository staffRepo, IServiceProviderRepository spRepo, IAuditLogRepository auditLogRepo)
         {
             _staffRepo = staffRepo;
             _spRepo = spRepo;
+            _auditLogRepo = auditLogRepo;
         }
 
         public async Task<AddBarberResult> AddBarberAsync(AddBarberRequest request, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
@@ -41,6 +44,8 @@ namespace GrandeTech.QueueHub.API.Application.Staff
                 result.FieldErrors["PhoneNumber"] = "This field is required.";
             if (request.ServiceTypeIds == null || request.ServiceTypeIds.Count == 0)
                 result.FieldErrors["ServiceTypeIds"] = "At least one service type is required.";
+            if (string.IsNullOrWhiteSpace(request.Username))
+                result.FieldErrors["Username"] = "This field is required.";
 
             // Email format
             if (!result.FieldErrors.ContainsKey("Email"))
@@ -74,6 +79,14 @@ namespace GrandeTech.QueueHub.API.Application.Staff
                 return result;
             }
 
+            // Uniqueness: Username
+            var usernameExists = await _staffRepo.ExistsByUsernameAsync(request.Username, cancellationToken);
+            if (usernameExists)
+            {
+                result.FieldErrors["Username"] = "A barber with this username already exists.";
+                return result;
+            }
+
             // Create StaffMember
             var fullName = request.FirstName.Trim() + " " + request.LastName.Trim();
             var staff = new StaffMember(
@@ -83,6 +96,7 @@ namespace GrandeTech.QueueHub.API.Application.Staff
                 request.PhoneNumber,
                 null, // ProfilePictureUrl
                 "Barber", // Role
+                request.Username,
                 null, // UserId
                 userId
             );
@@ -107,6 +121,16 @@ namespace GrandeTech.QueueHub.API.Application.Staff
             result.Success = true;
             result.BarberId = staff.Id;
             result.Status = staff.IsActive ? "Active" : "Inactive";
+
+            // Audit log
+            await _auditLogRepo.LogAsync(new AuditLogEntry {
+                UserId = userId,
+                Action = "CreateBarber",
+                EntityId = staff.Id.ToString(),
+                EntityType = "Barber",
+                TimestampUtc = DateTime.UtcNow
+            }, cancellationToken);
+
             return result;
         }
     }

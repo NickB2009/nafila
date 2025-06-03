@@ -14,5 +14,6 @@ namespace GrandeTech.QueueHub.API.Application.Staff
         public string? Address { get; set; }
         public string? Notes { get; set; }
         public bool DeactivateOnCreation { get; set; } = false;
+        public string Username { get; set; } = string.Empty;
     }
 } 

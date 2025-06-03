@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Application.Staff;
 using GrandeTech.QueueHub.API.Domain.Staff;
 using GrandeTech.QueueHub.API.Domain.ServiceProviders;
+using GrandeTech.QueueHub.API.Domain.AuditLogs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -15,6 +16,7 @@ namespace GrandeTech.QueueHub.Tests.Application.Staff
     {
         private Mock<IStaffMemberRepository> _staffRepoMock = null!;
         private Mock<IServiceProviderRepository> _spRepoMock = null!;
+        private Mock<IAuditLogRepository> _auditLogRepoMock = null!;
         private AddBarberService _service = null!;
 
         [TestInitialize]
@@ -22,7 +24,8 @@ namespace GrandeTech.QueueHub.Tests.Application.Staff
         {
             _staffRepoMock = new Mock<IStaffMemberRepository>();
             _spRepoMock = new Mock<IServiceProviderRepository>();
-            _service = new AddBarberService(_staffRepoMock.Object, _spRepoMock.Object);
+            _auditLogRepoMock = new Mock<IAuditLogRepository>();
+            _service = new AddBarberService(_staffRepoMock.Object, _spRepoMock.Object, _auditLogRepoMock.Object);
         }
 
         [TestMethod]

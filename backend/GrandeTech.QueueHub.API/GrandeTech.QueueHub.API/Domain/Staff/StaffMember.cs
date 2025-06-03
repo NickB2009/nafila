@@ -22,6 +22,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
         public double AverageServiceTimeInMinutes { get; private set; }
         public int CompletedServicesCount { get; private set; }
         public string EmployeeCode { get; private set; } = string.Empty;
+        public string Username { get; private set; } = string.Empty;
         
         // Navigation properties
         private readonly List<StaffBreak> _breaks = new();
@@ -40,6 +41,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
             string? phoneNumber,
             string? profilePictureUrl,
             string role,
+            string username,
             string? userId,
             string createdBy)
         {
@@ -52,12 +54,16 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
             if (string.IsNullOrWhiteSpace(role))
                 throw new ArgumentException("Role is required", nameof(role));
 
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Username is required", nameof(username));
+
             Name = name;
             ServiceProviderId = serviceProviderId;
             Email = email != null ? Email.Create(email) : null;
             PhoneNumber = phoneNumber != null ? PhoneNumber.Create(phoneNumber) : null;
             ProfilePictureUrl = profilePictureUrl;
             Role = role;
+            Username = username;
             IsActive = true;
             StaffStatus = "available";
             UserId = userId;

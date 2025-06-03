@@ -81,5 +81,13 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
         {
             return await _dbSet.AnyAsync(s => s.Email != null && s.Email.Value.ToLower() == email.ToLower(), cancellationToken);
         }
+
+        /// <summary>
+        /// Checks if a staff member exists by username
+        /// </summary>
+        public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AnyAsync(s => s.Username.ToLower() == username.ToLower(), cancellationToken);
+        }
     }
 }
