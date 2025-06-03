@@ -6,6 +6,7 @@
     <UserSecretsId>c8f2c9be-60ed-4e59-be26-3186cd0ecc17</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup><ItemGroup>
+    <PackageReference Include="Bogus" Version="35.6.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
   <PrivateAssets>all</PrivateAssets>
