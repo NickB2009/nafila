@@ -1,4 +1,6 @@
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+using GrandeTech.QueueHub.API.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,9 @@ builder.Services.AddSwaggerGen(options =>
         Description = "REST API for Queue Hub Application"
     });
 });
+
+// Add infrastructure services
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
