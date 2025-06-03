@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.36105.23 d17.13
+VisualStudioVersion = 17.13.36105.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrandeTech.QueueHub.API", "GrandeTech.QueueHub.API\GrandeTech.QueueHub.API.csproj", "{FB1BF2C8-571B-42EB-9444-DCAD7F2ECFCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrandeTech.QueueHub.Tests", "GrandeTech.QueueHub.Tests\GrandeTech.QueueHub.Tests.csproj", "{DF098150-31F7-4205-9634-5138D9C6D20B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{FB1BF2C8-571B-42EB-9444-DCAD7F2ECFCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB1BF2C8-571B-42EB-9444-DCAD7F2ECFCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB1BF2C8-571B-42EB-9444-DCAD7F2ECFCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF098150-31F7-4205-9634-5138D9C6D20B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF098150-31F7-4205-9634-5138D9C6D20B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF098150-31F7-4205-9634-5138D9C6D20B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF098150-31F7-4205-9634-5138D9C6D20B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

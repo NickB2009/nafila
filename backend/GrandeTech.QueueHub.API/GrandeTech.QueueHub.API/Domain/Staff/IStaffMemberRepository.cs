@@ -44,5 +44,13 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The staff member or null if not found</returns>
         Task<StaffMember?> GetByEmployeeCodeAsync(Guid serviceProviderId, string employeeCode, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Checks if a staff member exists by email
+        /// </summary>
+        /// <param name="email">The email address</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if a staff member with the email exists, false otherwise</returns>
+        Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
     }
 }
