@@ -41,9 +41,11 @@ namespace GrandeTech.QueueHub.Tests.Application.Staff
                 ServiceProviderId = Guid.NewGuid(),
                 ServiceTypeIds = new List<Guid> { Guid.NewGuid() },
                 Address = "Rua Exemplo, 123",
-                Notes = "Experienced barber"
+                Notes = "Experienced barber",
+                Username = "johndoe" 
             };
             _staffRepoMock.Setup(r => r.ExistsByEmailAsync(request.Email, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _staffRepoMock.Setup(r => r.ExistsByUsernameAsync(request.Username, It.IsAny<CancellationToken>())).ReturnsAsync(false);
             _spRepoMock.Setup(r => r.ExistsAsync(It.IsAny<System.Linq.Expressions.Expression<Func<ServiceProvider, bool>>>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
             _staffRepoMock.Setup(r => r.AddAsync(It.IsAny<StaffMember>(), It.IsAny<CancellationToken>())).ReturnsAsync((StaffMember staff, CancellationToken _) => staff);
 
