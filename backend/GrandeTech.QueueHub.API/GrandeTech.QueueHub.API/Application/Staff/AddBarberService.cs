@@ -99,12 +99,14 @@ namespace GrandeTech.QueueHub.API.Application.Staff
                 request.Username,
                 null, // UserId
                 userId
-            );
-            if (request.DeactivateOnCreation)
+            );            if (request.DeactivateOnCreation)
                 staff.Deactivate(userId);
             // Add specialties
-            foreach (var serviceTypeId in request.ServiceTypeIds)
-                staff.AddSpecialty(serviceTypeId);
+            if (request.ServiceTypeIds != null)
+            {
+                foreach (var serviceTypeId in request.ServiceTypeIds)
+                    staff.AddSpecialty(serviceTypeId);
+            }
             // Optionals
             // Address and Notes are not mapped to StaffMember in current domain model, so skip for now
 

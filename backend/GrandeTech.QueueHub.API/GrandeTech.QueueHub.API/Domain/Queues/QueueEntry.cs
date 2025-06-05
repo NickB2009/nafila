@@ -11,16 +11,14 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
         Completed,
         Cancelled,
         NoShow
-    }
-
-    /// <summary>
+    }    /// <summary>
     /// Represents a single entry in a queue
     /// </summary>
     public class QueueEntry : BaseEntity
     {
         public Guid QueueId { get; private set; }
         public Guid CustomerId { get; private set; }
-        public string CustomerName { get; private set; }
+        public string CustomerName { get; private set; } = string.Empty;
         public int Position { get; private set; }
         public QueueEntryStatus Status { get; private set; }
         public Guid? StaffMemberId { get; private set; }
