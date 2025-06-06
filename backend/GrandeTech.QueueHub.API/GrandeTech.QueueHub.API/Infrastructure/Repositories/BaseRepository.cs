@@ -5,9 +5,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Common;
+using GrandeTech.QueueHub.API.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
+namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
 {
     /// <summary>
     /// Base repository implementation for all aggregate roots
@@ -106,4 +107,4 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
             return await _dbSet.AnyAsync(predicate, cancellationToken);
         }
     }
-}
+} 

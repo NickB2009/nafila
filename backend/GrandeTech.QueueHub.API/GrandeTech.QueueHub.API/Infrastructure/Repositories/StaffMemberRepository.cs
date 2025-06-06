@@ -4,9 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Staff;
+using GrandeTech.QueueHub.API.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
+namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
 {
     /// <summary>
     /// Implementation of the StaffMember repository
@@ -26,10 +27,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
         /// </summary>
         public async Task<IReadOnlyList<StaffMember>> GetByServiceProviderAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
         {
-            return await _dbSet
-                .Include(s => s.Breaks.Where(b => b.EndTime > DateTime.UtcNow.AddDays(-1)))
-                .Where(s => s.ServiceProviderId == serviceProviderId)
-                .ToListAsync(cancellationToken);
+            return await FindAsync(s => s.ServiceProviderId == serviceProviderId, cancellationToken);
         }
         
         /// <summary>
@@ -37,12 +35,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
         /// </summary>
         public async Task<IReadOnlyList<StaffMember>> GetActiveStaffMembersAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
         {
-            return await _dbSet
-                .Include(s => s.Breaks.Where(b => b.EndTime > DateTime.UtcNow.AddDays(-1)))
-                .Where(s => 
-                    s.ServiceProviderId == serviceProviderId && 
-                    s.IsActive)
-                .ToListAsync(cancellationToken);
+            return await FindAsync(s => s.ServiceProviderId == serviceProviderId && s.IsActive, cancellationToken);
         }
         
         /// <summary>
@@ -50,15 +43,13 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
         /// </summary>
         public async Task<IReadOnlyList<StaffMember>> GetAvailableStaffAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
         {
-            var now = DateTime.UtcNow;
-            
-            return await _dbSet                .Include(s => s.Breaks.Where(b => b.EndTime > DateTime.UtcNow.AddHours(-1)))
-                .Where(s => 
-                    s.ServiceProviderId == serviceProviderId && 
-                    s.IsActive &&
-                    s.IsOnDuty &&
-                    !s.Breaks.Any(b => b.StartedAt <= now && b.EndTime >= now))
-                .ToListAsync(cancellationToken);
+            var staffMembers = await FindAsync(s => 
+                s.ServiceProviderId == serviceProviderId && 
+                s.IsActive && 
+                s.IsOnDuty, 
+                cancellationToken);
+
+            return staffMembers.Where(s => !s.IsOnBreak()).ToList();
         }
         
         /// <summary>
@@ -66,28 +57,21 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
         /// </summary>
         public async Task<StaffMember?> GetByEmployeeCodeAsync(Guid serviceProviderId, string employeeCode, CancellationToken cancellationToken = default)
         {
-            return await _dbSet
-                .Include(s => s.Breaks.Where(b => b.EndTime > DateTime.UtcNow.AddDays(-1)))
-                .FirstOrDefaultAsync(s => 
-                    s.ServiceProviderId == serviceProviderId &&
-                    s.EmployeeCode == employeeCode, 
-                    cancellationToken);
+            return await FindAsync(s => 
+                s.ServiceProviderId == serviceProviderId && 
+                s.EmployeeCode == employeeCode, 
+                cancellationToken)
+                .ContinueWith(t => t.Result.FirstOrDefault());
         }
 
-        /// <summary>
-        /// Checks if a staff member exists by email
-        /// </summary>
         public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
-            return await _dbSet.AnyAsync(s => s.Email != null && s.Email.Value.ToLower() == email.ToLower(), cancellationToken);
+            return await ExistsAsync(s => s.Email == email, cancellationToken);
         }
 
-        /// <summary>
-        /// Checks if a staff member exists by username
-        /// </summary>
         public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
-            return await _dbSet.AnyAsync(s => s.Username.ToLower() == username.ToLower(), cancellationToken);
+            return await ExistsAsync(s => s.Username == username, cancellationToken);
         }
     }
-}
+} 

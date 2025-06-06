@@ -4,9 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Queues;
+using GrandeTech.QueueHub.API.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
+namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
 {
     /// <summary>
     /// Implementation of the Queue repository
@@ -55,52 +56,36 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
                     q.ServiceProviderId == serviceProviderId && 
                     q.QueueDate.Date >= startDate.Date && 
                     q.QueueDate.Date <= endDate.Date)
-                .OrderBy(q => q.QueueDate)
                 .ToListAsync(cancellationToken);
         }
-            
+
         /// <summary>
         /// Gets active queues with similar load to specified queue for analytics
         /// </summary>
         public async Task<IReadOnlyList<Queue>> GetSimilarQueuesByLoadAsync(
             Guid queueId,
-            int daysToLookBack = 30,
+            int maxEntries,
             CancellationToken cancellationToken = default)
         {
-            // First, get the queue we want to compare
-            var baseQueue = await _dbSet
+            var queue = await _dbSet
                 .Include(q => q.Entries)
                 .FirstOrDefaultAsync(q => q.Id == queueId, cancellationToken);
-                
-            if (baseQueue == null)
+
+            if (queue == null)
             {
                 return new List<Queue>();
             }
-            
-            var baseQueueSize = baseQueue.Entries.Count;
-            
-            // Get the day of week of the base queue
-            var dayOfWeek = baseQueue.QueueDate.DayOfWeek;
-            
-            // Look for queues with similar load (±20%) on same day of week
-            var minSize = baseQueueSize - (baseQueueSize * 0.2);
-            var maxSize = baseQueueSize + (baseQueueSize * 0.2);
-            
-            var startDate = baseQueue.QueueDate.AddDays(-daysToLookBack);
-            
+
+            var entryCount = queue.Entries.Count;
+            var targetMax = entryCount + maxEntries;
+
             return await _dbSet
                 .Include(q => q.Entries)
                 .Where(q => 
-                    q.Id != queueId &&
-                    q.ServiceProviderId == baseQueue.ServiceProviderId &&
-                    q.QueueDate >= startDate &&
-                    q.QueueDate < baseQueue.QueueDate &&
-                    q.QueueDate.DayOfWeek == dayOfWeek &&
-                    q.Entries.Count >= minSize &&
-                    q.Entries.Count <= maxSize)
-                .OrderByDescending(q => q.QueueDate)
-                .Take(5)
+                    q.Id != queueId && 
+                    q.IsActive && 
+                    q.Entries.Count <= targetMax)
                 .ToListAsync(cancellationToken);
         }
     }
-}
+} 

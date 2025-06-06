@@ -4,9 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Subscriptions;
+using GrandeTech.QueueHub.API.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
+namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
 {
     /// <summary>
     /// Implementation of the SubscriptionPlan repository
@@ -25,7 +26,8 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
         /// Gets all active subscription plans
         /// </summary>
         public async Task<IReadOnlyList<SubscriptionPlan>> GetActiveSubscriptionPlansAsync(CancellationToken cancellationToken = default)
-        {            return await _dbSet
+        {
+            return await _dbSet
                 .Where(sp => sp.IsActive)
                 .OrderBy(sp => sp.Price)
                 .ToListAsync(cancellationToken);
@@ -46,8 +48,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
         public async Task<SubscriptionPlan?> GetDefaultSubscriptionPlanAsync(CancellationToken cancellationToken = default)
         {
             return await _dbSet
-                .FirstOrDefaultAsync(sp => sp.IsDefault && sp.IsActive, cancellationToken) ??
-                await _dbSet.FirstOrDefaultAsync(sp => sp.IsActive, cancellationToken);
+                .FirstOrDefaultAsync(sp => sp.IsDefault, cancellationToken);
         }
     }
-}
+} 

@@ -4,9 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Organizations;
+using GrandeTech.QueueHub.API.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
+namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
 {
     /// <summary>
     /// Implementation of the Organization repository
@@ -50,4 +51,4 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
     }
-}
+} 

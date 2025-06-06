@@ -38,8 +38,8 @@ namespace GrandeTech.QueueHub.Tests.Application.Staff
                 LastName = "Doe",
                 Email = "john.doe@example.com",
                 PhoneNumber = "+5511999999999",
-                ServiceProviderId = Guid.NewGuid(),
-                ServiceTypeIds = new List<Guid> { Guid.NewGuid() },
+                ServiceProviderId = Guid.NewGuid().ToString(),
+                ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() },
                 Address = "Rua Exemplo, 123",
                 Notes = "Experienced barber",
                 Username = "johndoe" 

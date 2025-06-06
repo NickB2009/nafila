@@ -12,6 +12,7 @@ using GrandeTech.QueueHub.API.Domain.ServiceProviders;
 using GrandeTech.QueueHub.API.Domain.Services;
 using GrandeTech.QueueHub.API.Domain.Staff;
 using GrandeTech.QueueHub.API.Domain.Subscriptions;
+using GrandeTech.QueueHub.API.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using ServiceProviderEntity = GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider;
 
@@ -80,6 +81,11 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence
         /// Notifications
         /// </summary>
         public DbSet<Notification> Notifications { get; set; }
+
+        /// <summary>
+        /// Users
+        /// </summary>
+        public DbSet<User> Users { get; set; }
 
         /// <summary>
         /// Constructor

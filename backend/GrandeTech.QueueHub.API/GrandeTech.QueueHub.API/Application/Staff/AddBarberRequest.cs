@@ -5,15 +5,15 @@ namespace GrandeTech.QueueHub.API.Application.Staff
 {
     public class AddBarberRequest
     {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string PhoneNumber { get; set; } = string.Empty;
-        public Guid ServiceProviderId { get; set; }
-        public List<Guid> ServiceTypeIds { get; set; } = new();
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
+        public required string Email { get; set; }
+        public required string PhoneNumber { get; set; }
+        public required string Username { get; set; }
+        public required string ServiceProviderId { get; set; }
+        public required List<string> ServiceTypeIds { get; set; }
+        public bool DeactivateOnCreation { get; set; }
         public string? Address { get; set; }
         public string? Notes { get; set; }
-        public bool DeactivateOnCreation { get; set; } = false;
-        public string Username { get; set; } = string.Empty;
     }
 } 

@@ -1,6 +1,12 @@
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using GrandeTech.QueueHub.API.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using GrandeTech.QueueHub.API.Application.Auth;
+using GrandeTech.QueueHub.API.Domain.Users;
+using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +28,26 @@ builder.Services.AddSwaggerGen(options =>
 // Add infrastructure services
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Add JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found")))
+        };
+    });
+
+// Register services
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,6 +61,7 @@ app.UseSwaggerUI(options =>
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -188,7 +188,13 @@ $acrUsername=$(az acr credential show --name acrqueuehubapi001 --query username 
 $acrPassword=$(az acr credential show --name acrqueuehubapi001 --query passwords[0].value --output tsv)
 
 # Configure the App Service to use the container image
-az webapp config container set --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-core-001 --docker-custom-image-name acrqueuehubapi001.azurecr.io/queuehub-api:v1 --docker-registry-server-url https://acrqueuehubapi001.azurecr.io --docker-registry-server-user $acrUsername --docker-registry-server-password $acrPassword
+az webapp config container set `
+  --name app-p-queuehub-api-001 `
+  --resource-group rg-p-queuehub-core-001 `
+  --container-image-name acrqueuehubapi001.azurecr.io/queuehub-api:v1 `
+  --container-registry-url https://acrqueuehubapi001.azurecr.io `
+  --container-registry-user $acrUsername `
+  --container-registry-password $acrPassword
 
 # Restart the App Service to apply changes
 az webapp restart --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-core-001

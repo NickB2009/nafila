@@ -24,7 +24,14 @@ namespace GrandeTech.QueueHub.API.Application.Staff
 
         public async Task<AddBarberResult> AddBarberAsync(AddBarberRequest request, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
         {
-            var result = new AddBarberResult { Success = false, FieldErrors = new Dictionary<string, string>(), Errors = new List<string>() };
+            var result = new AddBarberResult 
+            { 
+                Success = false, 
+                FieldErrors = new Dictionary<string, string>(), 
+                Errors = new List<string>(),
+                BarberId = string.Empty,
+                Status = "Pending"
+            };
 
             // Permissions check (to be replaced by a proper user context in the future)
             if (userRole != "Admin" && userRole != "Owner")
@@ -64,7 +71,8 @@ namespace GrandeTech.QueueHub.API.Application.Staff
                 return result;
 
             // ServiceProvider existence
-            var spExists = await _spRepo.ExistsAsync(sp => sp.Id == request.ServiceProviderId, cancellationToken);
+            var serviceProviderId = Guid.Parse(request.ServiceProviderId);
+            var spExists = await _spRepo.ExistsAsync(sp => sp.Id == serviceProviderId, cancellationToken);
             if (!spExists)
             {
                 result.Errors.Add("Service provider not found.");
@@ -91,7 +99,7 @@ namespace GrandeTech.QueueHub.API.Application.Staff
             var fullName = request.FirstName.Trim() + " " + request.LastName.Trim();
             var staff = new StaffMember(
                 fullName,
-                request.ServiceProviderId,
+                serviceProviderId,
                 request.Email,
                 request.PhoneNumber,
                 null, // ProfilePictureUrl
@@ -99,16 +107,17 @@ namespace GrandeTech.QueueHub.API.Application.Staff
                 request.Username,
                 null, // UserId
                 userId
-            );            if (request.DeactivateOnCreation)
+            );
+
+            if (request.DeactivateOnCreation)
                 staff.Deactivate(userId);
+
             // Add specialties
             if (request.ServiceTypeIds != null)
             {
                 foreach (var serviceTypeId in request.ServiceTypeIds)
-                    staff.AddSpecialty(serviceTypeId);
+                    staff.AddSpecialty(Guid.Parse(serviceTypeId));
             }
-            // Optionals
-            // Address and Notes are not mapped to StaffMember in current domain model, so skip for now
 
             try
             {
@@ -121,7 +130,7 @@ namespace GrandeTech.QueueHub.API.Application.Staff
             }
 
             result.Success = true;
-            result.BarberId = staff.Id;
+            result.BarberId = staff.Id.ToString();
             result.Status = staff.IsActive ? "Active" : "Inactive";
 
             // Audit log

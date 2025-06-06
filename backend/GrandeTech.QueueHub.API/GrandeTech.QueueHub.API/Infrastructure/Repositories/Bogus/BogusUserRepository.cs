@@ -1,0 +1,91 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Bogus;
+using GrandeTech.QueueHub.API.Domain.Common;
+using GrandeTech.QueueHub.API.Domain.Users;
+
+namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
+{
+    public class BogusUserRepository : BogusBaseRepository<User>, IUserRepository
+    {
+        public BogusUserRepository()
+        {
+            var faker = new Faker<User>()
+                .RuleFor(u => u.Id, f => f.Random.Guid())
+                .RuleFor(u => u.Username, f => f.Internet.UserName())
+                .RuleFor(u => u.Email, f => f.Internet.Email())
+                .RuleFor(u => u.PasswordHash, f => BCrypt.Net.BCrypt.HashPassword("password123"))
+                .RuleFor(u => u.Role, f => f.PickRandom(new[] { "Admin", "Staff", "Customer" }))
+                .RuleFor(u => u.IsActive, f => f.Random.Bool())
+                .RuleFor(u => u.CreatedAt, f => f.Date.Past())
+                .RuleFor(u => u.LastLoginAt, f => f.Date.Recent());
+
+            var users = faker.Generate(50);
+            foreach (var user in users)
+            {
+                _items[user.Id] = user;
+            }
+        }
+
+        public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(_items.Values.FirstOrDefault(u => u.Username == username));
+        }
+
+        public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(_items.Values.FirstOrDefault(u => u.Email == email));
+        }
+
+        public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(_items.Values.Any(u => u.Username == username));
+        }
+
+        public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(_items.Values.Any(u => u.Email == email));
+        }
+
+        public new async Task AddAsync(User user, CancellationToken cancellationToken = default)
+        {
+            await base.AddAsync(user, cancellationToken);
+        }
+
+        public new async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
+        {
+            await base.UpdateAsync(user, cancellationToken);
+        }
+
+        protected override User CreateNewEntityWithId(User entity, Guid id)
+        {
+            // Create a new user with the same properties using the constructor
+            var newUser = new User(
+                entity.Username,
+                entity.Email,
+                entity.PasswordHash,
+                entity.Role
+            );
+
+            // Set the ID using reflection since it's protected
+            var baseEntity = typeof(BaseEntity);
+            var idProperty = baseEntity.GetProperty("Id");
+            idProperty?.SetValue(newUser, id);
+
+            // Copy the state of IsActive and LastLoginAt
+            if (!entity.IsActive)
+            {
+                newUser.Deactivate();
+            }
+            if (entity.LastLoginAt.HasValue)
+            {
+                newUser.UpdateLastLogin();
+            }
+
+            return newUser;
+        }
+    }
+} 
