@@ -24,7 +24,15 @@ namespace GrandeTech.QueueHub.API.Domain.Users
         public bool IsActive { get; private set; }
         public DateTime? LastLoginAt { get; private set; }
 
-        private User() { } // For EF Core
+        // For EF Core and Bogus
+        private User() 
+        {
+            Username = string.Empty;
+            Email = string.Empty;
+            PasswordHash = string.Empty;
+            Role = string.Empty;
+            IsActive = true;
+        }
 
         public User(string username, string email, string passwordHash, string role)
         {

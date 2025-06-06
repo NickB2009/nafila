@@ -14,11 +14,13 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
         public BogusUserRepository()
         {
             var faker = new Faker<User>()
+                .CustomInstantiator(f => new User(
+                    f.Internet.UserName(),
+                    f.Internet.Email(),
+                    BCrypt.Net.BCrypt.HashPassword("password123"),
+                    f.PickRandom(new[] { "Admin", "Staff", "Customer" })
+                ))
                 .RuleFor(u => u.Id, f => f.Random.Guid())
-                .RuleFor(u => u.Username, f => f.Internet.UserName())
-                .RuleFor(u => u.Email, f => f.Internet.Email())
-                .RuleFor(u => u.PasswordHash, f => BCrypt.Net.BCrypt.HashPassword("password123"))
-                .RuleFor(u => u.Role, f => f.PickRandom(new[] { "Admin", "Staff", "Customer" }))
                 .RuleFor(u => u.IsActive, f => f.Random.Bool())
                 .RuleFor(u => u.CreatedAt, f => f.Date.Past())
                 .RuleFor(u => u.LastLoginAt, f => f.Date.Recent());
