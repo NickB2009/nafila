@@ -1,9 +1,9 @@
-namespace GrandeTech.QueueHub.API.Application.ServiceProviders.Results;
+namespace GrandeTech.QueueHub.API.Application.ServicesProviders.Results;
 
-public class CreateServiceProviderResult
+public class CreateServicesProviderResult
 {
     public bool Success { get; set; }
-    public string? ServiceProviderId { get; set; }
+    public string? ServicesProviderId { get; set; }
     public string? LocationSlug { get; set; }
     public string? BusinessName { get; set; }
     public List<string> Errors { get; set; } = new();

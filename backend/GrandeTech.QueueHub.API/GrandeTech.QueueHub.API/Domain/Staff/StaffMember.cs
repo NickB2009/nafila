@@ -10,7 +10,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
     /// </summary>
     public class StaffMember : BaseEntity, IAggregateRoot
     {        public string Name { get; private set; } = string.Empty;
-        public Guid ServiceProviderId { get; private set; }
+        public Guid ServicesProviderId { get; private set; }
         public Email? Email { get; private set; }
         public PhoneNumber? PhoneNumber { get; private set; }
         public string? ProfilePictureUrl { get; private set; }
@@ -36,7 +36,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
 
         public StaffMember(
             string name,
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             string? email,
             string? phoneNumber,
             string? profilePictureUrl,
@@ -48,8 +48,8 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Staff member name is required", nameof(name));
 
-            if (serviceProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(serviceProviderId));
+            if (ServicesProviderId == Guid.Empty)
+                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
 
             if (string.IsNullOrWhiteSpace(role))
                 throw new ArgumentException("Role is required", nameof(role));
@@ -58,7 +58,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
                 throw new ArgumentException("Username is required", nameof(username));
 
             Name = name;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             Email = email != null ? Email.Create(email) : null;
             PhoneNumber = phoneNumber != null ? PhoneNumber.Create(phoneNumber) : null;
             ProfilePictureUrl = profilePictureUrl;
@@ -71,7 +71,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
             CompletedServicesCount = 0;
             CreatedBy = createdBy;
 
-            AddDomainEvent(new StaffMemberCreatedEvent(Id, Name, ServiceProviderId));
+            AddDomainEvent(new StaffMemberCreatedEvent(Id, Name, ServicesProviderId));
         }
 
         // Domain behavior methods

@@ -20,7 +20,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MediaUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MediaType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ServiceProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ServicesProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -54,7 +54,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                     NotificationsEnabled = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     PreferredNotificationChannel = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    FavoriteServiceProviderIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FavoriteServicesProviderIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -144,7 +144,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ServiceProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ServicesProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(320)", maxLength: 320, nullable: true),
                     PhoneNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     PhoneCountryCode = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: true),
@@ -185,8 +185,8 @@ namespace GrandeTech.QueueHub.API.Migrations
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     IsDefault = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    MaxServiceProviders = table.Column<int>(type: "int", nullable: false),
-                    MaxStaffPerServiceProvider = table.Column<int>(type: "int", nullable: false),
+                    MaxServicesProviders = table.Column<int>(type: "int", nullable: false),
+                    MaxStaffPerServicesProvider = table.Column<int>(type: "int", nullable: false),
                     IncludesAnalytics = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IncludesAdvancedReporting = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IncludesCustomBranding = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
@@ -212,7 +212,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ServiceProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ServicesProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StaffMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ServiceTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ServiceDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -233,7 +233,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ServiceProviders",
+                name: "ServicesProviders",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -280,9 +280,9 @@ namespace GrandeTech.QueueHub.API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ServiceProviders", x => x.Id);
+                    table.PrimaryKey("PK_ServicesProviders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ServiceProviders_Organizations_OrganizationId",
+                        name: "FK_ServicesProviders_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
                         principalColumn: "Id",
@@ -327,7 +327,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    ServiceProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ServicesProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DiscountPercentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     FixedDiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     FixedDiscountCurrency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: true),
@@ -349,9 +349,9 @@ namespace GrandeTech.QueueHub.API.Migrations
                 {
                     table.PrimaryKey("PK_Coupons", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Coupons_ServiceProviders_ServiceProviderId",
-                        column: x => x.ServiceProviderId,
-                        principalTable: "ServiceProviders",
+                        name: "FK_Coupons_ServicesProviders_ServicesProviderId",
+                        column: x => x.ServicesProviderId,
+                        principalTable: "ServicesProviders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -361,7 +361,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ServiceProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ServicesProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     QueueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     MaxSize = table.Column<int>(type: "int", nullable: false, defaultValue: 50),
@@ -378,9 +378,9 @@ namespace GrandeTech.QueueHub.API.Migrations
                 {
                     table.PrimaryKey("PK_Queues", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Queues_ServiceProviders_ServiceProviderId",
-                        column: x => x.ServiceProviderId,
-                        principalTable: "ServiceProviders",
+                        name: "FK_Queues_ServicesProviders_ServicesProviderId",
+                        column: x => x.ServicesProviderId,
+                        principalTable: "ServicesProviders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -392,7 +392,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    ServiceProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ServicesProviderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     EstimatedDurationMinutes = table.Column<int>(type: "int", nullable: false),
                     PriceAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     PriceCurrency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: true),
@@ -412,9 +412,9 @@ namespace GrandeTech.QueueHub.API.Migrations
                 {
                     table.PrimaryKey("PK_ServiceTypes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ServiceTypes_ServiceProviders_ServiceProviderId",
-                        column: x => x.ServiceProviderId,
-                        principalTable: "ServiceProviders",
+                        name: "FK_ServiceTypes_ServicesProviders_ServicesProviderId",
+                        column: x => x.ServicesProviderId,
+                        principalTable: "ServicesProviders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -492,9 +492,9 @@ namespace GrandeTech.QueueHub.API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Coupons_ServiceProviderId",
+                name: "IX_Coupons_ServicesProviderId",
                 table: "Coupons",
-                column: "ServiceProviderId");
+                column: "ServicesProviderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerServiceHistory_CustomerId",
@@ -540,26 +540,26 @@ namespace GrandeTech.QueueHub.API.Migrations
                 column: "StaffMemberId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Queues_ServiceProviderId_QueueDate",
+                name: "IX_Queues_ServicesProviderId_QueueDate",
                 table: "Queues",
-                columns: new[] { "ServiceProviderId", "QueueDate" },
+                columns: new[] { "ServicesProviderId", "QueueDate" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceProviders_OrganizationId",
-                table: "ServiceProviders",
+                name: "IX_ServicesProviders_OrganizationId",
+                table: "ServicesProviders",
                 column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceProviders_Slug",
-                table: "ServiceProviders",
+                name: "IX_ServicesProviders_Slug",
+                table: "ServicesProviders",
                 column: "Slug",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceTypes_ServiceProviderId",
+                name: "IX_ServiceTypes_ServicesProviderId",
                 table: "ServiceTypes",
-                column: "ServiceProviderId");
+                column: "ServicesProviderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffBreaks_StaffMemberId",
@@ -604,7 +604,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                 name: "StaffMembers");
 
             migrationBuilder.DropTable(
-                name: "ServiceProviders");
+                name: "ServicesProviders");
 
             migrationBuilder.DropTable(
                 name: "Organizations");

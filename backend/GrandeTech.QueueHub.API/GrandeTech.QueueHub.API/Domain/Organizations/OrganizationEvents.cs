@@ -81,27 +81,27 @@ namespace GrandeTech.QueueHub.API.Domain.Organizations
         }
     }
 
-    public class ServiceProviderAddedToOrganizationEvent : DomainEvent
+    public class ServicesProviderAddedToOrganizationEvent : DomainEvent
     {
         public Guid OrganizationId { get; }
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderAddedToOrganizationEvent(Guid organizationId, Guid serviceProviderId)
+        public ServicesProviderAddedToOrganizationEvent(Guid organizationId, Guid ServicesProviderId)
         {
             OrganizationId = organizationId;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class ServiceProviderRemovedFromOrganizationEvent : DomainEvent
+    public class ServicesProviderRemovedFromOrganizationEvent : DomainEvent
     {
         public Guid OrganizationId { get; }
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderRemovedFromOrganizationEvent(Guid organizationId, Guid serviceProviderId)
+        public ServicesProviderRemovedFromOrganizationEvent(Guid organizationId, Guid ServicesProviderId)
         {
             OrganizationId = organizationId;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 }

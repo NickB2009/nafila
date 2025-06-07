@@ -7,13 +7,13 @@ namespace GrandeTech.QueueHub.API.Domain.Services
     {
         public Guid ServiceTypeId { get; }
         public string ServiceTypeName { get; }
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceTypeCreatedEvent(Guid serviceTypeId, string serviceTypeName, Guid serviceProviderId)
+        public ServiceTypeCreatedEvent(Guid serviceTypeId, string serviceTypeName, Guid ServicesProviderId)
         {
             ServiceTypeId = serviceTypeId;
             ServiceTypeName = serviceTypeName;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 

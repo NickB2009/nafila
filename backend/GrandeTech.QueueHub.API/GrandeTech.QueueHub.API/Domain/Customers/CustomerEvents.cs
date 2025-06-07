@@ -81,27 +81,27 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         }
     }
 
-    public class CustomerFavoriteServiceProviderAddedEvent : DomainEvent
+    public class CustomerFavoriteServicesProviderAddedEvent : DomainEvent
     {
         public Guid CustomerId { get; }
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public CustomerFavoriteServiceProviderAddedEvent(Guid customerId, Guid serviceProviderId)
+        public CustomerFavoriteServicesProviderAddedEvent(Guid customerId, Guid ServicesProviderId)
         {
             CustomerId = customerId;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class CustomerFavoriteServiceProviderRemovedEvent : DomainEvent
+    public class CustomerFavoriteServicesProviderRemovedEvent : DomainEvent
     {
         public Guid CustomerId { get; }
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public CustomerFavoriteServiceProviderRemovedEvent(Guid customerId, Guid serviceProviderId)
+        public CustomerFavoriteServicesProviderRemovedEvent(Guid customerId, Guid ServicesProviderId)
         {
             CustomerId = customerId;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 

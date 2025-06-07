@@ -23,8 +23,8 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         public IReadOnlyCollection<ServiceHistoryItem> ServiceHistory => _serviceHistory.AsReadOnly();
 
         // Favorite service providers
-        private readonly List<Guid> _favoriteServiceProviderIds = new();
-        public IReadOnlyCollection<Guid> FavoriteServiceProviderIds => _favoriteServiceProviderIds.AsReadOnly();
+        private readonly List<Guid> _favoriteServicesProviderIds = new();
+        public IReadOnlyCollection<Guid> FavoriteServicesProviderIds => _favoriteServicesProviderIds.AsReadOnly();
 
         // For EF Core
         private Customer() { }
@@ -113,14 +113,14 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         }
 
         public void AddServiceHistoryItem(
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             Guid staffMemberId,
             Guid serviceTypeId,
             DateTime serviceDate,
             string? notes = null)
         {
             var historyItem = new ServiceHistoryItem(
-                serviceProviderId,
+                ServicesProviderId,
                 staffMemberId,
                 serviceTypeId,
                 serviceDate,
@@ -130,21 +130,21 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
             AddDomainEvent(new CustomerServiceHistoryAddedEvent(Id, historyItem.Id));
         }
 
-        public void AddFavoriteServiceProvider(Guid serviceProviderId)
+        public void AddFavoriteServicesProvider(Guid ServicesProviderId)
         {
-            if (!_favoriteServiceProviderIds.Contains(serviceProviderId))
+            if (!_favoriteServicesProviderIds.Contains(ServicesProviderId))
             {
-                _favoriteServiceProviderIds.Add(serviceProviderId);
-                AddDomainEvent(new CustomerFavoriteServiceProviderAddedEvent(Id, serviceProviderId));
+                _favoriteServicesProviderIds.Add(ServicesProviderId);
+                AddDomainEvent(new CustomerFavoriteServicesProviderAddedEvent(Id, ServicesProviderId));
             }
         }
 
-        public void RemoveFavoriteServiceProvider(Guid serviceProviderId)
+        public void RemoveFavoriteServicesProvider(Guid ServicesProviderId)
         {
-            if (_favoriteServiceProviderIds.Contains(serviceProviderId))
+            if (_favoriteServicesProviderIds.Contains(ServicesProviderId))
             {
-                _favoriteServiceProviderIds.Remove(serviceProviderId);
-                AddDomainEvent(new CustomerFavoriteServiceProviderRemovedEvent(Id, serviceProviderId));
+                _favoriteServicesProviderIds.Remove(ServicesProviderId);
+                AddDomainEvent(new CustomerFavoriteServicesProviderRemovedEvent(Id, ServicesProviderId));
             }
         }
 
@@ -177,7 +177,7 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
     }    public class ServiceHistoryItem
     {
         public Guid Id { get; private set; }
-        public Guid ServiceProviderId { get; private set; }
+        public Guid ServicesProviderId { get; private set; }
         public Guid StaffMemberId { get; private set; }
         public Guid ServiceTypeId { get; private set; }
         public DateTime ServiceDate { get; private set; }
@@ -189,7 +189,7 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         private ServiceHistoryItem() { }
 
         public ServiceHistoryItem(
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             Guid staffMemberId,
             Guid serviceTypeId,
             DateTime serviceDate,
@@ -198,7 +198,7 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
             string? feedback = null)
         {
             Id = Guid.NewGuid();
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             StaffMemberId = staffMemberId;
             ServiceTypeId = serviceTypeId;
             ServiceDate = serviceDate;

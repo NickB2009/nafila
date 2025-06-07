@@ -4,12 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 using GrandeTech.QueueHub.API.Domain.Common;
 using GrandeTech.QueueHub.API.Domain.Users;
 using GrandeTech.QueueHub.API.Domain.Organizations;
-using GrandeTech.QueueHub.API.Domain.ServiceProviders;
+using GrandeTech.QueueHub.API.Domain.ServicesProviders;
 using GrandeTech.QueueHub.API.Domain.Queues;
 using GrandeTech.QueueHub.API.Domain.Customers;
 using GrandeTech.QueueHub.API.Domain.Staff;
 using GrandeTech.QueueHub.API.Domain.Services;
 using GrandeTech.QueueHub.API.Domain.Subscriptions;
+using GrandeTech.QueueHub.API.Domain.AuditLogs;
 using GrandeTech.QueueHub.API.Infrastructure.Persistence;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
@@ -39,12 +40,13 @@ namespace GrandeTech.QueueHub.API.Infrastructure
             services.AddScoped(typeof(IRepository<>), typeof(BogusGenericRepository<>));
             services.AddScoped<IUserRepository, BogusUserRepository>();
             services.AddScoped<IOrganizationRepository, BogusOrganizationRepository>();
-            services.AddScoped<IServiceProviderRepository, BogusServiceProviderRepository>();
+            services.AddScoped<IServicesProviderRepository, BogusServicesProviderRepository>();
             services.AddScoped<IQueueRepository, BogusQueueRepository>();
             services.AddScoped<ICustomerRepository, BogusCustomerRepository>();
             services.AddScoped<IStaffMemberRepository, BogusStaffMemberRepository>();
             services.AddScoped<IServiceTypeRepository, BogusServiceTypeRepository>();
             services.AddScoped<ISubscriptionPlanRepository, BogusSubscriptionPlanRepository>();
+            services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
             
             return services;
         }

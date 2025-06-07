@@ -8,13 +8,13 @@ using GrandeTech.QueueHub.API.Domain.Notifications;
 using GrandeTech.QueueHub.API.Domain.Organizations;
 using GrandeTech.QueueHub.API.Domain.Promotions;
 using GrandeTech.QueueHub.API.Domain.Queues;
-using GrandeTech.QueueHub.API.Domain.ServiceProviders;
+using GrandeTech.QueueHub.API.Domain.ServicesProviders;
 using GrandeTech.QueueHub.API.Domain.Services;
 using GrandeTech.QueueHub.API.Domain.Staff;
 using GrandeTech.QueueHub.API.Domain.Subscriptions;
 using GrandeTech.QueueHub.API.Domain.Users;
 using Microsoft.EntityFrameworkCore;
-using ServiceProviderEntity = GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider;
+using ServicesProviderEntity = GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider;
 
 namespace GrandeTech.QueueHub.API.Infrastructure.Persistence
 {
@@ -30,7 +30,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence
           /// <summary>
         /// Service Providers
         /// </summary>
-        public DbSet<ServiceProviderEntity> ServiceProviders { get; set; }
+        public DbSet<ServicesProviderEntity> ServicesProviders { get; set; }
         
         /// <summary>
         /// Queues

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using GrandeTech.QueueHub.API.Domain.Common;
 using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
+namespace GrandeTech.QueueHub.API.Domain.ServicesProviders
 {
     /// <summary>
     /// Represents a service provider (barbershop) that belongs to an organization
     /// </summary>
-    public class ServiceProvider : BaseEntity, IAggregateRoot
+    public class ServicesProvider : BaseEntity, IAggregateRoot
     {
         public string Name { get; private set; } = string.Empty;
         public Slug Slug { get; private set; } = null!;
@@ -37,9 +37,9 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
         public IReadOnlyCollection<Guid> AdvertisementIds => _advertisementIds.AsReadOnly();
 
         // For EF Core
-        private ServiceProvider() { }
+        private ServicesProvider() { }
 
-        public ServiceProvider(
+        public ServicesProvider(
             string name,
             string slug,
             string description,
@@ -75,7 +75,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             LastAverageTimeReset = DateTime.UtcNow;
             CreatedBy = createdBy;
 
-            AddDomainEvent(new ServiceProviderCreatedEvent(Id, Name, OrganizationId));
+            AddDomainEvent(new ServicesProviderCreatedEvent(Id, Name, OrganizationId));
         }
 
         // Domain behavior methods
@@ -100,7 +100,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             BusinessHours = TimeSpanRange.Create(openingTime, closingTime);
 
             MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceProviderUpdatedEvent(Id));
+            AddDomainEvent(new ServicesProviderUpdatedEvent(Id));
         }
 
         public void SetCustomBranding(
@@ -121,7 +121,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             );
 
             MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceProviderBrandingUpdatedEvent(Id));
+            AddDomainEvent(new ServicesProviderBrandingUpdatedEvent(Id));
         }
 
         public void ClearCustomBranding(string updatedBy)
@@ -130,7 +130,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             {
                 CustomBranding = null;
                 MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceProviderBrandingUpdatedEvent(Id));
+                AddDomainEvent(new ServicesProviderBrandingUpdatedEvent(Id));
             }
         }
 
@@ -140,7 +140,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             {
                 IsQueueEnabled = true;
                 MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceProviderQueueEnabledEvent(Id));
+                AddDomainEvent(new ServicesProviderQueueEnabledEvent(Id));
             }
         }
 
@@ -150,7 +150,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             {
                 IsQueueEnabled = false;
                 MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceProviderQueueDisabledEvent(Id));
+                AddDomainEvent(new ServicesProviderQueueDisabledEvent(Id));
             }
         }
 
@@ -165,7 +165,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             MaxQueueSize = maxQueueSize;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes;
             MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceProviderQueueSettingsUpdatedEvent(Id));
+            AddDomainEvent(new ServicesProviderQueueSettingsUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -174,7 +174,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             {
                 IsActive = true;
                 MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceProviderActivatedEvent(Id));
+                AddDomainEvent(new ServicesProviderActivatedEvent(Id));
             }
         }
 
@@ -184,7 +184,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             {
                 IsActive = false;
                 MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceProviderDeactivatedEvent(Id));
+                AddDomainEvent(new ServicesProviderDeactivatedEvent(Id));
             }
         }
 
@@ -193,7 +193,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             if (!_staffMemberIds.Contains(staffMemberId))
             {
                 _staffMemberIds.Add(staffMemberId);
-                AddDomainEvent(new StaffMemberAddedToServiceProviderEvent(Id, staffMemberId));
+                AddDomainEvent(new StaffMemberAddedToServicesProviderEvent(Id, staffMemberId));
             }
         }
 
@@ -202,7 +202,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             if (_staffMemberIds.Contains(staffMemberId))
             {
                 _staffMemberIds.Remove(staffMemberId);
-                AddDomainEvent(new StaffMemberRemovedFromServiceProviderEvent(Id, staffMemberId));
+                AddDomainEvent(new StaffMemberRemovedFromServicesProviderEvent(Id, staffMemberId));
             }
         }
 
@@ -211,7 +211,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             if (!_serviceTypeIds.Contains(serviceTypeId))
             {
                 _serviceTypeIds.Add(serviceTypeId);
-                AddDomainEvent(new ServiceTypeAddedToServiceProviderEvent(Id, serviceTypeId));
+                AddDomainEvent(new ServiceTypeAddedToServicesProviderEvent(Id, serviceTypeId));
             }
         }
 
@@ -220,7 +220,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             if (_serviceTypeIds.Contains(serviceTypeId))
             {
                 _serviceTypeIds.Remove(serviceTypeId);
-                AddDomainEvent(new ServiceTypeRemovedFromServiceProviderEvent(Id, serviceTypeId));
+                AddDomainEvent(new ServiceTypeRemovedFromServicesProviderEvent(Id, serviceTypeId));
             }
         }
 
@@ -229,7 +229,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             if (!_advertisementIds.Contains(advertisementId))
             {
                 _advertisementIds.Add(advertisementId);
-                AddDomainEvent(new AdvertisementAddedToServiceProviderEvent(Id, advertisementId));
+                AddDomainEvent(new AdvertisementAddedToServicesProviderEvent(Id, advertisementId));
             }
         }
 
@@ -238,7 +238,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
             if (_advertisementIds.Contains(advertisementId))
             {
                 _advertisementIds.Remove(advertisementId);
-                AddDomainEvent(new AdvertisementRemovedFromServiceProviderEvent(Id, advertisementId));
+                AddDomainEvent(new AdvertisementRemovedFromServicesProviderEvent(Id, advertisementId));
             }
         }
 
@@ -249,14 +249,14 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
 
             AverageServiceTimeInMinutes = newAverageTimeInMinutes;
             MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceProviderAverageTimeUpdatedEvent(Id, newAverageTimeInMinutes));
+            AddDomainEvent(new ServicesProviderAverageTimeUpdatedEvent(Id, newAverageTimeInMinutes));
         }
 
         public void ResetAverageServiceTime(string updatedBy)
         {
             LastAverageTimeReset = DateTime.UtcNow;
             MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceProviderAverageTimeResetEvent(Id));
+            AddDomainEvent(new ServicesProviderAverageTimeResetEvent(Id));
         }
 
         public bool IsOpen()

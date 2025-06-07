@@ -117,8 +117,8 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 .IsRequired();
                 
             // Relationships
-            // The relationship to ServiceProviders is maintained
-            // via foreign keys in the ServiceProviders table
+            // The relationship to ServicesProviders is maintained
+            // via foreign keys in the ServicesProviders table
         }
     }
 }

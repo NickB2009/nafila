@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Staff;
-using GrandeTech.QueueHub.API.Domain.ServiceProviders;
+using GrandeTech.QueueHub.API.Domain.ServicesProviders;
 using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
 using GrandeTech.QueueHub.API.Domain.AuditLogs;
 
@@ -12,10 +12,10 @@ namespace GrandeTech.QueueHub.API.Application.Staff
     public class AddBarberService
     {
         private readonly IStaffMemberRepository _staffRepo;
-        private readonly IServiceProviderRepository _spRepo;
+        private readonly IServicesProviderRepository _spRepo;
         private readonly IAuditLogRepository _auditLogRepo;
 
-        public AddBarberService(IStaffMemberRepository staffRepo, IServiceProviderRepository spRepo, IAuditLogRepository auditLogRepo)
+        public AddBarberService(IStaffMemberRepository staffRepo, IServicesProviderRepository spRepo, IAuditLogRepository auditLogRepo)
         {
             _staffRepo = staffRepo;
             _spRepo = spRepo;
@@ -70,9 +70,9 @@ namespace GrandeTech.QueueHub.API.Application.Staff
             if (result.FieldErrors.Count > 0)
                 return result;
 
-            // ServiceProvider existence
-            var serviceProviderId = Guid.Parse(request.ServiceProviderId);
-            var spExists = await _spRepo.ExistsAsync(sp => sp.Id == serviceProviderId, cancellationToken);
+            // ServicesProvider existence
+            var ServicesProviderId = Guid.Parse(request.ServicesProviderId);
+            var spExists = await _spRepo.ExistsAsync(sp => sp.Id == ServicesProviderId, cancellationToken);
             if (!spExists)
             {
                 result.Errors.Add("Service provider not found.");
@@ -99,7 +99,7 @@ namespace GrandeTech.QueueHub.API.Application.Staff
             var fullName = request.FirstName.Trim() + " " + request.LastName.Trim();
             var staff = new StaffMember(
                 fullName,
-                serviceProviderId,
+                ServicesProviderId,
                 request.Email,
                 request.PhoneNumber,
                 null, // ProfilePictureUrl

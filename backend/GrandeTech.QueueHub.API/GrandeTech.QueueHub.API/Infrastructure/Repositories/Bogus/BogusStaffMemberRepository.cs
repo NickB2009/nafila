@@ -54,7 +54,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
         {
             var staffMember = new StaffMember(
                 entity.Name,
-                entity.ServiceProviderId,
+                entity.ServicesProviderId,
                 entity.Email?.Value,
                 entity.PhoneNumber?.Value,
                 entity.ProfilePictureUrl,
@@ -70,34 +70,34 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             return staffMember;
         }
 
-        public async Task<IReadOnlyList<StaffMember>> GetByServiceProviderAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<StaffMember>> GetByServicesProviderAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             var staffMembers = await GetAllAsync(cancellationToken);
-            return staffMembers.Where(sm => sm.ServiceProviderId == serviceProviderId).ToList();
+            return staffMembers.Where(sm => sm.ServicesProviderId == ServicesProviderId).ToList();
         }
 
-        public async Task<IReadOnlyList<StaffMember>> GetActiveStaffMembersAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<StaffMember>> GetActiveStaffMembersAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             var staffMembers = await GetAllAsync(cancellationToken);
-            return staffMembers.Where(sm => sm.ServiceProviderId == serviceProviderId && sm.IsActive).ToList();
+            return staffMembers.Where(sm => sm.ServicesProviderId == ServicesProviderId && sm.IsActive).ToList();
         }
 
-        public async Task<IReadOnlyList<StaffMember>> GetAvailableStaffAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<StaffMember>> GetAvailableStaffAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             var staffMembers = await GetAllAsync(cancellationToken);
             return staffMembers
-                .Where(sm => sm.ServiceProviderId == serviceProviderId && 
+                .Where(sm => sm.ServicesProviderId == ServicesProviderId && 
                     sm.IsActive && 
                     sm.IsOnDuty && 
                     !sm.IsOnBreak())
                 .ToList();
         }
 
-        public async Task<StaffMember?> GetByEmployeeCodeAsync(Guid serviceProviderId, string employeeCode, CancellationToken cancellationToken = default)
+        public async Task<StaffMember?> GetByEmployeeCodeAsync(Guid ServicesProviderId, string employeeCode, CancellationToken cancellationToken = default)
         {
             var staffMembers = await GetAllAsync(cancellationToken);
             return staffMembers.FirstOrDefault(sm => 
-                sm.ServiceProviderId == serviceProviderId && 
+                sm.ServicesProviderId == ServicesProviderId && 
                 sm.EmployeeCode == employeeCode);
         }
 

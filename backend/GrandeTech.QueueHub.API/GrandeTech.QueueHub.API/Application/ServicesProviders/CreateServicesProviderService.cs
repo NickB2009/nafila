@@ -1,29 +1,29 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using GrandeTech.QueueHub.API.Application.ServiceProviders.Requests;
-using GrandeTech.QueueHub.API.Application.ServiceProviders.Results;
+using GrandeTech.QueueHub.API.Application.ServicesProviders.Requests;
+using GrandeTech.QueueHub.API.Application.ServicesProviders.Results;
 using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
-using GrandeTech.QueueHub.API.Domain.ServiceProviders;
-using DomainServiceProvider = GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider;
+using GrandeTech.QueueHub.API.Domain.ServicesProviders;
+using DomainServicesProvider = GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider;
 
-namespace GrandeTech.QueueHub.API.Application.ServiceProviders;
+namespace GrandeTech.QueueHub.API.Application.ServicesProviders;
 
-public class CreateServiceProviderService
+public class CreateServicesProviderService
 {
-    private readonly IServiceProviderRepository _serviceProviderRepository;
+    private readonly IServicesProviderRepository _ServicesProviderRepository;
 
-    public CreateServiceProviderService(IServiceProviderRepository serviceProviderRepository)
+    public CreateServicesProviderService(IServicesProviderRepository ServicesProviderRepository)
     {
-        _serviceProviderRepository = serviceProviderRepository ?? throw new ArgumentNullException(nameof(serviceProviderRepository));
+        _ServicesProviderRepository = ServicesProviderRepository ?? throw new ArgumentNullException(nameof(ServicesProviderRepository));
     }
 
-    public async Task<CreateServiceProviderResult> ExecuteAsync(
-        CreateServiceProviderRequest request, 
+    public async Task<CreateServicesProviderResult> ExecuteAsync(
+        CreateServicesProviderRequest request, 
         string currentUserId,
         CancellationToken cancellationToken = default)
     {
-        var result = new CreateServiceProviderResult();
+        var result = new CreateServicesProviderResult();
 
         // Validate input
         var validationErrors = ValidateRequest(request);
@@ -39,7 +39,7 @@ public class CreateServiceProviderService
             var locationSlug = GenerateLocationSlug(request.BusinessName, request.Address.State);
 
             // Check for existing slug
-            var existingProvider = await _serviceProviderRepository.GetBySlugAsync(locationSlug, cancellationToken);
+            var existingProvider = await _ServicesProviderRepository.GetBySlugAsync(locationSlug, cancellationToken);
             if (existingProvider != null)
             {
                 // Try with a suffix
@@ -48,7 +48,7 @@ public class CreateServiceProviderService
                 do
                 {
                     uniqueSlug = $"{locationSlug}-{counter}";
-                    existingProvider = await _serviceProviderRepository.GetBySlugAsync(uniqueSlug, cancellationToken);
+                    existingProvider = await _ServicesProviderRepository.GetBySlugAsync(uniqueSlug, cancellationToken);
                     counter++;
                 } while (existingProvider != null && counter <= 10);
 
@@ -88,7 +88,7 @@ public class CreateServiceProviderService
 
             // For now, use a default organization ID - this will be from the authenticated user's context
             var organizationId = Guid.NewGuid();            // Create service provider
-            var serviceProvider = new DomainServiceProvider(
+            var ServicesProvider = new DomainServicesProvider(
                 name: request.BusinessName,
                 slug: locationSlug,
                 description: request.Description ?? "",
@@ -104,11 +104,11 @@ public class CreateServiceProviderService
             );
 
             // Save to repository
-            await _serviceProviderRepository.AddAsync(serviceProvider, cancellationToken);
+            await _ServicesProviderRepository.AddAsync(ServicesProvider, cancellationToken);
 
             // Return success result
             result.Success = true;
-            result.ServiceProviderId = serviceProvider.Id.ToString();
+            result.ServicesProviderId = ServicesProvider.Id.ToString();
             result.LocationSlug = locationSlug;
             result.BusinessName = request.BusinessName;
 
@@ -121,7 +121,7 @@ public class CreateServiceProviderService
         }
     }
 
-    private Dictionary<string, string> ValidateRequest(CreateServiceProviderRequest request)
+    private Dictionary<string, string> ValidateRequest(CreateServicesProviderRequest request)
     {
         var errors = new Dictionary<string, string>();
 

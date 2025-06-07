@@ -61,7 +61,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasDefaultValue(false);
                 
-            builder.Property(c => c.ServiceProviderId)
+            builder.Property(c => c.ServicesProviderId)
                 .IsRequired();
                 
             builder.Property(c => c.IsActive)
@@ -84,9 +84,9 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 .IsRequired();
                 
             // Relationships
-            builder.HasOne<Domain.ServiceProviders.ServiceProvider>()
+            builder.HasOne<Domain.ServicesProviders.ServicesProvider>()
                 .WithMany()
-                .HasForeignKey(c => c.ServiceProviderId)
+                .HasForeignKey(c => c.ServicesProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

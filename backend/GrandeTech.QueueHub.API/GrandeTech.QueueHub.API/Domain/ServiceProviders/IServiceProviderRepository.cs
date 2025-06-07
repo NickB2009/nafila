@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.ServiceProviders;
+using GrandeTech.QueueHub.API.Domain.ServicesProviders;
 
-namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
+namespace GrandeTech.QueueHub.API.Domain.ServicesProviders
 {
     /// <summary>
-    /// Repository interface for ServiceProvider aggregate root
+    /// Repository interface for ServicesProvider aggregate root
     /// </summary>
-    public interface IServiceProviderRepository : IRepository<ServiceProvider>
+    public interface IServicesProviderRepository : IRepository<ServicesProvider>
     {
         /// <summary>
         /// Gets a service provider by its slug
@@ -18,7 +18,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
         /// <param name="slug">The service provider slug</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The service provider or null if not found</returns>
-        Task<ServiceProvider?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
+        Task<ServicesProvider?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Gets all service providers for an organization
@@ -26,14 +26,14 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
         /// <param name="organizationId">The organization ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of service providers for the specified organization</returns>
-        Task<IReadOnlyList<ServiceProvider>> GetByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<ServicesProvider>> GetByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Gets all active service providers
         /// </summary>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of active service providers</returns>
-        Task<IReadOnlyList<ServiceProvider>> GetActiveServiceProvidersAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<ServicesProvider>> GetActiveServicesProvidersAsync(CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Gets service providers within a certain distance of coordinates
@@ -43,7 +43,7 @@ namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
         /// <param name="radiusInKm">Search radius in kilometers</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of nearby service providers</returns>
-        Task<IReadOnlyList<ServiceProvider>> GetNearbyServiceProvidersAsync(
+        Task<IReadOnlyList<ServicesProvider>> GetNearbyServicesProvidersAsync(
             double latitude, 
             double longitude, 
             double radiusInKm, 

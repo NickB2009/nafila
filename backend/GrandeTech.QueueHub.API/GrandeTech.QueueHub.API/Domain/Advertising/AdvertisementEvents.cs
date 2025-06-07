@@ -7,13 +7,13 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
     {
         public Guid AdvertisementId { get; }
         public string Title { get; }
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public AdvertisementCreatedEvent(Guid advertisementId, string title, Guid serviceProviderId)
+        public AdvertisementCreatedEvent(Guid advertisementId, string title, Guid ServicesProviderId)
         {
             AdvertisementId = advertisementId;
             Title = title;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 

@@ -12,7 +12,7 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
     {
         public string Code { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;
-        public Guid ServiceProviderId { get; private set; }
+        public Guid ServicesProviderId { get; private set; }
         public decimal DiscountPercentage { get; private set; }
         public Money? FixedDiscountAmount { get; private set; }
         public DateTime StartDate { get; private set; }
@@ -32,7 +32,7 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
         public Coupon(
             string code,
             string description,
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             decimal discountPercentage,
             decimal? fixedDiscountAmount,
             DateTime startDate,
@@ -45,8 +45,8 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
             if (string.IsNullOrWhiteSpace(code))
                 throw new ArgumentException("Coupon code is required", nameof(code));
 
-            if (serviceProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(serviceProviderId));
+            if (ServicesProviderId == Guid.Empty)
+                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
 
             if (discountPercentage < 0 || discountPercentage > 100)
                 throw new ArgumentException("Discount percentage must be between 0 and 100", nameof(discountPercentage));
@@ -62,7 +62,7 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
 
             Code = code.ToUpperInvariant();
             Description = description ?? string.Empty;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             DiscountPercentage = discountPercentage;
             FixedDiscountAmount = fixedDiscountAmount.HasValue ? Money.Create(fixedDiscountAmount.Value) : null;
             StartDate = startDate;
@@ -78,7 +78,7 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
                 _applicableServiceTypeIds = new List<Guid>(applicableServiceTypeIds);
             }
 
-            AddDomainEvent(new CouponCreatedEvent(Id, Code, ServiceProviderId));
+            AddDomainEvent(new CouponCreatedEvent(Id, Code, ServicesProviderId));
         }
 
         // Domain behavior methods

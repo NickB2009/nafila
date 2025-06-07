@@ -67,9 +67,9 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 sh.Property<Guid>("Id");
                 sh.HasKey("Id");
                 
-                sh.Property(s => s.ServiceProviderId)
+                sh.Property(s => s.ServicesProviderId)
                     .IsRequired()
-                    .HasColumnName("ServiceProviderId");
+                    .HasColumnName("ServicesProviderId");
                     
                 sh.Property(s => s.StaffMemberId)
                     .IsRequired()
@@ -96,13 +96,13 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
             });
             
             // Simple collection for favorite service provider IDs
-            builder.Property(c => c.FavoriteServiceProviderIds)
+            builder.Property(c => c.FavoriteServicesProviderIds)
                 .HasConversion(
                     v => string.Join(',', v),
                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
                           .Select(Guid.Parse)
                           .ToList())
-                .HasColumnName("FavoriteServiceProviderIds");
+                .HasColumnName("FavoriteServicesProviderIds");
                 
             // Audit fields
             builder.Property(c => c.CreatedBy)

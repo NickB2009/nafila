@@ -37,7 +37,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
             builder.Property(st => st.ImageUrl)
                 .HasMaxLength(255);
                 
-            builder.Property(st => st.ServiceProviderId)
+            builder.Property(st => st.ServicesProviderId)
                 .IsRequired();
                 
             // Money Value Object (nullable)
@@ -72,9 +72,9 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 .IsRequired();
                 
             // Relationships
-            builder.HasOne<Domain.ServiceProviders.ServiceProvider>()
+            builder.HasOne<Domain.ServicesProviders.ServicesProvider>()
                 .WithMany()
-                .HasForeignKey(st => st.ServiceProviderId)
+                .HasForeignKey(st => st.ServicesProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

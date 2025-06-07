@@ -55,7 +55,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             var serviceType = new ServiceType(
                 entity.Name,
                 entity.Description,
-                entity.ServiceProviderId,
+                entity.ServicesProviderId,
                 entity.EstimatedDurationMinutes,
                 entity.Price?.Amount,
                 entity.ImageUrl,
@@ -68,23 +68,23 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             return serviceType;
         }
 
-        public async Task<IReadOnlyList<ServiceType>> GetByServiceProviderAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<ServiceType>> GetByServicesProviderAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             var serviceTypes = await GetAllAsync(cancellationToken);
-            return serviceTypes.Where(st => st.ServiceProviderId == serviceProviderId).ToList();
+            return serviceTypes.Where(st => st.ServicesProviderId == ServicesProviderId).ToList();
         }
 
-        public async Task<IReadOnlyList<ServiceType>> GetActiveServiceTypesAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<ServiceType>> GetActiveServiceTypesAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             var serviceTypes = await GetAllAsync(cancellationToken);
-            return serviceTypes.Where(st => st.ServiceProviderId == serviceProviderId && st.IsActive).ToList();
+            return serviceTypes.Where(st => st.ServicesProviderId == ServicesProviderId && st.IsActive).ToList();
         }
 
-        public async Task<IReadOnlyList<ServiceType>> GetPopularServiceTypesAsync(Guid serviceProviderId, int count = 5, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<ServiceType>> GetPopularServiceTypesAsync(Guid ServicesProviderId, int count = 5, CancellationToken cancellationToken = default)
         {
             var serviceTypes = await GetAllAsync(cancellationToken);
             return serviceTypes
-                .Where(st => st.ServiceProviderId == serviceProviderId && st.IsActive)
+                .Where(st => st.ServicesProviderId == ServicesProviderId && st.IsActive)
                 .OrderByDescending(st => st.TimesProvided)
                 .Take(count)
                 .ToList();

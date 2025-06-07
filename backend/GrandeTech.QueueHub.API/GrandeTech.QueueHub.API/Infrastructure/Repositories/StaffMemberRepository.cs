@@ -25,26 +25,26 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
         /// <summary>
         /// Gets all staff members for a service provider
         /// </summary>
-        public async Task<IReadOnlyList<StaffMember>> GetByServiceProviderAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<StaffMember>> GetByServicesProviderAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
-            return await FindAsync(s => s.ServiceProviderId == serviceProviderId, cancellationToken);
+            return await FindAsync(s => s.ServicesProviderId == ServicesProviderId, cancellationToken);
         }
         
         /// <summary>
         /// Gets all active staff members for a service provider
         /// </summary>
-        public async Task<IReadOnlyList<StaffMember>> GetActiveStaffMembersAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<StaffMember>> GetActiveStaffMembersAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
-            return await FindAsync(s => s.ServiceProviderId == serviceProviderId && s.IsActive, cancellationToken);
+            return await FindAsync(s => s.ServicesProviderId == ServicesProviderId && s.IsActive, cancellationToken);
         }
         
         /// <summary>
         /// Gets staff members who are currently available (on duty and not on break)
         /// </summary>
-        public async Task<IReadOnlyList<StaffMember>> GetAvailableStaffAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<StaffMember>> GetAvailableStaffAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             var staffMembers = await FindAsync(s => 
-                s.ServiceProviderId == serviceProviderId && 
+                s.ServicesProviderId == ServicesProviderId && 
                 s.IsActive && 
                 s.IsOnDuty, 
                 cancellationToken);
@@ -55,10 +55,10 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
         /// <summary>
         /// Gets a staff member by their employee code
         /// </summary>
-        public async Task<StaffMember?> GetByEmployeeCodeAsync(Guid serviceProviderId, string employeeCode, CancellationToken cancellationToken = default)
+        public async Task<StaffMember?> GetByEmployeeCodeAsync(Guid ServicesProviderId, string employeeCode, CancellationToken cancellationToken = default)
         {
             return await FindAsync(s => 
-                s.ServiceProviderId == serviceProviderId && 
+                s.ServicesProviderId == ServicesProviderId && 
                 s.EmployeeCode == employeeCode, 
                 cancellationToken)
                 .ContinueWith(t => t.Result.FirstOrDefault());

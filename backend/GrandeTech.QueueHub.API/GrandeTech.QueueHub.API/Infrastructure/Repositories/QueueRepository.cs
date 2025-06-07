@@ -26,7 +26,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
         /// Gets the active queue for a service provider on a specific date
         /// </summary>
         public async Task<Queue?> GetActiveQueueAsync(
-            Guid serviceProviderId, 
+            Guid ServicesProviderId, 
             DateTime? date = null, 
             CancellationToken cancellationToken = default)
         {
@@ -35,7 +35,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
             return await _dbSet
                 .Include(q => q.Entries)
                 .FirstOrDefaultAsync(q => 
-                    q.ServiceProviderId == serviceProviderId && 
+                    q.ServicesProviderId == ServicesProviderId && 
                     q.QueueDate.Date == queueDate.Date && 
                     q.IsActive, 
                     cancellationToken);
@@ -45,7 +45,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
         /// Gets all queues for a service provider within a date range
         /// </summary>
         public async Task<IReadOnlyList<Queue>> GetQueuesByDateRangeAsync(
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             DateTime startDate,
             DateTime endDate, 
             CancellationToken cancellationToken = default)
@@ -53,7 +53,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
             return await _dbSet
                 .Include(q => q.Entries)
                 .Where(q => 
-                    q.ServiceProviderId == serviceProviderId && 
+                    q.ServicesProviderId == ServicesProviderId && 
                     q.QueueDate.Date >= startDate.Date && 
                     q.QueueDate.Date <= endDate.Date)
                 .ToListAsync(cancellationToken);

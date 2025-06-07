@@ -11,7 +11,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
     {
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }
-        public Guid ServiceProviderId { get; private set; }
+        public Guid ServicesProviderId { get; private set; }
         public int EstimatedDurationMinutes { get; private set; }
         public Money? Price { get; private set; }
         public string? ImageUrl { get; private set; }
@@ -25,7 +25,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
         public ServiceType(
             string name,
             string? description,
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             int estimatedDurationMinutes,
             decimal? price,
             string? imageUrl,
@@ -34,15 +34,15 @@ namespace GrandeTech.QueueHub.API.Domain.Services
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Service type name is required", nameof(name));
 
-            if (serviceProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(serviceProviderId));
+            if (ServicesProviderId == Guid.Empty)
+                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
 
             if (estimatedDurationMinutes <= 0)
                 throw new ArgumentException("Estimated duration must be positive", nameof(estimatedDurationMinutes));
 
             Name = name;
             Description = description;
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             EstimatedDurationMinutes = estimatedDurationMinutes;
             Price = price.HasValue ? Money.Create(price.Value) : null;
             ImageUrl = imageUrl;
@@ -51,7 +51,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
             ActualAverageDurationMinutes = estimatedDurationMinutes; // Start with estimate
             CreatedBy = createdBy;
 
-            AddDomainEvent(new ServiceTypeCreatedEvent(Id, Name, ServiceProviderId));
+            AddDomainEvent(new ServiceTypeCreatedEvent(Id, Name, ServicesProviderId));
         }
 
         // Domain behavior methods

@@ -1,18 +1,18 @@
-using GrandeTech.QueueHub.API.Domain.ServiceProviders;
+using GrandeTech.QueueHub.API.Domain.ServicesProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ServiceProviderEntity = GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider;
+using ServicesProviderEntity = GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider;
 
 namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
 {    /// <summary>
-    /// Entity Framework configuration for ServiceProvider entity
+    /// Entity Framework configuration for ServicesProvider entity
     /// </summary>
-    public class ServiceProviderConfiguration : IEntityTypeConfiguration<ServiceProviderEntity>
+    public class ServicesProviderConfiguration : IEntityTypeConfiguration<ServicesProviderEntity>
     {
-        public void Configure(EntityTypeBuilder<ServiceProviderEntity> builder)
+        public void Configure(EntityTypeBuilder<ServicesProviderEntity> builder)
         {
             // Table name
-            builder.ToTable("ServiceProviders");
+            builder.ToTable("ServicesProviders");
             
             // Key
             builder.HasKey(sp => sp.Id);

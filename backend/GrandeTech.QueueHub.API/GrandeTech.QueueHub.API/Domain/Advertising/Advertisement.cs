@@ -13,7 +13,7 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
         public string? Description { get; private set; }
         public string MediaUrl { get; private set; } = string.Empty;
         public string MediaType { get; private set; } = string.Empty; // image, video
-        public Guid ServiceProviderId { get; private set; }
+        public Guid ServicesProviderId { get; private set; }
         public bool IsActive { get; private set; }
         public DateTime? StartDate { get; private set; }
         public DateTime? EndDate { get; private set; }
@@ -29,7 +29,7 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
             string? description,
             string mediaUrl,
             string mediaType,
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             DateTime? startDate,
             DateTime? endDate,
             int displayDurationSeconds,
@@ -59,7 +59,7 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
             Description = description;
             MediaUrl = mediaUrl;
             MediaType = mediaType.ToLower();
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             StartDate = startDate;
             EndDate = endDate;
             DisplayDurationSeconds = displayDurationSeconds;
@@ -68,7 +68,7 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
             IsActive = true;
             CreatedBy = createdBy;
 
-            AddDomainEvent(new AdvertisementCreatedEvent(Id, Title, ServiceProviderId));
+            AddDomainEvent(new AdvertisementCreatedEvent(Id, Title, ServicesProviderId));
         }
 
         // Domain behavior methods

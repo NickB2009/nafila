@@ -53,7 +53,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
         /// Gets customers who frequently visit a specific service provider
         /// </summary>
         public async Task<IReadOnlyList<Customer>> GetFrequentCustomersAsync(
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             int minVisits,
             CancellationToken cancellationToken = default)
         {

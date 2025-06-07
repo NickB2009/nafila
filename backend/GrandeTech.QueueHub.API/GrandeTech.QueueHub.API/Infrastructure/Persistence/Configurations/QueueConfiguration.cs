@@ -18,7 +18,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
             builder.HasKey(q => q.Id);
             
             // Properties
-            builder.Property(q => q.ServiceProviderId)
+            builder.Property(q => q.ServicesProviderId)
                 .IsRequired();
                 
             builder.Property(q => q.QueueDate)
@@ -52,9 +52,9 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 .IsRequired();
                 
             // Relationships
-            builder.HasOne<Domain.ServiceProviders.ServiceProvider>()
+            builder.HasOne<Domain.ServicesProviders.ServicesProvider>()
                 .WithMany()
-                .HasForeignKey(q => q.ServiceProviderId)
+                .HasForeignKey(q => q.ServicesProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
                 
             builder.HasMany(q => q.Entries)
@@ -63,7 +63,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
                 
             // Indexes
-            builder.HasIndex(q => new { q.ServiceProviderId, q.QueueDate })
+            builder.HasIndex(q => new { q.ServicesProviderId, q.QueueDate })
                 .IsUnique();
         }
     }

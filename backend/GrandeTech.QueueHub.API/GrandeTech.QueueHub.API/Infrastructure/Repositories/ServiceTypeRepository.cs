@@ -25,21 +25,21 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
         /// <summary>
         /// Gets all service types for a service provider
         /// </summary>
-        public async Task<IReadOnlyList<ServiceType>> GetByServiceProviderAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<ServiceType>> GetByServicesProviderAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             return await _dbSet
-                .Where(s => s.ServiceProviderId == serviceProviderId)
+                .Where(s => s.ServicesProviderId == ServicesProviderId)
                 .ToListAsync(cancellationToken);
         }
         
         /// <summary>
         /// Gets all active service types for a service provider
         /// </summary>
-        public async Task<IReadOnlyList<ServiceType>> GetActiveServiceTypesAsync(Guid serviceProviderId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<ServiceType>> GetActiveServiceTypesAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default)
         {
             return await _dbSet
                 .Where(s => 
-                    s.ServiceProviderId == serviceProviderId && 
+                    s.ServicesProviderId == ServicesProviderId && 
                     s.IsActive)
                 .ToListAsync(cancellationToken);
         }
@@ -48,12 +48,12 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories
         /// Gets the most popular service types for a service provider
         /// </summary>
         public async Task<IReadOnlyList<ServiceType>> GetPopularServiceTypesAsync(
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             int count,
             CancellationToken cancellationToken = default)
         {
             // For now, return all active service types since we're using bogus data
-            return await GetActiveServiceTypesAsync(serviceProviderId, cancellationToken);
+            return await GetActiveServiceTypesAsync(ServicesProviderId, cancellationToken);
         }
     }
 } 

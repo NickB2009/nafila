@@ -78,7 +78,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ServiceProviderId")
+                    b.Property<Guid>("ServicesProviderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("StartDate")
@@ -113,10 +113,10 @@ namespace GrandeTech.QueueHub.API.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FavoriteServiceProviderIds")
+                    b.Property<string>("FavoriteServicesProviderIds")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("FavoriteServiceProviderIds");
+                        .HasColumnName("FavoriteServicesProviderIds");
 
                     b.Property<bool>("IsAnonymous")
                         .ValueGeneratedOnAdd()
@@ -370,7 +370,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<Guid>("ServiceProviderId")
+                    b.Property<Guid>("ServicesProviderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("StartDate")
@@ -381,7 +381,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.HasIndex("ServiceProviderId");
+                    b.HasIndex("ServicesProviderId");
 
                     b.ToTable("Coupons", (string)null);
                 });
@@ -436,12 +436,12 @@ namespace GrandeTech.QueueHub.API.Migrations
                     b.Property<DateTime>("QueueDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("ServiceProviderId")
+                    b.Property<Guid>("ServicesProviderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceProviderId", "QueueDate")
+                    b.HasIndex("ServicesProviderId", "QueueDate")
                         .IsUnique();
 
                     b.ToTable("Queues", (string)null);
@@ -576,7 +576,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                     b.ToTable("QueueEntries", (string)null);
                 });
 
-            modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider", b =>
+            modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -652,7 +652,7 @@ namespace GrandeTech.QueueHub.API.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("ServiceProviders", (string)null);
+                    b.ToTable("ServicesProviders", (string)null);
                 });
 
             modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.Services.ServiceType", b =>
@@ -711,7 +711,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid>("ServiceProviderId")
+                    b.Property<Guid>("ServicesProviderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("TimesProvided")
@@ -721,7 +721,7 @@ namespace GrandeTech.QueueHub.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceProviderId");
+                    b.HasIndex("ServicesProviderId");
 
                     b.ToTable("ServiceTypes", (string)null);
                 });
@@ -844,7 +844,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<Guid>("ServiceProviderId")
+                    b.Property<Guid>("ServicesProviderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("StaffStatus")
@@ -941,10 +941,10 @@ namespace GrandeTech.QueueHub.API.Migrations
                     b.Property<int>("MaxQueueEntriesPerDay")
                         .HasColumnType("int");
 
-                    b.Property<int>("MaxServiceProviders")
+                    b.Property<int>("MaxServicesProviders")
                         .HasColumnType("int");
 
-                    b.Property<int>("MaxStaffPerServiceProvider")
+                    b.Property<int>("MaxStaffPerServicesProvider")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -1039,9 +1039,9 @@ namespace GrandeTech.QueueHub.API.Migrations
                                 .HasColumnType("datetime2")
                                 .HasColumnName("ServiceDate");
 
-                            b1.Property<Guid>("ServiceProviderId")
+                            b1.Property<Guid>("ServicesProviderId")
                                 .HasColumnType("uniqueidentifier")
-                                .HasColumnName("ServiceProviderId");
+                                .HasColumnName("ServicesProviderId");
 
                             b1.Property<Guid>("ServiceTypeId")
                                 .HasColumnType("uniqueidentifier")
@@ -1210,9 +1210,9 @@ namespace GrandeTech.QueueHub.API.Migrations
 
             modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.Promotions.Coupon", b =>
                 {
-                    b.HasOne("GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider", null)
+                    b.HasOne("GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider", null)
                         .WithMany()
-                        .HasForeignKey("ServiceProviderId")
+                        .HasForeignKey("ServicesProviderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1244,9 +1244,9 @@ namespace GrandeTech.QueueHub.API.Migrations
 
             modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.Queues.Queue", b =>
                 {
-                    b.HasOne("GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider", null)
+                    b.HasOne("GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider", null)
                         .WithMany()
-                        .HasForeignKey("ServiceProviderId")
+                        .HasForeignKey("ServicesProviderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -1277,7 +1277,7 @@ namespace GrandeTech.QueueHub.API.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider", b =>
+            modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider", b =>
                 {
                     b.HasOne("GrandeTech.QueueHub.API.Domain.Organizations.Organization", null)
                         .WithMany()
@@ -1287,7 +1287,7 @@ namespace GrandeTech.QueueHub.API.Migrations
 
                     b.OwnsOne("GrandeTech.QueueHub.API.Domain.Common.ValueObjects.Address", "Location", b1 =>
                         {
-                            b1.Property<Guid>("ServiceProviderId")
+                            b1.Property<Guid>("ServicesProviderId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("City")
@@ -1346,17 +1346,17 @@ namespace GrandeTech.QueueHub.API.Migrations
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("Street");
 
-                            b1.HasKey("ServiceProviderId");
+                            b1.HasKey("ServicesProviderId");
 
-                            b1.ToTable("ServiceProviders");
+                            b1.ToTable("ServicesProviders");
 
                             b1.WithOwner()
-                                .HasForeignKey("ServiceProviderId");
+                                .HasForeignKey("ServicesProviderId");
                         });
 
                     b.OwnsOne("GrandeTech.QueueHub.API.Domain.Common.ValueObjects.TimeSpanRange", "BusinessHours", b1 =>
                         {
-                            b1.Property<Guid>("ServiceProviderId")
+                            b1.Property<Guid>("ServicesProviderId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<TimeSpan>("End")
@@ -1367,17 +1367,17 @@ namespace GrandeTech.QueueHub.API.Migrations
                                 .HasColumnType("time")
                                 .HasColumnName("BusinessHoursStart");
 
-                            b1.HasKey("ServiceProviderId");
+                            b1.HasKey("ServicesProviderId");
 
-                            b1.ToTable("ServiceProviders");
+                            b1.ToTable("ServicesProviders");
 
                             b1.WithOwner()
-                                .HasForeignKey("ServiceProviderId");
+                                .HasForeignKey("ServicesProviderId");
                         });
 
                     b.OwnsOne("GrandeTech.QueueHub.API.Domain.Common.ValueObjects.Email", "ContactEmail", b1 =>
                         {
-                            b1.Property<Guid>("ServiceProviderId")
+                            b1.Property<Guid>("ServicesProviderId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Value")
@@ -1386,17 +1386,17 @@ namespace GrandeTech.QueueHub.API.Migrations
                                 .HasColumnType("nvarchar(255)")
                                 .HasColumnName("ContactEmail");
 
-                            b1.HasKey("ServiceProviderId");
+                            b1.HasKey("ServicesProviderId");
 
-                            b1.ToTable("ServiceProviders");
+                            b1.ToTable("ServicesProviders");
 
                             b1.WithOwner()
-                                .HasForeignKey("ServiceProviderId");
+                                .HasForeignKey("ServicesProviderId");
                         });
 
                     b.OwnsOne("GrandeTech.QueueHub.API.Domain.Common.ValueObjects.PhoneNumber", "ContactPhone", b1 =>
                         {
-                            b1.Property<Guid>("ServiceProviderId")
+                            b1.Property<Guid>("ServicesProviderId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CountryCode")
@@ -1417,17 +1417,17 @@ namespace GrandeTech.QueueHub.API.Migrations
                                 .HasColumnType("nvarchar(20)")
                                 .HasColumnName("ContactPhone");
 
-                            b1.HasKey("ServiceProviderId");
+                            b1.HasKey("ServicesProviderId");
 
-                            b1.ToTable("ServiceProviders");
+                            b1.ToTable("ServicesProviders");
 
                             b1.WithOwner()
-                                .HasForeignKey("ServiceProviderId");
+                                .HasForeignKey("ServicesProviderId");
                         });
 
                     b.OwnsOne("GrandeTech.QueueHub.API.Domain.Common.ValueObjects.BrandingConfig", "CustomBranding", b1 =>
                         {
-                            b1.Property<Guid>("ServiceProviderId")
+                            b1.Property<Guid>("ServicesProviderId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CompanyName")
@@ -1466,17 +1466,17 @@ namespace GrandeTech.QueueHub.API.Migrations
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
-                            b1.HasKey("ServiceProviderId");
+                            b1.HasKey("ServicesProviderId");
 
-                            b1.ToTable("ServiceProviders");
+                            b1.ToTable("ServicesProviders");
 
                             b1.WithOwner()
-                                .HasForeignKey("ServiceProviderId");
+                                .HasForeignKey("ServicesProviderId");
                         });
 
                     b.OwnsOne("GrandeTech.QueueHub.API.Domain.Common.ValueObjects.Slug", "Slug", b1 =>
                         {
-                            b1.Property<Guid>("ServiceProviderId")
+                            b1.Property<Guid>("ServicesProviderId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Value")
@@ -1485,15 +1485,15 @@ namespace GrandeTech.QueueHub.API.Migrations
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("Slug");
 
-                            b1.HasKey("ServiceProviderId");
+                            b1.HasKey("ServicesProviderId");
 
                             b1.HasIndex("Value")
                                 .IsUnique();
 
-                            b1.ToTable("ServiceProviders");
+                            b1.ToTable("ServicesProviders");
 
                             b1.WithOwner()
-                                .HasForeignKey("ServiceProviderId");
+                                .HasForeignKey("ServicesProviderId");
                         });
 
                     b.Navigation("BusinessHours")
@@ -1514,9 +1514,9 @@ namespace GrandeTech.QueueHub.API.Migrations
 
             modelBuilder.Entity("GrandeTech.QueueHub.API.Domain.Services.ServiceType", b =>
                 {
-                    b.HasOne("GrandeTech.QueueHub.API.Domain.ServiceProviders.ServiceProvider", null)
+                    b.HasOne("GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider", null)
                         .WithMany()
-                        .HasForeignKey("ServiceProviderId")
+                        .HasForeignKey("ServicesProviderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

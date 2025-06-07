@@ -1,183 +1,183 @@
 using System;
 using GrandeTech.QueueHub.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.ServiceProviders
+namespace GrandeTech.QueueHub.API.Domain.ServicesProviders
 {
-    public class ServiceProviderCreatedEvent : DomainEvent
+    public class ServicesProviderCreatedEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
-        public string ServiceProviderName { get; }
+        public Guid ServicesProviderId { get; }
+        public string ServicesProviderName { get; }
         public Guid OrganizationId { get; }
 
-        public ServiceProviderCreatedEvent(Guid serviceProviderId, string serviceProviderName, Guid organizationId)
+        public ServicesProviderCreatedEvent(Guid ServicesProviderId, string ServicesProviderName, Guid organizationId)
         {
-            ServiceProviderId = serviceProviderId;
-            ServiceProviderName = serviceProviderName;
+            ServicesProviderId = ServicesProviderId;
+            ServicesProviderName = ServicesProviderName;
             OrganizationId = organizationId;
         }
     }
 
-    public class ServiceProviderUpdatedEvent : DomainEvent
+    public class ServicesProviderUpdatedEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderUpdatedEvent(Guid serviceProviderId)
+        public ServicesProviderUpdatedEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class ServiceProviderBrandingUpdatedEvent : DomainEvent
+    public class ServicesProviderBrandingUpdatedEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderBrandingUpdatedEvent(Guid serviceProviderId)
+        public ServicesProviderBrandingUpdatedEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class ServiceProviderQueueEnabledEvent : DomainEvent
+    public class ServicesProviderQueueEnabledEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderQueueEnabledEvent(Guid serviceProviderId)
+        public ServicesProviderQueueEnabledEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class ServiceProviderQueueDisabledEvent : DomainEvent
+    public class ServicesProviderQueueDisabledEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderQueueDisabledEvent(Guid serviceProviderId)
+        public ServicesProviderQueueDisabledEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class ServiceProviderQueueSettingsUpdatedEvent : DomainEvent
+    public class ServicesProviderQueueSettingsUpdatedEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderQueueSettingsUpdatedEvent(Guid serviceProviderId)
+        public ServicesProviderQueueSettingsUpdatedEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class ServiceProviderActivatedEvent : DomainEvent
+    public class ServicesProviderActivatedEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderActivatedEvent(Guid serviceProviderId)
+        public ServicesProviderActivatedEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class ServiceProviderDeactivatedEvent : DomainEvent
+    public class ServicesProviderDeactivatedEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderDeactivatedEvent(Guid serviceProviderId)
+        public ServicesProviderDeactivatedEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 
-    public class StaffMemberAddedToServiceProviderEvent : DomainEvent
+    public class StaffMemberAddedToServicesProviderEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
         public Guid StaffMemberId { get; }
 
-        public StaffMemberAddedToServiceProviderEvent(Guid serviceProviderId, Guid staffMemberId)
+        public StaffMemberAddedToServicesProviderEvent(Guid ServicesProviderId, Guid staffMemberId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             StaffMemberId = staffMemberId;
         }
     }
 
-    public class StaffMemberRemovedFromServiceProviderEvent : DomainEvent
+    public class StaffMemberRemovedFromServicesProviderEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
         public Guid StaffMemberId { get; }
 
-        public StaffMemberRemovedFromServiceProviderEvent(Guid serviceProviderId, Guid staffMemberId)
+        public StaffMemberRemovedFromServicesProviderEvent(Guid ServicesProviderId, Guid staffMemberId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             StaffMemberId = staffMemberId;
         }
     }
 
-    public class ServiceTypeAddedToServiceProviderEvent : DomainEvent
+    public class ServiceTypeAddedToServicesProviderEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
         public Guid ServiceTypeId { get; }
 
-        public ServiceTypeAddedToServiceProviderEvent(Guid serviceProviderId, Guid serviceTypeId)
+        public ServiceTypeAddedToServicesProviderEvent(Guid ServicesProviderId, Guid serviceTypeId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             ServiceTypeId = serviceTypeId;
         }
     }
 
-    public class ServiceTypeRemovedFromServiceProviderEvent : DomainEvent
+    public class ServiceTypeRemovedFromServicesProviderEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
         public Guid ServiceTypeId { get; }
 
-        public ServiceTypeRemovedFromServiceProviderEvent(Guid serviceProviderId, Guid serviceTypeId)
+        public ServiceTypeRemovedFromServicesProviderEvent(Guid ServicesProviderId, Guid serviceTypeId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             ServiceTypeId = serviceTypeId;
         }
     }
 
-    public class AdvertisementAddedToServiceProviderEvent : DomainEvent
+    public class AdvertisementAddedToServicesProviderEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
         public Guid AdvertisementId { get; }
 
-        public AdvertisementAddedToServiceProviderEvent(Guid serviceProviderId, Guid advertisementId)
+        public AdvertisementAddedToServicesProviderEvent(Guid ServicesProviderId, Guid advertisementId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             AdvertisementId = advertisementId;
         }
     }
 
-    public class AdvertisementRemovedFromServiceProviderEvent : DomainEvent
+    public class AdvertisementRemovedFromServicesProviderEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
         public Guid AdvertisementId { get; }
 
-        public AdvertisementRemovedFromServiceProviderEvent(Guid serviceProviderId, Guid advertisementId)
+        public AdvertisementRemovedFromServicesProviderEvent(Guid ServicesProviderId, Guid advertisementId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             AdvertisementId = advertisementId;
         }
     }
 
-    public class ServiceProviderAverageTimeUpdatedEvent : DomainEvent
+    public class ServicesProviderAverageTimeUpdatedEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
         public double NewAverageTimeInMinutes { get; }
 
-        public ServiceProviderAverageTimeUpdatedEvent(Guid serviceProviderId, double newAverageTimeInMinutes)
+        public ServicesProviderAverageTimeUpdatedEvent(Guid ServicesProviderId, double newAverageTimeInMinutes)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             NewAverageTimeInMinutes = newAverageTimeInMinutes;
         }
     }
 
-    public class ServiceProviderAverageTimeResetEvent : DomainEvent
+    public class ServicesProviderAverageTimeResetEvent : DomainEvent
     {
-        public Guid ServiceProviderId { get; }
+        public Guid ServicesProviderId { get; }
 
-        public ServiceProviderAverageTimeResetEvent(Guid serviceProviderId)
+        public ServicesProviderAverageTimeResetEvent(Guid ServicesProviderId)
         {
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
         }
     }
 }

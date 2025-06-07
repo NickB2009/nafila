@@ -4,38 +4,38 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.ServiceProviders;
+using GrandeTech.QueueHub.API.Domain.ServicesProviders;
 
 namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
 {
-    public class BogusServiceProviderRepository : BogusBaseRepository<Domain.ServiceProviders.ServiceProvider>, IServiceProviderRepository
+    public class BogusServicesProviderRepository : BogusBaseRepository<Domain.ServicesProviders.ServicesProvider>, IServicesProviderRepository
     {
-        public override async Task<Domain.ServiceProviders.ServiceProvider?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public override async Task<Domain.ServicesProviders.ServicesProvider?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await base.GetByIdAsync(id, cancellationToken);
         }
 
-        public override async Task<IReadOnlyList<Domain.ServiceProviders.ServiceProvider>> GetAllAsync(CancellationToken cancellationToken = default)
+        public override async Task<IReadOnlyList<Domain.ServicesProviders.ServicesProvider>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await base.GetAllAsync(cancellationToken);
         }
 
-        public override async Task<IReadOnlyList<Domain.ServiceProviders.ServiceProvider>> FindAsync(System.Linq.Expressions.Expression<Func<Domain.ServiceProviders.ServiceProvider, bool>> predicate, CancellationToken cancellationToken = default)
+        public override async Task<IReadOnlyList<Domain.ServicesProviders.ServicesProvider>> FindAsync(System.Linq.Expressions.Expression<Func<Domain.ServicesProviders.ServicesProvider, bool>> predicate, CancellationToken cancellationToken = default)
         {
             return await base.FindAsync(predicate, cancellationToken);
         }
 
-        public override async Task<Domain.ServiceProviders.ServiceProvider> AddAsync(Domain.ServiceProviders.ServiceProvider entity, CancellationToken cancellationToken = default)
+        public override async Task<Domain.ServicesProviders.ServicesProvider> AddAsync(Domain.ServicesProviders.ServicesProvider entity, CancellationToken cancellationToken = default)
         {
             return await base.AddAsync(entity, cancellationToken);
         }
 
-        public override async Task<Domain.ServiceProviders.ServiceProvider> UpdateAsync(Domain.ServiceProviders.ServiceProvider entity, CancellationToken cancellationToken = default)
+        public override async Task<Domain.ServicesProviders.ServicesProvider> UpdateAsync(Domain.ServicesProviders.ServicesProvider entity, CancellationToken cancellationToken = default)
         {
             return await base.UpdateAsync(entity, cancellationToken);
         }
 
-        public override async Task<bool> DeleteAsync(Domain.ServiceProviders.ServiceProvider entity, CancellationToken cancellationToken = default)
+        public override async Task<bool> DeleteAsync(Domain.ServicesProviders.ServicesProvider entity, CancellationToken cancellationToken = default)
         {
             return await base.DeleteAsync(entity, cancellationToken);
         }
@@ -45,14 +45,14 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             return await base.DeleteByIdAsync(id, cancellationToken);
         }
 
-        public override async Task<bool> ExistsAsync(System.Linq.Expressions.Expression<Func<Domain.ServiceProviders.ServiceProvider, bool>> predicate, CancellationToken cancellationToken = default)
+        public override async Task<bool> ExistsAsync(System.Linq.Expressions.Expression<Func<Domain.ServicesProviders.ServicesProvider, bool>> predicate, CancellationToken cancellationToken = default)
         {
             return await base.ExistsAsync(predicate, cancellationToken);
         }
 
-        protected override Domain.ServiceProviders.ServiceProvider CreateNewEntityWithId(Domain.ServiceProviders.ServiceProvider entity, Guid id)
+        protected override Domain.ServicesProviders.ServicesProvider CreateNewEntityWithId(Domain.ServicesProviders.ServicesProvider entity, Guid id)
         {
-            var serviceProvider = new Domain.ServiceProviders.ServiceProvider(
+            var ServicesProvider = new Domain.ServicesProviders.ServicesProvider(
                 entity.Name,
                 entity.Slug.Value,
                 entity.Description ?? string.Empty,
@@ -68,33 +68,33 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             
             // Set the ID using reflection since it's protected
             var idProperty = typeof(BaseEntity).GetProperty("Id");
-            idProperty?.SetValue(serviceProvider, id);
+            idProperty?.SetValue(ServicesProvider, id);
             
-            return serviceProvider;
+            return ServicesProvider;
         }
 
-        public async Task<IReadOnlyList<Domain.ServiceProviders.ServiceProvider>> GetByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Domain.ServicesProviders.ServicesProvider>> GetByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken = default)
         {
-            var serviceProviders = await GetAllAsync(cancellationToken);
-            return serviceProviders.Where(sp => sp.OrganizationId == organizationId).ToList();
+            var ServicesProviders = await GetAllAsync(cancellationToken);
+            return ServicesProviders.Where(sp => sp.OrganizationId == organizationId).ToList();
         }
 
-        public async Task<Domain.ServiceProviders.ServiceProvider?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+        public async Task<Domain.ServicesProviders.ServicesProvider?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
         {
-            var serviceProviders = await GetAllAsync(cancellationToken);
-            return serviceProviders.FirstOrDefault(sp => sp.Slug.Value == slug);
+            var ServicesProviders = await GetAllAsync(cancellationToken);
+            return ServicesProviders.FirstOrDefault(sp => sp.Slug.Value == slug);
         }
 
-        public async Task<IReadOnlyList<Domain.ServiceProviders.ServiceProvider>> GetActiveServiceProvidersAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Domain.ServicesProviders.ServicesProvider>> GetActiveServicesProvidersAsync(CancellationToken cancellationToken = default)
         {
-            var serviceProviders = await GetAllAsync(cancellationToken);
-            return serviceProviders.Where(sp => sp.IsActive).ToList();
+            var ServicesProviders = await GetAllAsync(cancellationToken);
+            return ServicesProviders.Where(sp => sp.IsActive).ToList();
         }
 
-        public async Task<IReadOnlyList<Domain.ServiceProviders.ServiceProvider>> GetNearbyServiceProvidersAsync(double latitude, double longitude, double radiusInKm, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Domain.ServicesProviders.ServicesProvider>> GetNearbyServicesProvidersAsync(double latitude, double longitude, double radiusInKm, CancellationToken cancellationToken = default)
         {
-            var serviceProviders = await GetAllAsync(cancellationToken);
-            return serviceProviders
+            var ServicesProviders = await GetAllAsync(cancellationToken);
+            return ServicesProviders
                 .Where(sp => sp.IsActive && 
                     sp.Location.Latitude.HasValue && 
                     sp.Location.Longitude.HasValue && 

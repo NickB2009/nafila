@@ -10,7 +10,7 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
     /// </summary>
     public class Queue : BaseEntity, IAggregateRoot
     {
-        public Guid ServiceProviderId { get; private set; }
+        public Guid ServicesProviderId { get; private set; }
         public DateTime QueueDate { get; private set; }
         public bool IsActive { get; private set; }
         public int MaxSize { get; private set; }
@@ -24,22 +24,22 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
         private Queue() { }
 
         public Queue(
-            Guid serviceProviderId,
+            Guid ServicesProviderId,
             int maxSize,
             int lateClientCapTimeInMinutes,
             string createdBy)
         {
-            if (serviceProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(serviceProviderId));
+            if (ServicesProviderId == Guid.Empty)
+                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
 
-            ServiceProviderId = serviceProviderId;
+            ServicesProviderId = ServicesProviderId;
             QueueDate = DateTime.UtcNow.Date;
             IsActive = true;
             MaxSize = maxSize > 0 ? maxSize : 100;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes >= 0 ? lateClientCapTimeInMinutes : 15;
             CreatedBy = createdBy;
 
-            AddDomainEvent(new QueueCreatedEvent(Id, ServiceProviderId, QueueDate));
+            AddDomainEvent(new QueueCreatedEvent(Id, ServicesProviderId, QueueDate));
         }
 
         // Domain behavior methods

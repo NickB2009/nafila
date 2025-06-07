@@ -10,7 +10,7 @@ namespace GrandeTech.QueueHub.API.Application.Staff
         public required string Email { get; set; }
         public required string PhoneNumber { get; set; }
         public required string Username { get; set; }
-        public required string ServiceProviderId { get; set; }
+        public required string ServicesProviderId { get; set; }
         public required List<string> ServiceTypeIds { get; set; }
         public bool DeactivateOnCreation { get; set; }
         public string? Address { get; set; }

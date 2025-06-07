@@ -32,10 +32,10 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasDefaultValue(false);
                 
-            builder.Property(sp => sp.MaxServiceProviders)
+            builder.Property(sp => sp.MaxServicesProviders)
                 .IsRequired();
                 
-            builder.Property(sp => sp.MaxStaffPerServiceProvider)
+            builder.Property(sp => sp.MaxStaffPerServicesProvider)
                 .IsRequired();
                 
             builder.Property(sp => sp.MaxQueueEntriesPerDay)
