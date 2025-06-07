@@ -1,2 +1,0 @@
-redis==5.0.1
-channels-redis==4.1.0
