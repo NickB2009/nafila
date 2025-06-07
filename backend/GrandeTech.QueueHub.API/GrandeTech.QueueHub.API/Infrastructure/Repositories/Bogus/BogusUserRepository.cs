@@ -10,46 +10,70 @@ using GrandeTech.QueueHub.API.Domain.Users;
 namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
 {
     public class BogusUserRepository : BogusBaseRepository<User>, IUserRepository
-    {
-        public BogusUserRepository()
+    {        public BogusUserRepository()
         {
-            var faker = new Faker<User>()
-                .CustomInstantiator(f => new User(
-                    f.Internet.UserName(),
-                    f.Internet.Email(),
-                    BCrypt.Net.BCrypt.HashPassword("password123"),
-                    f.PickRandom(new[] { "Admin", "Staff", "Customer" })
-                ))
-                .RuleFor(u => u.Id, f => f.Random.Guid())
-                .RuleFor(u => u.IsActive, f => f.Random.Bool())
-                .RuleFor(u => u.CreatedAt, f => f.Date.Past())
-                .RuleFor(u => u.LastLoginAt, f => f.Date.Recent());
-
-            var users = faker.Generate(50);
-            foreach (var user in users)
+            lock (_lock)
             {
-                _items[user.Id] = user;
-            }
-        }
+                // Only initialize if not already initialized
+                if (_items.Count == 0)
+                {
+                    var faker = new Faker<User>()
+                        .CustomInstantiator(f => new User(
+                            f.Internet.UserName(),
+                            f.Internet.Email(),
+                            BCrypt.Net.BCrypt.HashPassword("password123"),
+                            f.PickRandom(new[] { "Admin", "Staff", "Customer" })
+                        ))
+                        .RuleFor(u => u.Id, f => f.Random.Guid())
+                        .RuleFor(u => u.IsActive, f => f.Random.Bool())
+                        .RuleFor(u => u.CreatedAt, f => f.Date.Past())
+                        .RuleFor(u => u.LastLoginAt, f => f.Date.Recent());
 
-        public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
+                    var users = faker.Generate(50);
+                    foreach (var user in users)
+                    {
+                        _items[user.Id] = user;
+                    }
+                }
+            }
+        }public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.Values.FirstOrDefault(u => u.Username == username));
+            User? result;
+            lock (_lock)
+            {
+                result = _items.Values.FirstOrDefault(u => u.Username == username);
+            }
+            return await Task.FromResult(result);
         }
 
         public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.Values.FirstOrDefault(u => u.Email == email));
+            User? result;
+            lock (_lock)
+            {
+                result = _items.Values.FirstOrDefault(u => u.Email == email);
+            }
+            return await Task.FromResult(result);
         }
 
         public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.Values.Any(u => u.Username == username));
+            bool result;
+            lock (_lock)
+            {
+                result = _items.Values.Any(u => u.Username == username);
+            }
+            return await Task.FromResult(result);
         }
 
         public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.Values.Any(u => u.Email == email));
+            bool result;
+            lock (_lock)
+            {
+                result = _items.Values.Any(u => u.Email == email);
+            }
+            return await Task.FromResult(result);
         }
 
         public new async Task AddAsync(User user, CancellationToken cancellationToken = default)
