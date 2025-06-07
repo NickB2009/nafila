@@ -1,25 +1,21 @@
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Threading;
+using GrandeTech.QueueHub.API.Application.Auth;
+using GrandeTech.QueueHub.API.Domain.Users;
+using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using GrandeTech.QueueHub.API.Application.Auth;
-using GrandeTech.QueueHub.API.Domain.Users;
-using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
+using System.Net;
+using System.Text;
+using System.Text.Json;
 
 namespace GrandeTech.QueueHub.Tests.Integration.Controllers
-{    [TestClass]
+{
+    [TestClass]
     public class AuthControllerIntegrationTests
     {
         private WebApplicationFactory<Program>? _factory;
-        private HttpClient? _client;        [TestInitialize]
+        private HttpClient? _client; [TestInitialize]
         public void Setup()
         {
             _factory = new WebApplicationFactory<Program>()
@@ -50,12 +46,13 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
         {
             _client?.Dispose();
             _factory?.Dispose();
-        }        [TestMethod]
+        }
+        [TestMethod]
         public async Task Login_WithValidCredentials_ReturnsSuccessResult()
         {
             // Arrange - First register a user to ensure we have valid credentials
             Assert.IsNotNull(_client);
-            
+
             var registerRequest = new RegisterRequest
             {
                 Username = "testuser123",
@@ -66,10 +63,10 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             var registerJson = JsonSerializer.Serialize(registerRequest);
             var registerContent = new StringContent(registerJson, Encoding.UTF8, "application/json");
-            
+
             // Register the user first
             var registerResponse = await _client.PostAsync("/api/auth/register", registerContent);
-            
+
             // Now test login
             var loginRequest = new LoginRequest
             {
@@ -85,7 +82,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
-            
+
             var responseContent = await loginResponse.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
             {
@@ -97,12 +94,13 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult.Token);
             Assert.AreEqual("testuser123", loginResult.Username);
             Assert.AreEqual("User", loginResult.Role);
-        }        [TestMethod]
+        }
+        [TestMethod]
         public async Task Login_WithInvalidCredentials_ReturnsBadRequest()
         {
             // Arrange
             Assert.IsNotNull(_client);
-            
+
             var loginRequest = new LoginRequest
             {
                 Username = "nonexistentuser",
@@ -117,7 +115,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
             {
@@ -127,18 +125,19 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult);
             Assert.IsFalse(loginResult.Success);
             Assert.IsNotNull(loginResult.Error);
-        }        [TestMethod]
+        }
+        [TestMethod]
         public async Task Login_WithExistingBogusUser_ReturnsSuccessResult()
         {
             // Arrange - Get a user from the Bogus repository
             Assert.IsNotNull(_factory);
             Assert.IsNotNull(_client);
-            
+
             using var scope = _factory.Services.CreateScope();
             var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-            
+
             // Create a test user with known credentials in the repository
-            var knownUser = new User("integrationtestuser", "integration@test.com", 
+            var knownUser = new User("integrationtestuser", "integration@test.com",
                 BCrypt.Net.BCrypt.HashPassword("password123"), "User");
             await userRepository.AddAsync(knownUser, CancellationToken.None);
 
@@ -156,7 +155,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
             {
@@ -167,12 +166,13 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsTrue(loginResult.Success);
             Assert.IsNotNull(loginResult.Token);
             Assert.AreEqual("integrationtestuser", loginResult.Username);
-        }        [TestMethod]
+        }
+        [TestMethod]
         public async Task Register_WithValidData_ReturnsSuccessResult()
         {
             // Arrange
             Assert.IsNotNull(_client);
-            
+
             var registerRequest = new RegisterRequest
             {
                 Username = "newuser123",
@@ -189,7 +189,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             var registerResult = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
             {
@@ -198,12 +198,13 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             Assert.IsNotNull(registerResult);
             Assert.IsTrue(registerResult.Success);
-        }        [TestMethod]
+        }
+        [TestMethod]
         public async Task Register_WithDuplicateUsername_ReturnsBadRequest()
         {
             // Arrange - First register a user
             Assert.IsNotNull(_client);
-            
+
             var firstRegisterRequest = new RegisterRequest
             {
                 Username = "duplicateuser",
@@ -214,7 +215,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             var firstJson = JsonSerializer.Serialize(firstRegisterRequest);
             var firstContent = new StringContent(firstJson, Encoding.UTF8, "application/json");
-            
+
             await _client.PostAsync("/api/auth/register", firstContent);
 
             // Now try to register with the same username
@@ -234,7 +235,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             var registerResult = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
             {
@@ -252,7 +253,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
         {
             // Arrange - First register a user
             Assert.IsNotNull(_client);
-            
+
             var firstRegisterRequest = new RegisterRequest
             {
                 Username = "user1",
@@ -263,7 +264,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             var firstJson = JsonSerializer.Serialize(firstRegisterRequest);
             var firstContent = new StringContent(firstJson, Encoding.UTF8, "application/json");
-            
+
             await _client.PostAsync("/api/auth/register", firstContent);
 
             // Now try to register with the same email
@@ -283,7 +284,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             var registerResult = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
             {
@@ -301,7 +302,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
         {
             // Arrange
             Assert.IsNotNull(_client);
-            
+
             var registerRequest = new RegisterRequest
             {
                 Username = "testuser",
@@ -318,7 +319,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             var registerResult = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
             {
@@ -336,7 +337,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
         {
             // Arrange
             Assert.IsNotNull(_client);
-            
+
             var registerRequest = new RegisterRequest
             {
                 Username = "",
@@ -353,7 +354,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            
+
             var responseContent = await response.Content.ReadAsStringAsync();
             var registerResult = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
             {
@@ -371,7 +372,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
         {
             // Arrange
             Assert.IsNotNull(_client);
-            
+
             var username = "endtoenduser";
             var email = "endtoend@example.com";
             var password = "securepassword123";
@@ -405,7 +406,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Assert 2: Login successful
             Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
-            
+
             var responseContent = await loginResponse.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
             {
