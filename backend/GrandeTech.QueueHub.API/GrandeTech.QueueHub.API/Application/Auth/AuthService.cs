@@ -133,18 +133,14 @@ namespace GrandeTech.QueueHub.API.Application.Auth
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private string HashPassword(string password)
+        }        private string HashPassword(string password)
         {
-            // In production, use a proper password hasher like BCrypt
-            return Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(password)));
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
         private bool VerifyPassword(string password, string hash)
         {
-            var computedHash = HashPassword(password);
-            return computedHash == hash;
+            return BCrypt.Net.BCrypt.Verify(password, hash);
         }
     }
 } 
