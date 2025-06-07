@@ -85,6 +85,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
 
+// Register application services
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.ServiceProviders.CreateServiceProviderService>();
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.AddBarberService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

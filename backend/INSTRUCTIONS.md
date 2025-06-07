@@ -207,3 +207,60 @@ When creating Azure resources for this project, follow these best practices:
     - Document compliance status and any needed exceptions.
     - Implement appropriate data handling policies in each BFF to comply with domain-specific regulations.
     - Ensure all frontends and BFFs properly handle consent and privacy preferences.
+
+---
+
+## Nafila Development Guidelines
+
+### 1. **TDD-First Workflow**
+   * Prompt for a concrete test case before writing any implementation.
+   * Generate a minimal failing test that captures the desired behavior or edge case.
+   * Once the test is in place, implement just enough logic to pass it.
+
+### 2. **Domain-Driven Design (DDD) Layered Separation**
+   * Treat business rules and data transformations as pure domain logic: no direct calls to databases, web frameworks, or external services.
+   * Keep "infrastructure" concerns (DB access, HTTP handlers, external API clients) separate and inject them as dependencies.
+   * Follow the existing clean architecture pattern with Domain, Application, Infrastructure, and API layers.
+
+### 3. **Dependency Injection & Mocks**
+   * When scaffolding a service or use-case, include constructor (or parameter) hooks for repositories, API clients, or external services.
+   * In test scaffolding, substitute real adapters with in-memory stubs or mocks.
+   * Follow the existing pattern used in `AddBarberService` with injected `IStaffMemberRepository`.
+
+### 4. **Thin Controllers / Handlers**
+   * Recommend endpoint layers that only validate inputs, invoke one application service, and format outputs.
+   * Avoid embedding any business logic in controllers.
+   * Follow the existing pattern in `StaffController` where controllers delegate to application services.
+
+### 5. **Integration Test Scaffolding**
+   * Offer integration test harnesses using `WebApplicationFactory<Program>` pattern.
+   * Swap only external adapters with test doubles, and assert on HTTP status codes, response bodies, or side-effects.
+   * Follow the existing pattern in `StaffControllerIntegrationTests`.
+
+### 6. **Progressive Implementation Strategy**
+   * After use-case and handler tests pass, guide replacement of stubs with real database clients, external APIs, or Azure services.
+   * Auto-generate adapter tests that target real clients against test databases or local services.
+   * Implement foundational entities first (ServiceProvider → Services → Staff → Queue).
+
+### 7. **Built-In Observability**
+   * Suggest hooks for logging, metrics (latency, error rates), and health-check endpoints alongside every use-case or handler.
+   * Include alerts or threshold checks to catch performance regressions or failures early.
+   * Use structured logging with correlation IDs for request tracing.
+
+### 8. **Queue-Specific Domain Events**
+   * Tag use-cases and domain entities with version identifiers for the barbershop queue domain.
+   * When proposing changes to queue operations, generate event-driven patterns for real-time updates.
+   * Consider domain events like `ClientJoinedQueueEvent`, `BarberCalledNextEvent`, `ServiceCompletedEvent`.
+
+### 9. **Barbershop Domain Safety Gates**
+   * Before or after any queue operation, insert business rule validation (queue capacity, barber availability, service compatibility).
+   * Include test cases for barbershop-specific constraints and edge cases (late clients, duplicate entries, service time violations).
+   * Implement tenant isolation to ensure barbershop data separation.
+
+### 10. **Multi-Tenant Architecture Documentation**
+    * After generating new components, automatically draft or update architectural notes: purpose, inputs/outputs, dependencies.
+    * Maintain clear boundaries between "domain logic," "application services," "infrastructure adapters," and "API controllers."
+    * Document tenant-specific customizations and branding capabilities.
+    * Ensure all queue operations respect ServiceProvider (tenant) boundaries.
+
+---
