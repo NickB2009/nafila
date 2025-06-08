@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Staff;
-using GrandeTech.QueueHub.API.Domain.ServicesProviders;
+using GrandeTech.QueueHub.API.Domain.Locations;
 using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
 using GrandeTech.QueueHub.API.Domain.AuditLogs;
 
@@ -12,13 +12,13 @@ namespace GrandeTech.QueueHub.API.Application.Staff
     public class AddBarberService
     {
         private readonly IStaffMemberRepository _staffRepo;
-        private readonly IServicesProviderRepository _spRepo;
+        private readonly ILocationRepository _locationRepo;
         private readonly IAuditLogRepository _auditLogRepo;
 
-        public AddBarberService(IStaffMemberRepository staffRepo, IServicesProviderRepository spRepo, IAuditLogRepository auditLogRepo)
+        public AddBarberService(IStaffMemberRepository staffRepo, ILocationRepository locationRepo, IAuditLogRepository auditLogRepo)
         {
             _staffRepo = staffRepo;
-            _spRepo = spRepo;
+            _locationRepo = locationRepo;
             _auditLogRepo = auditLogRepo;
         }
 
@@ -68,14 +68,12 @@ namespace GrandeTech.QueueHub.API.Application.Staff
             }
 
             if (result.FieldErrors.Count > 0)
-                return result;
-
-            // ServicesProvider existence
-            var ServicesProviderId = Guid.Parse(request.ServicesProviderId);
-            var spExists = await _spRepo.ExistsAsync(sp => sp.Id == ServicesProviderId, cancellationToken);
-            if (!spExists)
+                return result;            // Location existence
+            var locationId = Guid.Parse(request.LocationId);
+            var locationExists = await _locationRepo.ExistsAsync(location => location.Id == locationId, cancellationToken);
+            if (!locationExists)
             {
-                result.Errors.Add("Service provider not found.");
+                result.Errors.Add("Location not found.");
                 return result;
             }
 
@@ -96,10 +94,9 @@ namespace GrandeTech.QueueHub.API.Application.Staff
             }
 
             // Create StaffMember
-            var fullName = request.FirstName.Trim() + " " + request.LastName.Trim();
-            var staff = new StaffMember(
+            var fullName = request.FirstName.Trim() + " " + request.LastName.Trim();            var staff = new StaffMember(
                 fullName,
-                ServicesProviderId,
+                locationId,
                 request.Email,
                 request.PhoneNumber,
                 null, // ProfilePictureUrl

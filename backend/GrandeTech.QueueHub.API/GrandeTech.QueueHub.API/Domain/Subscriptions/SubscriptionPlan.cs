@@ -16,8 +16,8 @@ namespace GrandeTech.QueueHub.API.Domain.Subscriptions
         public decimal Price { get; private set; } // Simple price property for queries
         public bool IsActive { get; private set; }
         public bool IsDefault { get; private set; }
-        public int MaxServicesProviders { get; private set; }
-        public int MaxStaffPerServicesProvider { get; private set; }
+        public int MaxLocations { get; private set; }
+        public int MaxStaffPerLocation { get; private set; }
         public bool IncludesAnalytics { get; private set; }
         public bool IncludesAdvancedReporting { get; private set; }
         public bool IncludesCustomBranding { get; private set; }
@@ -34,8 +34,8 @@ namespace GrandeTech.QueueHub.API.Domain.Subscriptions
             string description,
             decimal monthlyPrice,
             decimal yearlyPrice,
-            int maxServicesProviders,
-            int maxStaffPerServicesProvider,
+            int maxLocations,
+            int maxStaffPerLocation,
             bool includesAnalytics,
             bool includesAdvancedReporting,
             bool includesCustomBranding,
@@ -53,8 +53,8 @@ namespace GrandeTech.QueueHub.API.Domain.Subscriptions
             MonthlyPrice = Money.Create(monthlyPrice);
             YearlyPrice = Money.Create(yearlyPrice);
             IsActive = true;
-            MaxServicesProviders = maxServicesProviders;
-            MaxStaffPerServicesProvider = maxStaffPerServicesProvider;
+            MaxLocations = maxLocations;
+            MaxStaffPerLocation = maxStaffPerLocation;
             IncludesAnalytics = includesAnalytics;
             IncludesAdvancedReporting = includesAdvancedReporting;
             IncludesCustomBranding = includesCustomBranding;
@@ -72,8 +72,8 @@ namespace GrandeTech.QueueHub.API.Domain.Subscriptions
             string description,
             decimal monthlyPrice,
             decimal yearlyPrice,
-            int maxServicesProviders,
-            int maxStaffPerServicesProvider,
+            int maxLocations,
+            int maxStaffPerLocation,
             bool includesAnalytics,
             bool includesAdvancedReporting,
             bool includesCustomBranding,
@@ -90,8 +90,8 @@ namespace GrandeTech.QueueHub.API.Domain.Subscriptions
             Description = description ?? string.Empty;
             MonthlyPrice = Money.Create(monthlyPrice);
             YearlyPrice = Money.Create(yearlyPrice);
-            MaxServicesProviders = maxServicesProviders;
-            MaxStaffPerServicesProvider = maxStaffPerServicesProvider;
+            MaxLocations = maxLocations;
+            MaxStaffPerLocation = maxStaffPerLocation;
             IncludesAnalytics = includesAnalytics;
             IncludesAdvancedReporting = includesAdvancedReporting;
             IncludesCustomBranding = includesCustomBranding;
@@ -126,14 +126,14 @@ namespace GrandeTech.QueueHub.API.Domain.Subscriptions
 
         public bool CanHaveMultipleLocations() => IncludesMultipleLocations;
 
-        public bool HasReachedServicesProviderLimit(int currentServicesProviderCount)
+        public bool HasReachedLocationLimit(int currentLocationCount)
         {
-            return currentServicesProviderCount >= MaxServicesProviders;
+            return currentLocationCount >= MaxLocations;
         }
 
         public bool HasReachedStaffLimit(int currentStaffCount)
         {
-            return currentStaffCount >= MaxStaffPerServicesProvider;
+            return currentStaffCount >= MaxStaffPerLocation;
         }
     }
 }

@@ -1,5 +1,4 @@
 using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
 using GrandeTech.QueueHub.API.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -86,8 +85,12 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
 
 // Register application services
-builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.ServicesProviders.CreateServicesProviderService>();
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Locations.CreateLocationService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.AddBarberService>();
+
+// Register organization services
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Organizations.CreateOrganizationService>();
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Organizations.OrganizationService>();
 
 var app = builder.Build();
 

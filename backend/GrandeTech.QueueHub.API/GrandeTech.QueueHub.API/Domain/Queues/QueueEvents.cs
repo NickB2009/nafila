@@ -6,13 +6,11 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
     public class QueueCreatedEvent : DomainEvent
     {
         public Guid QueueId { get; }
-        public Guid ServicesProviderId { get; }
-        public DateTime QueueDate { get; }
-
-        public QueueCreatedEvent(Guid queueId, Guid ServicesProviderId, DateTime queueDate)
+        public Guid LocationId { get; }
+        public DateTime QueueDate { get; }        public QueueCreatedEvent(Guid queueId, Guid locationId, DateTime queueDate)
         {
             QueueId = queueId;
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
             QueueDate = queueDate;
         }
     }

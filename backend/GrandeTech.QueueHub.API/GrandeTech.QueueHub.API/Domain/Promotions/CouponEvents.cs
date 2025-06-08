@@ -7,13 +7,11 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
     {
         public Guid CouponId { get; }
         public string Code { get; }
-        public Guid ServicesProviderId { get; }
-
-        public CouponCreatedEvent(Guid couponId, string code, Guid ServicesProviderId)
+        public Guid LocationId { get; }        public CouponCreatedEvent(Guid couponId, string code, Guid locationId)
         {
             CouponId = couponId;
             Code = code;
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
         }
     }
 

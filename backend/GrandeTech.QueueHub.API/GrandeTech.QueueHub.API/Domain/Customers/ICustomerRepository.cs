@@ -39,12 +39,12 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         /// <summary>
         /// Gets customers who frequently visit a specific service provider
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="LocationId">The service provider ID</param>
         /// <param name="minVisits">Minimum number of visits to be considered frequent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of frequent customers</returns>
         Task<IReadOnlyList<Customer>> GetFrequentCustomersAsync(
-            Guid ServicesProviderId, 
+            Guid LocationId, 
             int minVisits = 3, 
             CancellationToken cancellationToken = default);
     }

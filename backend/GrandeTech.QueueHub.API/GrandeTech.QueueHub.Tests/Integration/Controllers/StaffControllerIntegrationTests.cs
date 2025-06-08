@@ -12,7 +12,7 @@ using GrandeTech.QueueHub.API.Application.Auth;
 using GrandeTech.QueueHub.API.Application.Staff;
 using GrandeTech.QueueHub.API.Domain.Users;
 using GrandeTech.QueueHub.API.Domain.Staff;
-using GrandeTech.QueueHub.API.Domain.ServicesProviders;
+using GrandeTech.QueueHub.API.Domain.Locations;
 using GrandeTech.QueueHub.API.Domain.AuditLogs;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
@@ -47,9 +47,8 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                     {
                         // Remove existing repositories if any
                         var descriptors = services.Where(d => 
-                            d.ServiceType == typeof(IUserRepository) ||
-                            d.ServiceType == typeof(IStaffMemberRepository) ||
-                            d.ServiceType == typeof(IServicesProviderRepository) ||
+                            d.ServiceType == typeof(IUserRepository) ||                            d.ServiceType == typeof(IStaffMemberRepository) ||
+                            d.ServiceType == typeof(ILocationRepository) ||
                             d.ServiceType == typeof(IAuditLogRepository)).ToList();
                         
                         foreach (var descriptor in descriptors)
@@ -58,7 +57,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                         }                        // Use Bogus repositories for testing
                         services.AddScoped<IUserRepository, BogusUserRepository>();
                         services.AddScoped<IStaffMemberRepository, BogusStaffMemberRepository>();
-                        services.AddScoped<IServicesProviderRepository, BogusServicesProviderRepository>();
+                        services.AddScoped<ILocationRepository, BogusLocationRepository>();
                         services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
                         
                         // Register AddBarberService
@@ -87,19 +86,16 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // First, create and authenticate an admin user
             var adminToken = await CreateAndAuthenticateUserAsync("Admin");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            // Create a service provider first (required for barber creation)
-            var ServicesProviderId = await CreateServicesProviderAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            // Create a location first (required for barber creation)
+            var locationId = await CreateLocationAsync();
 
             var addBarberRequest = new AddBarberRequest
             {
                 FirstName = "John",
                 LastName = "Doe",
                 Email = "john.doe@barbershop.com",
-                PhoneNumber = "+5511999999999",
-                Username = "johndoe",
-                ServicesProviderId = ServicesProviderId,
+                PhoneNumber = "+5511999999999",                Username = "johndoe",
+                LocationId = locationId,
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() },
                 DeactivateOnCreation = false,
                 Address = "Rua Exemplo, 123",
@@ -139,10 +135,8 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // First, create and authenticate an owner user
             var ownerToken = await CreateAndAuthenticateUserAsync("Owner");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);
-
-            // Create a service provider first
-            var ServicesProviderId = await CreateServicesProviderAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);            // Create a location first
+            var locationId = await CreateLocationAsync();
 
             var addBarberRequest = new AddBarberRequest
             {
@@ -151,7 +145,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                 Email = "jane.smith@barbershop.com",
                 PhoneNumber = "+5511888888888",
                 Username = "janesmith",
-                ServicesProviderId = ServicesProviderId,
+                LocationId = locationId,
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() },
                 DeactivateOnCreation = false,
                 Address = "Avenida Teste, 456",
@@ -194,10 +188,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             {
                 FirstName = "Bob",
                 LastName = "Johnson",
-                Email = "bob.johnson@barbershop.com",
-                PhoneNumber = "+5511777777777",
+                Email = "bob.johnson@barbershop.com",                PhoneNumber = "+5511777777777",
                 Username = "bobjohnson",
-                ServicesProviderId = Guid.NewGuid().ToString(),
+                LocationId = Guid.NewGuid().ToString(),
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
             };
 
@@ -221,10 +214,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             {
                 FirstName = "Test",
                 LastName = "User",
-                Email = "test.user@barbershop.com",
-                PhoneNumber = "+5511666666666",
+                Email = "test.user@barbershop.com",                PhoneNumber = "+5511666666666",
                 Username = "testuser",
-                ServicesProviderId = Guid.NewGuid().ToString(),
+                LocationId = Guid.NewGuid().ToString(),
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
             };
 
@@ -249,13 +241,12 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 
             // Invalid request with missing required fields
             var addBarberRequest = new AddBarberRequest
-            {
-                FirstName = "", // Invalid - empty
+            {                FirstName = "", // Invalid - empty
                 LastName = "", // Invalid - empty
                 Email = "invalid-email", // Invalid format
                 PhoneNumber = "", // Invalid - empty
                 Username = "", // Invalid - empty
-                ServicesProviderId = "invalid-guid", // Invalid format
+                LocationId = "invalid-guid", // Invalid format
                 ServiceTypeIds = new List<string>() // Invalid - empty list
             };
 
@@ -287,9 +278,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsNotNull(_factory);
 
             var adminToken = await CreateAndAuthenticateUserAsync("Admin");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            var ServicesProviderId = await CreateServicesProviderAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
 
             // Create a barber first with a specific email
             using var scope = _factory.Services.CreateScope();
@@ -297,7 +286,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             
             var existingBarber = new StaffMember(
                 "Existing Barber",
-                Guid.Parse(ServicesProviderId),
+                Guid.Parse(locationId),
                 "duplicate@barbershop.com",
                 "+5511555555555",
                 null,
@@ -312,11 +301,10 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var addBarberRequest = new AddBarberRequest
             {
                 FirstName = "New",
-                LastName = "Barber",
-                Email = "duplicate@barbershop.com", // Same email as existing barber
+                LastName = "Barber",                Email = "duplicate@barbershop.com", // Same email as existing barber
                 PhoneNumber = "+5511444444444",
                 Username = "newbarber",
-                ServicesProviderId = ServicesProviderId,
+                LocationId = locationId,
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
             };
 
@@ -349,9 +337,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsNotNull(_factory);
 
             var adminToken = await CreateAndAuthenticateUserAsync("Admin");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            var ServicesProviderId = await CreateServicesProviderAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
 
             // Create a barber first with a specific username
             using var scope = _factory.Services.CreateScope();
@@ -359,7 +345,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             
             var existingBarber = new StaffMember(
                 "Existing Barber",
-                Guid.Parse(ServicesProviderId),
+                Guid.Parse(locationId),
                 "existing@barbershop.com",
                 "+5511555555555",
                 null,
@@ -374,11 +360,10 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var addBarberRequest = new AddBarberRequest
             {
                 FirstName = "New",
-                LastName = "Barber",
-                Email = "new@barbershop.com",
+                LastName = "Barber",                Email = "new@barbershop.com",
                 PhoneNumber = "+5511444444444",
                 Username = "duplicateuser", // Same username as existing barber
-                ServicesProviderId = ServicesProviderId,
+                LocationId = locationId,
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
             };
 
@@ -401,10 +386,8 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsFalse(result.Success);
             Assert.IsTrue(result.FieldErrors.ContainsKey("Username"));
             Assert.AreEqual("A barber with this username already exists.", result.FieldErrors["Username"]);
-        }
-
-        [TestMethod]
-        public async Task AddBarber_WithNonExistentServicesProvider_ReturnsBadRequestWithError()
+        }        [TestMethod]
+        public async Task AddBarber_WithNonExistentLocation_ReturnsBadRequestWithError()
         {
             // Arrange
             Assert.IsNotNull(_client);
@@ -416,10 +399,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             {
                 FirstName = "Test",
                 LastName = "Barber",
-                Email = "test@barbershop.com",
-                PhoneNumber = "+5511333333333",
+                Email = "test@barbershop.com",                PhoneNumber = "+5511333333333",
                 Username = "testbarber",
-                ServicesProviderId = Guid.NewGuid().ToString(), // Non-existent service provider
+                LocationId = Guid.NewGuid().ToString(), // Non-existent location
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
             };
 
@@ -441,7 +423,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
             Assert.IsTrue(result.Errors.Count > 0);
-            Assert.IsTrue(result.Errors.Contains("Service provider not found."));
+            Assert.IsTrue(result.Errors.Contains("Location not found."));
         }
 
         [TestMethod]
@@ -451,9 +433,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
 
             var adminToken = await CreateAndAuthenticateUserAsync("Admin");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            var ServicesProviderId = await CreateServicesProviderAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
 
             var addBarberRequest = new AddBarberRequest
             {
@@ -462,7 +442,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                 Email = "inactive@barbershop.com",
                 PhoneNumber = "+5511222222222",
                 Username = "inactivebarber",
-                ServicesProviderId = ServicesProviderId,
+                LocationId = locationId,
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() },
                 DeactivateOnCreation = true // This should make the barber inactive
             };
@@ -530,15 +510,15 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult.Token);
 
             return loginResult.Token;
-        }
-
-        private async Task<string> CreateServicesProviderAsync()
+        }        private async Task<string> CreateLocationAsync()
         {
             Assert.IsNotNull(_factory);
 
             using var scope = _factory.Services.CreateScope();
-            var ServicesProviderRepo = scope.ServiceProvider.GetRequiredService<IServicesProviderRepository>();            // Create a service provider for testing
-            var ServicesProvider = new GrandeTech.QueueHub.API.Domain.ServicesProviders.ServicesProvider(
+            var locationRepo = scope.ServiceProvider.GetRequiredService<ILocationRepository>();
+
+            // Create a location for testing
+            var location = new GrandeTech.QueueHub.API.Domain.Locations.Location(
                 "Test Barbershop",
                 "test-barbershop",
                 "Test Description",
@@ -554,9 +534,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                 "testuser"
             );
 
-            await ServicesProviderRepo.AddAsync(ServicesProvider, CancellationToken.None);
+            await locationRepo.AddAsync(location, CancellationToken.None);
 
-            return ServicesProvider.Id.ToString();
+            return location.Id.ToString();
         }
     }
 }

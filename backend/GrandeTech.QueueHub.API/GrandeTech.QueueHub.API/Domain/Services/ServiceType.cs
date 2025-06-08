@@ -11,13 +11,12 @@ namespace GrandeTech.QueueHub.API.Domain.Services
     {
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }
-        public Guid ServicesProviderId { get; private set; }
+        public Guid LocationId { get; private set; }
         public int EstimatedDurationMinutes { get; private set; }
         public Money? Price { get; private set; }
         public string? ImageUrl { get; private set; }
         public bool IsActive { get; private set; }
-        public int TimesProvided { get; private set; }
-        public double ActualAverageDurationMinutes { get; private set; }
+        public int TimesProvided { get; private set; }        public double ActualAverageDurationMinutes { get; private set; }
 
         // For EF Core
         private ServiceType() { }
@@ -25,33 +24,33 @@ namespace GrandeTech.QueueHub.API.Domain.Services
         public ServiceType(
             string name,
             string? description,
-            Guid ServicesProviderId,
+            Guid locationId,
             int estimatedDurationMinutes,
-            decimal? price,
+            decimal? priceValue,
             string? imageUrl,
             string createdBy)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Service type name is required", nameof(name));
 
-            if (ServicesProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
+            if (locationId == Guid.Empty)
+                throw new ArgumentException("Location ID is required", nameof(locationId));
 
             if (estimatedDurationMinutes <= 0)
                 throw new ArgumentException("Estimated duration must be positive", nameof(estimatedDurationMinutes));
 
             Name = name;
             Description = description;
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
             EstimatedDurationMinutes = estimatedDurationMinutes;
-            Price = price.HasValue ? Money.Create(price.Value) : null;
+            Price = priceValue.HasValue ? Money.Create(priceValue.Value) : null;
             ImageUrl = imageUrl;
             IsActive = true;
             TimesProvided = 0;
             ActualAverageDurationMinutes = estimatedDurationMinutes; // Start with estimate
             CreatedBy = createdBy;
 
-            AddDomainEvent(new ServiceTypeCreatedEvent(Id, Name, ServicesProviderId));
+            AddDomainEvent(new ServiceTypeCreatedEvent(Id, Name, LocationId));
         }
 
         // Domain behavior methods

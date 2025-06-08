@@ -22,8 +22,8 @@ namespace GrandeTech.QueueHub.API.Domain.Organizations
         public bool SharesDataForAnalytics { get; private set; }
 
         // Navigation properties
-        private readonly List<Guid> _ServicesProviderIds = new();
-        public IReadOnlyCollection<Guid> ServicesProviderIds => _ServicesProviderIds.AsReadOnly();
+        private readonly List<Guid> _LocationIds = new();
+        public IReadOnlyCollection<Guid> LocationIds => _LocationIds.AsReadOnly();
         
         // For EF Core
         private Organization() { }
@@ -120,21 +120,21 @@ namespace GrandeTech.QueueHub.API.Domain.Organizations
             }
         }
 
-        public void AddServicesProvider(Guid ServicesProviderId)
+        public void AddLocation(Guid LocationId)
         {
-            if (!_ServicesProviderIds.Contains(ServicesProviderId))
+            if (!_LocationIds.Contains(LocationId))
             {
-                _ServicesProviderIds.Add(ServicesProviderId);
-                AddDomainEvent(new ServicesProviderAddedToOrganizationEvent(Id, ServicesProviderId));
+                _LocationIds.Add(LocationId);
+                AddDomainEvent(new LocationAddedToOrganizationEvent(Id, LocationId));
             }
         }
 
-        public void RemoveServicesProvider(Guid ServicesProviderId)
+        public void RemoveLocation(Guid LocationId)
         {
-            if (_ServicesProviderIds.Contains(ServicesProviderId))
+            if (_LocationIds.Contains(LocationId))
             {
-                _ServicesProviderIds.Remove(ServicesProviderId);
-                AddDomainEvent(new ServicesProviderRemovedFromOrganizationEvent(Id, ServicesProviderId));
+                _LocationIds.Remove(LocationId);
+                AddDomainEvent(new LocationRemovedFromOrganizationEvent(Id, LocationId));
             }
         }
 

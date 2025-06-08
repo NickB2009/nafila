@@ -164,13 +164,13 @@ namespace GrandeTech.QueueHub.API.Domain.Notifications
             Guid customerId,
             int position,
             string customerName,
-            string ServicesProviderName,
+            string LocationName,
             NotificationChannel channel,
             Guid queueEntryId,
             string deepLink)
         {
             var title = $"É quase sua vez, {customerName}!";
-            var content = $"Você está na {position}ª posição na fila da {ServicesProviderName}. Em breve será atendido.";
+            var content = $"Você está na {position}ª posição na fila da {LocationName}. Em breve será atendido.";
             
             return new Notification(
                 customerId,
@@ -191,13 +191,13 @@ namespace GrandeTech.QueueHub.API.Domain.Notifications
             string couponCode,
             string discount,
             string expirationDate,
-            string ServicesProviderName,
+            string LocationName,
             NotificationChannel channel,
             Guid couponId,
             string deepLink)
         {
             var title = $"Cupom especial para você, {customerName}!";
-            var content = $"Use o código {couponCode} para ganhar {discount}% de desconto na {ServicesProviderName}. Válido até {expirationDate}.";
+            var content = $"Use o código {couponCode} para ganhar {discount}% de desconto na {LocationName}. Válido até {expirationDate}.";
             
             return new Notification(
                 customerId,

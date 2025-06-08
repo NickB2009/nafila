@@ -4,15 +4,14 @@ using GrandeTech.QueueHub.API.Domain.Common;
 using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
 
 namespace GrandeTech.QueueHub.API.Domain.Promotions
-{
-    /// <summary>
+{    /// <summary>
     /// Represents a coupon that can be used by customers to receive discounts
     /// </summary>
     public class Coupon : BaseEntity, IAggregateRoot
     {
         public string Code { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;
-        public Guid ServicesProviderId { get; private set; }
+        public Guid LocationId { get; private set; }
         public decimal DiscountPercentage { get; private set; }
         public Money? FixedDiscountAmount { get; private set; }
         public DateTime StartDate { get; private set; }
@@ -24,15 +23,13 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
 
         // Navigation properties
         private readonly List<Guid>? _applicableServiceTypeIds;
-        public IReadOnlyCollection<Guid>? ApplicableServiceTypeIds => _applicableServiceTypeIds?.AsReadOnly();
-
-        // For EF Core
+        public IReadOnlyCollection<Guid>? ApplicableServiceTypeIds => _applicableServiceTypeIds?.AsReadOnly();        // For EF Core
         private Coupon() { }
 
         public Coupon(
             string code,
             string description,
-            Guid ServicesProviderId,
+            Guid locationId,
             decimal discountPercentage,
             decimal? fixedDiscountAmount,
             DateTime startDate,
@@ -41,12 +38,11 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
             bool requiresLogin,
             IEnumerable<Guid>? applicableServiceTypeIds,
             string createdBy)
-        {
-            if (string.IsNullOrWhiteSpace(code))
+        {            if (string.IsNullOrWhiteSpace(code))
                 throw new ArgumentException("Coupon code is required", nameof(code));
 
-            if (ServicesProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
+            if (locationId == Guid.Empty)
+                throw new ArgumentException("Location ID is required", nameof(locationId));
 
             if (discountPercentage < 0 || discountPercentage > 100)
                 throw new ArgumentException("Discount percentage must be between 0 and 100", nameof(discountPercentage));
@@ -58,11 +54,9 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
                 throw new ArgumentException("End date must be after start date", nameof(endDate));
 
             if (maxUsageCount <= 0)
-                throw new ArgumentException("Max usage count must be positive", nameof(maxUsageCount));
-
-            Code = code.ToUpperInvariant();
+                throw new ArgumentException("Max usage count must be positive", nameof(maxUsageCount));            Code = code.ToUpperInvariant();
             Description = description ?? string.Empty;
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
             DiscountPercentage = discountPercentage;
             FixedDiscountAmount = fixedDiscountAmount.HasValue ? Money.Create(fixedDiscountAmount.Value) : null;
             StartDate = startDate;
@@ -71,14 +65,12 @@ namespace GrandeTech.QueueHub.API.Domain.Promotions
             CurrentUsageCount = 0;
             IsActive = true;
             RequiresLogin = requiresLogin;
-            CreatedBy = createdBy;
-
-            if (applicableServiceTypeIds != null)
+            CreatedBy = createdBy;            if (applicableServiceTypeIds != null)
             {
                 _applicableServiceTypeIds = new List<Guid>(applicableServiceTypeIds);
             }
 
-            AddDomainEvent(new CouponCreatedEvent(Id, Code, ServicesProviderId));
+            AddDomainEvent(new CouponCreatedEvent(Id, Code, LocationId));
         }
 
         // Domain behavior methods

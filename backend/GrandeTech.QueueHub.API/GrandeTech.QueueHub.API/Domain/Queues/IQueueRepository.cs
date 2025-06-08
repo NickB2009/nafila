@@ -15,25 +15,25 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
         /// <summary>
         /// Gets the active queue for a service provider on a specific date
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="LocationId">The service provider ID</param>
         /// <param name="date">The queue date (defaults to today)</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The active queue or null if not found</returns>
         Task<Queue?> GetActiveQueueAsync(
-            Guid ServicesProviderId, 
+            Guid LocationId, 
             DateTime? date = null, 
             CancellationToken cancellationToken = default);
             
         /// <summary>
         /// Gets all queues for a service provider within a date range
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="LocationId">The service provider ID</param>
         /// <param name="startDate">The start date</param>
         /// <param name="endDate">The end date</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of queues for the specified date range</returns>
         Task<IReadOnlyList<Queue>> GetQueuesByDateRangeAsync(
-            Guid ServicesProviderId,
+            Guid LocationId,
             DateTime startDate,
             DateTime endDate, 
             CancellationToken cancellationToken = default);

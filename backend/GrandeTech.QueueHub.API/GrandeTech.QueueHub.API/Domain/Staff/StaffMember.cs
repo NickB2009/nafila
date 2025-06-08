@@ -10,7 +10,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
     /// </summary>
     public class StaffMember : BaseEntity, IAggregateRoot
     {        public string Name { get; private set; } = string.Empty;
-        public Guid ServicesProviderId { get; private set; }
+        public Guid LocationId { get; private set; }
         public Email? Email { get; private set; }
         public PhoneNumber? PhoneNumber { get; private set; }
         public string? ProfilePictureUrl { get; private set; }
@@ -32,11 +32,9 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
         public IReadOnlyCollection<Guid> SpecialtyServiceTypeIds => _specialtyServiceTypeIds.AsReadOnly();
         
         // For EF Core
-        private StaffMember() { }
-
-        public StaffMember(
+        private StaffMember() { }        public StaffMember(
             string name,
-            Guid ServicesProviderId,
+            Guid locationId,
             string? email,
             string? phoneNumber,
             string? profilePictureUrl,
@@ -48,8 +46,8 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Staff member name is required", nameof(name));
 
-            if (ServicesProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
+            if (locationId == Guid.Empty)
+                throw new ArgumentException("Service provider ID is required", nameof(locationId));
 
             if (string.IsNullOrWhiteSpace(role))
                 throw new ArgumentException("Role is required", nameof(role));
@@ -58,7 +56,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
                 throw new ArgumentException("Username is required", nameof(username));
 
             Name = name;
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
             Email = email != null ? Email.Create(email) : null;
             PhoneNumber = phoneNumber != null ? PhoneNumber.Create(phoneNumber) : null;
             ProfilePictureUrl = profilePictureUrl;
@@ -71,7 +69,7 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
             CompletedServicesCount = 0;
             CreatedBy = createdBy;
 
-            AddDomainEvent(new StaffMemberCreatedEvent(Id, Name, ServicesProviderId));
+            AddDomainEvent(new StaffMemberCreatedEvent(Id, Name, LocationId));
         }
 
         // Domain behavior methods

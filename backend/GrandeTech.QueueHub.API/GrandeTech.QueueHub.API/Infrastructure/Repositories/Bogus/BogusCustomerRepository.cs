@@ -84,11 +84,11 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             return customers.FirstOrDefault(c => c.UserId == userId);
         }
 
-        public async Task<IReadOnlyList<Customer>> GetFrequentCustomersAsync(Guid ServicesProviderId, int minVisits, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Customer>> GetFrequentCustomersAsync(Guid LocationId, int minVisits, CancellationToken cancellationToken = default)
         {
             var customers = await GetAllAsync(cancellationToken);
             return customers
-                .Where(c => c.ServiceHistory.Count(h => h.ServicesProviderId == ServicesProviderId) >= minVisits)
+                .Where(c => c.ServiceHistory.Count(h => h.LocationId == LocationId) >= minVisits)
                 .ToList();
         }
     }

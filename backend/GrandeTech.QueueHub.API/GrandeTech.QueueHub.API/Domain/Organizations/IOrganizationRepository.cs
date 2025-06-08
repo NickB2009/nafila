@@ -26,13 +26,20 @@ namespace GrandeTech.QueueHub.API.Domain.Organizations
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of active organizations</returns>
         Task<IReadOnlyList<Organization>> GetActiveOrganizationsAsync(CancellationToken cancellationToken = default);
-        
-        /// <summary>
+          /// <summary>
         /// Gets organizations by subscription plan ID
         /// </summary>
         /// <param name="subscriptionPlanId">The subscription plan ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of organizations with the specified subscription plan</returns>
         Task<IReadOnlyList<Organization>> GetBySubscriptionPlanAsync(Guid subscriptionPlanId, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Checks if a slug is unique across all organizations
+        /// </summary>
+        /// <param name="slug">The slug to check</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the slug is unique, false otherwise</returns>
+        Task<bool> IsSlugUniqueAsync(string slug, CancellationToken cancellationToken = default);
     }
 }

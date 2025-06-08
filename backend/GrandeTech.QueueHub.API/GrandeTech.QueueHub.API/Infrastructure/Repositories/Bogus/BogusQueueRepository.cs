@@ -53,7 +53,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
         protected override Queue CreateNewEntityWithId(Queue entity, Guid id)
         {
             var queue = new Queue(
-                entity.ServicesProviderId,
+                entity.LocationId,
                 entity.MaxSize,
                 entity.LateClientCapTimeInMinutes,
                 entity.CreatedBy);
@@ -65,21 +65,21 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             return queue;
         }
 
-        public async Task<Queue?> GetActiveQueueAsync(Guid ServicesProviderId, DateTime? date = null, CancellationToken cancellationToken = default)
+        public async Task<Queue?> GetActiveQueueAsync(Guid LocationId, DateTime? date = null, CancellationToken cancellationToken = default)
         {
             var queueDate = date ?? DateTime.Today;
             var queues = await GetAllAsync(cancellationToken);
             return queues.FirstOrDefault(q => 
-                q.ServicesProviderId == ServicesProviderId && 
+                q.LocationId == LocationId && 
                 q.QueueDate.Date == queueDate.Date && 
                 q.IsActive);
         }
 
-        public async Task<IReadOnlyList<Queue>> GetQueuesByDateRangeAsync(Guid ServicesProviderId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Queue>> GetQueuesByDateRangeAsync(Guid LocationId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
         {
             var queues = await GetAllAsync(cancellationToken);
             return queues.Where(q => 
-                q.ServicesProviderId == ServicesProviderId && 
+                q.LocationId == LocationId && 
                 q.QueueDate.Date >= startDate.Date && 
                 q.QueueDate.Date <= endDate.Date)
                 .ToList();

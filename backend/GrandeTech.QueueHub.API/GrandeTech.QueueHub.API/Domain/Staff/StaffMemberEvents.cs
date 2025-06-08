@@ -7,13 +7,11 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
     {
         public Guid StaffMemberId { get; }
         public string StaffMemberName { get; }
-        public Guid ServicesProviderId { get; }
-
-        public StaffMemberCreatedEvent(Guid staffMemberId, string staffMemberName, Guid ServicesProviderId)
+        public Guid LocationId { get; }        public StaffMemberCreatedEvent(Guid staffMemberId, string staffMemberName, Guid locationId)
         {
             StaffMemberId = staffMemberId;
             StaffMemberName = staffMemberName;
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
         }
     }
 

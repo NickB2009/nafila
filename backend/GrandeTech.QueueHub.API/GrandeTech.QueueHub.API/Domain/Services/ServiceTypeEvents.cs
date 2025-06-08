@@ -2,18 +2,17 @@ using System;
 using GrandeTech.QueueHub.API.Domain.Common;
 
 namespace GrandeTech.QueueHub.API.Domain.Services
-{
-    public class ServiceTypeCreatedEvent : DomainEvent
+{    public class ServiceTypeCreatedEvent : DomainEvent
     {
         public Guid ServiceTypeId { get; }
         public string ServiceTypeName { get; }
-        public Guid ServicesProviderId { get; }
+        public Guid LocationId { get; }
 
-        public ServiceTypeCreatedEvent(Guid serviceTypeId, string serviceTypeName, Guid ServicesProviderId)
+        public ServiceTypeCreatedEvent(Guid serviceTypeId, string serviceTypeName, Guid locationId)
         {
             ServiceTypeId = serviceTypeId;
             ServiceTypeName = serviceTypeName;
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
         }
     }
 

@@ -10,7 +10,7 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
     /// </summary>
     public class Queue : BaseEntity, IAggregateRoot
     {
-        public Guid ServicesProviderId { get; private set; }
+        public Guid LocationId { get; private set; }
         public DateTime QueueDate { get; private set; }
         public bool IsActive { get; private set; }
         public int MaxSize { get; private set; }
@@ -21,25 +21,22 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
         public IReadOnlyCollection<QueueEntry> Entries => _entries.AsReadOnly();
 
         // For EF Core
-        private Queue() { }
-
-        public Queue(
-            Guid ServicesProviderId,
+        private Queue() { }        public Queue(
+            Guid locationId,
             int maxSize,
             int lateClientCapTimeInMinutes,
-            string createdBy)
-        {
-            if (ServicesProviderId == Guid.Empty)
-                throw new ArgumentException("Service provider ID is required", nameof(ServicesProviderId));
+            string createdBy)        {
+            if (locationId == Guid.Empty)
+                throw new ArgumentException("Service provider ID is required", nameof(locationId));
 
-            ServicesProviderId = ServicesProviderId;
+            this.LocationId = locationId;
             QueueDate = DateTime.UtcNow.Date;
             IsActive = true;
             MaxSize = maxSize > 0 ? maxSize : 100;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes >= 0 ? lateClientCapTimeInMinutes : 15;
             CreatedBy = createdBy;
 
-            AddDomainEvent(new QueueCreatedEvent(Id, ServicesProviderId, QueueDate));
+            AddDomainEvent(new QueueCreatedEvent(Id, LocationId, QueueDate));
         }
 
         // Domain behavior methods

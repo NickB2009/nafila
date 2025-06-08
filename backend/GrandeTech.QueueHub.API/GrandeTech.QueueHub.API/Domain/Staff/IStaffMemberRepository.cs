@@ -15,35 +15,35 @@ namespace GrandeTech.QueueHub.API.Domain.Staff
         /// <summary>
         /// Gets all staff members for a service provider
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="LocationId">The service provider ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of staff members for the specified service provider</returns>
-        Task<IReadOnlyList<StaffMember>> GetByServicesProviderAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<StaffMember>> GetByLocationAsync(Guid LocationId, CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Gets all active staff members for a service provider
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="LocationId">The service provider ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of active staff members</returns>
-        Task<IReadOnlyList<StaffMember>> GetActiveStaffMembersAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<StaffMember>> GetActiveStaffMembersAsync(Guid LocationId, CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Gets staff members who are currently available (on duty and not on break)
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="LocationId">The service provider ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of available staff members</returns>
-        Task<IReadOnlyList<StaffMember>> GetAvailableStaffAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<StaffMember>> GetAvailableStaffAsync(Guid LocationId, CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Gets a staff member by their employee code
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="LocationId">The service provider ID</param>
         /// <param name="employeeCode">The employee code</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The staff member or null if not found</returns>
-        Task<StaffMember?> GetByEmployeeCodeAsync(Guid ServicesProviderId, string employeeCode, CancellationToken cancellationToken = default);
+        Task<StaffMember?> GetByEmployeeCodeAsync(Guid LocationId, string employeeCode, CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Checks if a staff member exists by email

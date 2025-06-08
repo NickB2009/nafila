@@ -23,8 +23,8 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         public IReadOnlyCollection<ServiceHistoryItem> ServiceHistory => _serviceHistory.AsReadOnly();
 
         // Favorite service providers
-        private readonly List<Guid> _favoriteServicesProviderIds = new();
-        public IReadOnlyCollection<Guid> FavoriteServicesProviderIds => _favoriteServicesProviderIds.AsReadOnly();
+        private readonly List<Guid> _favoriteLocationIds = new();
+        public IReadOnlyCollection<Guid> FavoriteLocationIds => _favoriteLocationIds.AsReadOnly();
 
         // For EF Core
         private Customer() { }
@@ -113,14 +113,14 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         }
 
         public void AddServiceHistoryItem(
-            Guid ServicesProviderId,
+            Guid LocationId,
             Guid staffMemberId,
             Guid serviceTypeId,
             DateTime serviceDate,
             string? notes = null)
         {
             var historyItem = new ServiceHistoryItem(
-                ServicesProviderId,
+                LocationId,
                 staffMemberId,
                 serviceTypeId,
                 serviceDate,
@@ -130,21 +130,21 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
             AddDomainEvent(new CustomerServiceHistoryAddedEvent(Id, historyItem.Id));
         }
 
-        public void AddFavoriteServicesProvider(Guid ServicesProviderId)
+        public void AddFavoriteLocation(Guid LocationId)
         {
-            if (!_favoriteServicesProviderIds.Contains(ServicesProviderId))
+            if (!_favoriteLocationIds.Contains(LocationId))
             {
-                _favoriteServicesProviderIds.Add(ServicesProviderId);
-                AddDomainEvent(new CustomerFavoriteServicesProviderAddedEvent(Id, ServicesProviderId));
+                _favoriteLocationIds.Add(LocationId);
+                AddDomainEvent(new CustomerFavoriteLocationAddedEvent(Id, LocationId));
             }
         }
 
-        public void RemoveFavoriteServicesProvider(Guid ServicesProviderId)
+        public void RemoveFavoriteLocation(Guid LocationId)
         {
-            if (_favoriteServicesProviderIds.Contains(ServicesProviderId))
+            if (_favoriteLocationIds.Contains(LocationId))
             {
-                _favoriteServicesProviderIds.Remove(ServicesProviderId);
-                AddDomainEvent(new CustomerFavoriteServicesProviderRemovedEvent(Id, ServicesProviderId));
+                _favoriteLocationIds.Remove(LocationId);
+                AddDomainEvent(new CustomerFavoriteLocationRemovedEvent(Id, LocationId));
             }
         }
 
@@ -177,7 +177,7 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
     }    public class ServiceHistoryItem
     {
         public Guid Id { get; private set; }
-        public Guid ServicesProviderId { get; private set; }
+        public Guid LocationId { get; private set; }
         public Guid StaffMemberId { get; private set; }
         public Guid ServiceTypeId { get; private set; }
         public DateTime ServiceDate { get; private set; }
@@ -186,10 +186,8 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         public string? Feedback { get; private set; }
 
         // For EF Core
-        private ServiceHistoryItem() { }
-
-        public ServiceHistoryItem(
-            Guid ServicesProviderId,
+        private ServiceHistoryItem() { }        public ServiceHistoryItem(
+            Guid locationId,
             Guid staffMemberId,
             Guid serviceTypeId,
             DateTime serviceDate,
@@ -198,7 +196,7 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
             string? feedback = null)
         {
             Id = Guid.NewGuid();
-            ServicesProviderId = ServicesProviderId;
+            LocationId = locationId;
             StaffMemberId = staffMemberId;
             ServiceTypeId = serviceTypeId;
             ServiceDate = serviceDate;

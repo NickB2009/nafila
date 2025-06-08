@@ -48,9 +48,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
         public override async Task<bool> ExistsAsync(System.Linq.Expressions.Expression<Func<Organization, bool>> predicate, CancellationToken cancellationToken = default)
         {
             return await base.ExistsAsync(predicate, cancellationToken);
-        }
-
-        protected override Organization CreateNewEntityWithId(Organization entity, Guid id)
+        }        protected override Organization CreateNewEntityWithId(Organization entity, Guid id)
         {
             var organization = new Organization(
                 entity.Name,
@@ -61,7 +59,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
                 entity.WebsiteUrl,
                 entity.BrandingConfig,
                 entity.SubscriptionPlanId,
-                entity.CreatedBy);
+                entity.CreatedBy ?? "system");
             
             // Set the ID using reflection since it's protected
             var idProperty = typeof(BaseEntity).GetProperty("Id");
@@ -80,12 +78,16 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
         {
             var organizations = await GetAllAsync(cancellationToken);
             return organizations.Where(o => o.IsActive).ToList();
-        }
-
-        public async Task<IReadOnlyList<Organization>> GetBySubscriptionPlanAsync(Guid subscriptionPlanId, CancellationToken cancellationToken = default)
+        }        public async Task<IReadOnlyList<Organization>> GetBySubscriptionPlanAsync(Guid subscriptionPlanId, CancellationToken cancellationToken = default)
         {
             var organizations = await GetAllAsync(cancellationToken);
             return organizations.Where(o => o.SubscriptionPlanId == subscriptionPlanId).ToList();
         }
+
+        public async Task<bool> IsSlugUniqueAsync(string slug, CancellationToken cancellationToken = default)
+        {
+            var organizations = await GetAllAsync(cancellationToken);
+            return !organizations.Any(o => o.Slug.Value == slug);
+        }
     }
-} 
+}

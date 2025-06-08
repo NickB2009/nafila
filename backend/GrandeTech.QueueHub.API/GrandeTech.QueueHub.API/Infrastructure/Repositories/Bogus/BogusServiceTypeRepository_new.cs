@@ -66,21 +66,23 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             idProperty?.SetValue(serviceType, id);
             
             return serviceType;
-        }        public async Task<IReadOnlyList<ServiceType>> GetByLocationAsync(Guid locationId, CancellationToken cancellationToken = default)
+        }
+
+        public async Task<IReadOnlyList<ServiceType>> GetByLocationAsync(Guid locationId, CancellationToken cancellationToken = default)
         {
-            var serviceTypes = await base.GetAllAsync(cancellationToken);
+            var serviceTypes = await GetAllAsync(cancellationToken);
             return serviceTypes.Where(st => st.LocationId == locationId).ToList();
         }
 
         public async Task<IReadOnlyList<ServiceType>> GetActiveServiceTypesAsync(Guid locationId, CancellationToken cancellationToken = default)
         {
-            var serviceTypes = await base.GetAllAsync(cancellationToken);
+            var serviceTypes = await GetAllAsync(cancellationToken);
             return serviceTypes.Where(st => st.LocationId == locationId && st.IsActive).ToList();
         }
 
         public async Task<IReadOnlyList<ServiceType>> GetPopularServiceTypesAsync(Guid locationId, int count = 5, CancellationToken cancellationToken = default)
         {
-            var serviceTypes = await base.GetAllAsync(cancellationToken);
+            var serviceTypes = await GetAllAsync(cancellationToken);
             return serviceTypes
                 .Where(st => st.LocationId == locationId && st.IsActive)
                 .OrderByDescending(st => st.TimesProvided)

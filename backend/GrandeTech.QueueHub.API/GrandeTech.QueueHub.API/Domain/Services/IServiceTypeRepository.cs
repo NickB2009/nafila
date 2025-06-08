@@ -13,30 +13,30 @@ namespace GrandeTech.QueueHub.API.Domain.Services
     public interface IServiceTypeRepository : IRepository<ServiceType>
     {
         /// <summary>
-        /// Gets all service types for a service provider
+        /// Gets all service types for a location
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="locationId">The location ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>A collection of service types for the specified service provider</returns>
-        Task<IReadOnlyList<ServiceType>> GetByServicesProviderAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default);
+        /// <returns>A collection of service types for the specified location</returns>
+        Task<IReadOnlyList<ServiceType>> GetByLocationAsync(Guid locationId, CancellationToken cancellationToken = default);
         
         /// <summary>
-        /// Gets all active service types for a service provider
+        /// Gets all active service types for a location
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="locationId">The location ID</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of active service types</returns>
-        Task<IReadOnlyList<ServiceType>> GetActiveServiceTypesAsync(Guid ServicesProviderId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<ServiceType>> GetActiveServiceTypesAsync(Guid locationId, CancellationToken cancellationToken = default);
         
         /// <summary>
-        /// Gets the most popular service types for a service provider
+        /// Gets the most popular service types for a location
         /// </summary>
-        /// <param name="ServicesProviderId">The service provider ID</param>
+        /// <param name="locationId">The location ID</param>
         /// <param name="count">The number of service types to return</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of popular service types</returns>
         Task<IReadOnlyList<ServiceType>> GetPopularServiceTypesAsync(
-            Guid ServicesProviderId, 
+            Guid locationId, 
             int count = 5, 
             CancellationToken cancellationToken = default);
     }
