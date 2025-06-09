@@ -5,39 +5,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Common;
 using GrandeTech.QueueHub.API.Domain.Queues;
+using GrandeTech.QueueHub.API.Domain.Services;
 
 namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
 {
     public class BogusQueueRepository : BogusBaseRepository<Queue>, IQueueRepository
     {
-        public override async Task<Queue?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            return await base.GetByIdAsync(id, cancellationToken);
-        }
-
-        public override async Task<IReadOnlyList<Queue>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            return await base.GetAllAsync(cancellationToken);
-        }
+        // Rely on the storage implemented in BogusBaseRepository<T> (the static _items dictionary).
+        // No additional state or CRUD overrides are required here.
 
         public override async Task<IReadOnlyList<Queue>> FindAsync(System.Linq.Expressions.Expression<Func<Queue, bool>> predicate, CancellationToken cancellationToken = default)
         {
             return await base.FindAsync(predicate, cancellationToken);
-        }
-
-        public override async Task<Queue> AddAsync(Queue entity, CancellationToken cancellationToken = default)
-        {
-            return await base.AddAsync(entity, cancellationToken);
-        }
-
-        public override async Task<Queue> UpdateAsync(Queue entity, CancellationToken cancellationToken = default)
-        {
-            return await base.UpdateAsync(entity, cancellationToken);
-        }
-
-        public override async Task<bool> DeleteAsync(Queue entity, CancellationToken cancellationToken = default)
-        {
-            return await base.DeleteAsync(entity, cancellationToken);
         }
 
         public override async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -65,43 +44,49 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             return queue;
         }
 
-        public async Task<Queue?> GetActiveQueueAsync(Guid LocationId, DateTime? date = null, CancellationToken cancellationToken = default)
+        public async Task<Queue?> GetActiveQueueAsync(Guid locationId, DateTime? date = null, CancellationToken cancellationToken = default)
         {
             var queueDate = date ?? DateTime.Today;
             var queues = await GetAllAsync(cancellationToken);
             return queues.FirstOrDefault(q => 
-                q.LocationId == LocationId && 
+                q.LocationId == locationId && 
                 q.QueueDate.Date == queueDate.Date && 
                 q.IsActive);
         }
 
-        public async Task<IReadOnlyList<Queue>> GetQueuesByDateRangeAsync(Guid LocationId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Queue>> GetQueuesByDateRangeAsync(
+            Guid locationId,
+            DateTime startDate,
+            DateTime endDate,
+            CancellationToken cancellationToken = default)
         {
             var queues = await GetAllAsync(cancellationToken);
-            return queues.Where(q => 
-                q.LocationId == LocationId && 
-                q.QueueDate.Date >= startDate.Date && 
-                q.QueueDate.Date <= endDate.Date)
-                .ToList();
+            return queues.Where(q =>
+                q.LocationId == locationId &&
+                q.QueueDate.Date >= startDate.Date &&
+                q.QueueDate.Date <= endDate.Date).ToList();
         }
 
-        public async Task<IReadOnlyList<Queue>> GetSimilarQueuesByLoadAsync(Guid queueId, int maxEntries, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Queue>> GetSimilarQueuesByLoadAsync(
+            Guid queueId,
+            int daysToLookBack = 30,
+            CancellationToken cancellationToken = default)
         {
-            var queue = await GetByIdAsync(queueId, cancellationToken);
-            if (queue == null)
-            {
+            var targetQueue = await GetByIdAsync(queueId, cancellationToken);
+            if (targetQueue == null)
                 return new List<Queue>();
-            }
 
-            var entryCount = queue.Entries.Count;
-            var targetMax = entryCount + maxEntries;
+            var startDate = targetQueue.QueueDate.AddDays(-daysToLookBack);
+            var endDate = targetQueue.QueueDate.AddDays(-1);
 
-            var queues = await GetAllAsync(cancellationToken);
-            return queues.Where(q => 
-                q.Id != queueId && 
-                q.IsActive && 
-                q.Entries.Count <= targetMax)
-                .ToList();
+            var queues = await GetQueuesByDateRangeAsync(
+                targetQueue.LocationId,
+                startDate,
+                endDate,
+                cancellationToken);
+
+            // TODO: Implement similarity logic based on queue load patterns
+            return queues;
         }
     }
 } 

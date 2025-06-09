@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GrandeTech.QueueHub.API.Domain.Common;
+using System.Text.Json.Serialization;
 
 namespace GrandeTech.QueueHub.API.Domain.Queues
 {
@@ -10,6 +11,7 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
     /// </summary>
     public class Queue : BaseEntity, IAggregateRoot
     {
+        [JsonPropertyName("locationId")]
         public Guid LocationId { get; private set; }
         public DateTime QueueDate { get; private set; }
         public bool IsActive { get; private set; }
@@ -20,12 +22,15 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
         private readonly List<QueueEntry> _entries = new();
         public IReadOnlyCollection<QueueEntry> Entries => _entries.AsReadOnly();
 
-        // For EF Core
-        private Queue() { }        public Queue(
+        // For EF Core and deserialization
+        private Queue() { }
+
+        public Queue(
             Guid locationId,
             int maxSize,
             int lateClientCapTimeInMinutes,
-            string createdBy)        {
+            string createdBy)
+        {
             if (locationId == Guid.Empty)
                 throw new ArgumentException("Service provider ID is required", nameof(locationId));
 

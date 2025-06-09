@@ -121,5 +121,16 @@ namespace GrandeTech.QueueHub.API.Domain.Services
         {
             return (int)Math.Ceiling(ActualAverageDurationMinutes);
         }
+
+        public void Update(string name, string? description, Guid locationId, int estimatedDurationMinutes, decimal? price, string? imageUrl, bool isActive)
+        {
+            Name = name;
+            Description = description;
+            LocationId = locationId;
+            EstimatedDurationMinutes = estimatedDurationMinutes;
+            Price = price.HasValue ? Money.Create(price.Value, "USD") : null;
+            ImageUrl = imageUrl;
+            IsActive = isActive;
+        }
     }
 }
