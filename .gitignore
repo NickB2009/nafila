@@ -84,3 +84,4 @@ Desktop.ini
 # Migration backups
 *.bak
 /.vs/nafila
+/.vs/slnx.sqlite
