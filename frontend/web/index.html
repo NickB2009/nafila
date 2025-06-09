@@ -32,12 +32,7 @@
   <link rel="manifest" href="manifest.json">
   <script>
     // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = "{{flutter_service_worker_version}}";
-    
-    // Fallback for development mode
-    if (serviceWorkerVersion === "{{flutter_service_worker_version}}") {
-      serviceWorkerVersion = null;
-    }
+    var serviceWorkerVersion = null;
   </script>
   <!-- This script adds the flutter initialization JS inline -->
   <script>
@@ -49,7 +44,6 @@
   <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
-      var loading = document.querySelector('#loading');
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,

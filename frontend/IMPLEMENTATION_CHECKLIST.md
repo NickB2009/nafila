@@ -42,6 +42,18 @@ Refer to `USE_CASES.md` for complete specifications.
 - [ ] `lib/ui/theme/app_text_styles.dart` - Typography scale created
 - [ ] `lib/ui/theme/app_spacing.dart` - Spacing constants defined
 - [ ] `lib/ui/theme/app_theme.dart` - Material theme configuration
+- [ ] `lib/ui/theme/organization_theme.dart` - Organization theme model
+- [ ] `lib/ui/theme/theme_provider.dart` - Theme state management
+- [ ] `lib/ui/theme/theme_utils.dart` - Theme helper functions
+- [ ] `lib/ui/theme/theme_constants.dart` - Default theme values
+
+### Theme System Implementation
+- [ ] Theme switching mechanism
+- [ ] Organization theme configuration
+- [ ] Brand asset management
+- [ ] Theme preview functionality
+- [ ] Theme persistence
+- [ ] Default theme fallback
 
 ### State Management Setup
 - [ ] `lib/ui/view_models/mock_queue_notifier.dart` implemented
@@ -108,6 +120,21 @@ Refer to `USE_CASES.md` for complete specifications.
   - [ ] Queue list display test
   - [ ] Loading state test
   - [ ] Responsive layout test
+
+### Theme Tests
+- [ ] `test/theme/organization_theme_test.dart`
+  - [ ] Theme model validation
+  - [ ] Color scheme tests
+  - [ ] Typography tests
+  - [ ] Brand asset tests
+- [ ] `test/theme/theme_provider_test.dart`
+  - [ ] Theme switching tests
+  - [ ] Theme persistence tests
+  - [ ] Default theme tests
+- [ ] `test/theme/theme_utils_test.dart`
+  - [ ] Color contrast tests
+  - [ ] Typography scaling tests
+  - [ ] Theme merging tests
 
 ### State Management Tests
 - [ ] `test/view_models/mock_queue_notifier_test.dart`

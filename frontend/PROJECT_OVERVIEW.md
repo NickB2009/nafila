@@ -10,6 +10,13 @@ A Flutter web application for managing queues, designed with a mobile-first appr
 - **Target Device**: iPhone 15 web (~390-430 dp width)
 - **Development IDE**: VS Code with Dart & Flutter extensions
 
+## Theming and Branding
+The application is designed with a flexible theming system to support organization-specific branding:
+- **Theme Customization**: All UI components are built using a centralized theme system
+- **Branding Support**: Colors, typography, and visual elements can be customized per organization
+- **Theme Implementation**: Uses Flutter's ThemeData for consistent styling across all screens
+- **Brand Assets**: Support for custom logos, icons, and brand-specific imagery
+
 ## Project Goals
 - Create a responsive queue management interface
 - Implement clean separation of concerns (UI → ViewModel → Data)

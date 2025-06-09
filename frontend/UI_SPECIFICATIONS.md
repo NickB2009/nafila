@@ -21,6 +21,49 @@ class AppColors {
 }
 ```
 
+### Theme Customization
+The application supports organization-specific theming through a centralized theme system:
+
+```dart
+class OrganizationTheme {
+  final Color primary;
+  final Color secondary;
+  final Color background;
+  final Color surface;
+  final Color error;
+  final Color waiting;
+  final Color inService;
+  final Color completed;
+  final String logoPath;
+  final String fontFamily;
+  
+  const OrganizationTheme({
+    required this.primary,
+    required this.secondary,
+    required this.background,
+    required this.surface,
+    required this.error,
+    required this.waiting,
+    required this.inService,
+    required this.completed,
+    required this.logoPath,
+    required this.fontFamily,
+  });
+}
+```
+
+#### Theme Implementation
+- All UI components reference theme values instead of hardcoded colors
+- Theme changes are applied dynamically without requiring app restart
+- Brand assets (logos, icons) are loaded from organization-specific paths
+- Typography can be customized per organization while maintaining readability
+
+#### Theme Switching
+- Theme configuration is stored in organization settings
+- Theme changes are applied through the ThemeProvider
+- All components automatically update when theme changes
+- Theme preview available in settings for testing
+
 ### Typography
 ```dart
 class AppTextStyles {
