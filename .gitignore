@@ -2,11 +2,68 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs/nafila/CopilotIndices/17.14.734.62261/CodeChunks.db
-/.vs/nafila/CopilotIndices/17.14.734.62261/CodeChunks.db-shm
-/.vs/nafila/CopilotIndices/17.14.734.62261/CodeChunks.db-wal
-/.vs/nafila/CopilotIndices/17.14.734.62261/SemanticSymbols.db
-/.vs/nafila/CopilotIndices/17.14.734.62261
-/.vs/nafila/FileContentIndex
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+.venv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Deployment
+*.zip
+*.tar.gz
+eutonafila_deploy.zip
+
+# Static files
+staticfiles/
+node_modules/
+
+# Testing
+.coverage
+htmlcov/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Logs
+logs/
+*.log
+debug.log
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Sensitive
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database backups
+*.dump
+*.sql
+
+# Migration backups
+*.bak
+/.vs/nafila
 /.vs/slnx.sqlite
-/.vs/slnx.sqlite-journal
