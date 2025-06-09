@@ -86,10 +86,10 @@ namespace GrandeTech.QueueHub.API.Domain.Organizations
         public Guid OrganizationId { get; }
         public Guid LocationId { get; }
 
-        public LocationAddedToOrganizationEvent(Guid organizationId, Guid LocationId)
+        public LocationAddedToOrganizationEvent(Guid organizationId, Guid locationId)
         {
             OrganizationId = organizationId;
-            LocationId = LocationId;
+            LocationId = locationId;
         }
     }
 
@@ -98,10 +98,10 @@ namespace GrandeTech.QueueHub.API.Domain.Organizations
         public Guid OrganizationId { get; }
         public Guid LocationId { get; }
 
-        public LocationRemovedFromOrganizationEvent(Guid organizationId, Guid LocationId)
+        public LocationRemovedFromOrganizationEvent(Guid organizationId, Guid locationId)
         {
             OrganizationId = organizationId;
-            LocationId = LocationId;
+            LocationId = locationId;
         }
     }
 }

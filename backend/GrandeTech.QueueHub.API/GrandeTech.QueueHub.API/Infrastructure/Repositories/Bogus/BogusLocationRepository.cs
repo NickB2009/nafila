@@ -64,7 +64,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
                 entity.BusinessHours.End,
                 entity.MaxQueueSize,
                 entity.LateClientCapTimeInMinutes,
-                entity.CreatedBy);
+                entity.CreatedBy ?? "system");
             
             // Set the ID using reflection since it's protected
             var idProperty = typeof(BaseEntity).GetProperty("Id");

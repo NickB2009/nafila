@@ -61,7 +61,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
                 entity.Role,
                 entity.Username,
                 entity.UserId,
-                entity.CreatedBy);
+                entity.CreatedBy ?? "system");
             
             // Set the ID using reflection since it's protected
             var idProperty = typeof(BaseEntity).GetProperty("Id");

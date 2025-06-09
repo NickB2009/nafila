@@ -29,7 +29,7 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
             string? description,
             string mediaUrl,
             string mediaType,
-            Guid LocationId,
+            Guid locationId,
             DateTime? startDate,
             DateTime? endDate,
             int displayDurationSeconds,
@@ -59,7 +59,7 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
             Description = description;
             MediaUrl = mediaUrl;
             MediaType = mediaType.ToLower();
-            LocationId = LocationId;
+            LocationId = locationId;
             StartDate = startDate;
             EndDate = endDate;
             DisplayDurationSeconds = displayDurationSeconds;

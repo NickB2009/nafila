@@ -86,10 +86,10 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         public Guid CustomerId { get; }
         public Guid LocationId { get; }
 
-        public CustomerFavoriteLocationAddedEvent(Guid customerId, Guid LocationId)
+        public CustomerFavoriteLocationAddedEvent(Guid customerId, Guid locationId)
         {
             CustomerId = customerId;
-            LocationId = LocationId;
+            LocationId = locationId;
         }
     }
 
@@ -98,10 +98,10 @@ namespace GrandeTech.QueueHub.API.Domain.Customers
         public Guid CustomerId { get; }
         public Guid LocationId { get; }
 
-        public CustomerFavoriteLocationRemovedEvent(Guid customerId, Guid LocationId)
+        public CustomerFavoriteLocationRemovedEvent(Guid customerId, Guid locationId)
         {
             CustomerId = customerId;
-            LocationId = LocationId;
+            LocationId = locationId;
         }
     }
 

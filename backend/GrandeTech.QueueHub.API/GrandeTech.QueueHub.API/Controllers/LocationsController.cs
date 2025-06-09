@@ -42,7 +42,7 @@ public class LocationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetLocation(string id)
+    public IActionResult GetLocation(string id)
     {
         // Placeholder - will be implemented later
         return Ok(new { Id = id, Message = "Get location endpoint - to be implemented" });

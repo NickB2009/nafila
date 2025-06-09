@@ -9,11 +9,11 @@ namespace GrandeTech.QueueHub.API.Domain.Advertising
         public string Title { get; }
         public Guid LocationId { get; }
 
-        public AdvertisementCreatedEvent(Guid advertisementId, string title, Guid LocationId)
+        public AdvertisementCreatedEvent(Guid advertisementId, string title, Guid locationId)
         {
             AdvertisementId = advertisementId;
             Title = title;
-            LocationId = LocationId;
+            LocationId = locationId;
         }
     }
 
