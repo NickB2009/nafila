@@ -25,33 +25,24 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Eutonafila">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
   <title>Eutonafila</title>
   <link rel="manifest" href="manifest.json">
+
   <script>
     // The value below is injected by flutter build, do not touch.
     var serviceWorkerVersion = "{{flutter_service_worker_version}}";
-    
-    // Fallback for development mode
-    if (serviceWorkerVersion === "{{flutter_service_worker_version}}") {
-      serviceWorkerVersion = null;
-    }
   </script>
   <!-- This script adds the flutter initialization JS inline -->
-  <script>
-    window.flutterWebRenderer = "html";
-  </script>
   <script src="flutter.js" defer></script>
 </head>
-<body>
-  <script>
+<body>  <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
-      var loading = document.querySelector('#loading');
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
+      _flutter.loader.load({
+        serviceWorkerSettings: {
           serviceWorkerVersion: serviceWorkerVersion,
         },
         onEntrypointLoaded: function(engineInitializer) {
