@@ -1,14 +1,14 @@
 using System;
 using GrandeTech.QueueHub.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Services
-{    public class ServiceTypeCreatedEvent : DomainEvent
+namespace GrandeTech.QueueHub.API.Domain.ServicesOffered
+{    public class ServiceOfferedCreatedEvent : DomainEvent
     {
         public Guid ServiceTypeId { get; }
         public string ServiceTypeName { get; }
         public Guid LocationId { get; }
 
-        public ServiceTypeCreatedEvent(Guid serviceTypeId, string serviceTypeName, Guid locationId)
+        public ServiceOfferedCreatedEvent(Guid serviceTypeId, string serviceTypeName, Guid locationId)
         {
             ServiceTypeId = serviceTypeId;
             ServiceTypeName = serviceTypeName;
@@ -16,43 +16,43 @@ namespace GrandeTech.QueueHub.API.Domain.Services
         }
     }
 
-    public class ServiceTypeUpdatedEvent : DomainEvent
+    public class ServiceOfferedUpdatedEvent : DomainEvent
     {
         public Guid ServiceTypeId { get; }
 
-        public ServiceTypeUpdatedEvent(Guid serviceTypeId)
+        public ServiceOfferedUpdatedEvent(Guid serviceTypeId)
         {
             ServiceTypeId = serviceTypeId;
         }
     }
 
-    public class ServiceTypeActivatedEvent : DomainEvent
+    public class ServiceOfferedActivatedEvent : DomainEvent
     {
         public Guid ServiceTypeId { get; }
 
-        public ServiceTypeActivatedEvent(Guid serviceTypeId)
+        public ServiceOfferedActivatedEvent(Guid serviceTypeId)
         {
             ServiceTypeId = serviceTypeId;
         }
     }
 
-    public class ServiceTypeDeactivatedEvent : DomainEvent
+    public class ServiceOfferedDeactivatedEvent : DomainEvent
     {
         public Guid ServiceTypeId { get; }
 
-        public ServiceTypeDeactivatedEvent(Guid serviceTypeId)
+        public ServiceOfferedDeactivatedEvent(Guid serviceTypeId)
         {
             ServiceTypeId = serviceTypeId;
         }
     }
 
-    public class ServiceTypeProvidedEvent : DomainEvent
+    public class ServiceOfferedProvidedEvent : DomainEvent
     {
         public Guid ServiceTypeId { get; }
         public int ActualDurationMinutes { get; }
         public double NewAverageDurationMinutes { get; }
 
-        public ServiceTypeProvidedEvent(
+        public ServiceOfferedProvidedEvent(
             Guid serviceTypeId,
             int actualDurationMinutes,
             double newAverageDurationMinutes)

@@ -1,8 +1,8 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Domain.Services
+namespace GrandeTech.QueueHub.API.Application.ServicesOffered
 {
-    public class UpdateServiceTypeRequest
+    public class UpdateServicesOfferedRequest
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }

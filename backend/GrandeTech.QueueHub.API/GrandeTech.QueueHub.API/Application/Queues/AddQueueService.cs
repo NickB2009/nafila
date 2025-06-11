@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Queues;
 
-namespace GrandeTech.QueueHub.API.Domain.Services
+namespace GrandeTech.QueueHub.API.Application.Queues
 {
     public class AddQueueService
     {

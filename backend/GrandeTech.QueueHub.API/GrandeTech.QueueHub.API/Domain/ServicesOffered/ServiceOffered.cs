@@ -2,12 +2,12 @@ using System;
 using GrandeTech.QueueHub.API.Domain.Common;
 using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.Services
+namespace GrandeTech.QueueHub.API.Domain.ServicesOffered
 {
     /// <summary>
     /// Represents a type of service (e.g., haircut style) offered by a service provider
     /// </summary>
-    public class ServiceType : BaseEntity, IAggregateRoot
+    public class ServiceOffered : BaseEntity, IAggregateRoot
     {
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }
@@ -19,9 +19,9 @@ namespace GrandeTech.QueueHub.API.Domain.Services
         public int TimesProvided { get; private set; }        public double ActualAverageDurationMinutes { get; private set; }
 
         // For EF Core
-        private ServiceType() { }
+        private ServiceOffered() { }
 
-        public ServiceType(
+        public ServiceOffered(
             string name,
             string? description,
             Guid locationId,
@@ -50,7 +50,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
             ActualAverageDurationMinutes = estimatedDurationMinutes; // Start with estimate
             CreatedBy = createdBy;
 
-            AddDomainEvent(new ServiceTypeCreatedEvent(Id, Name, LocationId));
+            AddDomainEvent(new ServiceOfferedCreatedEvent(Id, Name, LocationId));
         }
 
         // Domain behavior methods
@@ -75,7 +75,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
             ImageUrl = imageUrl;
             
             MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceTypeUpdatedEvent(Id));
+            AddDomainEvent(new ServiceOfferedUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -84,7 +84,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
             {
                 IsActive = true;
                 MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceTypeActivatedEvent(Id));
+                AddDomainEvent(new ServiceOfferedActivatedEvent(Id));
             }
         }
 
@@ -94,7 +94,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
             {
                 IsActive = false;
                 MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceTypeDeactivatedEvent(Id));
+                AddDomainEvent(new ServiceOfferedDeactivatedEvent(Id));
             }
         }
 
@@ -109,7 +109,7 @@ namespace GrandeTech.QueueHub.API.Domain.Services
             ActualAverageDurationMinutes = (totalMinutes + actualDurationMinutes) / TimesProvided;
             
             MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceTypeProvidedEvent(Id, actualDurationMinutes, ActualAverageDurationMinutes));
+            AddDomainEvent(new ServiceOfferedProvidedEvent(Id, actualDurationMinutes, ActualAverageDurationMinutes));
         }
 
         public int GetEstimatedWaitTime()

@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Common;
 using GrandeTech.QueueHub.API.Domain.Queues;
-using GrandeTech.QueueHub.API.Domain.Services;
 
 namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
 {
@@ -88,5 +87,17 @@ namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
             // TODO: Implement similarity logic based on queue load patterns
             return queues;
         }
+
+        public async Task<Queue?> GetByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
+        {
+            var queues = await GetAllAsync(cancellationToken);
+            return queues.FirstOrDefault(q => q.LocationId == locationId);
+        }
+
+        public async Task<IList<Queue>> GetAllByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
+        {
+            var queues = await GetAllAsync(cancellationToken);
+            return queues.Where(q => q.LocationId == locationId).ToList();
+        }
     }
-} 
+}

@@ -1,6 +1,6 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Domain.Services
+namespace GrandeTech.QueueHub.API.Application.Queues
 {
     public class AddQueueResult
     {

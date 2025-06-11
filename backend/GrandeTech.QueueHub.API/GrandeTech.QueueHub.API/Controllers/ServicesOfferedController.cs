@@ -1,35 +1,44 @@
+using GrandeTech.QueueHub.API.Application.ServicesOffered;
+using GrandeTech.QueueHub.API.Domain.ServicesOffered;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using GrandeTech.QueueHub.API.Domain.Services;
 
 namespace GrandeTech.QueueHub.API.Controllers
 {
     [ApiController]
     [Route("api/servicetypes")]
     [Authorize]
-    public class ServiceTypesController : ControllerBase
+    public class ServicesOfferedController : ControllerBase
     {
-        private readonly AddServiceTypeService _addServiceTypeService;
-        private readonly IServiceTypeRepository _serviceTypeRepository;
+        private readonly AddServiceOfferedService _addServiceTypeService;
+        private readonly IServicesOfferedRepository _serviceTypeRepository;
 
-        public ServiceTypesController(AddServiceTypeService addServiceTypeService, IServiceTypeRepository serviceTypeRepository)
+        public ServicesOfferedController(AddServiceOfferedService addServiceTypeService, IServicesOfferedRepository serviceTypeRepository)
         {
             _addServiceTypeService = addServiceTypeService ?? throw new ArgumentNullException(nameof(addServiceTypeService));
             _serviceTypeRepository = serviceTypeRepository ?? throw new ArgumentNullException(nameof(serviceTypeRepository));
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddServiceType([FromBody] AddServiceTypeRequest request)
+        public async Task<IActionResult> AddServiceType([FromBody] AddServiceOfferedRequest request, CancellationToken cancellationToken)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
-            request.CreatedBy = currentUserId;
 
-            var result = await _addServiceTypeService.ExecuteAsync(request);
+            var result = await _addServiceTypeService.AddServiceTypeAsync(request, currentUserId, cancellationToken);
 
             if (!result.Success)
             {
-                return BadRequest(result);
+                if (result.FieldErrors.Count > 0)
+                {
+                    foreach (var fieldError in result.FieldErrors)
+                    {
+                        ModelState.AddModelError(fieldError.Key, fieldError.Value);
+                    }
+                    return BadRequest(ModelState);
+                }
+
+                return BadRequest(new { errors = result.Errors });
             }
 
             return CreatedAtAction(
@@ -44,11 +53,10 @@ namespace GrandeTech.QueueHub.API.Controllers
             if (!Guid.TryParse(id, out var guid))
                 return BadRequest("Invalid service type ID format.");
 
-            var serviceType = await _serviceTypeRepository.GetByIdAsync(guid, cancellationToken);
-            if (serviceType == null)
+            var serviceType = await _serviceTypeRepository.GetByIdAsync(guid, cancellationToken); if (serviceType == null)
                 return NotFound();
 
-            var dto = new ServiceTypeDto
+            var dto = new ServicesOfferedDto
             {
                 Id = serviceType.Id,
                 Name = serviceType.Name,
@@ -65,10 +73,9 @@ namespace GrandeTech.QueueHub.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetServiceTypes([FromQuery] Guid? locationId, CancellationToken cancellationToken)
         {
-            var serviceTypes = await _serviceTypeRepository.GetAllAsync(cancellationToken);
-            if (locationId.HasValue)
+            var serviceTypes = await _serviceTypeRepository.GetAllAsync(cancellationToken); if (locationId.HasValue)
                 serviceTypes = serviceTypes.Where(st => st.LocationId == locationId.Value).ToList();
-            var dtos = serviceTypes.Select(st => new ServiceTypeDto
+            var dtos = serviceTypes.Select(st => new ServicesOfferedDto
             {
                 Id = st.Id,
                 Name = st.Name,
@@ -83,19 +90,17 @@ namespace GrandeTech.QueueHub.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateServiceType(string id, [FromBody] UpdateServiceTypeRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateServiceType(string id, [FromBody] UpdateServicesOfferedRequest request, CancellationToken cancellationToken)
         {
             if (!Guid.TryParse(id, out var guid))
                 return BadRequest("Invalid service type ID format.");
 
             var serviceType = await _serviceTypeRepository.GetByIdAsync(guid, cancellationToken);
             if (serviceType == null)
-                return NotFound();
-
-            serviceType.Update(request.Name, request.Description, request.LocationId, request.EstimatedDurationMinutes, request.Price, request.ImageUrl, request.IsActive);
+                return NotFound(); serviceType.Update(request.Name, request.Description, request.LocationId, request.EstimatedDurationMinutes, request.Price, request.ImageUrl, request.IsActive);
             await _serviceTypeRepository.UpdateAsync(serviceType, cancellationToken);
 
-            var dto = new ServiceTypeDto
+            var dto = new ServicesOfferedDto
             {
                 Id = serviceType.Id,
                 Name = serviceType.Name,
@@ -135,12 +140,10 @@ namespace GrandeTech.QueueHub.API.Controllers
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            serviceType.Activate(userId);
+                return Unauthorized(); serviceType.Activate(userId);
             await _serviceTypeRepository.UpdateAsync(serviceType, cancellationToken);
 
-            var dto = new ServiceTypeDto
+            var dto = new ServicesOfferedDto
             {
                 Id = serviceType.Id,
                 Name = serviceType.Name,
@@ -154,4 +157,4 @@ namespace GrandeTech.QueueHub.API.Controllers
             return Ok(dto);
         }
     }
-} 
+}

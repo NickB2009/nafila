@@ -7,10 +7,10 @@ using GrandeTech.QueueHub.API.Domain.Locations;
 using GrandeTech.QueueHub.API.Domain.Queues;
 using GrandeTech.QueueHub.API.Domain.Customers;
 using GrandeTech.QueueHub.API.Domain.Staff;
-using GrandeTech.QueueHub.API.Domain.Services;
 using GrandeTech.QueueHub.API.Domain.Subscriptions;
 using GrandeTech.QueueHub.API.Domain.AuditLogs;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
+using GrandeTech.QueueHub.API.Domain.ServicesOffered;
 
 namespace GrandeTech.QueueHub.API.Infrastructure
 {
@@ -32,7 +32,7 @@ namespace GrandeTech.QueueHub.API.Infrastructure
             services.AddScoped<IQueueRepository, BogusQueueRepository>();
             services.AddScoped<ICustomerRepository, BogusCustomerRepository>();
             services.AddScoped<IStaffMemberRepository, BogusStaffMemberRepository>();
-            services.AddScoped<IServiceTypeRepository, BogusServiceTypeRepository>();
+            services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
             services.AddScoped<ISubscriptionPlanRepository, BogusSubscriptionPlanRepository>();
             services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
             

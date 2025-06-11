@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using GrandeTech.QueueHub.API.Application.Queues;
 using GrandeTech.QueueHub.API.Domain.Queues;
-using GrandeTech.QueueHub.API.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

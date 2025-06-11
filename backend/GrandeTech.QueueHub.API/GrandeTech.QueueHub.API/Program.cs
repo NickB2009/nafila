@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using GrandeTech.QueueHub.API.Application.Auth;
+using GrandeTech.QueueHub.API.Application.Queues;
 using GrandeTech.QueueHub.API.Domain.Users;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
-using GrandeTech.QueueHub.API.Domain.Services;
+using GrandeTech.QueueHub.API.Application.ServicesOffered;
+using GrandeTech.QueueHub.API.Domain.ServicesOffered;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -88,14 +90,14 @@ builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
 // Register application services
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Locations.CreateLocationService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.AddBarberService>();
-builder.Services.AddScoped<AddServiceTypeService>();
+builder.Services.AddScoped<AddServiceOfferedService>();
 
 // Register organization services
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Organizations.CreateOrganizationService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Organizations.OrganizationService>();
 
 // Register repositories
-builder.Services.AddScoped<IServiceTypeRepository, BogusServiceTypeRepository>();
+builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
 builder.Services.AddScoped<AddQueueService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 

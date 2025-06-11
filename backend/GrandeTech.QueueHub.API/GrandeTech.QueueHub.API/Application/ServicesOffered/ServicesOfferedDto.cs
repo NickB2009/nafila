@@ -1,8 +1,8 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Domain.Services
+namespace GrandeTech.QueueHub.API.Application.ServicesOffered
 {
-    public class ServiceTypeDto
+    public class ServicesOfferedDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
