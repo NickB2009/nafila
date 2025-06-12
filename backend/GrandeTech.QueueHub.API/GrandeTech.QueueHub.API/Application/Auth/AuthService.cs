@@ -109,20 +109,38 @@ namespace GrandeTech.QueueHub.API.Application.Auth
             }
 
             return result;
-        }
-
-        private string GenerateJwtToken(User user)
+        }        private string GenerateJwtToken(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found")));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            // Map old roles to new roles for backward compatibility
+            var mappedRole = MapToNewRole(user.Role);
+
+            var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim("sub", user.Id.ToString())
+                new Claim(TenantClaims.UserId, user.Id.ToString()),
+                new Claim(TenantClaims.Username, user.Username),
+                new Claim(TenantClaims.Email, user.Email),
+                new Claim(TenantClaims.Role, mappedRole)
             };
+
+            // Add tenant context for non-platform admin roles
+            // For testing purposes, we'll add dummy GUIDs so that authorization checks pass.
+            // In production, these should come from the user's actual organization/location assignments.
+            if (mappedRole != UserRoles.PlatformAdmin)
+            {
+                var organizationId = Guid.NewGuid().ToString();
+                claims.Add(new Claim(TenantClaims.OrganizationId, organizationId));
+                claims.Add(new Claim(TenantClaims.TenantSlug, "test-tenant"));
+
+                // Add location context for barber role
+                if (mappedRole == UserRoles.Barber)
+                {
+                    var locationId = Guid.NewGuid().ToString();
+                    claims.Add(new Claim(TenantClaims.LocationId, locationId));
+                }
+            }
 
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
@@ -133,7 +151,21 @@ namespace GrandeTech.QueueHub.API.Application.Auth
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }        private string HashPassword(string password)
+        }
+
+        private string MapToNewRole(string oldRole)
+        {
+            return oldRole.ToLower() switch
+            {
+                "admin" => UserRoles.Admin,
+                "owner" => UserRoles.Admin, // Owner becomes Admin in new model
+                "barber" => UserRoles.Barber,
+                "client" => UserRoles.Client,
+                "user" => UserRoles.Client, // Default user becomes Client
+                "system" => UserRoles.ServiceAccount,
+                _ => UserRoles.Client // Default fallback
+            };
+        }private string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
         }

@@ -1,14 +1,15 @@
 using GrandeTech.QueueHub.API.Application.ServicesOffered;
 using GrandeTech.QueueHub.API.Domain.ServicesOffered;
+using GrandeTech.QueueHub.API.Domain.Users;
+using GrandeTech.QueueHub.API.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace GrandeTech.QueueHub.API.Controllers
 {
     [ApiController]
     [Route("api/servicetypes")]
-    [Authorize]
+    [Authorize] // Base authorization requirement
     public class ServicesOfferedController : ControllerBase
     {
         private readonly AddServiceOfferedService _addServiceTypeService;
@@ -21,9 +22,10 @@ namespace GrandeTech.QueueHub.API.Controllers
         }
 
         [HttpPost]
+        [RequireAdmin] // Only admins can add services
         public async Task<IActionResult> AddServiceType([FromBody] AddServiceOfferedRequest request, CancellationToken cancellationToken)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
+            var currentUserId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
 
             var result = await _addServiceTypeService.AddServiceTypeAsync(request, currentUserId, cancellationToken);
 
@@ -37,124 +39,123 @@ namespace GrandeTech.QueueHub.API.Controllers
                     }
                     return BadRequest(ModelState);
                 }
-
-                return BadRequest(new { errors = result.Errors });
+                return BadRequest(result);
             }
 
-            return CreatedAtAction(
-                nameof(GetServiceType),
-                new { id = result.ServiceTypeId },
-                result);
+            return CreatedAtAction(nameof(GetServiceType), new { id = result.ServiceTypeId }, result);
         }
 
         [HttpGet("{id}")]
+        [RequireClient] // Allow clients to view services
         public async Task<IActionResult> GetServiceType(string id, CancellationToken cancellationToken)
         {
-            if (!Guid.TryParse(id, out var guid))
-                return BadRequest("Invalid service type ID format.");
-
-            var serviceType = await _serviceTypeRepository.GetByIdAsync(guid, cancellationToken); if (serviceType == null)
-                return NotFound();
-
-            var dto = new ServicesOfferedDto
+            if (!Guid.TryParse(id, out var serviceTypeId))
             {
-                Id = serviceType.Id,
-                Name = serviceType.Name,
-                Description = serviceType.Description,
-                LocationId = serviceType.LocationId,
-                EstimatedDurationMinutes = serviceType.EstimatedDurationMinutes,
-                Price = serviceType.Price?.Amount,
-                ImageUrl = serviceType.ImageUrl,
-                IsActive = serviceType.IsActive
-            };
-            return Ok(dto);
+                return BadRequest("Invalid service type ID format");
+            }
+
+            var serviceType = await _serviceTypeRepository.GetByIdAsync(serviceTypeId, cancellationToken);
+            if (serviceType == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(serviceType);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetServiceTypes([FromQuery] Guid? locationId, CancellationToken cancellationToken)
+        [RequireClient] // Allow clients to view services
+        public async Task<IActionResult> GetServiceTypes(CancellationToken cancellationToken)
         {
-            var serviceTypes = await _serviceTypeRepository.GetAllAsync(cancellationToken); if (locationId.HasValue)
-                serviceTypes = serviceTypes.Where(st => st.LocationId == locationId.Value).ToList();
-            var dtos = serviceTypes.Select(st => new ServicesOfferedDto
-            {
-                Id = st.Id,
-                Name = st.Name,
-                Description = st.Description,
-                LocationId = st.LocationId,
-                EstimatedDurationMinutes = st.EstimatedDurationMinutes,
-                Price = st.Price?.Amount,
-                ImageUrl = st.ImageUrl,
-                IsActive = st.IsActive
-            }).ToList();
-            return Ok(dtos);
+            var serviceTypes = await _serviceTypeRepository.GetAllAsync(cancellationToken);
+            return Ok(serviceTypes);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateServiceType(string id, [FromBody] UpdateServicesOfferedRequest request, CancellationToken cancellationToken)
+        [RequireAdmin] // Only admins can update services
+        public async Task<IActionResult> UpdateServiceType(string id, [FromBody] UpdateServiceOfferedRequest request, CancellationToken cancellationToken)
         {
-            if (!Guid.TryParse(id, out var guid))
-                return BadRequest("Invalid service type ID format.");
-
-            var serviceType = await _serviceTypeRepository.GetByIdAsync(guid, cancellationToken);
-            if (serviceType == null)
-                return NotFound(); serviceType.Update(request.Name, request.Description, request.LocationId, request.EstimatedDurationMinutes, request.Price, request.ImageUrl, request.IsActive);
-            await _serviceTypeRepository.UpdateAsync(serviceType, cancellationToken);
-
-            var dto = new ServicesOfferedDto
+            if (!Guid.TryParse(id, out var serviceTypeId))
             {
-                Id = serviceType.Id,
-                Name = serviceType.Name,
-                Description = serviceType.Description,
-                LocationId = serviceType.LocationId,
-                EstimatedDurationMinutes = serviceType.EstimatedDurationMinutes,
-                Price = serviceType.Price?.Amount,
-                ImageUrl = serviceType.ImageUrl,
-                IsActive = serviceType.IsActive
-            };
-            return Ok(dto);
+                return BadRequest("Invalid service type ID format");
+            }
+
+            var currentUserId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+
+            var result = await _addServiceTypeService.UpdateServiceTypeAsync(serviceTypeId, request, currentUserId, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                {
+                    foreach (var fieldError in result.FieldErrors)
+                    {
+                        ModelState.AddModelError(fieldError.Key, fieldError.Value);
+                    }
+                    return BadRequest(ModelState);
+                }
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
+        [RequireAdmin] // Only admins can delete services
         public async Task<IActionResult> DeleteServiceType(string id, CancellationToken cancellationToken)
         {
-            if (!Guid.TryParse(id, out var guid))
-                return BadRequest("Invalid service type ID format.");
+            if (!Guid.TryParse(id, out var serviceTypeId))
+            {
+                return BadRequest("Invalid service type ID format");
+            }
 
-            var serviceType = await _serviceTypeRepository.GetByIdAsync(guid, cancellationToken);
-            if (serviceType == null)
-                return NotFound();
+            var currentUserId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
 
-            await _serviceTypeRepository.DeleteAsync(serviceType, cancellationToken);
+            var result = await _addServiceTypeService.DeleteServiceTypeAsync(serviceTypeId, currentUserId, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                {
+                    foreach (var fieldError in result.FieldErrors)
+                    {
+                        ModelState.AddModelError(fieldError.Key, fieldError.Value);
+                    }
+                    return BadRequest(ModelState);
+                }
+                return BadRequest(result);
+            }
+
             return NoContent();
         }
 
-        [HttpPost("{id}/activate")]
+        [HttpPut("{id}/activate")]
+        [RequireAdmin] // Only admins can activate services
         public async Task<IActionResult> ActivateServiceType(string id, CancellationToken cancellationToken)
         {
-            if (!Guid.TryParse(id, out var guid))
-                return BadRequest("Invalid service type ID format.");
-
-            var serviceType = await _serviceTypeRepository.GetByIdAsync(guid, cancellationToken);
-            if (serviceType == null)
-                return NotFound();
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(); serviceType.Activate(userId);
-            await _serviceTypeRepository.UpdateAsync(serviceType, cancellationToken);
-
-            var dto = new ServicesOfferedDto
+            if (!Guid.TryParse(id, out var serviceTypeId))
             {
-                Id = serviceType.Id,
-                Name = serviceType.Name,
-                Description = serviceType.Description,
-                LocationId = serviceType.LocationId,
-                EstimatedDurationMinutes = serviceType.EstimatedDurationMinutes,
-                Price = serviceType.Price?.Amount,
-                ImageUrl = serviceType.ImageUrl,
-                IsActive = serviceType.IsActive
-            };
-            return Ok(dto);
+                return BadRequest("Invalid service type ID format");
+            }
+
+            var currentUserId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+
+            var result = await _addServiceTypeService.ActivateServiceTypeAsync(serviceTypeId, currentUserId, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                {
+                    foreach (var fieldError in result.FieldErrors)
+                    {
+                        ModelState.AddModelError(fieldError.Key, fieldError.Value);
+                    }
+                    return BadRequest(ModelState);
+                }
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
     }
 }

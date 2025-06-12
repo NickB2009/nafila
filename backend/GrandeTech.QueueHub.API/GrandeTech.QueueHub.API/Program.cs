@@ -71,6 +71,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        // Disable automatic claim mapping to keep original JWT claim types (e.g. "role", "sub")
+        options.MapInboundClaims = false;
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -82,6 +85,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found")))
         };
     });
+
+// Add tenant-aware authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequirePlatformAdmin", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("PlatformAdmin", requireOrganizationContext: false)));
+    
+    options.AddPolicy("RequireAdmin", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Admin")));
+    
+    options.AddPolicy("RequireOwner", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Owner")));
+    
+    options.AddPolicy("RequireBarber", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Barber", requireLocationContext: true)));
+    
+    options.AddPolicy("RequireClient", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Client", requireOrganizationContext: false)));
+    
+    options.AddPolicy("RequireServiceAccount", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("ServiceAccount", requireOrganizationContext: false)));
+});
+
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantAuthorizationHandler>();
+
+// Add tenant context service
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Infrastructure.Authorization.ITenantContextService, GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantContextService>();
 
 // Register services
 builder.Services.AddScoped<AuthService>();

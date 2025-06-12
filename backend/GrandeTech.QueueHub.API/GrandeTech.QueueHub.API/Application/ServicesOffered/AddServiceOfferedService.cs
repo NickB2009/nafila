@@ -1,33 +1,109 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Locations;
 using GrandeTech.QueueHub.API.Domain.ServicesOffered;
+using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
 
 namespace GrandeTech.QueueHub.API.Application.ServicesOffered
 {
     public class AddServiceOfferedService
     {
-        private readonly IServicesOfferedRepository _serviceTypeRepo;
+        private readonly IServicesOfferedRepository _serviceTypeRepository;
         private readonly ILocationRepository _locationRepo;
 
-        public AddServiceOfferedService(IServicesOfferedRepository serviceTypeRepo, ILocationRepository locationRepo)
+        public AddServiceOfferedService(IServicesOfferedRepository serviceTypeRepository, ILocationRepository locationRepo)
         {
-            _serviceTypeRepo = serviceTypeRepo;
+            _serviceTypeRepository = serviceTypeRepository ?? throw new ArgumentNullException(nameof(serviceTypeRepository));
             _locationRepo = locationRepo;
         }
 
-        public async Task<AddServiceOfferedResult> AddServiceTypeAsync(AddServiceOfferedRequest request, string userId, CancellationToken cancellationToken = default)
+        public async Task<AddServiceOfferedResult> AddServiceTypeAsync(AddServiceOfferedRequest request, string userId, CancellationToken cancellationToken)
         {
-            var result = new AddServiceOfferedResult();
+            var result = new AddServiceOfferedResult
+            {
+                Success = false,
+                FieldErrors = new Dictionary<string, string>(),
+                Errors = new List<string>()
+            };
 
-            // Validate LocationId format
-            if (!Guid.TryParse(request.LocationId, out var locationId))
+            // Validation
+            if (string.IsNullOrWhiteSpace(request.Name))
+                result.FieldErrors["Name"] = "Service name is required.";
+
+            // LocationId validation (guid format)
+            if (!Guid.TryParse(request.LocationId, out var locationGuid))
             {
                 result.FieldErrors["LocationId"] = "Invalid location ID format.";
             }
+            else
+            {
+                // Check if location exists
+                if (_locationRepo != null)
+                {
+                    var locationExists = await _locationRepo.ExistsAsync(l => l.Id == locationGuid, cancellationToken);
+                    if (!locationExists)
+                    {
+                        result.FieldErrors["LocationId"] = "Location not found.";
+                    }
+                }
+            }
 
-            // Validate required fields
+            if (request.EstimatedDurationMinutes <= 0)
+                result.FieldErrors["EstimatedDurationMinutes"] = "Duration must be greater than 0 minutes.";
+
+            if (request.Price < 0)
+                result.FieldErrors["Price"] = "Price cannot be negative.";
+
+            // Duplicate name validation (within same location)
+            if (string.IsNullOrWhiteSpace(request.Name) == false && result.FieldErrors.ContainsKey("LocationId") == false)
+            {
+                if (_serviceTypeRepository != null)
+                {
+                    var duplicateExists = await _serviceTypeRepository.ExistsAsync(s => s.LocationId == locationGuid && s.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+                    if (duplicateExists)
+                        result.FieldErrors["Name"] = "A service with this name already exists at this location.";
+                }
+            }
+
+            if (result.FieldErrors.Count > 0)
+                return result;
+
+            try
+            {
+                var serviceType = new ServiceOffered(
+                    request.Name,
+                    request.Description,
+                    locationGuid,
+                    request.EstimatedDurationMinutes,
+                    request.Price,
+                    request.ImageUrl,
+                    userId
+                );
+
+                await _serviceTypeRepository.AddAsync(serviceType, cancellationToken);
+                result.Success = true;
+                result.ServiceTypeId = serviceType.Id.ToString();
+            }
+            catch (Exception ex)
+            {
+                result.Errors.Add($"Failed to add service type: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<AddServiceOfferedResult> UpdateServiceTypeAsync(Guid serviceTypeId, UpdateServiceOfferedRequest request, string userId, CancellationToken cancellationToken)
+        {
+            var result = new AddServiceOfferedResult
+            {
+                Success = false,
+                FieldErrors = new Dictionary<string, string>(),
+                Errors = new List<string>()
+            };
+
+            // Validation
             if (string.IsNullOrWhiteSpace(request.Name))
                 result.FieldErrors["Name"] = "Service name is required.";
 
@@ -40,48 +116,94 @@ namespace GrandeTech.QueueHub.API.Application.ServicesOffered
             if (result.FieldErrors.Count > 0)
                 return result;
 
-            // Check if location exists
-            var locationExists = await _locationRepo.ExistsAsync(location => location.Id == locationId, cancellationToken);
-            if (!locationExists)
+            var serviceType = await _serviceTypeRepository.GetByIdAsync(serviceTypeId, cancellationToken);
+            if (serviceType == null)
             {
-                result.FieldErrors["LocationId"] = "Location not found.";
-                return result;
-            }
-
-            // Check if service name already exists at this location
-            var serviceExists = await _serviceTypeRepo.ExistsAsync(
-                service => service.LocationId == locationId && service.Name == request.Name.Trim(), 
-                cancellationToken);
-            
-            if (serviceExists)
-            {
-                result.FieldErrors["Name"] = "A service with this name already exists at this location.";
+                result.Errors.Add("Service type not found.");
                 return result;
             }
 
             try
             {
-                var serviceType = new ServiceOffered(
-                    name: request.Name.Trim(),
-                    description: request.Description?.Trim() ?? "",
-                    locationId: locationId,
-                    estimatedDurationMinutes: request.EstimatedDurationMinutes,
-                    priceValue: request.Price,
-                    imageUrl: request.ImageUrl?.Trim(),
-                    createdBy: userId
+                serviceType.UpdateDetails(
+                    request.Name,
+                    request.Description,
+                    request.EstimatedDurationMinutes,
+                    request.Price,
+                    request.ImageUrl,
+                    userId
                 );
 
-                await _serviceTypeRepo.AddAsync(serviceType, cancellationToken);
-
+                await _serviceTypeRepository.UpdateAsync(serviceType, cancellationToken);
                 result.Success = true;
                 result.ServiceTypeId = serviceType.Id.ToString();
-                return result;
             }
             catch (Exception ex)
             {
-                result.Errors.Add($"An error occurred while creating the service type: {ex.Message}");
+                result.Errors.Add($"Failed to update service type: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<AddServiceOfferedResult> DeleteServiceTypeAsync(Guid serviceTypeId, string userId, CancellationToken cancellationToken)
+        {
+            var result = new AddServiceOfferedResult
+            {
+                Success = false,
+                FieldErrors = new Dictionary<string, string>(),
+                Errors = new List<string>()
+            };
+
+            var serviceType = await _serviceTypeRepository.GetByIdAsync(serviceTypeId, cancellationToken);
+            if (serviceType == null)
+            {
+                result.Errors.Add("Service type not found.");
                 return result;
             }
+
+            try
+            {
+                await _serviceTypeRepository.DeleteAsync(serviceType, cancellationToken);
+                result.Success = true;
+            }
+            catch (Exception ex)
+            {
+                result.Errors.Add($"Failed to delete service type: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<AddServiceOfferedResult> ActivateServiceTypeAsync(Guid serviceTypeId, string userId, CancellationToken cancellationToken)
+        {
+            var result = new AddServiceOfferedResult
+            {
+                Success = false,
+                FieldErrors = new Dictionary<string, string>(),
+                Errors = new List<string>()
+            };
+
+            var serviceType = await _serviceTypeRepository.GetByIdAsync(serviceTypeId, cancellationToken);
+            if (serviceType == null)
+            {
+                result.Errors.Add("Service type not found.");
+                return result;
+            }
+
+            try
+            {
+                serviceType.Activate(userId);
+                await _serviceTypeRepository.UpdateAsync(serviceType, cancellationToken);
+                result.Success = true;
+                result.ServiceTypeId = serviceType.Id.ToString();
+            }
+            catch (Exception ex)
+            {
+                result.Errors.Add($"Failed to activate service type: {ex.Message}");
+            }
+
+            return result;
         }
     }
 }

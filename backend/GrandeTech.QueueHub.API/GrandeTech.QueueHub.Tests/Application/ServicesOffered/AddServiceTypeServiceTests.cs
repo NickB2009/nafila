@@ -45,7 +45,7 @@ namespace GrandeTech.QueueHub.Tests.Application
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _service.AddServiceTypeAsync(request, "user123");
+            var result = await _service.AddServiceTypeAsync(request, "user123", CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -67,7 +67,7 @@ namespace GrandeTech.QueueHub.Tests.Application
             };
 
             // Act
-            var result = await _service.AddServiceTypeAsync(request, "user123");
+            var result = await _service.AddServiceTypeAsync(request, "user123", CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -91,7 +91,7 @@ namespace GrandeTech.QueueHub.Tests.Application
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _service.AddServiceTypeAsync(request, "user123");
+            var result = await _service.AddServiceTypeAsync(request, "user123", CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -118,7 +118,7 @@ namespace GrandeTech.QueueHub.Tests.Application
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.AddServiceTypeAsync(request, "user123");
+            var result = await _service.AddServiceTypeAsync(request, "user123", CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -139,7 +139,7 @@ namespace GrandeTech.QueueHub.Tests.Application
             };
 
             // Act
-            var result = await _service.AddServiceTypeAsync(request, "user123");
+            var result = await _service.AddServiceTypeAsync(request, "user123", CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -160,7 +160,7 @@ namespace GrandeTech.QueueHub.Tests.Application
             };
 
             // Act
-            var result = await _service.AddServiceTypeAsync(request, "user123");
+            var result = await _service.AddServiceTypeAsync(request, "user123", CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -181,7 +181,7 @@ namespace GrandeTech.QueueHub.Tests.Application
             };
 
             // Act
-            var result = await _service.AddServiceTypeAsync(request, "user123");
+            var result = await _service.AddServiceTypeAsync(request, "user123", CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);

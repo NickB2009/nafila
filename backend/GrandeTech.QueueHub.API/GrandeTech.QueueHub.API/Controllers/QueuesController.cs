@@ -5,12 +5,12 @@ using GrandeTech.QueueHub.API.Application.Queues;
 using GrandeTech.QueueHub.API.Domain.Queues;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GrandeTech.QueueHub.API.Infrastructure.Authorization;
 
 namespace GrandeTech.QueueHub.API.Controllers
-{
-    [ApiController]
+{    [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [RequireOwner] // Default: Admin/Owner can manage queues
     public class QueuesController : ControllerBase
     {
         private readonly AddQueueService _addQueueService;
@@ -58,9 +58,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             }
 
             return CreatedAtAction(nameof(GetQueue), new { id = result.QueueId }, result);
-        }
-
-        [HttpGet("{id}")]
+        }        [HttpGet("{id}")]
+        [RequireClient] // UC-QUEUELISTCLI: Any authenticated user can view queue status
         public async Task<IActionResult> GetQueue(Guid id, CancellationToken cancellationToken)
         {
             var queue = await _queueRepository.GetByIdAsync(id, cancellationToken);

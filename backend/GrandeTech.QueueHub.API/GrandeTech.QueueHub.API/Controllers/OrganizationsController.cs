@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GrandeTech.QueueHub.API.Application.Organizations;
 using GrandeTech.QueueHub.API.Domain.Organizations;
+using GrandeTech.QueueHub.API.Infrastructure.Authorization;
+using GrandeTech.QueueHub.API.Domain.Users;
 
 namespace GrandeTech.QueueHub.API.Controllers
 {
@@ -39,8 +41,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             [FromBody] CreateOrganizationRequest request,
             CancellationToken cancellationToken)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             var result = await _createOrganizationService.CreateOrganizationAsync(request, userId, userRole, cancellationToken);
 
@@ -65,8 +67,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             [FromBody] UpdateOrganizationRequest request,
             CancellationToken cancellationToken)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             request.OrganizationId = organizationId;
             var result = await _organizationService.UpdateOrganizationAsync(request, userId, userRole, cancellationToken);
@@ -92,8 +94,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             [FromBody] UpdateBrandingRequest request,
             CancellationToken cancellationToken)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             request.OrganizationId = organizationId;
             var result = await _organizationService.UpdateBrandingAsync(request, userId, userRole, cancellationToken);
@@ -119,8 +121,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             string subscriptionPlanId,
             CancellationToken cancellationToken)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             var result = await _organizationService.ChangeSubscriptionPlanAsync(organizationId, subscriptionPlanId, userId, userRole, cancellationToken);
 
@@ -145,8 +147,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             [FromBody] bool sharesData,
             CancellationToken cancellationToken)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             var result = await _organizationService.SetAnalyticsSharingAsync(organizationId, sharesData, userId, userRole, cancellationToken);
 
@@ -170,8 +172,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             string organizationId,
             CancellationToken cancellationToken)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             var result = await _organizationService.ActivateOrganizationAsync(organizationId, userId, userRole, cancellationToken);
 
@@ -195,8 +197,8 @@ namespace GrandeTech.QueueHub.API.Controllers
             string organizationId,
             CancellationToken cancellationToken)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             var result = await _organizationService.DeactivateOrganizationAsync(organizationId, userId, userRole, cancellationToken);
 
