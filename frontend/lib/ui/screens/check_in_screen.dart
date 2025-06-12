@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../../models/salon.dart';
+import 'check_in_success_screen.dart';
 
 class CheckInScreen extends StatefulWidget {
   final Salon salon;
@@ -232,7 +233,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const CheckInSuccessScreen(),
+                      ),
+                    );
+                  },
                   child: Text(
                     "Check-in",
                     style: theme.textTheme.titleMedium?.copyWith(
