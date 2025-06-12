@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Http;
 namespace GrandeTech.QueueHub.API.Controllers;
 
 [ApiController]
-[Route("api/locations")]
+[Route("api/[controller]")]
 [RequireAdmin] // Admin/Owner can create locations
 public class LocationsController : ControllerBase
 {
