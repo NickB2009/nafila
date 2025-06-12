@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GrandeTech.QueueHub.API.Controllers
 {
     [ApiController]
-    [Route("api/servicetypes")]
+    [Route("/api/servicesoffered")]
     [Authorize] // Base authorization requirement
     public class ServicesOfferedController : ControllerBase
     {

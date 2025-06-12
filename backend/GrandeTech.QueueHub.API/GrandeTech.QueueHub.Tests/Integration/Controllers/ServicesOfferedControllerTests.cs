@@ -24,6 +24,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers;
 public class ServicesOfferedControllerTests
 {
     private static WebApplicationFactory<Program> _factory = null!;
+    private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
@@ -75,13 +76,13 @@ public class ServicesOfferedControllerTests
             EstimatedDurationMinutes = 30,
             Price = 25.00m
         };
-        var response = await client.PostAsJsonAsync("/api/servicetypes", request);
+        var response = await client.PostAsJsonAsync("/api/servicesoffered", request);
         Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         
         var content = await response.Content.ReadAsStringAsync();
         if (!string.IsNullOrEmpty(content))
         {
-            var result = JsonSerializer.Deserialize<AddServiceOfferedResult>(content);
+            var result = JsonSerializer.Deserialize<AddServiceOfferedResult>(content, _jsonOptions);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.ServiceTypeId);
@@ -107,19 +108,73 @@ public class ServicesOfferedControllerTests
             EstimatedDurationMinutes = 30,
             Price = 25.00m
         };
-        var response = await client.PostAsJsonAsync("/api/servicetypes", request);
+        var response = await client.PostAsJsonAsync("/api/servicesoffered", request);
         Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
     }
     [TestMethod]
     public async Task GetServiceType_ExistingId_ReturnsOk()
     {
         var client = _factory.CreateClient();
-        var adminToken = await CreateAndAuthenticateUserAsync(client, "Client");
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        
+        // Create a test location first with a specific organization ID
+        using var scope = _factory.Services.CreateScope();
+        var locationRepository = scope.ServiceProvider.GetRequiredService<ILocationRepository>();
+        var organizationId = Guid.NewGuid();
 
-        // Create a test location first
-        var testLocationId = await CreateTestLocationAsync(client);
+        var address = Address.Create(
+            "123 Test Street",
+            "1",
+            "",
+            "Test Neighborhood",
+            "Test City",
+            "Test State",
+            "US",
+            "12345"
+        );
 
+        var testLocation = new Location(
+            name: "Test Barbershop",
+            slug: "test-barbershop",
+            description: "A test barbershop for integration tests",
+            organizationId: organizationId,
+            address: address,
+            contactPhone: "+1234567890",
+            contactEmail: "test@barbershop.com",
+            openingTime: TimeSpan.FromHours(9),
+            closingTime: TimeSpan.FromHours(17),
+            maxQueueSize: 50,
+            lateClientCapTimeInMinutes: 15,
+            createdBy: "test"
+        );
+
+        await locationRepository.AddAsync(testLocation, CancellationToken.None);
+        var testLocationId = testLocation.Id.ToString();
+
+        // Create an admin user to create the service type
+        var adminUsername = $"admin_{Guid.NewGuid():N}";
+        var adminEmail = $"{adminUsername}@test.com";
+        var adminPassword = "testpassword123";
+        var adminUser = new User(adminUsername, adminEmail, BCrypt.Net.BCrypt.HashPassword(adminPassword), "Admin");
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        await userRepository.AddAsync(adminUser, CancellationToken.None);
+
+        var adminLoginRequest = new LoginRequest
+        {
+            Username = adminUsername,
+            Password = adminPassword
+        };
+
+        var adminLoginResponse = await client.PostAsJsonAsync("/api/auth/login", adminLoginRequest);
+        Assert.AreEqual(HttpStatusCode.OK, adminLoginResponse.StatusCode);
+
+        var adminLoginResult = await adminLoginResponse.Content.ReadFromJsonAsync<LoginResult>();
+        Assert.IsNotNull(adminLoginResult);
+        Assert.IsTrue(adminLoginResult.Success);
+        Assert.IsNotNull(adminLoginResult.Token);
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminLoginResult.Token);
+
+        // Create a service type for the location using admin
         var addRequest = new AddServiceOfferedRequest
         {
             Name = "Test Service",
@@ -128,26 +183,57 @@ public class ServicesOfferedControllerTests
             EstimatedDurationMinutes = 30,
             Price = 25.00m
         };
-        var addResponse = await client.PostAsJsonAsync("/api/servicetypes", addRequest);
+        var addResponse = await client.PostAsJsonAsync("/api/servicesoffered", addRequest);
         var addContent = await addResponse.Content.ReadAsStringAsync();
-        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent);
+        Console.WriteLine($"Response Content: {addContent}");
+        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent, _jsonOptions);
         Assert.IsNotNull(addResult);
         Assert.IsTrue(addResult.Success);
 
-        var getResponse = await client.GetAsync($"/api/servicetypes/{addResult.ServiceTypeId}");
+        // Create a client user to get the service type
+        var clientUsername = $"client_{Guid.NewGuid():N}";
+        var clientEmail = $"{clientUsername}@test.com";
+        var clientPassword = "testpassword123";
+        var clientUser = new User(clientUsername, clientEmail, BCrypt.Net.BCrypt.HashPassword(clientPassword), "Client");
+        await userRepository.AddAsync(clientUser, CancellationToken.None);
+
+        var clientLoginRequest = new LoginRequest
+        {
+            Username = clientUsername,
+            Password = clientPassword
+        };
+
+        var clientLoginResponse = await client.PostAsJsonAsync("/api/auth/login", clientLoginRequest);
+        Assert.AreEqual(HttpStatusCode.OK, clientLoginResponse.StatusCode);
+
+        var clientLoginResult = await clientLoginResponse.Content.ReadFromJsonAsync<LoginResult>();
+        Assert.IsNotNull(clientLoginResult);
+        Assert.IsTrue(clientLoginResult.Success);
+        Assert.IsNotNull(clientLoginResult.Token);
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientLoginResult.Token);
+
+        // Now try to get the service type with client user
+        var getResponse = await client.GetAsync($"/api/servicesoffered/{addResult.ServiceTypeId}");
+        var getContent = await getResponse.Content.ReadAsStringAsync();
+        Console.WriteLine($"Get Response Status: {getResponse.StatusCode}");
+        Console.WriteLine($"Get Response Content: {getContent}");
         Assert.AreEqual(HttpStatusCode.OK, getResponse.StatusCode);
         
-        var getContent = await getResponse.Content.ReadAsStringAsync();
         if (!string.IsNullOrEmpty(getContent))
         {
-            var getResult = JsonSerializer.Deserialize<ServicesOfferedDto>(getContent);
+            var getResult = JsonSerializer.Deserialize<ServicesOfferedDto>(getContent, _jsonOptions);
             Assert.IsNotNull(getResult);
             Assert.AreEqual(addResult.ServiceTypeId, getResult.Id.ToString());
             Assert.AreEqual(addRequest.Name, getResult.Name);
             Assert.AreEqual(addRequest.Description, getResult.Description);
             Assert.AreEqual(Guid.Parse(addRequest.LocationId), getResult.LocationId);
             Assert.AreEqual(addRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
-            Assert.AreEqual(addRequest.Price, getResult.Price);
+            Assert.AreEqual(addRequest.Price, getResult.PriceAmount);
+        }
+        else
+        {
+            Assert.Fail("Get response content was empty");
         }
     }
 
@@ -158,7 +244,7 @@ public class ServicesOfferedControllerTests
         var adminToken = await CreateAndAuthenticateUserAsync(client, "Client");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
         var nonExistingId = Guid.NewGuid();
-        var response = await client.GetAsync($"/api/servicetypes/{nonExistingId}");
+        var response = await client.GetAsync($"/api/servicesoffered/{nonExistingId}");
         Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -169,7 +255,7 @@ public class ServicesOfferedControllerTests
         var adminToken = await CreateAndAuthenticateUserAsync(client, "Client");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
         var invalidId = "invalid_id";
-        var response = await client.GetAsync($"/api/servicetypes/{invalidId}");
+        var response = await client.GetAsync($"/api/servicesoffered/{invalidId}");
         Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
     }
     [TestMethod]
@@ -188,7 +274,7 @@ public class ServicesOfferedControllerTests
             EstimatedDurationMinutes = 30,
             Price = 25.00m
         };
-        var response = await client.PostAsJsonAsync("/api/servicetypes", request);
+        var response = await client.PostAsJsonAsync("/api/servicesoffered", request);
         Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -196,7 +282,7 @@ public class ServicesOfferedControllerTests
     public async Task GetServiceType_WithoutAuthentication_ReturnsUnauthorized()
     {
         var client = _factory.CreateClient();
-        var response = await client.GetAsync($"/api/servicetypes/{Guid.NewGuid()}");
+        var response = await client.GetAsync($"/api/servicesoffered/{Guid.NewGuid()}");
         Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -206,12 +292,12 @@ public class ServicesOfferedControllerTests
         var client = _factory.CreateClient();
         var adminToken = await CreateAndAuthenticateUserAsync(client, "PlatformAdmin");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-        var response = await client.GetAsync("/api/servicetypes");
+        var response = await client.GetAsync("/api/servicesoffered");
         var responseBody = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"Status: {response.StatusCode}");
         Console.WriteLine($"Body: {responseBody}");
         Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-        var result = JsonSerializer.Deserialize<List<ServicesOfferedDto>>(responseBody);
+        var result = JsonSerializer.Deserialize<List<ServicesOfferedDto>>(responseBody, _jsonOptions);
         Assert.IsNotNull(result);
     }
 
@@ -233,9 +319,9 @@ public class ServicesOfferedControllerTests
             EstimatedDurationMinutes = 30,
             Price = 25.00m
         };
-        var addResponse = await client.PostAsJsonAsync("/api/servicetypes", addRequest);
+        var addResponse = await client.PostAsJsonAsync("/api/servicesoffered", addRequest);
         var addContent = await addResponse.Content.ReadAsStringAsync();
-        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent);
+        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent, _jsonOptions);
         Assert.IsNotNull(addResult);
         Assert.IsTrue(addResult.Success);
 
@@ -249,21 +335,32 @@ public class ServicesOfferedControllerTests
             ImageUrl = "http://example.com/image.jpg",
             IsActive = true
         };
-        var updateResponse = await client.PutAsJsonAsync($"/api/servicetypes/{addResult.ServiceTypeId}", updateRequest);
+        var updateResponse = await client.PutAsJsonAsync($"/api/servicesoffered/{addResult.ServiceTypeId}", updateRequest);
         Assert.AreEqual(HttpStatusCode.OK, updateResponse.StatusCode);
         
         var updateContent = await updateResponse.Content.ReadAsStringAsync();
         if (!string.IsNullOrEmpty(updateContent))
         {
-            var updateResult = JsonSerializer.Deserialize<ServicesOfferedDto>(updateContent);
+            var updateResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(updateContent, _jsonOptions);
             Assert.IsNotNull(updateResult);
-            Assert.AreEqual(updateRequest.Name, updateResult.Name);
-            Assert.AreEqual(updateRequest.Description, updateResult.Description);
-            Assert.AreEqual(updateRequest.LocationId, updateResult.LocationId);
-            Assert.AreEqual(updateRequest.EstimatedDurationMinutes, updateResult.EstimatedDurationMinutes);
-            Assert.AreEqual(updateRequest.Price, updateResult.Price);
-            Assert.AreEqual(updateRequest.ImageUrl, updateResult.ImageUrl);
-            Assert.AreEqual(updateRequest.IsActive, updateResult.IsActive);
+            Assert.IsTrue(updateResult.Success);
+            Assert.AreEqual(addResult.ServiceTypeId, updateResult.ServiceTypeId);
+            Assert.AreEqual(0, updateResult.FieldErrors.Count);
+            Assert.AreEqual(0, updateResult.Errors.Count);
+
+            // Verify the update by getting the service type
+            var getResponse = await client.GetAsync($"/api/servicesoffered/{addResult.ServiceTypeId}");
+            Assert.AreEqual(HttpStatusCode.OK, getResponse.StatusCode);
+            var getContent = await getResponse.Content.ReadAsStringAsync();
+            var getResult = JsonSerializer.Deserialize<ServicesOfferedDto>(getContent, _jsonOptions);
+            Assert.IsNotNull(getResult);
+            Assert.AreEqual(updateRequest.Name, getResult.Name);
+            Assert.AreEqual(updateRequest.Description, getResult.Description);
+            Assert.AreEqual(updateRequest.LocationId, getResult.LocationId);
+            Assert.AreEqual(updateRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
+            Assert.AreEqual(updateRequest.Price, getResult.PriceAmount);
+            Assert.AreEqual(updateRequest.ImageUrl, getResult.ImageUrl);
+            Assert.AreEqual(updateRequest.IsActive, getResult.IsActive);
         }
     }
     [TestMethod]
@@ -284,13 +381,13 @@ public class ServicesOfferedControllerTests
             EstimatedDurationMinutes = 30,
             Price = 25.00m
         };
-        var addResponse = await client.PostAsJsonAsync("/api/servicetypes", addRequest);
+        var addResponse = await client.PostAsJsonAsync("/api/servicesoffered", addRequest);
         var addContent = await addResponse.Content.ReadAsStringAsync();
-        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent);
+        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent, _jsonOptions);
         Assert.IsNotNull(addResult);
         Assert.IsTrue(addResult.Success);
 
-        var deleteResponse = await client.DeleteAsync($"/api/servicetypes/{addResult.ServiceTypeId}");
+        var deleteResponse = await client.DeleteAsync($"/api/servicesoffered/{addResult.ServiceTypeId}");
         Assert.AreEqual(HttpStatusCode.NoContent, deleteResponse.StatusCode);
     }
     [TestMethod]
@@ -350,9 +447,9 @@ public class ServicesOfferedControllerTests
             EstimatedDurationMinutes = 30,
             Price = 25.00m
         };
-        var addResponse = await client.PostAsJsonAsync("/api/servicetypes", addRequest);
+        var addResponse = await client.PostAsJsonAsync("/api/servicesoffered", addRequest);
         var addContent = await addResponse.Content.ReadAsStringAsync();
-        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent);
+        var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent, _jsonOptions);
         Assert.IsNotNull(addResult);
         Assert.IsTrue(addResult.Success);
 
@@ -366,18 +463,18 @@ public class ServicesOfferedControllerTests
             Price = 25.00m,
             IsActive = false
         };
-        var updateResponse = await client.PutAsJsonAsync($"/api/servicetypes/{addResult.ServiceTypeId}", updateRequest);
+        var updateResponse = await client.PutAsJsonAsync($"/api/servicesoffered/{addResult.ServiceTypeId}", updateRequest);
         Assert.AreEqual(HttpStatusCode.OK, updateResponse.StatusCode);
 
         // Now try to activate it
-        var activateResponse = await client.PutAsJsonAsync($"/api/servicetypes/{addResult.ServiceTypeId}/activate", new { });
+        var activateResponse = await client.PutAsJsonAsync($"/api/servicesoffered/{addResult.ServiceTypeId}/activate", new { });
         Assert.AreEqual(HttpStatusCode.OK, activateResponse.StatusCode);
 
         // Optionally, if a response body is expected, verify its content
         var activateContent = await activateResponse.Content.ReadAsStringAsync();
         if (!string.IsNullOrWhiteSpace(activateContent))
         {
-            var activateResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(activateContent);
+            var activateResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(activateContent, _jsonOptions);
             Assert.IsNotNull(activateResult, "Activation result should not be null");
             Assert.IsTrue(activateResult.Success, "Activation should be successful");
             Assert.AreEqual(addResult.ServiceTypeId, activateResult.ServiceTypeId, "Service type ID should match");
