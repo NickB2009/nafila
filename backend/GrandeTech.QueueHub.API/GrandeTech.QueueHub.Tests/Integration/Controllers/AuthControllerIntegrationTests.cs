@@ -419,5 +419,168 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.AreEqual(username, loginResult.Username);
             Assert.AreEqual("User", loginResult.Role);
         }
+
+        [TestMethod]
+        public async Task Login_AsAdmin_WithTwoFactor_ReturnsTwoFactorRequired()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            using var scope = _factory.Services.CreateScope();
+            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+            // Create an admin user
+            var username = $"admin_{Guid.NewGuid():N}";
+            var email = $"{username}@test.com";
+            var password = "adminpass123";
+
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Admin);
+            user.EnableTwoFactor();
+            await userRepository.AddAsync(user, CancellationToken.None);
+
+            // Act
+            var loginRequest = new LoginRequest
+            {
+                Username = username,
+                Password = password
+            };
+
+            var loginJson = JsonSerializer.Serialize(loginRequest);
+            var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
+
+            var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
+
+            var responseContent = await loginResponse.Content.ReadAsStringAsync();
+            var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(loginResult);
+            Assert.IsTrue(loginResult.RequiresTwoFactor);
+            Assert.IsNotNull(loginResult.TwoFactorToken);
+            Assert.IsNull(loginResult.Token);
+        }
+
+        [TestMethod]
+        public async Task VerifyTwoFactor_WithValidCode_ReturnsToken()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            using var scope = _factory.Services.CreateScope();
+            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+            // Create an admin user
+            var username = $"admin_{Guid.NewGuid():N}";
+            var email = $"{username}@test.com";
+            var password = "adminpass123";
+
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Admin);
+            user.EnableTwoFactor();
+            await userRepository.AddAsync(user, CancellationToken.None);
+
+            // First login to get 2FA token
+            var loginRequest = new LoginRequest
+            {
+                Username = username,
+                Password = password
+            };
+
+            var loginJson = JsonSerializer.Serialize(loginRequest);
+            var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
+
+            var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
+            var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
+            var loginResult = JsonSerializer.Deserialize<LoginResult>(loginResponseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(loginResult);
+            Assert.IsTrue(loginResult.RequiresTwoFactor);
+            Assert.IsNotNull(loginResult.TwoFactorToken);
+
+            // Now verify 2FA
+            var verifyRequest = new VerifyTwoFactorRequest
+            {
+                Username = username,
+                TwoFactorCode = "123456", // In a real implementation, this would be validated
+                TwoFactorToken = loginResult.TwoFactorToken
+            };
+
+            var verifyJson = JsonSerializer.Serialize(verifyRequest);
+            var verifyContent = new StringContent(verifyJson, Encoding.UTF8, "application/json");
+
+            // Act
+            var verifyResponse = await _client.PostAsync("/api/auth/verify-2fa", verifyContent);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+            var verifyResponseContent = await verifyResponse.Content.ReadAsStringAsync();
+            var verifyResult = JsonSerializer.Deserialize<LoginResult>(verifyResponseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(verifyResult);
+            Assert.IsTrue(verifyResult.Success);
+            Assert.IsNotNull(verifyResult.Token);
+            Assert.AreEqual(username, verifyResult.Username);
+            Assert.AreEqual(UserRoles.Admin, verifyResult.Role);
+            Assert.IsNotNull(verifyResult.Permissions);
+            Assert.IsTrue(verifyResult.Permissions.Length > 0);
+        }
+
+        [TestMethod]
+        public async Task Login_AsLockedAdmin_ReturnsLockedError()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            using var scope = _factory.Services.CreateScope();
+            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+            // Create a locked admin user
+            var username = $"admin_{Guid.NewGuid():N}";
+            var email = $"{username}@test.com";
+            var password = "adminpass123";
+
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Admin);
+            user.Lock();
+            await userRepository.AddAsync(user, CancellationToken.None);
+
+            // Act
+            var loginRequest = new LoginRequest
+            {
+                Username = username,
+                Password = password
+            };
+
+            var loginJson = JsonSerializer.Serialize(loginRequest);
+            var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
+
+            var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, loginResponse.StatusCode);
+
+            var responseContent = await loginResponse.Content.ReadAsStringAsync();
+            var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(loginResult);
+            Assert.IsFalse(loginResult.Success);
+            Assert.AreEqual("Admin account is locked. Please contact support.", loginResult.Error);
+        }
     }
 }

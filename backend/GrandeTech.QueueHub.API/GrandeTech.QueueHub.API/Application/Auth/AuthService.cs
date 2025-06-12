@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Domain.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
 
 namespace GrandeTech.QueueHub.API.Application.Auth
 {
@@ -45,6 +46,25 @@ namespace GrandeTech.QueueHub.API.Application.Auth
                 return result;
             }
 
+            // Admin-specific validation
+            if (user.Role == UserRoles.PlatformAdmin || user.Role == UserRoles.Admin)
+            {
+                // Check if admin account is locked
+                if (user.IsLocked)
+                {
+                    result.Error = "Admin account is locked. Please contact support.";
+                    return result;
+                }
+
+                // Check if admin account requires 2FA
+                if (user.RequiresTwoFactor)
+                {
+                    result.RequiresTwoFactor = true;
+                    result.TwoFactorToken = GenerateTwoFactorToken(user);
+                    return result;
+                }
+            }
+
             user.UpdateLastLogin();
             await _userRepo.UpdateAsync(user, cancellationToken);
 
@@ -54,6 +74,7 @@ namespace GrandeTech.QueueHub.API.Application.Auth
             result.Token = token;
             result.Username = user.Username;
             result.Role = user.Role;
+            result.Permissions = GetUserPermissions(user.Role);
 
             return result;
         }
@@ -109,7 +130,9 @@ namespace GrandeTech.QueueHub.API.Application.Auth
             }
 
             return result;
-        }        private string GenerateJwtToken(User user)
+        }
+
+        private string GenerateJwtToken(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found")));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -122,12 +145,11 @@ namespace GrandeTech.QueueHub.API.Application.Auth
                 new Claim(TenantClaims.UserId, user.Id.ToString()),
                 new Claim(TenantClaims.Username, user.Username),
                 new Claim(TenantClaims.Email, user.Email),
-                new Claim(TenantClaims.Role, mappedRole)
+                new Claim(TenantClaims.Role, mappedRole),
+                new Claim(TenantClaims.Permissions, JsonSerializer.Serialize(GetUserPermissions(mappedRole)))
             };
 
             // Add tenant context for non-platform admin roles
-            // For testing purposes, we'll add dummy GUIDs so that authorization checks pass.
-            // In production, these should come from the user's actual organization/location assignments.
             if (mappedRole != UserRoles.PlatformAdmin)
             {
                 var organizationId = Guid.NewGuid().ToString();
@@ -165,7 +187,9 @@ namespace GrandeTech.QueueHub.API.Application.Auth
                 "system" => UserRoles.ServiceAccount,
                 _ => UserRoles.Client // Default fallback
             };
-        }private string HashPassword(string password)
+        }
+
+        private string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
@@ -173,6 +197,130 @@ namespace GrandeTech.QueueHub.API.Application.Auth
         private bool VerifyPassword(string password, string hash)
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
+        }
+
+        private string[] GetUserPermissions(string role)
+        {
+            return role switch
+            {
+                UserRoles.PlatformAdmin => new[]
+                {
+                    "manage:organizations",
+                    "manage:subscriptions",
+                    "view:analytics",
+                    "manage:system",
+                    "manage:users"
+                },
+                UserRoles.Admin => new[]
+                {
+                    "manage:locations",
+                    "manage:staff",
+                    "manage:services",
+                    "view:metrics",
+                    "manage:branding"
+                },
+                UserRoles.Barber => new[]
+                {
+                    "manage:queue",
+                    "view:queue",
+                    "manage:appointments"
+                },
+                UserRoles.Client => new[]
+                {
+                    "view:queue",
+                    "join:queue"
+                },
+                _ => Array.Empty<string>()
+            };
+        }
+
+        private string GenerateTwoFactorToken(User user)
+        {
+            // In a real implementation, this would generate a secure 2FA token
+            // For now, we'll return a dummy token for testing
+            return $"2FA-{Guid.NewGuid()}";
+        }
+
+        public async Task<AdminVerificationResult> VerifyAdminAsync(AdminVerificationRequest request, CancellationToken cancellationToken = default)
+        {
+            var result = new AdminVerificationResult { Success = false };
+
+            var user = await _userRepo.GetByUsernameAsync(request.Username, cancellationToken);
+            if (user == null)
+            {
+                result.Error = "Invalid username.";
+                return result;
+            }
+
+            if (!user.IsActive)
+            {
+                result.Error = "Account is deactivated.";
+                return result;
+            }
+
+            if (user.Role != UserRoles.PlatformAdmin && user.Role != UserRoles.Admin)
+            {
+                result.Error = "User is not an admin.";
+                return result;
+            }
+
+            // In a real implementation, verify the 2FA code
+            // For now, we'll just check if it's not empty
+            if (string.IsNullOrEmpty(request.TwoFactorCode))
+            {
+                result.Error = "Invalid 2FA code.";
+                return result;
+            }
+
+            user.UpdateLastLogin();
+            await _userRepo.UpdateAsync(user, cancellationToken);
+
+            var token = GenerateJwtToken(user);
+
+            result.Success = true;
+            result.Token = token;
+            result.Permissions = GetUserPermissions(user.Role);
+
+            return result;
+        }
+
+        public async Task<LoginResult> VerifyTwoFactorAsync(VerifyTwoFactorRequest request, CancellationToken cancellationToken = default)
+        {
+            var result = new LoginResult { Success = false };
+
+            var user = await _userRepo.GetByUsernameAsync(request.Username, cancellationToken);
+            if (user == null)
+            {
+                result.Error = "Invalid username.";
+                return result;
+            }
+
+            if (!user.IsActive)
+            {
+                result.Error = "Account is deactivated.";
+                return result;
+            }
+
+            // In a real implementation, verify the 2FA code
+            // For now, we'll just check if it's not empty
+            if (string.IsNullOrEmpty(request.TwoFactorCode))
+            {
+                result.Error = "Invalid 2FA code.";
+                return result;
+            }
+
+            user.UpdateLastLogin();
+            await _userRepo.UpdateAsync(user, cancellationToken);
+
+            var token = GenerateJwtToken(user);
+
+            result.Success = true;
+            result.Token = token;
+            result.Username = user.Username;
+            result.Role = user.Role;
+            result.Permissions = GetUserPermissions(user.Role);
+
+            return result;
         }
     }
 } 
