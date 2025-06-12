@@ -1,8 +1,26 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'queue_status_screen.dart';
 
-class CheckInSuccessScreen extends StatelessWidget {
+class CheckInSuccessScreen extends StatefulWidget {
   const CheckInSuccessScreen({Key? key}) : super(key: key);
+
+  @override
+  State<CheckInSuccessScreen> createState() => _CheckInSuccessScreenState();
+}
+
+class _CheckInSuccessScreenState extends State<CheckInSuccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const QueueStatusScreen()),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
