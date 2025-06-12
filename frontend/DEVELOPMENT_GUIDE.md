@@ -1,68 +1,87 @@
+
 # Frontend Development Guide
 
-## Development Context & Use Cases
+## 🌐 System Context
 
-This frontend implements a queue management system with specific use cases organized by priority. The current development phase focuses on **MVP Core Features (Priority 1)**, specifically:
+This frontend is for a SaaS queue management platform with a multi-tenant architecture structured around **Organizations** and **Locations**. Access control is enforced through tenant-aware RBAC, with roles as follows:
 
-- **UC-ENTRY**: Client queue entry interface
-- **UC-QUEUELISTCLI**: Real-time queue status display
-- **UC-BARBERQUEUE**: Barber queue management view
-- **UC-CALLNEXT**: Next client call interface
-- **UC-CANCEL**: Queue cancellation functionality
+- **Platform-level operations** (`PlatformAdmin`)
+- **Organization-level operations** (`Admin`)
+- **Location-level operations** (`Barber`)
+- **Client-level operations** (`Client`)
+- **Service operations** (`ServiceAccount`)
 
-For complete use case specifications, see `USE_CASES.md`.
+The frontend is scoped for **Client**, **Barber**, and partial **Admin** interfaces in the MVP.
 
-## 1. Prerequisites Setup
+## 🧱 Development Context & Use Cases
+
+We're in the **MVP Core Features (Priority 1)** phase. Focused use cases:
+
+- **UC-ENTRY**: Client joins queue
+- **UC-QUEUELISTCLI**: Client-side real-time queue viewer
+- **UC-BARBERQUEUE**: Barber's queue management view
+- **UC-CALLNEXT**: Interface for calling next client
+- **UC-CANCEL**: Client cancelation workflow
+
+📄 Reference: `USE_CASES.md` for detailed logic.
+
+---
+
+## 🧰 Prerequisites Setup
 
 ### Required Tools
-- **VS Code** with extensions:
+- **VS Code** with:
   - Dart
   - Flutter
   - Flutter Widget Snippets (recommended)
-- **Flutter SDK** with web support enabled
+- **Flutter SDK** with web enabled
 
 ### Initial Configuration
 ```bash
-# Enable Flutter web support
 flutter config --enable-web
-
-# Verify web support is enabled
 flutter devices
-```
+````
 
 ### Repository Setup
+
 ```bash
-# Create feature branch for each development session
-git checkout -b feature/ui-20250608
+git checkout -b feature/ui-YYYYMMDD
+# Example:
+# git checkout -b feature/ui-20250611
 
-# After session completion
+# After your changes:
 git add .
-git commit -m "feat: implement queue screen UI components"
-git push origin feature/ui-20250608
+git commit -m "feat: implement [feature] UI components"
+git push origin feature/ui-YYYYMMDD
 ```
 
-## 2. Project Structure Implementation
+---
 
-### Create Core Directories
-```
+## 🧩 Project Structure
+
+```plaintext
 lib/
-├── main.dart                           # Application entry point
+├── main.dart
 └── ui/
     ├── screens/
-    │   └── queue_screen.dart           # Main queue management screen
+    │   └── queue_screen.dart
     ├── widgets/
-    │   ├── queue_card.dart             # Individual queue entry widget
-    │   └── status_panel.dart           # Status display widget
+    │   ├── queue_card.dart
+    │   └── status_panel.dart
     ├── view_models/
-    │   └── mock_queue_notifier.dart    # State management
+    │   └── mock_queue_notifier.dart
     └── data/
-        └── mock_data.dart              # Development mock data
+        └── mock_data.dart
 ```
 
-## 3. State Management Setup
+---
 
-### Provider Configuration
-Add to `pubspec.yaml`:
+## 📦 State Management
+
+### Provider Setup
+
+In `pubspec.yaml`:
+
 ```yaml
 dependencies:
   flutter:
@@ -70,14 +89,9 @@ dependencies:
   provider: ^6.1.1
 ```
 
-### Main App Structure
-```dart
-// main.dart template
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'ui/view_models/mock_queue_notifier.dart';
-import 'ui/screens/queue_screen.dart';
+### App Entry
 
+```dart
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -103,102 +117,117 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-## 4. UI Layer Development Priorities
+---
+
+## 🖼️ UI Layer Implementation Priorities
 
 ### Phase 1: Core Components
-1. **QueueScreen** - Main layout with responsive design
-2. **QueueCard** - Individual queue entry display
-3. **StatusPanel** - Status indicator component
 
-### Design Constraints
-- **Target Width**: 390-430 dp (iPhone 15 web)
-- **Responsive**: Use `LayoutBuilder` for width adaptation
-- **Mobile-First**: Design for touch interaction
-- **Accessibility**: Proper semantic labels
+* **QueueScreen**: Full layout
+* **QueueCard**: Single client entry
+* **StatusPanel**: Queue state indicator
 
-### Component Properties
-- **QueueCard**: `name`, `status`, `width`
-- **StatusPanel**: `status`, `iconData`, `color`
+### Constraints
 
-## 5. Testing Strategy
+* Target width: `390–430dp`
+* Responsive: Use `LayoutBuilder`
+* Mobile-first & touch optimized
+* Accessibility: semantic labeling
 
-### Widget Testing
-Create test for each widget immediately after implementation:
+### Component Props
+
+| Component     | Props                         |
+| ------------- | ----------------------------- |
+| `QueueCard`   | `name`, `status`, `width`     |
+| `StatusPanel` | `status`, `iconData`, `color` |
+
+---
+
+## 🧪 Testing Strategy
+
+### Widget Tests
+
 ```dart
-// Example test structure
 testWidgets('QueueCard displays name and status correctly', (WidgetTester tester) async {
-  // Test implementation
+  // Test logic
 });
 ```
 
-### Test Files Structure
-```
+### Test File Structure
+
+```plaintext
 test/
-├── widget_test.dart           # Main widget tests
+├── widget_test.dart
 └── widgets/
-    ├── queue_card_test.dart   # QueueCard widget tests
-    └── status_panel_test.dart # StatusPanel widget tests
+    ├── queue_card_test.dart
+    └── status_panel_test.dart
 ```
 
-## 6. AI Agent Integration Workflow
+---
 
-### Context Preparation
-1. Prepare UI mockups or screenshots
-2. Identify specific component to implement
-3. Define component inputs and constraints
+## 🤖 AI Workflow for UI
 
-### Effective AI Prompts
-```
-Goal: Generate a QueueCard widget matching this screenshot
-Inputs: name (String), status (String), width (double)
-Constraints: 
+### Prompt Strategy
+
+```txt
+Goal: Generate a QueueCard widget matching this screenshot  
+Inputs: name (String), status (String), width (double)  
+Constraints:
 - Mobile-first design
 - Provider for state management
 - Minimal mocking
 - Material Design components
-Output: Widget code + basic widget test
 ```
 
-### Image Integration
-- Attach PNG/JPG screenshots to Cursor
-- Reference specific UI elements in prompts
-- Request responsive behavior specifications
+### Screenshot Usage
 
-## 7. Development Phases
+Attach PNG/JPG mockups
+Refer to component parts visually
+Clarify responsive behavior in prompt
 
-### Current Phase: Presentation Layer
-- ✅ Project structure
-- 🔄 QueueScreen implementation
-- ⏳ QueueCard widget
-- ⏳ StatusPanel widget
-- ⏳ Responsive design testing
+---
 
-### Next Phase: ViewModel Layer
-- Replace mocks with real data structures
-- Implement business logic
-- Add error handling
+## 📅 Development Phases
 
-### Future Phase: Data Layer
-- API integration
-- HTTP client setup
-- Repository pattern implementation
+### ✅ Current Phase: Presentation Layer
 
-## 8. Quality Guidelines
+* Project structure ready
+* QueueScreen in progress
+* QueueCard + StatusPanel pending
+* Initial responsiveness testing
 
-### Code Standards
-- Use meaningful variable names
-- Follow Dart style guide
-- Add documentation comments for public APIs
-- Implement proper error handling
+### 🔜 Next Phase: ViewModel Layer
 
-### UI/UX Standards
-- Consistent spacing and typography
-- Proper loading states
-- Accessibility compliance
-- Smooth animations and transitions
+* Replace mocks with real data
+* Business logic integration
+* Error + state handling
 
-### Testing Standards
-- Widget tests for all custom widgets
-- Integration tests for user flows
-- Golden tests for critical UI components
-- Performance testing on target devices
+### 📡 Future Phase: Data Layer
+
+* API integration
+* HTTP client & repositories
+
+---
+
+## 🧼 Quality Standards
+
+### Code
+
+* Descriptive naming
+* Follow Dart style guide
+* Public methods = documented
+* Handle errors gracefully
+
+### UI/UX
+
+* Consistent layout and type
+* Loading and error states
+* Accessibility compliance
+* Smooth transitions
+
+### Testing
+
+* Widget test for all custom components
+* Integration tests for flows
+* Golden tests for major screens
+* Performance checks on target devices

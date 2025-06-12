@@ -7,6 +7,7 @@ class Salon {
   final bool isOpen;
   final String closingTime;
   final bool isFavorite;
+  final int queueLength; // number of people in queue
 
   const Salon({
     required this.name,
@@ -16,6 +17,7 @@ class Salon {
     required this.isOpen,
     required this.closingTime,
     required this.isFavorite,
+    required this.queueLength,
   });
 
   /// Create a copy of this salon with updated properties
@@ -27,6 +29,7 @@ class Salon {
     bool? isOpen,
     String? closingTime,
     bool? isFavorite,
+    int? queueLength,
   }) {
     return Salon(
       name: name ?? this.name,
@@ -36,12 +39,13 @@ class Salon {
       isOpen: isOpen ?? this.isOpen,
       closingTime: closingTime ?? this.closingTime,
       isFavorite: isFavorite ?? this.isFavorite,
+      queueLength: queueLength ?? this.queueLength,
     );
   }
 
   @override
   String toString() {
-    return 'Salon(name: $name, address: $address, waitTime: $waitTime, distance: $distance)';
+    return 'Salon(name: $name, address: $address, waitTime: $waitTime, distance: $distance, queueLength: $queueLength)';
   }
 
   @override
@@ -54,7 +58,8 @@ class Salon {
         other.distance == distance &&
         other.isOpen == isOpen &&
         other.closingTime == closingTime &&
-        other.isFavorite == isFavorite;
+        other.isFavorite == isFavorite &&
+        other.queueLength == queueLength;
   }
 
   @override
@@ -67,6 +72,7 @@ class Salon {
       isOpen,
       closingTime,
       isFavorite,
+      queueLength,
     );
   }
 }

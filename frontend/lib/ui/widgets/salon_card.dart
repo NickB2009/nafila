@@ -1,176 +1,147 @@
 import 'package:flutter/material.dart';
 import '../../models/salon.dart';
+import '../theme/app_theme.dart';
+import '../screens/check_in_screen.dart';
 
 /// Card widget displaying salon information with wait time and check-in option
 class SalonCard extends StatelessWidget {
   final Salon salon;
+  final bool isSelected;
+  final VoidCallback? onTap;
 
   const SalonCard({
     super.key,
     required this.salon,
+    this.isSelected = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    final theme = Theme.of(context);
+    
+    return Card(
+      elevation: isSelected ? 4 : 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+          width: 2,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Wait time header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'ESTIMATED WAIT',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Wait time display
-          Text(
-            '${salon.waitTime} min',
-            style: const TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1DB584),
-              height: 1.0,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Salon name and favorite icon
-          Row(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  salon.name,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              if (salon.isFavorite)
-                const Icon(
-                  Icons.star,
-                  color: Color(0xFF1DB584),
-                  size: 20,
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 4),
-
-          // Address
-          Text(
-            salon.address,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Status and distance
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: salon.isOpen ? Colors.green : Colors.red,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  salon.isOpen ? 'Open' : 'Closed',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '• Closes ${salon.closingTime}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '• 🚗 ${salon.distance} mi',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Check in button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: salon.isOpen
-                  ? () {
-                      _showCheckInDialog(context);
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1DB584),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Row(
                 children: [
-                  const Icon(
-                    Icons.check_circle_outline,
-                    size: 20,
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                    child: Icon(
+                      Icons.store,
+                      color: AppTheme.primaryColor,
+                      size: 24,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Check In',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          salon.name,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          salon.address,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _buildInfoChip(
+                    context,
+                    Icons.access_time,
+                    '${salon.waitTime} min',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildInfoChip(
+                    context,
+                    Icons.people,
+                    '${salon.queueLength} in queue',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Check In button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.check_circle, color: theme.colorScheme.onPrimary),
+                  label: const Text('Check In'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => CheckInScreen(
+                          salon: salon,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(BuildContext context, IconData icon, String label) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: AppTheme.primaryColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
