@@ -3,6 +3,7 @@ import '../widgets/salon_card.dart';
 import '../../models/salon.dart';
 import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
+import 'salon_map_screen.dart';
 
 /// Salon finder screen for mobile web interface
 class SalonFinderScreen extends StatelessWidget {
@@ -146,7 +147,11 @@ class SalonFinderScreen extends StatelessWidget {
                             const SizedBox(height: 4),
                             GestureDetector(
                               onTap: () {
-                                // TODO: Navigate to map
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const SalonMapScreen(),
+                                  ),
+                                );
                               },
                               child: Text(
                                 'View map →',

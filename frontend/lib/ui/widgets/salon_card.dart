@@ -34,9 +34,9 @@ class SalonCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               Row(
                 children: [
                   CircleAvatar(
@@ -47,7 +47,7 @@ class SalonCard extends StatelessWidget {
                       color: AppTheme.primaryColor,
                       size: 24,
                     ),
-                  ),
+            ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -56,22 +56,22 @@ class SalonCard extends StatelessWidget {
                         Text(
                           salon.name,
                           style: theme.textTheme.titleLarge,
-                        ),
+              ),
                         const SizedBox(height: 4),
-                        Text(
+          Text(
                           salon.address,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
-                        ),
-                      ],
-                    ),
+                ),
+            ],
+          ),
                   ),
                 ],
-              ),
+            ),
               const SizedBox(height: 16),
-              Row(
-                children: [
+          Row(
+            children: [
                   _buildInfoChip(
                     context,
                     Icons.access_time,
@@ -97,10 +97,10 @@ class SalonCard extends StatelessWidget {
                     foregroundColor: theme.colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
-                    ),
+                ),
                     textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+              ),
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -127,21 +127,21 @@ class SalonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.primaryColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
+              ),
+              child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+                children: [
           Icon(
             icon,
             size: 16,
             color: AppTheme.primaryColor,
-          ),
+                  ),
           const SizedBox(width: 4),
           Text(
             label,
             style: theme.textTheme.labelMedium?.copyWith(
               color: AppTheme.primaryColor,
-              fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w600,
             ),
           ),
         ],
