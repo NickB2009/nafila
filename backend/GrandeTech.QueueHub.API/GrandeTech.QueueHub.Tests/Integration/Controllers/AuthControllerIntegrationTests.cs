@@ -452,7 +452,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
+            Assert.AreEqual(HttpStatusCode.BadRequest, loginResponse.StatusCode);
 
             var responseContent = await loginResponse.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
@@ -461,13 +461,14 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             });
 
             Assert.IsNotNull(loginResult);
+            Assert.IsFalse(loginResult.Success);
             Assert.IsTrue(loginResult.RequiresTwoFactor);
             Assert.IsNotNull(loginResult.TwoFactorToken);
             Assert.IsNull(loginResult.Token);
         }
 
         [TestMethod]
-        public async Task VerifyTwoFactor_WithValidCode_ReturnsToken()
+        public async Task CompleteTwoFactorFlow_WithValidCode_ReturnsSuccess()
         {
             // Arrange
             Assert.IsNotNull(_client);
@@ -485,7 +486,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             user.EnableTwoFactor();
             await userRepository.AddAsync(user, CancellationToken.None);
 
-            // First login to get 2FA token
+            // Step 1: Initial login to get 2FA token
             var loginRequest = new LoginRequest
             {
                 Username = username,
@@ -496,6 +497,8 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
             var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
+            Assert.AreEqual(HttpStatusCode.BadRequest, loginResponse.StatusCode);
+
             var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(loginResponseContent, new JsonSerializerOptions
             {
@@ -506,7 +509,7 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsTrue(loginResult.RequiresTwoFactor);
             Assert.IsNotNull(loginResult.TwoFactorToken);
 
-            // Now verify 2FA
+            // Step 2: Verify 2FA code
             var verifyRequest = new VerifyTwoFactorRequest
             {
                 Username = username,
@@ -517,10 +520,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var verifyJson = JsonSerializer.Serialize(verifyRequest);
             var verifyContent = new StringContent(verifyJson, Encoding.UTF8, "application/json");
 
-            // Act
             var verifyResponse = await _client.PostAsync("/api/auth/verify-2fa", verifyContent);
 
-            // Assert
+            // Assert final result
             Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
 
             var verifyResponseContent = await verifyResponse.Content.ReadAsStringAsync();

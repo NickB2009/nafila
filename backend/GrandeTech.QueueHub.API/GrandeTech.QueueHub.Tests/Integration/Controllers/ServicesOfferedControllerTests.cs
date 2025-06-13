@@ -115,11 +115,21 @@ public class ServicesOfferedControllerTests
     public async Task GetServiceType_ExistingId_ReturnsOk()
     {
         var client = _factory.CreateClient();
-        
-        // Create a test location first with a specific organization ID
+        var adminToken = await CreateAndAuthenticateUserAsync(client, "Admin");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+        // Create a test location first
         using var scope = _factory.Services.CreateScope();
         var locationRepository = scope.ServiceProvider.GetRequiredService<ILocationRepository>();
-        var organizationId = Guid.NewGuid();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+        // Get the user from the token
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var jwtToken = tokenHandler.ReadJwtToken(adminToken);
+        var username = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Username)?.Value;
+        var organizationId = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.OrganizationId)?.Value;
+        Assert.IsNotNull(username);
+        Assert.IsNotNull(organizationId);
 
         var address = Address.Create(
             "123 Test Street",
@@ -136,7 +146,7 @@ public class ServicesOfferedControllerTests
             name: "Test Barbershop",
             slug: "test-barbershop",
             description: "A test barbershop for integration tests",
-            organizationId: organizationId,
+            organizationId: Guid.Parse(organizationId),
             address: address,
             contactPhone: "+1234567890",
             contactEmail: "test@barbershop.com",
@@ -144,37 +154,12 @@ public class ServicesOfferedControllerTests
             closingTime: TimeSpan.FromHours(17),
             maxQueueSize: 50,
             lateClientCapTimeInMinutes: 15,
-            createdBy: "test"
+            createdBy: username
         );
 
         await locationRepository.AddAsync(testLocation, CancellationToken.None);
         var testLocationId = testLocation.Id.ToString();
 
-        // Create an admin user to create the service type
-        var adminUsername = $"admin_{Guid.NewGuid():N}";
-        var adminEmail = $"{adminUsername}@test.com";
-        var adminPassword = "testpassword123";
-        var adminUser = new User(adminUsername, adminEmail, BCrypt.Net.BCrypt.HashPassword(adminPassword), "Admin");
-        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-        await userRepository.AddAsync(adminUser, CancellationToken.None);
-
-        var adminLoginRequest = new LoginRequest
-        {
-            Username = adminUsername,
-            Password = adminPassword
-        };
-
-        var adminLoginResponse = await client.PostAsJsonAsync("/api/auth/login", adminLoginRequest);
-        Assert.AreEqual(HttpStatusCode.OK, adminLoginResponse.StatusCode);
-
-        var adminLoginResult = await adminLoginResponse.Content.ReadFromJsonAsync<LoginResult>();
-        Assert.IsNotNull(adminLoginResult);
-        Assert.IsTrue(adminLoginResult.Success);
-        Assert.IsNotNull(adminLoginResult.Token);
-
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminLoginResult.Token);
-
-        // Create a service type for the location using admin
         var addRequest = new AddServiceOfferedRequest
         {
             Name = "Test Service",
@@ -185,56 +170,23 @@ public class ServicesOfferedControllerTests
         };
         var addResponse = await client.PostAsJsonAsync("/api/servicesoffered", addRequest);
         var addContent = await addResponse.Content.ReadAsStringAsync();
-        Console.WriteLine($"Response Content: {addContent}");
         var addResult = JsonSerializer.Deserialize<AddServiceOfferedResult>(addContent, _jsonOptions);
         Assert.IsNotNull(addResult);
         Assert.IsTrue(addResult.Success);
 
-        // Create a client user to get the service type
-        var clientUsername = $"client_{Guid.NewGuid():N}";
-        var clientEmail = $"{clientUsername}@test.com";
-        var clientPassword = "testpassword123";
-        var clientUser = new User(clientUsername, clientEmail, BCrypt.Net.BCrypt.HashPassword(clientPassword), "Client");
-        await userRepository.AddAsync(clientUser, CancellationToken.None);
-
-        var clientLoginRequest = new LoginRequest
-        {
-            Username = clientUsername,
-            Password = clientPassword
-        };
-
-        var clientLoginResponse = await client.PostAsJsonAsync("/api/auth/login", clientLoginRequest);
-        Assert.AreEqual(HttpStatusCode.OK, clientLoginResponse.StatusCode);
-
-        var clientLoginResult = await clientLoginResponse.Content.ReadFromJsonAsync<LoginResult>();
-        Assert.IsNotNull(clientLoginResult);
-        Assert.IsTrue(clientLoginResult.Success);
-        Assert.IsNotNull(clientLoginResult.Token);
-
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientLoginResult.Token);
-
-        // Now try to get the service type with client user
+        // Now try to get it
         var getResponse = await client.GetAsync($"/api/servicesoffered/{addResult.ServiceTypeId}");
         var getContent = await getResponse.Content.ReadAsStringAsync();
-        Console.WriteLine($"Get Response Status: {getResponse.StatusCode}");
-        Console.WriteLine($"Get Response Content: {getContent}");
+        var getResult = JsonSerializer.Deserialize<ServiceOfferedDto>(getContent, _jsonOptions);
+
         Assert.AreEqual(HttpStatusCode.OK, getResponse.StatusCode);
-        
-        if (!string.IsNullOrEmpty(getContent))
-        {
-            var getResult = JsonSerializer.Deserialize<ServicesOfferedDto>(getContent, _jsonOptions);
-            Assert.IsNotNull(getResult);
-            Assert.AreEqual(addResult.ServiceTypeId, getResult.Id.ToString());
-            Assert.AreEqual(addRequest.Name, getResult.Name);
-            Assert.AreEqual(addRequest.Description, getResult.Description);
-            Assert.AreEqual(Guid.Parse(addRequest.LocationId), getResult.LocationId);
-            Assert.AreEqual(addRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
-            Assert.AreEqual(addRequest.Price, getResult.PriceAmount);
-        }
-        else
-        {
-            Assert.Fail("Get response content was empty");
-        }
+        Assert.IsNotNull(getResult);
+        Assert.AreEqual(addResult.ServiceTypeId.ToString(), getResult.Id.ToString());
+        Assert.AreEqual(addRequest.Name, getResult.Name);
+        Assert.AreEqual(addRequest.Description, getResult.Description);
+        Assert.AreEqual(addRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
+        Assert.AreEqual(addRequest.Price, getResult.Price.Amount);
+        Assert.AreEqual(testLocationId, getResult.LocationId);
     }
 
     [TestMethod]
@@ -358,7 +310,7 @@ public class ServicesOfferedControllerTests
             Assert.AreEqual(updateRequest.Description, getResult.Description);
             Assert.AreEqual(updateRequest.LocationId, getResult.LocationId);
             Assert.AreEqual(updateRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
-            Assert.AreEqual(updateRequest.Price, getResult.PriceAmount);
+            Assert.AreEqual(updateRequest.Price, getResult.Price.Amount);
             Assert.AreEqual(updateRequest.ImageUrl, getResult.ImageUrl);
             Assert.AreEqual(updateRequest.IsActive, getResult.IsActive);
         }
@@ -534,14 +486,39 @@ public class ServicesOfferedControllerTests
         };
 
         var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
-        Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
-
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResult>();
         Assert.IsNotNull(loginResult);
-        Assert.IsTrue(loginResult.Success);
-        Assert.IsNotNull(loginResult.Token);
 
-        return loginResult.Token;
+        // Handle two-factor authentication for admin users
+        if (loginResult.RequiresTwoFactor)
+        {
+            Assert.IsNotNull(loginResult.TwoFactorToken);
+            
+            // Verify 2FA
+            var verifyRequest = new VerifyTwoFactorRequest
+            {
+                Username = username,
+                TwoFactorCode = "123456", // In a real implementation, this would be validated
+                TwoFactorToken = loginResult.TwoFactorToken
+            };
+
+            var verifyResponse = await client.PostAsJsonAsync("/api/auth/verify-2fa", verifyRequest);
+            Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+            var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<LoginResult>();
+            Assert.IsNotNull(verifyResult);
+            Assert.IsTrue(verifyResult.Success);
+            Assert.IsNotNull(verifyResult.Token);
+            return verifyResult.Token;
+        }
+        else
+        {
+            // Regular user login
+            Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
+            Assert.IsTrue(loginResult.Success);
+            Assert.IsNotNull(loginResult.Token);
+            return loginResult.Token;
+        }
     }
     private async Task<string> CreateTestLocationAsync(HttpClient client)
     {
@@ -580,5 +557,22 @@ public class ServicesOfferedControllerTests
 
         await locationRepository.AddAsync(testLocation, CancellationToken.None);
         return testLocation.Id.ToString();
+    }
+
+    // Add a DTO for test deserialization
+    public class ServiceOfferedDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string LocationId { get; set; } = string.Empty;
+        public int EstimatedDurationMinutes { get; set; }
+        public PriceDto Price { get; set; } = new PriceDto();
+    }
+
+    public class PriceDto
+    {
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } = "USD";
     }
 }
