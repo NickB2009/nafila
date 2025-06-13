@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/salon_card.dart';
 import '../../models/salon.dart';
+import '../theme/app_theme.dart';
 
 /// Salon finder screen for mobile web interface
 class SalonFinderScreen extends StatelessWidget {
@@ -8,10 +9,12 @@ class SalonFinderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF1DB584), // Green background from mockup
+      backgroundColor: AppTheme.primaryColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1DB584),
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
         leading: null,
         automaticallyImplyLeading: false,
@@ -21,21 +24,20 @@ class SalonFinderScreen extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.orange,
+                color: theme.colorScheme.secondary,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.person,
-                color: Colors.white,
+                color: theme.colorScheme.onSecondary,
                 size: 20,
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               '1',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onPrimary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -45,22 +47,21 @@ class SalonFinderScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: theme.colorScheme.error,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
+            child: Text(
               'Q2',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onError,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           const SizedBox(width: 16),
-          const Icon(
+          Icon(
             Icons.notifications_outlined,
-            color: Colors.white,
+            color: theme.colorScheme.onPrimary,
           ),
           const SizedBox(width: 16),
         ],
@@ -73,21 +74,17 @@ class SalonFinderScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header text
-                const Text(
+                Text(
                   "Lookin' good, Rommel!",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.onPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   "Make every day\na great hair day.",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: theme.colorScheme.onPrimary,
                     height: 1.2,
                   ),
                 ),
@@ -100,7 +97,9 @@ class SalonFinderScreen extends StatelessWidget {
                     width: 120,
                     height: 120,
                     child: CustomPaint(
-                      painter: ChairPainter(),
+                      painter: ChairPainter(
+                        color: theme.colorScheme.onPrimary.withOpacity(0.3),
+                      ),
                     ),
                   ),
                 ),
@@ -112,7 +111,7 @@ class SalonFinderScreen extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -121,12 +120,12 @@ class SalonFinderScreen extends StatelessWidget {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1DB584).withOpacity(0.1),
+                          color: AppTheme.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(25),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.location_on,
-                          color: Color(0xFF1DB584),
+                          color: AppTheme.primaryColor,
                           size: 24,
                         ),
                       ),
@@ -135,25 +134,19 @@ class SalonFinderScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Find a salon near you',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
+                              style: theme.textTheme.titleLarge,
                             ),
                             const SizedBox(height: 4),
                             GestureDetector(
                               onTap: () {
                                 // TODO: Navigate to map
                               },
-                              child: const Text(
+                              child: Text(
                                 'View map →',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF1DB584),
-                                  fontWeight: FontWeight.w500,
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: AppTheme.primaryColor,
                                 ),
                               ),
                             ),
@@ -173,7 +166,7 @@ class SalonFinderScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(),
+      bottomNavigationBar: _buildBottomNavigation(context),
     );
   }
 
@@ -187,6 +180,7 @@ class SalonFinderScreen extends StatelessWidget {
         isOpen: true,
         closingTime: '6 PM',
         isFavorite: true,
+        queueLength: 5,
       ),
       Salon(
         name: 'Cortez Commons',
@@ -196,6 +190,7 @@ class SalonFinderScreen extends StatelessWidget {
         isOpen: true,
         closingTime: '8 PM',
         isFavorite: true,
+        queueLength: 2,
       ),
     ];
 
@@ -207,12 +202,14 @@ class SalonFinderScreen extends StatelessWidget {
         .toList();
   }
 
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Container(
       height: 80,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -220,20 +217,22 @@ class SalonFinderScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildNavItem(Icons.home, true),
-          _buildNavItem(Icons.search, false),
-          _buildNavItem(Icons.person_outline, false),
+          _buildNavItem(context, Icons.home, true),
+          _buildNavItem(context, Icons.search, false),
+          _buildNavItem(context, Icons.person_outline, false),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, bool isSelected) {
+  Widget _buildNavItem(BuildContext context, IconData icon, bool isSelected) {
+    final theme = Theme.of(context);
+    
     return Container(
       padding: const EdgeInsets.all(12),
       child: Icon(
         icon,
-        color: isSelected ? const Color(0xFF1DB584) : Colors.grey,
+        color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurfaceVariant,
         size: 28,
       ),
     );
@@ -242,10 +241,14 @@ class SalonFinderScreen extends StatelessWidget {
 
 /// Custom painter for the salon chair icon
 class ChairPainter extends CustomPainter {
+  final Color color;
+
+  ChairPainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 

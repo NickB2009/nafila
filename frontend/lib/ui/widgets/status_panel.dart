@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/queue_entry.dart';
+import '../theme/app_theme.dart';
 
 /// A widget that displays queue status with appropriate color and icon
 class StatusPanel extends StatelessWidget {
@@ -51,32 +52,32 @@ class StatusPanel extends StatelessWidget {
     );
   }
 
-  _StatusInfo _getStatusInfo(QueueStatus status) {
+  StatusInfo _getStatusInfo(QueueStatus status) {
     switch (status) {
       case QueueStatus.waiting:
-        return _StatusInfo(
-          icon: Icons.schedule,
-          color: const Color(0xFFFF9800), // Orange
+        return StatusInfo(
+          icon: Icons.access_time,
+          color: AppTheme.statusColors['waiting']!,
         );
       case QueueStatus.inService:
-        return _StatusInfo(
+        return StatusInfo(
           icon: Icons.person_outline,
-          color: const Color(0xFF4CAF50), // Green
+          color: AppTheme.statusColors['inService']!,
         );
       case QueueStatus.completed:
-        return _StatusInfo(
+        return StatusInfo(
           icon: Icons.check_circle_outline,
-          color: const Color(0xFF9E9E9E), // Grey
+          color: AppTheme.statusColors['completed']!,
         );
     }
   }
 }
 
-class _StatusInfo {
+class StatusInfo {
   final IconData icon;
   final Color color;
 
-  _StatusInfo({
+  const StatusInfo({
     required this.icon,
     required this.color,
   });

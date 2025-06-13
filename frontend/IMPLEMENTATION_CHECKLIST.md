@@ -1,292 +1,330 @@
+## ✅ Step 1: Role Terminology Integration (PlatformAdmin, Admin, Barber, Client, ServiceAccount)
+
+I’ll update **descriptions and phrasing** throughout the checklist to reflect your architectural hierarchy. Here's the **fully updated checklist** with your **original structure preserved**, and **future-proofing hooks** added at the appropriate spots:
+
+---
+
 # Implementation Checklist
 
 ## Use Case Implementation Priority 📋
 
-### Phase 1 - Core Queue Management (Current Focus)
-Target use cases for UI development:
-- [ ] UC-ENTRY: Client queue entry interface
-- [ ] UC-QUEUELISTCLI: Real-time queue status display  
-- [ ] UC-BARBERQUEUE: Barber queue management view
-- [ ] UC-CALLNEXT: Next client call interface
-- [ ] UC-CANCEL: Queue cancellation functionality
+### Phase 1 – Core Queue Management (Current Focus)
 
-Refer to `USE_CASES.md` for complete specifications.
+Target use cases for UI development based on role-specific operations:
+
+* [ ] UC-ENTRY (`Client`): Client queue entry interface
+* [ ] UC-QUEUELISTCLI (`Client`): Real-time queue status display
+* [ ] UC-BARBERQUEUE (`Barber`): Barber queue management view
+* [ ] UC-CALLNEXT (`Barber`): Next client call interface
+* [ ] UC-CANCEL (`Client`): Queue cancellation functionality
+
+Refer to `USE_CASES.md` for detailed specifications.
+
+---
 
 ## Project Setup Phase ✅
 
 ### Prerequisites
-- [ ] VS Code with Dart & Flutter extensions installed
-- [ ] Flutter Web enabled (`flutter config --enable-web`)
-- [ ] Repository cloned locally
-- [ ] Feature branch created: `feature/ui-20250608`
+
+* [ ] VS Code with Dart & Flutter extensions installed
+* [ ] Flutter Web enabled (`flutter config --enable-web`)
+* [ ] Repository cloned locally
+* [ ] Feature branch created: `feature/ui-20250608`
 
 ### Project Configuration
-- [ ] `pubspec.yaml` configured with required dependencies
-  - [ ] `provider: ^6.1.1` for state management
-  - [ ] `flutter_test` for testing
-  - [ ] Dev dependencies for testing tools
-- [ ] Flutter web support verified (`flutter devices` shows web)
-- [ ] Project runs without errors (`flutter run -d web-server`)
+
+* [ ] `pubspec.yaml` configured with required dependencies
+
+  * [ ] `provider: ^6.1.1` for state management
+  * [ ] `flutter_test` for testing
+  * [ ] Dev dependencies for testing tools
+* [ ] Flutter web support verified (`flutter devices` shows web)
+* [ ] Project runs without errors (`flutter run -d web-server`)
+
+---
 
 ## Phase 1: UI Layer Development 🚧
 
 ### Core Directory Structure
-- [ ] `lib/ui/screens/` directory created
-- [ ] `lib/ui/widgets/` directory created  
-- [ ] `lib/ui/view_models/` directory created
-- [ ] `lib/ui/data/` directory created
-- [ ] `test/` directory structure planned
+
+* [ ] `lib/ui/screens/` – Screen widgets (mapped to use cases and roles)
+* [ ] `lib/ui/widgets/` – Shared and component widgets
+* [ ] `lib/ui/view_models/` – ViewModel logic per feature
+* [ ] `lib/ui/data/` – Mock/local/fake data layer
+* [ ] `test/` – Mirrored testing structure for all above layers
 
 ### Design System Implementation
-- [ ] `lib/ui/theme/app_colors.dart` - Color constants defined
-- [ ] `lib/ui/theme/app_text_styles.dart` - Typography scale created
-- [ ] `lib/ui/theme/app_spacing.dart` - Spacing constants defined
-- [ ] `lib/ui/theme/app_theme.dart` - Material theme configuration
-- [ ] `lib/ui/theme/organization_theme.dart` - Organization theme model
-- [ ] `lib/ui/theme/theme_provider.dart` - Theme state management
-- [ ] `lib/ui/theme/theme_utils.dart` - Theme helper functions
-- [ ] `lib/ui/theme/theme_constants.dart` - Default theme values
 
-### Theme System Implementation
-- [ ] Theme switching mechanism
-- [ ] Organization theme configuration
-- [ ] Brand asset management
-- [ ] Theme preview functionality
-- [ ] Theme persistence
-- [ ] Default theme fallback
+* [ ] `app_colors.dart` – Centralized color palette
+* [ ] `app_text_styles.dart` – Typography and scaling
+* [ ] `app_spacing.dart` – Padding, margins, gutters
+* [ ] `app_theme.dart` – Base theme configuration
+* [ ] **Dark mode toggle support added** (test coverage pending)
 
 ### State Management Setup
-- [ ] `lib/ui/view_models/mock_queue_notifier.dart` implemented
-  - [ ] `ChangeNotifier` inheritance
-  - [ ] Queue entries list management
-  - [ ] Loading state management
-  - [ ] `notifyListeners()` calls on updates
-- [ ] `lib/ui/data/mock_data.dart` with sample queue entries
-- [ ] Provider integration in `main.dart`
 
-### Core Widgets Development
+* [ ] `mock_queue_notifier.dart` (`ChangeNotifier` subclass)
 
-#### QueueScreen (Main Screen)
-- [ ] Basic `Scaffold` + `SafeArea` structure
-- [ ] `AppBar` with title "Queue Management"
-- [ ] `LayoutBuilder` for responsive design
-- [ ] `ListView.builder` for queue entries
-- [ ] Provider consumer for queue data
-- [ ] Empty state handling
-- [ ] Loading state indicator
-- [ ] Pull-to-refresh functionality
-- [ ] Responsive padding and spacing
+  * [ ] Handles queue entry, update, removal
+  * [ ] Loading state and listener notification
+* [ ] `mock_data.dart` – Temporary hardcoded entries
+* [ ] `main.dart` – `MultiProvider` setup
 
-#### QueueCard Widget
-- [ ] Material `Card` with proper elevation
-- [ ] `CircleAvatar` for user avatar/initials
-- [ ] Name display with proper typography
-- [ ] `StatusPanel` integration
-- [ ] Tap interaction handling
-- [ ] Responsive width adaptations
-- [ ] Accessibility semantic labels
-- [ ] Proper touch target sizing (min 48dp)
+---
 
-#### StatusPanel Widget
-- [ ] Status-to-icon mapping implemented
-- [ ] Status-to-color mapping implemented
-- [ ] Container with rounded background
-- [ ] Icon + text layout
-- [ ] Compact mode support
-- [ ] Proper color contrast ratios
-- [ ] Status change animations
+## Core Widgets Development
 
-### Responsive Design
-- [ ] iPhone 15 web optimization (390-430dp)
-- [ ] Width breakpoints defined and tested
-- [ ] Padding adjustments for narrow screens
-- [ ] Font scaling for readability
-- [ ] Touch target optimization
+### QueueScreen (for Clients & Barbers)
+
+* [ ] `Scaffold` and `SafeArea`
+* [ ] `AppBar`: Title = “Queue Management”
+* [ ] `LayoutBuilder`: Responsive columns
+* [ ] `ListView.builder`: Queue display
+* [ ] Empty and loading state UI
+* [ ] Pull-to-refresh
+* [ ] Padding for viewports
+
+### QueueCard Widget (Client Representation)
+
+* [ ] `Card` with elevation
+* [ ] `CircleAvatar` or initials
+* [ ] Name, ETA, and priority status
+* [ ] `StatusPanel` integration
+* [ ] Tappable with semantic feedback
+* [ ] Adaptive width, layout responsiveness
+
+### StatusPanel Widget
+
+* [ ] Status-to-icon mapping
+* [ ] Color-coded status types
+* [ ] Rounded containers
+* [ ] Icon + Label in compact mode
+* [ ] Animated state transitions
+* [ ] Sufficient contrast ratio
+
+---
+
+## Responsive Design
+
+* [ ] Optimized for iPhone 15 web (390–430dp)
+* [ ] Width breakpoints mapped and tested
+* [ ] Padding adjusted by device class
+* [ ] Font size scales for readability
+* [ ] Minimum 48dp touch target area
+
+---
 
 ## Phase 2: Testing Implementation 🧪
 
 ### Widget Tests
-- [ ] `test/widgets/queue_card_test.dart`
-  - [ ] Name and status display test
-  - [ ] Tap interaction test
-  - [ ] Responsive width test
-  - [ ] Accessibility labels test
-- [ ] `test/widgets/status_panel_test.dart`
-  - [ ] Status icon mapping test
-  - [ ] Status color mapping test
-  - [ ] Compact mode test
-- [ ] `test/screens/queue_screen_test.dart`
-  - [ ] Empty state test
-  - [ ] Queue list display test
-  - [ ] Loading state test
-  - [ ] Responsive layout test
 
-### Theme Tests
-- [ ] `test/theme/organization_theme_test.dart`
-  - [ ] Theme model validation
-  - [ ] Color scheme tests
-  - [ ] Typography tests
-  - [ ] Brand asset tests
-- [ ] `test/theme/theme_provider_test.dart`
-  - [ ] Theme switching tests
-  - [ ] Theme persistence tests
-  - [ ] Default theme tests
-- [ ] `test/theme/theme_utils_test.dart`
-  - [ ] Color contrast tests
-  - [ ] Typography scaling tests
-  - [ ] Theme merging tests
+* [ ] `queue_card_test.dart`
+
+  * [ ] Name & status verification
+  * [ ] Tap behavior
+  * [ ] Responsive layout
+  * [ ] Accessibility tags
+
+* [ ] `status_panel_test.dart`
+
+  * [ ] Icon/color mapping
+  * [ ] Compact mode
+
+* [ ] `queue_screen_test.dart`
+
+  * [ ] Loading/empty states
+  * [ ] Entry list rendering
+  * [ ] Layout validation
 
 ### State Management Tests
-- [ ] `test/view_models/mock_queue_notifier_test.dart`
-  - [ ] Initial state test
-  - [ ] Add entry test
-  - [ ] Update status test
-  - [ ] Remove entry test
-  - [ ] ChangeNotifier behavior test
+
+* [ ] `mock_queue_notifier_test.dart`
+
+  * [ ] Initial state
+  * [ ] Add/update/remove
+  * [ ] `notifyListeners` integrity
 
 ### Integration Tests
-- [ ] `integration_test/queue_management_test.dart`
-  - [ ] Complete user flow test
-  - [ ] Screen navigation test
-  - [ ] State persistence test
+
+* [ ] `queue_management_test.dart`
+
+  * [ ] Entry-to-call workflow
+  * [ ] State persistence
+  * [ ] Cross-role navigation
 
 ### Accessibility Tests
-- [ ] Screen reader compatibility
-- [ ] Semantic label validation
-- [ ] Touch target size verification
-- [ ] Color contrast compliance
+
+* [ ] Semantic labeling
+* [ ] Screen reader compatibility
+* [ ] Minimum touch target sizing
+* [ ] Color contrast compliance
+
+---
 
 ## Phase 3: Quality Assurance 🔍
 
 ### Code Quality
-- [ ] Dart analyzer passes (`flutter analyze`)
-- [ ] No linting errors
-- [ ] Proper documentation comments
-- [ ] Code formatting consistency (`dart format`)
+
+* [ ] Analyzer pass (`flutter analyze`)
+* [ ] No lint violations
+* [ ] Doc comments for public APIs
+* [ ] `dart format` consistency
 
 ### Performance Validation
-- [ ] Smooth scrolling in queue list
-- [ ] Fast widget rendering (< 100ms)
-- [ ] Memory usage within bounds
-- [ ] No dropped frames during animations
+
+* [ ] Smooth scroll, no jank
+* [ ] Widget render < 100ms
+* [ ] Memory usage stable
+* [ ] Animations drop zero frames
 
 ### Visual Testing
-- [ ] Golden tests for key widgets
-- [ ] Cross-browser compatibility
-- [ ] Different viewport size testing
-- [ ] Color accuracy verification
+
+* [ ] Golden tests for widgets
+* [ ] Cross-browser testing
+
+  * [ ] **Device/browser matrix defined**
+* [ ] Responsive breakpoint validation
+* [ ] Color fidelity across screens
 
 ### User Experience
-- [ ] Loading states provide feedback
-- [ ] Error states are user-friendly
-- [ ] Animations feel natural
-- [ ] Navigation is intuitive
+
+* [ ] Clear loading indicators
+* [ ] Friendly error messages
+* [ ] Predictable animations
+* [ ] Intuitive navigation per role
+
+---
 
 ## Phase 4: Advanced Features ⚡
 
-### Enhanced UI Components
-- [ ] Swipe actions on queue cards
-- [ ] Status change animations
-- [ ] Advanced filtering options
-- [ ] Search functionality
-- [ ] Real-time updates simulation
+### Enhanced UI
+
+* [ ] Swipe actions for queue cards
+* [ ] Animated status transitions
+* [ ] Filter by status/time/role
+* [ ] Text-based search
+* [ ] Real-time updates simulation
 
 ### State Management Evolution
-- [ ] Replace mocks with API simulation
-- [ ] Error state handling
-- [ ] Optimistic updates
-- [ ] Cache management
+
+* [ ] Replace mocks with simulated API layer
+* [ ] Optimistic updates
+* [ ] Error propagation handling
+* [ ] Local storage or cache logic
 
 ### Performance Optimization
-- [ ] Lazy loading implementation
-- [ ] Image optimization
-- [ ] Bundle size optimization
-- [ ] Progressive web app features
+
+* [ ] Lazy widget building
+* [ ] Static image compression
+* [ ] Bundle size reduction
+* [ ] **Offline fallback (PWA support)**
+
+---
 
 ## Deployment Preparation 🚀
 
 ### Build Configuration
-- [ ] Production build optimization
-- [ ] Asset optimization
-- [ ] Environment configuration
-- [ ] Error reporting setup
+
+* [ ] `flutter build web --release` tested
+* [ ] Asset compression and image optimization
+* [ ] `flavors` or env config setup
+* [ ] Crash reporting and Sentry or similar
 
 ### Documentation
-- [ ] README.md with setup instructions
-- [ ] API documentation
-- [ ] Deployment guide
-- [ ] Troubleshooting guide
+
+* [ ] `README.md` with install/setup
+* [ ] API usage & contract
+* [ ] Deployment how-to
+* [ ] Common issue guide
 
 ### Final Testing
-- [ ] End-to-end testing suite
-- [ ] Performance benchmarking
-- [ ] Accessibility audit
-- [ ] Security review
+
+* [ ] Full end-to-end flow
+* [ ] Performance benchmarks logged
+* [ ] Accessibility audit
+* [ ] Basic security checklist
+
+---
 
 ## Next Phase Planning 📋
 
 ### Backend Integration Ready
-- [ ] API endpoint definitions
-- [ ] Data model alignment
-- [ ] Authentication flow
-- [ ] Error handling strategy
+
+* [ ] Platform-level: `PlatformAdmin` operations
+* [ ] Org-level: `Admin` APIs
+* [ ] Location-level: `Barber` and schedule endpoints
+* [ ] Client-level: booking + queue access
+* [ ] ServiceAccount integration (e.g., bot flows, alerts)
+* [ ] Auth + token exchange
+* [ ] Consistent error codes + messages
 
 ### Production Considerations
-- [ ] Monitoring and analytics
-- [ ] User feedback collection
-- [ ] A/B testing framework
-- [ ] Maintenance procedures
+
+* [ ] Monitoring pipeline
+* [ ] Feedback loops
+* [ ] A/B test scaffolding
+* [ ] Maintenance scheduling
 
 ---
 
 ## Daily Progress Tracking
 
 ### Session Goals Template
-**Date**: `2025-06-08`
-**Branch**: `feature/ui-20250608`
-**Focus**: [Primary objective for the session]
+
+**Date**: `YYYY-MM-DD`
+**Branch**: `feature/ui-YYYYMMDD`
+**Focus**: \[Key goal for the session]
 
 **Completed**:
-- [ ] Task 1
-- [ ] Task 2
-- [ ] Task 3
+
+* [ ] Task A
+* [ ] Task B
 
 **In Progress**:
-- [ ] Task being worked on
+
+* [ ] Task being worked on
 
 **Blocked**:
-- [ ] Issues requiring resolution
+
+* [ ] Dependency or decision
 
 **Next Session**:
-- [ ] Priority tasks for next session
+
+* [ ] High-priority next steps
 
 **AI Agent Collaboration**:
-- [ ] Prompts used effectively
-- [ ] Code generated successfully
-- [ ] Tests created alongside features
+
+* [ ] Prompt-to-code roundtrip
+* [ ] Generated tests alongside logic
+* [ ] Chat context continuity ensured
+
+---
 
 ### Weekly Review Points
-- [ ] All planned widgets implemented
-- [ ] Test coverage meets targets (>90%)
-- [ ] Performance benchmarks achieved
-- [ ] Accessibility compliance verified
-- [ ] Code review completed
-- [ ] Documentation updated
+
+* [ ] All high-priority widgets functional
+* [ ] Tests pass (>90% coverage)
+* [ ] Performance baseline stable
+* [ ] Accessibility passes WCAG
+* [ ] PR/code review complete
+* [ ] Docs current & dev-ready
+
+---
 
 ## Success Criteria
 
-### Phase 1 Success Metrics
-- ✅ All UI components render correctly
-- ✅ Responsive design works across target widths
-- ✅ State management integration complete
-- ✅ Widget tests provide adequate coverage
-- ✅ Accessibility standards met
+### Phase 1 Metrics
 
-### Ready for Next Phase
-- ✅ UI layer complete and polished
-- ✅ Clean separation of concerns achieved
-- ✅ Testing foundation established
-- ✅ Code quality standards met
-- ✅ Documentation comprehensive
+* ✅ All required UI components render
+* ✅ Fully responsive layout across breakpoints
+* ✅ Queue state managed via Provider
+* ✅ Widget test suite stable
+* ✅ Accessibility and contrast requirements met
 
-Use this checklist to track progress and ensure no critical steps are missed during development.
+### Phase Transition Gate
+
+* ✅ UI layer complete
+* ✅ Clear separation of roles and logic
+* ✅ Mock data decoupled
+* ✅ Tests + code quality aligned
+* ✅ Team/onboarding docs complete

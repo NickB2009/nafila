@@ -1,8 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/mock_queue_notifier.dart';
 import '../widgets/queue_card.dart';
 import '../../models/queue_entry.dart';
+import '../theme/app_theme.dart';
 
 /// Main screen displaying the queue management interface
 class QueueScreen extends StatelessWidget {
@@ -10,16 +12,23 @@ class QueueScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Queue Management'),
+        title: Text(
+          'Gerenciamento de Fila',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onPrimary,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
               context.read<MockQueueNotifier>().refresh();
             },
-            tooltip: 'Refresh',
+            tooltip: 'Atualizar',
           ),
         ],
       ),
@@ -29,8 +38,10 @@ class QueueScreen extends StatelessWidget {
             return Consumer<MockQueueNotifier>(
               builder: (context, queueNotifier, child) {
                 if (queueNotifier.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: theme.colorScheme.primary,
+                    ),
                   );
                 }
 
@@ -58,7 +69,7 @@ class QueueScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddPersonDialog(context),
-        tooltip: 'Add Person',
+        tooltip: 'Adicionar Pessoa',
         child: const Icon(Icons.add),
       ),
     );
@@ -84,10 +95,10 @@ class QueueScreen extends StatelessWidget {
           Expanded(
             child: _buildStatItem(
               context,
-              'Waiting',
+              'Aguardando',
               notifier.waitingCount.toString(),
               Icons.schedule,
-              const Color(0xFFFF9800),
+              AppTheme.statusColors['waiting']!,
               isCompact,
             ),
           ),
@@ -95,10 +106,10 @@ class QueueScreen extends StatelessWidget {
           Expanded(
             child: _buildStatItem(
               context,
-              'In Service',
+              'Em Atendimento',
               notifier.inServiceCount.toString(),
               Icons.person_outline,
-              const Color(0xFF4CAF50),
+              AppTheme.statusColors['inService']!,
               isCompact,
             ),
           ),
@@ -204,14 +215,14 @@ class QueueScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No one in queue',
+            'Ninguém na fila',
             style: theme.textTheme.headlineSmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap the + button to add someone',
+            'Toque no botão + para adicionar alguém',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -223,23 +234,35 @@ class QueueScreen extends StatelessWidget {
 
   void _showAddPersonDialog(BuildContext context) {
     final nameController = TextEditingController();
+    final theme = Theme.of(context);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Person to Queue'),
+        title: Text(
+          'Adicionar Pessoa à Fila',
+          style: theme.textTheme.titleLarge,
+        ),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Name',
-            hintText: 'Enter person\'s name',
+          decoration: InputDecoration(
+            labelText: 'Nome',
+            hintText: 'Digite o nome da pessoa',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancelar',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -250,7 +273,10 @@ class QueueScreen extends StatelessWidget {
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('Add'),
+            child: Text(
+              'Adicionar',
+              style: theme.textTheme.labelLarge,
+            ),
           ),
         ],
       ),
@@ -258,6 +284,8 @@ class QueueScreen extends StatelessWidget {
   }
 
   void _showEntryActions(BuildContext context, QueueEntry entry) {
+    final theme = Theme.of(context);
+    
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -267,13 +295,19 @@ class QueueScreen extends StatelessWidget {
           children: [
             Text(
               entry.name,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
             if (entry.status == QueueStatus.waiting) ...[
               ListTile(
-                leading: const Icon(Icons.person_outline),
-                title: const Text('Start Service'),
+                leading: Icon(
+                  Icons.person_outline,
+                  color: AppTheme.statusColors['inService'],
+                ),
+                title: Text(
+                  'Iniciar Atendimento',
+                  style: theme.textTheme.bodyLarge,
+                ),
                 onTap: () {
                   context
                       .read<MockQueueNotifier>()
@@ -284,8 +318,14 @@ class QueueScreen extends StatelessWidget {
             ],
             if (entry.status == QueueStatus.inService) ...[
               ListTile(
-                leading: const Icon(Icons.check_circle_outline),
-                title: const Text('Complete Service'),
+                leading: Icon(
+                  Icons.check_circle_outline,
+                  color: AppTheme.statusColors['completed'],
+                ),
+                title: Text(
+                  'Concluir Atendimento',
+                  style: theme.textTheme.bodyLarge,
+                ),
                 onTap: () {
                   context
                       .read<MockQueueNotifier>()
@@ -295,8 +335,16 @@ class QueueScreen extends StatelessWidget {
               ),
             ],
             ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: const Text('Remove from Queue'),
+              leading: Icon(
+                Icons.delete_outline,
+                color: theme.colorScheme.error,
+              ),
+              title: Text(
+                'Remover da Fila',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
               onTap: () {
                 context.read<MockQueueNotifier>().removeFromQueue(entry.id);
                 Navigator.of(context).pop();
