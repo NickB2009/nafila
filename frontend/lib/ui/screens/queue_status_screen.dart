@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
 import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart' as launcher;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class QueueStatusScreen extends StatelessWidget {
   const QueueStatusScreen({Key? key}) : super(key: key);
@@ -310,7 +311,14 @@ class QueueStatusScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildSalonAction(theme, Icons.navigation, 'Como chegar', onTap: () async {
-            if (Platform.isIOS || Platform.isMacOS) {
+            final googleMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+            final appleMapsUrl = 'http://maps.apple.com/?daddr=$lat,$lng';
+            if (kIsWeb) {
+              await launcher.launchUrl(
+                Uri.parse(googleMapsUrl),
+                mode: launcher.LaunchMode.externalApplication,
+              );
+            } else if (Platform.isIOS || Platform.isMacOS) {
               showModalBottomSheet(
                 context: context,
                 shape: const RoundedRectangleBorder(
@@ -323,8 +331,10 @@ class QueueStatusScreen extends StatelessWidget {
                       leading: const Icon(Icons.map),
                       title: const Text('Apple Maps'),
                       onTap: () async {
-                        final url = 'http://maps.apple.com/?daddr=$lat,$lng';
-                        await launcher.launchUrl(Uri.parse(url));
+                        await launcher.launchUrl(
+                          Uri.parse(appleMapsUrl),
+                          mode: launcher.LaunchMode.externalApplication,
+                        );
                         Navigator.of(modalContext).pop();
                       },
                     ),
@@ -332,8 +342,10 @@ class QueueStatusScreen extends StatelessWidget {
                       leading: const Icon(Icons.map),
                       title: const Text('Google Maps'),
                       onTap: () async {
-                        final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
-                        await launcher.launchUrl(Uri.parse(url));
+                        await launcher.launchUrl(
+                          Uri.parse(googleMapsUrl),
+                          mode: launcher.LaunchMode.externalApplication,
+                        );
                         Navigator.of(modalContext).pop();
                       },
                     ),
@@ -341,8 +353,10 @@ class QueueStatusScreen extends StatelessWidget {
                 ),
               );
             } else {
-              final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
-              await launcher.launchUrl(Uri.parse(url));
+              await launcher.launchUrl(
+                Uri.parse(googleMapsUrl),
+                mode: launcher.LaunchMode.externalApplication,
+              );
             }
           }),
           Divider(color: theme.dividerColor),
