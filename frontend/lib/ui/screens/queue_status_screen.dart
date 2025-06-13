@@ -84,7 +84,7 @@ class QueueStatusScreen extends StatelessWidget {
                 _buildStepper(theme),
                 const SizedBox(height: 20),
                 // Estimated Wait Card
-                _buildWaitCard(theme, waitTime, position),
+                _buildWaitCard(theme, waitTime, position, context),
                 const SizedBox(height: 20),
                 // Checked-in Salon Card
                 _buildSalonCard(theme, salonName, salonAddress, isOpen, closingTime, distance, phone, context),
@@ -151,7 +151,7 @@ class QueueStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWaitCard(ThemeData theme, int waitTime, int position) {
+  Widget _buildWaitCard(ThemeData theme, int waitTime, int position, BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -225,7 +225,17 @@ class QueueStatusScreen extends StatelessWidget {
                 textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              onPressed: () {},
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: theme.colorScheme.surface,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  ),
+                  builder: (modalContext) => const WaitlistSheet(),
+                );
+              },
               child: const Text('Ver lista de espera'),
             ),
           ),
@@ -304,7 +314,7 @@ class QueueStatusScreen extends StatelessWidget {
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
-                builder: (context) => const HaircutReminderSheet(),
+                builder: (modalContext) => HaircutReminderSheet(parentContext: context),
               );
             },
           ),
@@ -383,7 +393,8 @@ class QueueStatusScreen extends StatelessWidget {
 }
 
 class HaircutReminderSheet extends StatefulWidget {
-  const HaircutReminderSheet({Key? key}) : super(key: key);
+  final BuildContext parentContext;
+  const HaircutReminderSheet({Key? key, required this.parentContext}) : super(key: key);
 
   @override
   State<HaircutReminderSheet> createState() => _HaircutReminderSheetState();
@@ -392,6 +403,21 @@ class HaircutReminderSheet extends StatefulWidget {
 class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
   int selectedWeek = 3;
   final List<int> weeks = List.generate(8, (i) => i + 1);
+
+  void _confirmReminder() {
+    Navigator.of(context).pop();
+    // Show SnackBar after closing the modal
+    Future.delayed(const Duration(milliseconds: 300), () {
+      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+        SnackBar(
+          content: const Text('Lembrete agendado com sucesso!'),
+          backgroundColor: AppTheme.primaryColor,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -465,9 +491,7 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
                     borderRadius: BorderRadius.circular(24),
                   ),
                 ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+                onPressed: _confirmReminder,
                 child: Text(
                   'Agendar lembrete único',
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -477,6 +501,114 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class WaitlistSheet extends StatelessWidget {
+  const WaitlistSheet({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // Mock waitlist data
+    final List<Map<String, dynamic>> waitlist = [
+      {"name": "DM", "inSalon": false},
+      {"name": "JC", "inSalon": false},
+      {"name": "MP", "inSalon": true},
+      {"name": "AP", "inSalon": true},
+      {"name": "CM", "inSalon": false},
+      {"name": "Rommel B", "inSalon": false, "isUser": true},
+    ];
+    final int userPosition = waitlist.indexWhere((g) => g["isUser"] == true) + 1;
+
+    return Padding(
+      padding: MediaQuery.of(context).viewInsets,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Você é o $userPositionº da fila',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Text('Nº.', style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold)),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text('CONVIDADO', style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold)),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text('NO SALÃO', style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold), textAlign: TextAlign.end),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...waitlist.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final guest = entry.value;
+              final bool isUser = guest["isUser"] == true;
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                decoration: isUser
+                    ? BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.07),
+                        borderRadius: BorderRadius.circular(8),
+                      )
+                    : null,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "${idx + 1}.",
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: isUser ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        guest["name"],
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: isUser ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: guest["inSalon"] == true
+                          ? Align(
+                              alignment: Alignment.centerRight,
+                              child: Icon(Icons.check, color: AppTheme.primaryColor, size: 22),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ],
         ),
       ),
