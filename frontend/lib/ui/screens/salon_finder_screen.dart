@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/salon_card.dart';
 import '../../models/salon.dart';
 import '../theme/app_theme.dart';
+import 'notifications_screen.dart';
 
 /// Salon finder screen for mobile web interface
 class SalonFinderScreen extends StatelessWidget {
@@ -59,9 +60,13 @@ class SalonFinderScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          Icon(
-            Icons.notifications_outlined,
-            color: theme.colorScheme.onPrimary,
+          IconButton(
+            icon: Icon(Icons.notifications_outlined, color: theme.colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
           const SizedBox(width: 16),
         ],

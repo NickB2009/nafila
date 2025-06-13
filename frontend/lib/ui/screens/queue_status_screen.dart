@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'notifications_screen.dart';
+import 'dart:io' show Platform;
+import 'package:url_launcher/url_launcher.dart' as launcher;
 
 class QueueStatusScreen extends StatelessWidget {
   const QueueStatusScreen({Key? key}) : super(key: key);
@@ -66,9 +69,13 @@ class QueueStatusScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          Icon(
-            Icons.notifications_outlined,
-            color: theme.colorScheme.onPrimary,
+          IconButton(
+            icon: Icon(Icons.notifications_outlined, color: theme.colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
           ),
           const SizedBox(width: 16),
         ],
@@ -245,6 +252,9 @@ class QueueStatusScreen extends StatelessWidget {
   }
 
   Widget _buildSalonCard(ThemeData theme, String name, String address, bool isOpen, String closingTime, double distance, String phone, BuildContext context) {
+    // Mock coordinates for the salon
+    final double lat = -22.9068;
+    final double lng = -43.1729;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -299,7 +309,42 @@ class QueueStatusScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildSalonAction(theme, Icons.navigation, 'Como chegar', onTap: () {}),
+          _buildSalonAction(theme, Icons.navigation, 'Como chegar', onTap: () async {
+            if (Platform.isIOS || Platform.isMacOS) {
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                builder: (modalContext) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.map),
+                      title: const Text('Apple Maps'),
+                      onTap: () async {
+                        final url = 'http://maps.apple.com/?daddr=$lat,$lng';
+                        await launcher.launchUrl(Uri.parse(url));
+                        Navigator.of(modalContext).pop();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.map),
+                      title: const Text('Google Maps'),
+                      onTap: () async {
+                        final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+                        await launcher.launchUrl(Uri.parse(url));
+                        Navigator.of(modalContext).pop();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+              await launcher.launchUrl(Uri.parse(url));
+            }
+          }),
           Divider(color: theme.dividerColor),
           _buildSalonAction(
             theme,
