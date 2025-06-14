@@ -6,6 +6,7 @@ import '../../models/salon.dart';
 import '../widgets/salon_card.dart';
 import 'check_in_screen.dart';
 import 'notifications_screen.dart';
+import 'account_screen.dart';
 
 class SalonMapScreen extends StatefulWidget {
   const SalonMapScreen({super.key});
@@ -158,6 +159,61 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
             // Bottom Sheet List
             if (_showList) _buildBottomSheetList(theme),
           ],
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavigation(context),
+    );
+  }
+
+  Widget _buildBottomNavigation(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildNavItem(context, Icons.home_outlined, false, onTap: () {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }),
+          _buildNavItem(context, Icons.search_outlined, true, onTap: () {
+            // Already on map/search screen
+          }),
+          _buildNavItem(context, Icons.person_outline, false, onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AccountScreen()),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(BuildContext context, IconData icon, bool isSelected, {VoidCallback? onTap}) {
+    final theme = Theme.of(context);
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Icon(
+          icon,
+          color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurfaceVariant,
+          size: 28,
         ),
       ),
     );

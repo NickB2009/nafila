@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'ui/screens/salon_finder_screen.dart';
+import 'ui/screens/salon_tv_dashboard.dart';
 import 'ui/view_models/mock_queue_notifier.dart';
 import 'ui/theme/app_theme.dart';
 
@@ -22,6 +23,9 @@ class EutonautilaApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system, // Will follow system theme
         home: const SalonFinderScreen(),
+        routes: {
+          '/tv-dashboard': (context) => const SalonTvDashboard(),
+        },
       ),
     );
   }

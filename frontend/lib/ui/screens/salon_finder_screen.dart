@@ -4,6 +4,7 @@ import '../../models/salon.dart';
 import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
 import 'salon_map_screen.dart';
+import 'account_screen.dart';
 
 /// Salon finder screen for mobile web interface
 class SalonFinderScreen extends StatelessWidget {
@@ -61,6 +62,12 @@ class SalonFinderScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
+          IconButton(
+            icon: Icon(Icons.tv, color: theme.colorScheme.onPrimary),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/tv-dashboard');
+            },
+          ),
           IconButton(
             icon: Icon(Icons.notifications_outlined, color: theme.colorScheme.onPrimary),
             onPressed: () {
@@ -238,12 +245,21 @@ class SalonFinderScreen extends StatelessWidget {
   Widget _buildNavItem(BuildContext context, IconData icon, bool isSelected) {
     final theme = Theme.of(context);
     
-    return Container(
-      padding: const EdgeInsets.all(12),
-      child: Icon(
-        icon,
-        color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurfaceVariant,
-        size: 28,
+    return GestureDetector(
+      onTap: () {
+        if (icon == Icons.person_outline && !isSelected) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AccountScreen()),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Icon(
+          icon,
+          color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurfaceVariant,
+          size: 28,
+        ),
       ),
     );
   }
