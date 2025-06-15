@@ -4,6 +4,8 @@ import 'notifications_screen.dart';
 import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'account_screen.dart';
+import 'salon_map_screen.dart';
 
 class QueueStatusScreen extends StatelessWidget {
   const QueueStatusScreen({super.key});
@@ -435,15 +437,25 @@ class QueueStatusScreen extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.home, color: AppTheme.primaryColor),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
           ),
           IconButton(
             icon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SalonMapScreen()),
+              );
+            },
           ),
           IconButton(
             icon: Icon(Icons.person_outline, color: theme.colorScheme.onSurfaceVariant),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AccountScreen()),
+              );
+            },
           ),
         ],
       ),

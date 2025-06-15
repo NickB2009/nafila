@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
+import 'personal_info_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -30,7 +31,7 @@ class AccountScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Account Info Card
-                      _buildAccountInfoCard(theme),
+                      _buildAccountInfoCard(context, theme),
                       
                       const SizedBox(height: 20),
                       
@@ -128,7 +129,7 @@ class AccountScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountInfoCard(ThemeData theme) {
+  Widget _buildAccountInfoCard(BuildContext context, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -149,7 +150,11 @@ class AccountScreen extends StatelessWidget {
             Icons.person_outline, 
             'Informações Pessoais',
             showDivider: false,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PersonalInfoScreen()),
+              );
+            },
           ),
           Divider(color: theme.dividerColor),
           _buildMenuItem(

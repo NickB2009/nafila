@@ -251,6 +251,10 @@ class SalonFinderScreen extends StatelessWidget {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const AccountScreen()),
           );
+        } else if (icon == Icons.search) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SalonMapScreen()),
+          );
         }
       },
       child: Container(
