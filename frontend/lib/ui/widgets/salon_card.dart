@@ -42,7 +42,7 @@ class SalonCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                    child: Icon(
+                    child: const Icon(
                       Icons.store,
                       color: AppTheme.primaryColor,
                       size: 24,

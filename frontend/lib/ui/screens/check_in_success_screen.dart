@@ -3,7 +3,7 @@ import '../theme/app_theme.dart';
 import 'queue_status_screen.dart';
 
 class CheckInSuccessScreen extends StatefulWidget {
-  const CheckInSuccessScreen({Key? key}) : super(key: key);
+  const CheckInSuccessScreen({super.key});
 
   @override
   State<CheckInSuccessScreen> createState() => _CheckInSuccessScreenState();

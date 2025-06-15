@@ -6,21 +6,21 @@ import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class QueueStatusScreen extends StatelessWidget {
-  const QueueStatusScreen({Key? key}) : super(key: key);
+  const QueueStatusScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // Mock data
-    final String userName = "Rommel B";
-    final String salonName = "Market at Mirada";
-    final String salonAddress = "30921 Mirada Blvd, San Antonio, FL";
-    final int waitTime = 34;
-    final int position = 6;
-    final String closingTime = "18:00";
-    final String phone = "(352) 668-4089";
-    final double distance = 10.9;
-    final bool isOpen = true;
+    const String userName = "Rommel B";
+    const String salonName = "Market at Mirada";
+    const String salonAddress = "30921 Mirada Blvd, San Antonio, FL";
+    const int waitTime = 34;
+    const int position = 6;
+    const String closingTime = "18:00";
+    const String phone = "(352) 668-4089";
+    const double distance = 10.9;
+    const bool isOpen = true;
 
     return Scaffold(
       backgroundColor: AppTheme.primaryColor,
@@ -129,9 +129,9 @@ class QueueStatusScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
+          children: [
             Text('Na fila', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             Text('Chegada', style: TextStyle(color: Colors.white)),
             Text('Corte', style: TextStyle(color: Colors.white)),
@@ -154,7 +154,7 @@ class QueueStatusScreen extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: active
-          ? Icon(Icons.check, size: 14, color: AppTheme.primaryColor)
+          ? const Icon(Icons.check, size: 14, color: AppTheme.primaryColor)
           : null,
     );
   }
@@ -181,7 +181,7 @@ class QueueStatusScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              SizedBox(
+              const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
@@ -213,7 +213,7 @@ class QueueStatusScreen extends StatelessWidget {
               children: [
                 const TextSpan(text: 'Você é o '),
                 TextSpan(
-                  text: '${position}º',
+                  text: '$positionº',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const TextSpan(text: ' da fila'),
@@ -226,7 +226,7 @@ class QueueStatusScreen extends StatelessWidget {
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.primaryColor,
-                side: BorderSide(color: AppTheme.primaryColor, width: 2),
+                side: const BorderSide(color: AppTheme.primaryColor, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -254,8 +254,8 @@ class QueueStatusScreen extends StatelessWidget {
 
   Widget _buildSalonCard(ThemeData theme, String name, String address, bool isOpen, String closingTime, double distance, String phone, BuildContext context) {
     // Mock coordinates for the salon
-    final double lat = -22.9068;
-    final double lng = -43.1729;
+    const double lat = -22.9068;
+    const double lng = -43.1729;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -406,7 +406,7 @@ class QueueStatusScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -434,7 +434,7 @@ class QueueStatusScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton(
-            icon: Icon(Icons.home, color: AppTheme.primaryColor),
+            icon: const Icon(Icons.home, color: AppTheme.primaryColor),
             onPressed: () {},
           ),
           IconButton(
@@ -453,7 +453,7 @@ class QueueStatusScreen extends StatelessWidget {
 
 class HaircutReminderSheet extends StatefulWidget {
   final BuildContext parentContext;
-  const HaircutReminderSheet({Key? key, required this.parentContext}) : super(key: key);
+  const HaircutReminderSheet({super.key, required this.parentContext});
 
   @override
   State<HaircutReminderSheet> createState() => _HaircutReminderSheetState();
@@ -468,11 +468,11 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
     // Show SnackBar after closing the modal
     Future.delayed(const Duration(milliseconds: 300), () {
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-        SnackBar(
-          content: const Text('Lembrete agendado com sucesso!'),
+        const SnackBar(
+          content: Text('Lembrete agendado com sucesso!'),
           backgroundColor: AppTheme.primaryColor,
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
         ),
       );
     });
@@ -568,7 +568,7 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
 }
 
 class WaitlistSheet extends StatelessWidget {
-  const WaitlistSheet({Key? key}) : super(key: key);
+  const WaitlistSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -658,7 +658,7 @@ class WaitlistSheet extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: guest["inSalon"] == true
-                          ? Align(
+                          ? const Align(
                               alignment: Alignment.centerRight,
                               child: Icon(Icons.check, color: AppTheme.primaryColor, size: 22),
                             )
@@ -667,7 +667,7 @@ class WaitlistSheet extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

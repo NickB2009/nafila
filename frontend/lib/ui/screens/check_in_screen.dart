@@ -5,7 +5,7 @@ import 'check_in_success_screen.dart';
 
 class CheckInScreen extends StatefulWidget {
   final Salon salon;
-  const CheckInScreen({Key? key, required this.salon}) : super(key: key);
+  const CheckInScreen({super.key, required this.salon});
 
   @override
   State<CheckInScreen> createState() => _CheckInScreenState();
@@ -31,7 +31,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     final theme = Theme.of(context);
     final salon = widget.salon;
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,7 +69,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.check_circle, color: AppTheme.primaryColor, size: 36),
+                      const Icon(Icons.check_circle, color: AppTheme.primaryColor, size: 36),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(

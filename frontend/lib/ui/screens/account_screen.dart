@@ -21,7 +21,7 @@ class AccountScreen extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.background,
+                  color: theme.colorScheme.surface,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: SingleChildScrollView(
@@ -207,7 +207,7 @@ class AccountScreen extends StatelessWidget {
               color: AppTheme.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.content_cut,
               color: AppTheme.primaryColor,
               size: 28,

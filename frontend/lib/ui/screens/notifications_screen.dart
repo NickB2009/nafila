@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +23,9 @@ class NotificationsScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.background,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
@@ -110,7 +110,7 @@ class NotificationsScreen extends StatelessWidget {
                             color: AppTheme.primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.notifications,
                             color: AppTheme.primaryColor,
                             size: 24,

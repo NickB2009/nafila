@@ -106,7 +106,7 @@ class SalonFinderScreen extends StatelessWidget {
                 // Chair icon
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Container(
+                  child: SizedBox(
                     width: 120,
                     height: 120,
                     child: CustomPaint(
@@ -136,7 +136,7 @@ class SalonFinderScreen extends StatelessWidget {
                           color: AppTheme.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(25),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.location_on,
                           color: AppTheme.primaryColor,
                           size: 24,
@@ -189,7 +189,7 @@ class SalonFinderScreen extends StatelessWidget {
 
   List<Widget> _buildSalonCards() {
     final salons = [
-      Salon(
+      const Salon(
         name: 'Market at Mirada',
         address: '30921 Mirada Blvd, San Antonio, FL',
         waitTime: 24,
@@ -199,7 +199,7 @@ class SalonFinderScreen extends StatelessWidget {
         isFavorite: true,
         queueLength: 5,
       ),
-      Salon(
+      const Salon(
         name: 'Cortez Commons',
         address: '123 Cortez Ave, San Antonio, FL',
         waitTime: 8,

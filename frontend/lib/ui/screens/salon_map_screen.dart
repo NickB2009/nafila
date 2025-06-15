@@ -26,7 +26,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   // Mock salon locations in San Antonio, FL area
   final List<SalonLocation> _salonLocations = [
     SalonLocation(
-      salon: Salon(
+      salon: const Salon(
         name: 'Market at Mirada',
         address: '30921 Mirada Blvd, San Antonio, FL',
         waitTime: 24,
@@ -36,10 +36,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         isFavorite: true,
         queueLength: 5,
       ),
-      position: LatLng(28.3372, -82.2637), // San Antonio, FL area
+      position: const LatLng(28.3372, -82.2637), // San Antonio, FL area
     ),
     SalonLocation(
-      salon: Salon(
+      salon: const Salon(
         name: 'Cortez Commons',
         address: '123 Cortez Ave, San Antonio, FL',
         waitTime: 8,
@@ -49,10 +49,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         isFavorite: true,
         queueLength: 2,
       ),
-      position: LatLng(28.3422, -82.2587),
+      position: const LatLng(28.3422, -82.2587),
     ),
     SalonLocation(
-      salon: Salon(
+      salon: const Salon(
         name: 'Westshore Plaza',
         address: '456 Westshore Blvd, San Antonio, FL',
         waitTime: 15,
@@ -62,10 +62,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         isFavorite: false,
         queueLength: 3,
       ),
-      position: LatLng(28.3322, -82.2687),
+      position: const LatLng(28.3322, -82.2687),
     ),
     SalonLocation(
-      salon: Salon(
+      salon: const Salon(
         name: 'Tampa Bay Center',
         address: '789 Bay Center Dr, San Antonio, FL',
         waitTime: 32,
@@ -75,7 +75,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         isFavorite: false,
         queueLength: 8,
       ),
-      position: LatLng(28.3272, -82.2737),
+      position: const LatLng(28.3272, -82.2737),
     ),
   ];
 
@@ -90,7 +90,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -100,7 +100,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
               child: FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
-                  initialCenter: LatLng(28.3372, -82.2637), // San Antonio, FL
+                  initialCenter: const LatLng(28.3372, -82.2637), // San Antonio, FL
                   initialZoom: 12.0,
                   minZoom: 10.0,
                   maxZoom: 18.0,
@@ -431,7 +431,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
             heroTag: "location",
             onPressed: () {
               // Animate to user location (mocked)
-              _mapController.move(LatLng(28.3372, -82.2637), 14.0);
+              _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
             },
             backgroundColor: theme.colorScheme.surface,
             foregroundColor: AppTheme.primaryColor,
@@ -535,7 +535,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.store,
                     color: AppTheme.primaryColor,
                     size: 24,
@@ -694,14 +694,14 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'Buscar localização...',
-                prefixIcon: Icon(Icons.search, color: AppTheme.primaryColor),
+                prefixIcon: const Icon(Icons.search, color: AppTheme.primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: theme.colorScheme.outline),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
@@ -755,12 +755,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     
     // Animate to a mock location based on search
     if (query.toLowerCase().contains('tampa')) {
-      _mapController.move(LatLng(27.9506, -82.4572), 12.0);
+      _mapController.move(const LatLng(27.9506, -82.4572), 12.0);
     } else if (query.toLowerCase().contains('wesley chapel')) {
-      _mapController.move(LatLng(28.2420, -82.3271), 12.0);
+      _mapController.move(const LatLng(28.2420, -82.3271), 12.0);
     } else {
       // Default to San Antonio, FL
-      _mapController.move(LatLng(28.3372, -82.2637), 12.0);
+      _mapController.move(const LatLng(28.3372, -82.2637), 12.0);
     }
     
     ScaffoldMessenger.of(context).showSnackBar(
@@ -807,7 +807,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                         bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.add,
                       color: AppTheme.primaryColor,
                       size: 20,
@@ -825,7 +825,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     decoration: const BoxDecoration(
                       borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.remove,
                       color: AppTheme.primaryColor,
                       size: 20,

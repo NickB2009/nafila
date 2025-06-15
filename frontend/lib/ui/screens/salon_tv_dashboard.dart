@@ -78,7 +78,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final screenSize = MediaQuery.of(context).size;
     
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -145,7 +145,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               color: AppTheme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.content_cut,
               color: AppTheme.primaryColor,
               size: 32,
@@ -250,7 +250,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.people,
                   color: Colors.white,
                   size: 32,
@@ -372,7 +372,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
       decoration: BoxDecoration(
         color: isInSalon 
             ? AppTheme.primaryColor.withOpacity(0.1)
-            : theme.colorScheme.background,
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isInSalon 
@@ -406,7 +406,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             flex: 2,
             child: Center(
               child: isInSalon
-                  ? Icon(
+                  ? const Icon(
                       Icons.check_circle,
                       color: AppTheme.primaryColor,
                       size: 28,
