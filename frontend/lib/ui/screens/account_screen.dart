@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
 import 'personal_info_screen.dart';
+import 'favoritos_screen.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  DateTime _reminderDate = DateTime.now().add(const Duration(days: 14));
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +170,11 @@ class AccountScreen extends StatelessWidget {
             Icons.star_outline, 
             'Favoritos',
             showDivider: false,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FavoritosScreen()),
+              );
+            },
           ),
         ],
       ),
@@ -196,11 +208,44 @@ class AccountScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  '14 de Junho.',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      _formatDate(_reminderDate),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _reminderDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          locale: const Locale('pt', 'BR'),
+                        );
+                        if (picked != null && picked != _reminderDate) {
+                          setState(() {
+                            _reminderDate = picked;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Lembrete atualizado!'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.edit_calendar, size: 18),
+                      label: const Text('Alterar'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.primaryColor,
+                        textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -221,6 +266,15 @@ class AccountScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    // Ex: 14 de Junho de 2024
+    final months = [
+      '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return '${date.day} de ${months[date.month]} de ${date.year}';
   }
 
   Widget _buildSectionHeader(ThemeData theme, String title) {

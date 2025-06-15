@@ -18,6 +18,8 @@ dependencies:
   url_launcher: ^6.1.7
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
