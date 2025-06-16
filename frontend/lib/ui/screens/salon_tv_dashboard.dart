@@ -179,7 +179,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             _getCurrentTime(),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w500,
-              color: AppTheme.primaryColor,
+              color: theme.colorScheme.primary,
             ),
           ),
         ],

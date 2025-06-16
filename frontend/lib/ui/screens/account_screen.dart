@@ -260,7 +260,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       icon: const Icon(Icons.edit_calendar, size: 18),
                       label: const Text('Alterar'),
                       style: TextButton.styleFrom(
-                        foregroundColor: AppTheme.primaryColor,
+                        foregroundColor: theme.colorScheme.primary,
                         textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -273,12 +273,12 @@ class _AccountScreenState extends State<AccountScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: theme.colorScheme.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.content_cut,
-              color: AppTheme.primaryColor,
+              color: theme.colorScheme.primary,
               size: 28,
             ),
           ),
@@ -321,7 +321,7 @@ class _AccountScreenState extends State<AccountScreen> {
           contentPadding: EdgeInsets.zero,
           leading: Icon(
             icon,
-            color: AppTheme.primaryColor,
+            color: theme.colorScheme.primary,
             size: 24,
           ),
           title: Text(

@@ -92,16 +92,6 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     
     return Scaffold(
       backgroundColor: theme.colorScheme.primary,
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
-        title: Text(
-          'Encontrar um salão',
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.onPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: Stack(
           children: [
