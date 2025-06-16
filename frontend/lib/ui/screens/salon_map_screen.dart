@@ -23,6 +23,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   String _selectedFilter = 'Aberto agora';
   bool _showSearch = false;
   final TextEditingController _searchController = TextEditingController();
+  final Set<String> _favoriteSalons = {};
   
   // Mock salon locations in San Antonio, FL area
   final List<SalonLocation> _salonLocations = [
@@ -493,11 +494,36 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _selectedSalon!.name,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _selectedSalon!.name,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (_favoriteSalons.contains(_selectedSalon!.name)) {
+                                  _favoriteSalons.remove(_selectedSalon!.name);
+                                } else {
+                                  _favoriteSalons.add(_selectedSalon!.name);
+                                }
+                              });
+                            },
+                            child: Icon(
+                              _favoriteSalons.contains(_selectedSalon!.name)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -912,6 +938,25 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                          ),
                                        ),
                                      ),
+                                   const SizedBox(width: 4),
+                                   GestureDetector(
+                                     onTap: () {
+                                       setState(() {
+                                         if (_favoriteSalons.contains(location.salon.name)) {
+                                           _favoriteSalons.remove(location.salon.name);
+                                         } else {
+                                           _favoriteSalons.add(location.salon.name);
+                                         }
+                                       });
+                                     },
+                                     child: Icon(
+                                       _favoriteSalons.contains(location.salon.name)
+                                           ? Icons.favorite
+                                           : Icons.favorite_border,
+                                       color: theme.colorScheme.primary,
+                                       size: 20,
+                                     ),
+                                   ),
                                  ],
                                ),
                               const SizedBox(height: 4),

@@ -10,6 +10,8 @@ class SalonCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onCheckIn;
+  final bool isFavorite;
+  final VoidCallback? onToggleFavorite;
 
   const SalonCard({
     super.key,
@@ -17,6 +19,8 @@ class SalonCard extends StatelessWidget {
     this.isSelected = false,
     this.onTap,
     this.onCheckIn,
+    this.isFavorite = false,
+    this.onToggleFavorite,
   });
 
   @override
@@ -76,12 +80,10 @@ class SalonCard extends StatelessWidget {
                   ),
                   IconButton(
                     icon: Icon(
-                      salon.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
                       color: theme.colorScheme.primary,
                     ),
-                    onPressed: () {
-                      // TODO: Handle favorite toggle
-                    },
+                    onPressed: onToggleFavorite,
                   ),
                 ],
               ),

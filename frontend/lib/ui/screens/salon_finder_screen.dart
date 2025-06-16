@@ -9,8 +9,15 @@ import 'account_screen.dart';
 import 'check_in_screen.dart';
 
 /// Salon finder screen for mobile web interface
-class SalonFinderScreen extends StatelessWidget {
+class SalonFinderScreen extends StatefulWidget {
   const SalonFinderScreen({super.key});
+
+  @override
+  State<SalonFinderScreen> createState() => _SalonFinderScreenState();
+}
+
+class _SalonFinderScreenState extends State<SalonFinderScreen> {
+  final Set<String> _favoriteSalons = {};
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +231,16 @@ class SalonFinderScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 16),
               child: SalonCard(
                 salon: salon,
+                isFavorite: _favoriteSalons.contains(salon.name),
+                onToggleFavorite: () {
+                  setState(() {
+                    if (_favoriteSalons.contains(salon.name)) {
+                      _favoriteSalons.remove(salon.name);
+                    } else {
+                      _favoriteSalons.add(salon.name);
+                    }
+                  });
+                },
                 onCheckIn: salon.isOpen ? () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
