@@ -4,6 +4,8 @@ import 'notifications_screen.dart';
 import 'personal_info_screen.dart';
 import 'favoritos_screen.dart';
 import 'comunicacoes_screen.dart';
+import 'display_screen.dart';
+import 'atendimento_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -57,14 +59,22 @@ class _AccountScreenState extends State<AccountScreen> {
                           MaterialPageRoute(builder: (_) => const ComunicacoesScreen()),
                         );
                       }),
-                      _buildMenuItem(theme, Icons.wb_sunny_outlined, 'Display', onTap: () {}),
+                      _buildMenuItem(theme, Icons.wb_sunny_outlined, 'Display', onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const DisplayScreen()),
+                        );
+                      }),
                       
                       const SizedBox(height: 30),
                       
                       // Help & Policies Section
                       _buildSectionHeader(theme, 'AJUDA E POLÍTICAS'),
                       const SizedBox(height: 16),
-                      _buildMenuItem(theme, Icons.help_outline, 'Atendimento ao Cliente', hasExternalIcon: true, onTap: () {}),
+                      _buildMenuItem(theme, Icons.help_outline, 'Atendimento ao Cliente', hasExternalIcon: true, onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AtendimentoScreen()),
+                        );
+                      }),
                       _buildMenuItem(theme, Icons.accessibility_outlined, 'Aviso de Acessibilidade', hasExternalIcon: true, onTap: () {}),
                       _buildMenuItem(theme, Icons.description_outlined, 'Legal e Privacidade', onTap: () {}),
                       
