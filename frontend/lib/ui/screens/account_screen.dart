@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
 import 'personal_info_screen.dart';
 import 'favoritos_screen.dart';
+import 'comunicacoes_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -51,7 +52,11 @@ class _AccountScreenState extends State<AccountScreen> {
                       // Preferences Section
                       _buildSectionHeader(theme, 'PREFERÊNCIAS'),
                       const SizedBox(height: 16),
-                      _buildMenuItem(theme, Icons.notifications_outlined, 'Configurações de Comunicação', onTap: () {}),
+                      _buildMenuItem(theme, Icons.notifications_outlined, 'Configurações de Comunicação', onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ComunicacoesScreen()),
+                        );
+                      }),
                       _buildMenuItem(theme, Icons.wb_sunny_outlined, 'Display', onTap: () {}),
                       
                       const SizedBox(height: 30),
