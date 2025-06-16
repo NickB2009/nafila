@@ -19,7 +19,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
         title: Text(
@@ -30,7 +30,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
           ),
         ),
       ),
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
@@ -82,7 +82,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                         value: highContrast,
                         onChanged: (v) => setState(() => highContrast = v),
                         title: Text('Modo alto contraste', style: theme.textTheme.bodyLarge),
-                        secondary: Icon(Icons.contrast, color: AppTheme.primaryColor),
+                        secondary: Icon(Icons.contrast, color: theme.colorScheme.primary),
                         contentPadding: EdgeInsets.zero,
                       ),
                       Divider(height: 1),
@@ -90,7 +90,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                         value: animations,
                         onChanged: (v) => setState(() => animations = v),
                         title: Text('Animações', style: theme.textTheme.bodyLarge),
-                        secondary: Icon(Icons.animation, color: AppTheme.primaryColor),
+                        secondary: Icon(Icons.animation, color: theme.colorScheme.primary),
                         contentPadding: EdgeInsets.zero,
                       ),
                     ],
@@ -120,7 +120,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
       ),
       selected: isSelected,
       onSelected: (_) => setState(() => themeMode = value),
-      selectedColor: AppTheme.primaryColor,
+      selectedColor: theme.colorScheme.primary,
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
         color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -137,7 +137,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => setState(() => fontSize = value),
-      selectedColor: AppTheme.primaryColor,
+      selectedColor: theme.colorScheme.primary,
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
         color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

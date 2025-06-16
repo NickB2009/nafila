@@ -142,12 +142,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: theme.colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.content_cut,
-              color: AppTheme.primaryColor,
+              color: theme.colorScheme.primary,
               size: 32,
             ),
           ),
@@ -191,11 +191,11 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor,
+        color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: theme.colorScheme.primary.withOpacity(0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -371,12 +371,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: isInSalon 
-            ? AppTheme.primaryColor.withOpacity(0.1)
+            ? theme.colorScheme.primary.withOpacity(0.1)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isInSalon 
-              ? AppTheme.primaryColor.withOpacity(0.3)
+              ? theme.colorScheme.primary.withOpacity(0.3)
               : theme.colorScheme.outline.withOpacity(0.2),
         ),
       ),

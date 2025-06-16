@@ -10,7 +10,7 @@ class AtendimentoScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
         title: Text(
@@ -21,7 +21,7 @@ class AtendimentoScreen extends StatelessWidget {
           ),
         ),
       ),
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
@@ -33,7 +33,7 @@ class AtendimentoScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.question_answer, color: AppTheme.primaryColor, size: 28),
+                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 10),
                   Text(
                     'Perguntas Frequentes',
@@ -48,7 +48,7 @@ class AtendimentoScreen extends StatelessWidget {
               const SizedBox(height: 18),
               Row(
                 children: [
-                  Icon(Icons.support_agent, color: AppTheme.primaryColor, size: 28),
+                  Icon(Icons.support_agent, color: theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 10),
                   Text(
                     'Precisa de mais ajuda?',
@@ -150,7 +150,7 @@ class AtendimentoScreen extends StatelessWidget {
         collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: theme.colorScheme.surfaceVariant,
         collapsedBackgroundColor: theme.colorScheme.surfaceVariant,
-        leading: Icon(Icons.help_outline, color: AppTheme.primaryColor),
+        leading: Icon(Icons.help_outline, color: theme.colorScheme.primary),
         title: Text(faq['q']!, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
         children: [
           Padding(
@@ -176,7 +176,7 @@ class AtendimentoScreen extends StatelessWidget {
         icon: Icon(icon, color: theme.colorScheme.onPrimary),
         label: Text(label, style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryColor,
+          backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

@@ -44,7 +44,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
         title: Text(
@@ -65,7 +65,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
           ],
         ),
       ),
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
@@ -85,8 +85,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                       children: [
                         CircleAvatar(
                           radius: 28,
-                          backgroundColor: AppTheme.primaryColor.withOpacity(0.13),
-                          child: Icon(Icons.person, size: 32, color: AppTheme.primaryColor),
+                          backgroundColor: theme.colorScheme.primary.withOpacity(0.13),
+                          child: Icon(Icons.person, size: 32, color: theme.colorScheme.primary),
                         ),
                         const SizedBox(width: 16),
                         Text(
@@ -106,7 +106,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                           icon: const Icon(Icons.edit, size: 18),
                           label: const Text('Editar'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
+                            backgroundColor: theme.colorScheme.primary,
                             foregroundColor: theme.colorScheme.onPrimary,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -271,7 +271,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.content_cut, color: AppTheme.primaryColor, size: 22),
+                              Icon(Icons.content_cut, color: theme.colorScheme.primary, size: 22),
                               const SizedBox(width: 10),
                               Text(
                                 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja',
@@ -306,7 +306,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppTheme.primaryColor, size: 24),
+        Icon(icon, color: theme.colorScheme.primary, size: 24),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -354,7 +354,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
               label: Text(option),
               selected: isSelected,
               onSelected: (_) => onChanged(option),
-              selectedColor: AppTheme.primaryColor,
+              selectedColor: theme.colorScheme.primary,
               labelStyle: theme.textTheme.bodyMedium?.copyWith(
                 color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -441,16 +441,16 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
           width: 110,
           margin: const EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.primaryColor.withOpacity(0.13) : theme.colorScheme.surface,
+            color: isSelected ? theme.colorScheme.primary.withOpacity(0.13) : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? AppTheme.primaryColor : theme.colorScheme.outline.withOpacity(0.18),
+              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.18),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: [
               if (isSelected)
                 BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.08),
+                  color: theme.colorScheme.primary.withOpacity(0.08),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -460,7 +460,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (t['isCustom'] == true)
-                Icon(Icons.edit, size: 48, color: AppTheme.primaryColor)
+                Icon(Icons.edit, size: 48, color: theme.colorScheme.primary)
               else
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
@@ -476,7 +476,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                 t['name'],
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurface,
+                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),

@@ -63,7 +63,7 @@ class NotificationsScreen extends StatelessWidget {
             child: Text(
               'Editar',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: AppTheme.primaryColor,
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -107,12 +107,12 @@ class NotificationsScreen extends StatelessWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            color: theme.colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.notifications,
-                            color: AppTheme.primaryColor,
+                            color: theme.colorScheme.primary,
                             size: 24,
                           ),
                         ),

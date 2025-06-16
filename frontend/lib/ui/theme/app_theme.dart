@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 /// Theme configuration for the application
 class AppTheme {
-  /// Primary color for the application
+  /// Primary brand color
   static const Color primaryColor = Color(0xFF1DB584);
   
-  /// Secondary color for the application
+  /// Secondary brand color
   static const Color secondaryColor = Color(0xFF03DAC6);
   
   /// Background color for the application
@@ -26,56 +26,83 @@ class AppTheme {
 
   /// Get the light theme configuration
   static ThemeData get lightTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: primaryColor,
+      secondary: secondaryColor,
+      brightness: Brightness.light,
+    );
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: Brightness.light,
-      ),
-      appBarTheme: const AppBarTheme(
+      colorScheme: colorScheme,
+      appBarTheme: AppBarTheme(
         centerTitle: true,
-        elevation: 2,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        elevation: 0,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
-      cardTheme: const CardThemeData(
-        elevation: 2,
+      cardTheme: CardThemeData(
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.circular(16),
         ),
+        color: colorScheme.surface,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         headlineLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: colorScheme.onBackground,
         ),
         headlineMedium: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: colorScheme.onBackground,
         ),
         titleLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: colorScheme.onBackground,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
-          color: Colors.black87,
+          color: colorScheme.onBackground,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: Colors.black87,
+          color: colorScheme.onBackground,
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: colorScheme.onPrimary,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colorScheme.primary,
+          side: BorderSide(color: colorScheme.primary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: colorScheme.primary,
         ),
       ),
     );
@@ -83,56 +110,83 @@ class AppTheme {
 
   /// Get the dark theme configuration
   static ThemeData get darkTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: primaryColor,
+      secondary: secondaryColor,
+      brightness: Brightness.dark,
+    );
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: Brightness.dark,
-      ),
-      appBarTheme: const AppBarTheme(
+      colorScheme: colorScheme,
+      appBarTheme: AppBarTheme(
         centerTitle: true,
-        elevation: 2,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        elevation: 0,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
-      cardTheme: const CardThemeData(
-        elevation: 2,
+      cardTheme: CardThemeData(
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.circular(16),
         ),
+        color: colorScheme.surface,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         headlineLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: colorScheme.onBackground,
         ),
         headlineMedium: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: colorScheme.onBackground,
         ),
         titleLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: colorScheme.onBackground,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
-          color: Colors.white,
+          color: colorScheme.onBackground,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: Colors.white,
+          color: colorScheme.onBackground,
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: colorScheme.onPrimary,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colorScheme.primary,
+          side: BorderSide(color: colorScheme.primary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: colorScheme.primary,
         ),
       ),
     );

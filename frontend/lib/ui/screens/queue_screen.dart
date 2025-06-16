@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/mock_queue_notifier.dart';
@@ -98,7 +97,7 @@ class QueueScreen extends StatelessWidget {
               'Aguardando',
               notifier.waitingCount.toString(),
               Icons.schedule,
-              AppTheme.statusColors['waiting']!,
+              theme.colorScheme.tertiary,
               isCompact,
             ),
           ),
@@ -109,7 +108,7 @@ class QueueScreen extends StatelessWidget {
               'Em Atendimento',
               notifier.inServiceCount.toString(),
               Icons.person_outline,
-              AppTheme.statusColors['inService']!,
+              theme.colorScheme.secondary,
               isCompact,
             ),
           ),

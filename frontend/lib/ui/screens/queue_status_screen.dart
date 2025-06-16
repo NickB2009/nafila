@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'account_screen.dart';
 import 'salon_map_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class QueueStatusScreen extends StatelessWidget {
   const QueueStatusScreen({super.key});
@@ -25,9 +26,9 @@ class QueueStatusScreen extends StatelessWidget {
     const bool isOpen = true;
 
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
         leading: null,
         automaticallyImplyLeading: false,
@@ -103,7 +104,7 @@ class QueueStatusScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(context),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 
@@ -156,7 +157,7 @@ class QueueStatusScreen extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: active
-          ? const Icon(Icons.check, size: 14, color: AppTheme.primaryColor)
+          ? Icon(Icons.check, size: 14, color: theme.colorScheme.primary)
           : null,
     );
   }
@@ -183,12 +184,12 @@ class QueueStatusScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const SizedBox(
+              SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(AppTheme.primaryColor),
+                  valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
                 ),
               ),
             ],
@@ -197,7 +198,7 @@ class QueueStatusScreen extends StatelessWidget {
           Text(
             '$waitTime min',
             style: theme.textTheme.displayMedium?.copyWith(
-              color: AppTheme.primaryColor,
+              color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -227,8 +228,8 @@ class QueueStatusScreen extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primaryColor,
-                side: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(color: theme.colorScheme.primary, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -271,13 +272,13 @@ class QueueStatusScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: theme.colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               'CHECK-IN REALIZADO',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: AppTheme.primaryColor,
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.1,
               ),
@@ -391,7 +392,7 @@ class QueueStatusScreen extends StatelessWidget {
   Widget _buildSalonAction(ThemeData theme, IconData icon, String label, {Widget? trailing, Color? color, VoidCallback? onTap}) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: color ?? AppTheme.primaryColor),
+      leading: Icon(icon, color: color ?? theme.colorScheme.primary),
       title: Text(
         label,
         style: theme.textTheme.bodyLarge?.copyWith(
@@ -417,47 +418,6 @@ class QueueStatusScreen extends StatelessWidget {
           color: theme.colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.bold,
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigation(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.home, color: AppTheme.primaryColor),
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SalonMapScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.person_outline, color: theme.colorScheme.onSurfaceVariant),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AccountScreen()),
-              );
-            },
-          ),
-        ],
       ),
     );
   }
@@ -557,7 +517,7 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
               height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: theme.colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -643,7 +603,7 @@ class WaitlistSheet extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(vertical: 2),
                 decoration: isUser
                     ? BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.07),
+                        color: theme.colorScheme.primary.withOpacity(0.07),
                         borderRadius: BorderRadius.circular(8),
                       )
                     : null,

@@ -17,7 +17,7 @@ class _ComunicacoesScreenState extends State<ComunicacoesScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
         title: Text(
@@ -28,7 +28,7 @@ class _ComunicacoesScreenState extends State<ComunicacoesScreen> {
           ),
         ),
       ),
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
@@ -53,14 +53,14 @@ class _ComunicacoesScreenState extends State<ComunicacoesScreen> {
                       value: emailOn,
                       onChanged: (v) => setState(() => emailOn = v),
                       title: Text('Receber notificações por e-mail', style: theme.textTheme.bodyLarge),
-                      secondary: Icon(Icons.email_outlined, color: AppTheme.primaryColor),
+                      secondary: Icon(Icons.email_outlined, color: theme.colorScheme.primary),
                     ),
                     Divider(height: 1),
                     SwitchListTile.adaptive(
                       value: smsOn,
                       onChanged: (v) => setState(() => smsOn = v),
                       title: Text('Receber notificações por SMS', style: theme.textTheme.bodyLarge),
-                      secondary: Icon(Icons.sms_outlined, color: AppTheme.primaryColor),
+                      secondary: Icon(Icons.sms_outlined, color: theme.colorScheme.primary),
                     ),
                   ],
                 ),

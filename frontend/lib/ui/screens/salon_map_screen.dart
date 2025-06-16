@@ -7,6 +7,7 @@ import '../widgets/salon_card.dart';
 import 'check_in_screen.dart';
 import 'notifications_screen.dart';
 import 'account_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class SalonMapScreen extends StatefulWidget {
   const SalonMapScreen({super.key});
@@ -18,7 +19,7 @@ class SalonMapScreen extends StatefulWidget {
 class _SalonMapScreenState extends State<SalonMapScreen> {
   final MapController _mapController = MapController();
   Salon? _selectedSalon;
-  bool _showList = false;
+  bool _showList = true;
   String _selectedFilter = 'Aberto agora';
   bool _showSearch = false;
   final TextEditingController _searchController = TextEditingController();
@@ -90,7 +91,17 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: theme.colorScheme.primary,
+      appBar: AppBar(
+        backgroundColor: theme.colorScheme.primary,
+        title: Text(
+          'Encontrar um salão',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -129,7 +140,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                               _showSearch = false;
                             });
                           },
-                          child: _buildMarker(location.salon),
+                          child: _buildMarker(location.salon, theme),
                         ),
                       );
                     }).toList(),
@@ -161,61 +172,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(context),
-    );
-  }
-
-  Widget _buildBottomNavigation(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(context, Icons.home_outlined, false, onTap: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }),
-          _buildNavItem(context, Icons.search_outlined, true, onTap: () {
-            // Already on map/search screen
-          }),
-          _buildNavItem(context, Icons.person_outline, false, onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AccountScreen()),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(BuildContext context, IconData icon, bool isSelected, {VoidCallback? onTap}) {
-    final theme = Theme.of(context);
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: Icon(
-          icon,
-          color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurfaceVariant,
-          size: 28,
-        ),
-      ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
 
@@ -224,11 +181,11 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor,
+        color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: theme.shadowColor.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -367,10 +324,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor : theme.colorScheme.surface,
+          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : theme.colorScheme.outline,
+            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline,
             width: 1,
           ),
           boxShadow: [
@@ -419,8 +376,8 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 if (_showList) _selectedSalon = null;
               });
             },
-            backgroundColor: _showList ? AppTheme.primaryColor : theme.colorScheme.surface,
-            foregroundColor: _showList ? Colors.white : AppTheme.primaryColor,
+            backgroundColor: _showList ? theme.colorScheme.primary : theme.colorScheme.surface,
+            foregroundColor: _showList ? Colors.white : theme.colorScheme.primary,
             elevation: 4,
             mini: true,
             child: Icon(_showList ? Icons.map : Icons.list),
@@ -434,7 +391,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
               _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
             },
             backgroundColor: theme.colorScheme.surface,
-            foregroundColor: AppTheme.primaryColor,
+            foregroundColor: theme.colorScheme.primary,
             elevation: 4,
             child: const Icon(Icons.my_location),
           ),
@@ -443,7 +400,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildMarker(Salon salon) {
+  Widget _buildMarker(Salon salon, ThemeData theme) {
     final isSelected = _selectedSalon?.name == salon.name;
     
     return Stack(
@@ -454,7 +411,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
           width: isSelected ? 60 : 50,
           height: isSelected ? 60 : 50,
           decoration: BoxDecoration(
-            color: salon.isOpen ? AppTheme.primaryColor : Colors.grey,
+            color: salon.isOpen ? theme.colorScheme.primary : Colors.grey,
             shape: BoxShape.circle,
             border: Border.all(
               color: Colors.white,
@@ -532,12 +489,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.store,
-                    color: AppTheme.primaryColor,
+                    color: theme.colorScheme.primary,
                     size: 24,
                   ),
                 ),
@@ -645,7 +602,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 icon: Icon(Icons.check_circle, color: theme.colorScheme.onPrimary),
                 label: const Text('Check In'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
@@ -694,19 +651,18 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
               autofocus: true,
               decoration: InputDecoration(
                 hintText: 'Buscar localização...',
-                prefixIcon: const Icon(Icons.search, color: AppTheme.primaryColor),
+                prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: theme.colorScheme.outline),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                  borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
               onSubmitted: (value) {
-                _performSearch(value);
+                _performSearch(value, theme);
               },
             ),
             const SizedBox(height: 12),
@@ -727,18 +683,18 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
 
   Widget _buildSearchChip(ThemeData theme, String location) {
     return GestureDetector(
-      onTap: () => _performSearch(location),
+      onTap: () => _performSearch(location, theme),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(0.1),
+          color: theme.colorScheme.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+          border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
         ),
         child: Text(
           location,
           style: theme.textTheme.labelMedium?.copyWith(
-            color: AppTheme.primaryColor,
+            color: theme.colorScheme.primary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -746,7 +702,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  void _performSearch(String query) {
+  void _performSearch(String query, ThemeData theme) {
     // Mock search functionality - in real app, this would geocode the address
     setState(() {
       _showSearch = false;
@@ -766,7 +722,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Buscando por: $query'),
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
@@ -807,9 +763,9 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                         bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.add,
-                      color: AppTheme.primaryColor,
+                      color: theme.colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -825,9 +781,9 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     decoration: const BoxDecoration(
                       borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.remove,
-                      color: AppTheme.primaryColor,
+                      color: theme.colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -903,7 +859,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 itemCount: _salonLocations.length,
                 itemBuilder: (context, index) {
                   final location = _salonLocations[index];
-                                     final isCheckedIn = location.salon.name == 'Market at Mirada';
+                   final isCheckedIn = location.salon.name == 'Market at Mirada';
                    return Container(
                      margin: const EdgeInsets.only(bottom: 16),
                      padding: const EdgeInsets.all(16),
@@ -912,7 +868,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                        borderRadius: BorderRadius.circular(12),
                        border: Border.all(
                          color: isCheckedIn 
-                             ? AppTheme.primaryColor.withOpacity(0.3)
+                             ? theme.colorScheme.primary.withOpacity(0.3)
                              : theme.colorScheme.outline.withOpacity(0.2),
                        ),
                      ),
@@ -923,14 +879,14 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                           height: 50,
                           decoration: BoxDecoration(
                             color: location.salon.isOpen 
-                                ? AppTheme.primaryColor.withOpacity(0.1)
+                                ? theme.colorScheme.primary.withOpacity(0.1)
                                 : Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(25),
                           ),
                           child: Icon(
                             Icons.store,
                             color: location.salon.isOpen 
-                                ? AppTheme.primaryColor 
+                                ? theme.colorScheme.primary 
                                 : Colors.grey,
                             size: 24,
                           ),
@@ -954,7 +910,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                      Container(
                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                        decoration: BoxDecoration(
-                                         color: AppTheme.primaryColor,
+                                         color: theme.colorScheme.primary,
                                          borderRadius: BorderRadius.circular(8),
                                        ),
                                        child: Text(
@@ -1053,7 +1009,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                   );
                                 } : null,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryColor,
+                                  backgroundColor: theme.colorScheme.primary,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20),

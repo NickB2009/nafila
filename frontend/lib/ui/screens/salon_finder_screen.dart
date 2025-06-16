@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../widgets/salon_card.dart';
+import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
 import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
 import 'salon_map_screen.dart';
 import 'account_screen.dart';
+import 'check_in_screen.dart';
 
 /// Salon finder screen for mobile web interface
 class SalonFinderScreen extends StatelessWidget {
@@ -13,11 +15,12 @@ class SalonFinderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
     
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
         leading: null,
         automaticallyImplyLeading: false,
@@ -64,17 +67,15 @@ class SalonFinderScreen extends StatelessWidget {
           const SizedBox(width: 16),
           IconButton(
             icon: Icon(Icons.tv, color: theme.colorScheme.onPrimary),
-            onPressed: () {
-              Navigator.of(context).pushNamed('/tv-dashboard');
-            },
+            onPressed: () => Navigator.of(context).pushNamed('/tv-dashboard'),
+            tooltip: 'Ver TV Dashboard',
           ),
           IconButton(
             icon: Icon(Icons.notifications_outlined, color: theme.colorScheme.onPrimary),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              );
-            },
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+            ),
+            tooltip: 'Notificações',
           ),
           const SizedBox(width: 16),
         ],
@@ -82,20 +83,20 @@ class SalonFinderScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: EdgeInsets.all(size.width > 600 ? 32.0 : 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header text
                 Text(
-                  "Lookin' good, Rommel!",
+                  "Olá, Rommel!",
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: theme.colorScheme.onPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Make every day\na great hair day.",
+                  "Faça cada dia\num ótimo dia para o cabelo.",
                   style: theme.textTheme.headlineLarge?.copyWith(
                     color: theme.colorScheme.onPrimary,
                     height: 1.2,
@@ -107,8 +108,8 @@ class SalonFinderScreen extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: SizedBox(
-                    width: 120,
-                    height: 120,
+                    width: size.width > 600 ? 160 : 120,
+                    height: size.width > 600 ? 160 : 120,
                     child: CustomPaint(
                       painter: ChairPainter(
                         color: theme.colorScheme.onPrimary.withOpacity(0.3),
@@ -120,74 +121,81 @@ class SalonFinderScreen extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Find salon card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: const Icon(
-                          Icons.location_on,
-                          color: AppTheme.primaryColor,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Find a salon near you',
-                              style: theme.textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 4),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const SalonMapScreen(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'View map →',
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  color: AppTheme.primaryColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildFindSalonCard(context, theme),
 
                 const SizedBox(height: 20),
 
                 // Salon listings
-                ..._buildSalonCards(),
+                ..._buildSalonCards(context),
               ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(context),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 
-  List<Widget> _buildSalonCards() {
+  Widget _buildFindSalonCard(BuildContext context, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Icon(
+              Icons.location_on,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Encontre um salão próximo',
+                  style: theme.textTheme.titleLarge,
+                ),
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SalonMapScreen()),
+                  ),
+                  child: Text(
+                    'Ver mapa →',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildSalonCards(BuildContext context) {
     final salons = [
       const Salon(
         name: 'Market at Mirada',
@@ -214,58 +222,18 @@ class SalonFinderScreen extends StatelessWidget {
     return salons
         .map((salon) => Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: SalonCard(salon: salon),
+              child: SalonCard(
+                salon: salon,
+                onCheckIn: salon.isOpen ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CheckInScreen(salon: salon),
+                    ),
+                  );
+                } : null,
+              ),
             ))
         .toList();
-  }
-
-  Widget _buildBottomNavigation(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(context, Icons.home, true),
-          _buildNavItem(context, Icons.search, false),
-          _buildNavItem(context, Icons.person_outline, false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(BuildContext context, IconData icon, bool isSelected) {
-    final theme = Theme.of(context);
-    
-    return GestureDetector(
-      onTap: () {
-        if (icon == Icons.person_outline && !isSelected) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AccountScreen()),
-          );
-        } else if (icon == Icons.search) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SalonMapScreen()),
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: Icon(
-          icon,
-          color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurfaceVariant,
-          size: 28,
-        ),
-      ),
-    );
   }
 }
 
@@ -280,48 +248,20 @@ class ChairPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2;
 
-    // Chair outline - simplified representation
-    final path = Path();
-
-    // Seat
-    path.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.2, size.height * 0.4, size.width * 0.6,
-          size.height * 0.3),
-      const Radius.circular(8),
-    ));
-
-    // Backrest
-    path.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.25, size.height * 0.1, size.width * 0.5,
-          size.height * 0.35),
-      const Radius.circular(8),
-    ));
-
-    // Armrests
-    path.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.05, size.height * 0.35, size.width * 0.15,
-          size.height * 0.25),
-      const Radius.circular(4),
-    ));
-
-    path.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.8, size.height * 0.35, size.width * 0.15,
-          size.height * 0.25),
-      const Radius.circular(4),
-    ));
-
-    // Base
-    path.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.35, size.height * 0.7, size.width * 0.3,
-          size.height * 0.25),
-      const Radius.circular(4),
-    ));
+    final path = Path()
+      ..moveTo(size.width * 0.2, size.height * 0.8)
+      ..lineTo(size.width * 0.8, size.height * 0.8)
+      ..lineTo(size.width * 0.9, size.height * 0.6)
+      ..lineTo(size.width * 0.7, size.height * 0.4)
+      ..lineTo(size.width * 0.3, size.height * 0.4)
+      ..lineTo(size.width * 0.1, size.height * 0.6)
+      ..close();
 
     canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

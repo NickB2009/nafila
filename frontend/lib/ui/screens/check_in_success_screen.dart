@@ -26,7 +26,7 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       body: SafeArea(
         child: Center(
           child: Column(

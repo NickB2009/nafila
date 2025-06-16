@@ -6,6 +6,7 @@ import 'favoritos_screen.dart';
 import 'comunicacoes_screen.dart';
 import 'display_screen.dart';
 import 'atendimento_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -22,7 +23,10 @@ class _AccountScreenState extends State<AccountScreen> {
     final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
+      appBar: AppBar(
+        backgroundColor: theme.colorScheme.primary,
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -96,7 +100,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(context),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 2),
     );
   }
 
@@ -335,58 +339,6 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
         if (showDivider) Divider(color: theme.dividerColor),
       ],
-    );
-  }
-
-  Widget _buildBottomNavigation(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(context, Icons.home_outlined, false, onTap: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }),
-          _buildNavItem(context, Icons.search_outlined, false, onTap: () {
-            // Navigate to search/map
-          }),
-          _buildNavItem(context, Icons.person, true, onTap: () {
-            // Already on account screen
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(BuildContext context, IconData icon, bool isSelected, {VoidCallback? onTap}) {
-    final theme = Theme.of(context);
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: Icon(
-          icon,
-          color: isSelected ? AppTheme.primaryColor : theme.colorScheme.onSurfaceVariant,
-          size: 28,
-        ),
-      ),
     );
   }
 } 
