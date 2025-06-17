@@ -44,7 +44,7 @@ class AtendimentoScreen extends StatelessWidget {
               const SizedBox(height: 18),
               ..._buildFaq(theme),
               const SizedBox(height: 36),
-              Divider(height: 32),
+              const Divider(height: 32),
               const SizedBox(height: 18),
               Row(
                 children: [
@@ -65,7 +65,7 @@ class AtendimentoScreen extends StatelessWidget {
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                   child: Column(
@@ -142,14 +142,14 @@ class AtendimentoScreen extends StatelessWidget {
     return faqs.map((faq) => Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: theme.colorScheme.surfaceVariant,
+      color: theme.colorScheme.surfaceContainerHighest,
       margin: const EdgeInsets.only(bottom: 14),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: theme.colorScheme.surfaceVariant,
-        collapsedBackgroundColor: theme.colorScheme.surfaceVariant,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        collapsedBackgroundColor: theme.colorScheme.surfaceContainerHighest,
         leading: Icon(Icons.help_outline, color: theme.colorScheme.primary),
         title: Text(faq['q']!, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
         children: [

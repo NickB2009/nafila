@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../theme/app_theme.dart';
 import '../../models/salon.dart';
-import '../widgets/salon_card.dart';
 import 'check_in_screen.dart';
 import 'notifications_screen.dart';
-import 'account_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class SalonMapScreen extends StatefulWidget {

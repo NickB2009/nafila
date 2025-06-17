@@ -314,8 +314,8 @@ class QueueStatusScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildSalonAction(theme, Icons.navigation, 'Como chegar', onTap: () async {
-            final googleMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
-            final appleMapsUrl = 'http://maps.apple.com/?daddr=$lat,$lng';
+            const googleMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+            const appleMapsUrl = 'http://maps.apple.com/?daddr=$lat,$lng';
             if (kIsWeb) {
               await launcher.launchUrl(
                 Uri.parse(googleMapsUrl),

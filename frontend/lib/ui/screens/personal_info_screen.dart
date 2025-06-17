@@ -120,7 +120,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                     Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      color: theme.colorScheme.surfaceVariant,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                         child: Column(
@@ -173,7 +173,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Divider(height: 32),
+                    const Divider(height: 32),
                     // Foto de Referência
                     Text(
                       'Foto de Referência',
@@ -242,7 +242,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Divider(height: 32),
+                    const Divider(height: 32),
                     // Preferências Personalizadas
                     Text(
                       'Preferências Personalizadas',
@@ -265,7 +265,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                       child: Card(
                         elevation: 1,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                           child: Row(
@@ -283,7 +283,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
                                 onPressed: () {
                                   final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja';
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Copiado!'), duration: const Duration(seconds: 1)),
+                                    const SnackBar(content: Text('Copiado!'), duration: Duration(seconds: 1)),
                                   );
                                 },
                               ),
@@ -507,7 +507,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with SingleTick
       case 'Alto':
         return LinearGradient(colors: [Colors.brown[700]!, Colors.white], begin: Alignment.bottomCenter, end: Alignment.topCenter);
       default:
-        return LinearGradient(colors: [Colors.transparent, Colors.transparent]);
+        return const LinearGradient(colors: [Colors.transparent, Colors.transparent]);
     }
   }
 

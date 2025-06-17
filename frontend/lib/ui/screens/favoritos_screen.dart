@@ -71,7 +71,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.star_border, size: 60, color: AppTheme.primaryColor),
+            const Icon(Icons.star_border, size: 60, color: AppTheme.primaryColor),
             const SizedBox(height: 24),
             Text(
               'Nenhum salão favorito ainda',
@@ -94,7 +94,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: theme.colorScheme.surfaceVariant,
+      color: theme.colorScheme.surfaceContainerHighest,
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -102,7 +102,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.store, color: AppTheme.primaryColor, size: 28),
+                const Icon(Icons.store, color: AppTheme.primaryColor, size: 28),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -110,7 +110,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> {
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                Icon(Icons.star, color: AppTheme.primaryColor, size: 22),
+                const Icon(Icons.star, color: AppTheme.primaryColor, size: 22),
               ],
             ),
             const SizedBox(height: 6),
@@ -147,7 +147,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.timer, size: 16, color: AppTheme.primaryColor),
+                      const Icon(Icons.timer, size: 16, color: AppTheme.primaryColor),
                       const SizedBox(width: 4),
                       Text('${salon['waitTime']} min', style: theme.textTheme.labelMedium?.copyWith(color: AppTheme.primaryColor)),
                     ],

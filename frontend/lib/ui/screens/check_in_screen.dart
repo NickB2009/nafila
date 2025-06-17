@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 import '../../models/salon.dart';
 import 'check_in_success_screen.dart';
 

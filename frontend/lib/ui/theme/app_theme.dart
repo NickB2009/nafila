@@ -56,25 +56,25 @@ class AppTheme {
         headlineLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         headlineMedium: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         titleLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         labelLarge: TextStyle(
           fontSize: 14,
@@ -140,25 +140,25 @@ class AppTheme {
         headlineLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         headlineMedium: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         titleLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: colorScheme.onBackground,
+          color: colorScheme.onSurface,
         ),
         labelLarge: TextStyle(
           fontSize: 14,

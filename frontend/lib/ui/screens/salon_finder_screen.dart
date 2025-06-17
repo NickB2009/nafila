@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/salon_card.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
-import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
 import 'salon_map_screen.dart';
-import 'account_screen.dart';
 import 'check_in_screen.dart';
 
 /// Salon finder screen for mobile web interface

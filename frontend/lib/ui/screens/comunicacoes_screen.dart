@@ -46,7 +46,7 @@ class _ComunicacoesScreenState extends State<ComunicacoesScreen> {
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 child: Column(
                   children: [
                     SwitchListTile.adaptive(
@@ -55,7 +55,7 @@ class _ComunicacoesScreenState extends State<ComunicacoesScreen> {
                       title: Text('Receber notificações por e-mail', style: theme.textTheme.bodyLarge),
                       secondary: Icon(Icons.email_outlined, color: theme.colorScheme.primary),
                     ),
-                    Divider(height: 1),
+                    const Divider(height: 1),
                     SwitchListTile.adaptive(
                       value: smsOn,
                       onChanged: (v) => setState(() => smsOn = v),

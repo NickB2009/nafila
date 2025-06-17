@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/salon.dart';
-import '../theme/app_theme.dart';
-import '../screens/check_in_screen.dart';
-import 'package:intl/intl.dart';
 
 /// Card widget displaying salon information with wait time and check-in option
 class SalonCard extends StatelessWidget {

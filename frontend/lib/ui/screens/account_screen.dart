@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import 'notifications_screen.dart';
 import 'personal_info_screen.dart';
 import 'favoritos_screen.dart';
 import 'comunicacoes_screen.dart';

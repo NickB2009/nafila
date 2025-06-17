@@ -48,7 +48,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                   child: Column(
@@ -85,7 +85,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                         secondary: Icon(Icons.contrast, color: theme.colorScheme.primary),
                         contentPadding: EdgeInsets.zero,
                       ),
-                      Divider(height: 1),
+                      const Divider(height: 1),
                       SwitchListTile.adaptive(
                         value: animations,
                         onChanged: (v) => setState(() => animations = v),
@@ -150,7 +150,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
 
   Widget _buildPreviewCard(ThemeData theme) {
     double fontScale = fontSize == 0 ? 0.9 : fontSize == 2 ? 1.2 : 1.0;
-    Color previewBg = highContrast ? Colors.black : theme.colorScheme.surfaceVariant;
+    Color previewBg = highContrast ? Colors.black : theme.colorScheme.surfaceContainerHighest;
     Color previewText = highContrast ? Colors.yellow : theme.colorScheme.onSurface;
     return Card(
       elevation: 2,
