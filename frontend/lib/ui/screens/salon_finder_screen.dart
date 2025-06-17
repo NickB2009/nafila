@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import '../widgets/salon_card.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
+import '../../models/salon_service.dart';
+import '../../models/salon_contact.dart';
+import '../../models/salon_hours.dart';
+import '../../models/salon_review.dart';
 import 'notifications_screen.dart';
 import 'salon_map_screen.dart';
 import 'check_in_screen.dart';
+import 'salon_details_screen.dart';
 
 /// Salon finder screen for mobile web interface
 class SalonFinderScreen extends StatefulWidget {
@@ -487,8 +492,74 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                             children: [
                               TextButton.icon(
                                 onPressed: () {
-                                  // TODO: Navigate to salon details page
-                                  debugPrint('Navigate to salon details: ${salons[index].name}');
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => SalonDetailsScreen(
+                                        salon: salons[index],
+                                        services: [
+                                          const SalonService(
+                                            id: '1',
+                                            name: 'Corte Feminino',
+                                            description: 'Corte e finalização',
+                                            price: 80.0,
+                                            durationMinutes: 60,
+                                          ),
+                                          const SalonService(
+                                            id: '2',
+                                            name: 'Coloração',
+                                            description: 'Coloração completa',
+                                            price: 150.0,
+                                            durationMinutes: 120,
+                                          ),
+                                        ],
+                                        contact: const SalonContact(
+                                          phone: '(123) 456-7890',
+                                          email: 'contato@salon.com',
+                                          website: 'www.salon.com',
+                                          instagram: '@salon',
+                                        ),
+                                        businessHours: [
+                                          const SalonHours(
+                                            day: 'Segunda - Sexta',
+                                            isOpen: true,
+                                            openTime: '09:00',
+                                            closeTime: '18:00',
+                                          ),
+                                          const SalonHours(
+                                            day: 'Sábado',
+                                            isOpen: true,
+                                            openTime: '09:00',
+                                            closeTime: '14:00',
+                                          ),
+                                          const SalonHours(
+                                            day: 'Domingo',
+                                            isOpen: false,
+                                          ),
+                                        ],
+                                        reviews: [
+                                          const SalonReview(
+                                            id: '1',
+                                            userName: 'Maria Silva',
+                                            rating: 5.0,
+                                            comment: 'Excelente atendimento!',
+                                            date: '2024-03-15',
+                                          ),
+                                          const SalonReview(
+                                            id: '2',
+                                            userName: 'João Santos',
+                                            rating: 4.5,
+                                            comment: 'Muito bom, recomendo!',
+                                            date: '2024-03-14',
+                                          ),
+                                        ],
+                                        additionalInfo: {
+                                          'Estacionamento': 'Gratuito',
+                                          'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                                          'Acessibilidade': 'Rampa de acesso',
+                                        },
+                                      ),
+                                    ),
+                                  );
                                 },
                                 icon: const Icon(Icons.info_outline, size: 18),
                                 label: const Text('Mais'),
