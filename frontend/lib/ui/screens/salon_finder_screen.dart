@@ -367,7 +367,73 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                 onTap: salons[index].isOpen ? () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => CheckInScreen(salon: salons[index]),
+                      builder: (_) => SalonDetailsScreen(
+                        salon: salons[index],
+                        services: [
+                          SalonService(
+                            id: '1',
+                            name: 'Corte Feminino',
+                            description: 'Corte e finalização',
+                            price: 80.0,
+                            durationMinutes: 60,
+                            categories: ['Corte'],
+                          ),
+                          SalonService(
+                            id: '2',
+                            name: 'Coloração',
+                            description: 'Coloração completa',
+                            price: 150.0,
+                            durationMinutes: 120,
+                            categories: ['Coloração'],
+                          ),
+                        ],
+                        contact: SalonContact(
+                          phone: '(555) 123-4567',
+                          email: 'contato@salon.com',
+                          website: 'www.salon.com',
+                          instagram: '@salon',
+                          facebook: 'Salon',
+                        ),
+                        businessHours: [
+                          SalonHours(
+                            day: 'Segunda - Sexta',
+                            isOpen: true,
+                            openTime: '9:00',
+                            closeTime: '18:00',
+                          ),
+                          SalonHours(
+                            day: 'Sábado',
+                            isOpen: true,
+                            openTime: '9:00',
+                            closeTime: '14:00',
+                          ),
+                          SalonHours(
+                            day: 'Domingo',
+                            isOpen: false,
+                          ),
+                        ],
+                        reviews: [
+                          SalonReview(
+                            id: '1',
+                            userName: 'Maria Silva',
+                            rating: 5,
+                            comment: 'Excelente atendimento!',
+                            date: '2024-03-15',
+                          ),
+                          SalonReview(
+                            id: '2',
+                            userName: 'João Santos',
+                            rating: 4,
+                            comment: 'Muito bom serviço',
+                            date: '2024-03-14',
+                          ),
+                        ],
+                        additionalInfo: {
+                          'Estacionamento': 'Gratuito',
+                          'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                          'Acessibilidade': 'Rampa de acesso',
+                        },
+                      ),
                     ),
                   );
                 } : null,
@@ -497,58 +563,61 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                       builder: (_) => SalonDetailsScreen(
                                         salon: salons[index],
                                         services: [
-                                          const SalonService(
+                                          SalonService(
                                             id: '1',
                                             name: 'Corte Feminino',
                                             description: 'Corte e finalização',
                                             price: 80.0,
                                             durationMinutes: 60,
+                                            categories: ['Corte'],
                                           ),
-                                          const SalonService(
+                                          SalonService(
                                             id: '2',
                                             name: 'Coloração',
                                             description: 'Coloração completa',
                                             price: 150.0,
                                             durationMinutes: 120,
+                                            categories: ['Coloração'],
                                           ),
                                         ],
-                                        contact: const SalonContact(
-                                          phone: '(123) 456-7890',
+                                        contact: SalonContact(
+                                          phone: '(555) 123-4567',
                                           email: 'contato@salon.com',
                                           website: 'www.salon.com',
                                           instagram: '@salon',
+                                          facebook: 'Salon',
                                         ),
                                         businessHours: [
-                                          const SalonHours(
+                                          SalonHours(
                                             day: 'Segunda - Sexta',
                                             isOpen: true,
-                                            openTime: '09:00',
+                                            openTime: '9:00',
                                             closeTime: '18:00',
                                           ),
-                                          const SalonHours(
+                                          SalonHours(
                                             day: 'Sábado',
                                             isOpen: true,
-                                            openTime: '09:00',
+                                            openTime: '9:00',
                                             closeTime: '14:00',
                                           ),
-                                          const SalonHours(
+                                          SalonHours(
                                             day: 'Domingo',
                                             isOpen: false,
                                           ),
                                         ],
                                         reviews: [
-                                          const SalonReview(
+                                          SalonReview(
                                             id: '1',
                                             userName: 'Maria Silva',
-                                            rating: 5.0,
+                                            rating: 5,
                                             comment: 'Excelente atendimento!',
                                             date: '2024-03-15',
                                           ),
-                                          const SalonReview(
+                                          SalonReview(
                                             id: '2',
                                             userName: 'João Santos',
-                                            rating: 4.5,
-                                            comment: 'Muito bom, recomendo!',
+                                            rating: 4,
+                                            comment: 'Muito bom serviço',
                                             date: '2024-03-14',
                                           ),
                                         ],

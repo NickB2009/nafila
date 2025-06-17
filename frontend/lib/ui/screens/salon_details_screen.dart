@@ -4,6 +4,8 @@ import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'check_in_screen.dart';
 
 class SalonDetailsScreen extends StatefulWidget {
   final Salon salon;
@@ -68,7 +70,109 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildAppBar(context),
+          SliverAppBar(
+            expandedHeight: 250,
+            pinned: true,
+            stretch: true,
+            backgroundColor: theme.colorScheme.surface,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Salon Image
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.store,
+                        size: 64,
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                  // Gradient Overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          theme.colorScheme.surface.withOpacity(0.8),
+                          theme.colorScheme.surface,
+                        ],
+                        stops: const [0.4, 0.8, 1.0],
+                      ),
+                    ),
+                  ),
+                  // Decorative Elements
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: CustomPaint(
+                      size: const Size(200, 200),
+                      painter: SalonDecorationPainter(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withOpacity(0.9),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            actions: [
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withOpacity(0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: _isFavorite ? theme.colorScheme.primary : theme.colorScheme.primary,
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isFavorite = !_isFavorite;
+                  });
+                },
+              ),
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withOpacity(0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.share,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                onPressed: () {
+                  // TODO: Implement share functionality
+                },
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -96,112 +200,75 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(context),
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return SliverAppBar(
-      expandedHeight: 250,
-      pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          fit: StackFit.expand,
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Row(
           children: [
-            // Placeholder for salon image with gradient overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    theme.colorScheme.primary.withOpacity(0.8),
-                    theme.colorScheme.primary.withOpacity(0.6),
-                  ],
-                ),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.store,
-                  size: 80,
-                  color: theme.colorScheme.onPrimary.withOpacity(0.3),
-                ),
-              ),
-            ),
-            // Decorative elements
-            Positioned(
-              top: 20,
-              right: 20,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.onPrimary.withOpacity(0.1),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CheckInScreen(salon: widget.salon),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.check_circle),
+                label: const Text('Check In'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.onPrimary.withOpacity(0.1),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final url = Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(widget.salon.address)}'
+                  );
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Não foi possível abrir o mapa'),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.directions),
+                label: const Text('Como Chegar'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  side: BorderSide(color: theme.colorScheme.primary),
                 ),
               ),
             ),
           ],
         ),
       ),
-      leading: IconButton(
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withOpacity(0.9),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.arrow_back),
-        ),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      actions: [
-        IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withOpacity(0.9),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.share),
-          ),
-          onPressed: () {
-            // TODO: Implement share functionality
-          },
-        ),
-        IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withOpacity(0.9),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: _isFavorite ? theme.colorScheme.error : null,
-            ),
-          ),
-          onPressed: () {
-            setState(() {
-              _isFavorite = !_isFavorite;
-            });
-          },
-        ),
-      ],
     );
   }
 
@@ -797,59 +864,6 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildBottomBar(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // TODO: Implement check-in
-              },
-              icon: const Icon(Icons.login),
-              label: const Text('Check-in'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          IconButton(
-            onPressed: () {
-              // TODO: Implement directions
-            },
-            icon: const Icon(Icons.directions),
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-              padding: const EdgeInsets.all(16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildInfoChip(BuildContext context, IconData icon, String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -919,4 +933,61 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
       ),
     );
   }
+}
+
+class SalonDecorationPainter extends CustomPainter {
+  final Color color;
+
+  SalonDecorationPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(size.width, 0)
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.2,
+        size.width * 0.6,
+        size.height * 0.1,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.4,
+        0,
+        size.width * 0.2,
+        size.height * 0.2,
+      )
+      ..quadraticBezierTo(
+        0,
+        size.height * 0.4,
+        0,
+        size.height * 0.6,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.2,
+        size.height * 0.8,
+        size.width * 0.4,
+        size.height * 0.7,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.6,
+        size.height * 0.6,
+        size.width * 0.8,
+        size.height * 0.8,
+      )
+      ..quadraticBezierTo(
+        size.width,
+        size.height,
+        size.width,
+        0,
+      );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 } 

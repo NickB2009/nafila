@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../models/salon.dart';
+import '../../models/salon_service.dart';
+import '../../models/salon_contact.dart';
+import '../../models/salon_hours.dart';
+import '../../models/salon_review.dart';
 import 'check_in_screen.dart';
 import 'notifications_screen.dart';
+import 'salon_details_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class SalonMapScreen extends StatefulWidget {
@@ -454,185 +459,260 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
       bottom: 16,
       left: 16,
       right: 16,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(25),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => SalonDetailsScreen(
+                salon: _selectedSalon!,
+                services: [
+                  SalonService(
+                    id: '1',
+                    name: 'Corte Feminino',
+                    description: 'Corte e finalização',
+                    price: 80.0,
+                    durationMinutes: 60,
+                    categories: ['Corte'],
                   ),
-                  child: Icon(
-                    Icons.store,
-                    color: theme.colorScheme.primary,
-                    size: 24,
+                  SalonService(
+                    id: '2',
+                    name: 'Coloração',
+                    description: 'Coloração completa',
+                    price: 150.0,
+                    durationMinutes: 120,
+                    categories: ['Coloração'],
                   ),
+                ],
+                contact: SalonContact(
+                  phone: '(555) 123-4567',
+                  email: 'contato@salon.com',
+                  website: 'www.salon.com',
+                  instagram: '@salon',
+                  facebook: 'Salon',
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _selectedSalon!.name,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (_favoriteSalons.contains(_selectedSalon!.name)) {
-                                  _favoriteSalons.remove(_selectedSalon!.name);
-                                } else {
-                                  _favoriteSalons.add(_selectedSalon!.name);
-                                }
-                              });
-                            },
-                            child: Icon(
-                              _favoriteSalons.contains(_selectedSalon!.name)
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: theme.colorScheme.primary,
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _selectedSalon!.address,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                businessHours: [
+                  SalonHours(
+                    day: 'Segunda - Sexta',
+                    isOpen: true,
+                    openTime: '9:00',
+                    closeTime: '18:00',
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _selectedSalon!.waitTime <= 10 
-                        ? Colors.green.withOpacity(0.1)
-                        : _selectedSalon!.waitTime <= 25 
-                            ? Colors.orange.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                  SalonHours(
+                    day: 'Sábado',
+                    isOpen: true,
+                    openTime: '9:00',
+                    closeTime: '14:00',
                   ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '${_selectedSalon!.waitTime} min',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: _selectedSalon!.waitTime <= 10 
-                              ? Colors.green 
-                              : _selectedSalon!.waitTime <= 25 
-                                  ? Colors.orange 
-                                  : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'TEMPO EST.',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  SalonHours(
+                    day: 'Domingo',
+                    isOpen: false,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _selectedSalon!.isOpen 
-                        ? Colors.green.withOpacity(0.1) 
-                        : Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                ],
+                reviews: [
+                  SalonReview(
+                    id: '1',
+                    userName: 'Maria Silva',
+                    rating: 5,
+                    comment: 'Excelente atendimento!',
+                    date: '2024-03-15',
                   ),
-                  child: Text(
-                    _selectedSalon!.isOpen ? 'Aberto' : 'Fechado',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: _selectedSalon!.isOpen ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  SalonReview(
+                    id: '2',
+                    userName: 'João Santos',
+                    rating: 4,
+                    comment: 'Muito bom serviço',
+                    date: '2024-03-14',
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '• Fecha às ${_selectedSalon!.closingTime}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.directions_car,
-                  size: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 2),
-                Text(
-                  '${_selectedSalon!.distance.toStringAsFixed(1)} km',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.check_circle, color: theme.colorScheme.onPrimary),
-                label: const Text('Check In'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                onPressed: _selectedSalon!.isOpen ? () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CheckInScreen(salon: _selectedSalon!),
-                    ),
-                  );
-                } : null,
+                ],
+                additionalInfo: {
+                  'Estacionamento': 'Gratuito',
+                  'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                  'Acessibilidade': 'Rampa de acesso',
+                },
               ),
             ),
-          ],
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Icon(
+                      Icons.store,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _selectedSalon!.name,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (_favoriteSalons.contains(_selectedSalon!.name)) {
+                                    _favoriteSalons.remove(_selectedSalon!.name);
+                                  } else {
+                                    _favoriteSalons.add(_selectedSalon!.name);
+                                  }
+                                });
+                              },
+                              child: Icon(
+                                _favoriteSalons.contains(_selectedSalon!.name)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: theme.colorScheme.primary,
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _selectedSalon!.address,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _selectedSalon!.waitTime <= 10 
+                          ? Colors.green.withOpacity(0.1)
+                          : _selectedSalon!.waitTime <= 25 
+                              ? Colors.orange.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${_selectedSalon!.waitTime} min',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: _selectedSalon!.waitTime <= 10 
+                                ? Colors.green 
+                                : _selectedSalon!.waitTime <= 25 
+                                    ? Colors.orange 
+                                    : Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'TEMPO EST.',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _selectedSalon!.isOpen 
+                          ? Colors.green.withOpacity(0.1) 
+                          : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _selectedSalon!.isOpen ? 'Aberto' : 'Fechado',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: _selectedSalon!.isOpen ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '• Fecha às ${_selectedSalon!.closingTime}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.directions_car,
+                    size: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${_selectedSalon!.distance.toStringAsFixed(1)} km',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.check_circle, color: theme.colorScheme.onPrimary),
+                  label: const Text('Check In'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: _selectedSalon!.isOpen ? () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => CheckInScreen(salon: _selectedSalon!),
+                      ),
+                    );
+                  } : null,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -872,191 +952,266 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 itemCount: _salonLocations.length,
                 itemBuilder: (context, index) {
                   final location = _salonLocations[index];
-                   final isCheckedIn = location.salon.name == 'Market at Mirada';
-                   return Container(
-                     margin: const EdgeInsets.only(bottom: 16),
-                     padding: const EdgeInsets.all(16),
-                     decoration: BoxDecoration(
-                       color: theme.colorScheme.surface,
-                       borderRadius: BorderRadius.circular(12),
-                       border: Border.all(
-                         color: isCheckedIn 
-                             ? theme.colorScheme.primary.withOpacity(0.3)
-                             : theme.colorScheme.outline.withOpacity(0.2),
-                       ),
-                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: location.salon.isOpen 
-                                ? theme.colorScheme.primary.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Icon(
-                            Icons.store,
-                            color: location.salon.isOpen 
-                                ? theme.colorScheme.primary 
-                                : Colors.grey,
-                            size: 24,
+                  final isCheckedIn = location.salon.name == 'Market at Mirada';
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => SalonDetailsScreen(
+                            salon: location.salon,
+                            services: [
+                              SalonService(
+                                id: '1',
+                                name: 'Corte Feminino',
+                                description: 'Corte e finalização',
+                                price: 80.0,
+                                durationMinutes: 60,
+                                categories: ['Corte'],
+                              ),
+                              SalonService(
+                                id: '2',
+                                name: 'Coloração',
+                                description: 'Coloração completa',
+                                price: 150.0,
+                                durationMinutes: 120,
+                                categories: ['Coloração'],
+                              ),
+                            ],
+                            contact: SalonContact(
+                              phone: '(555) 123-4567',
+                              email: 'contato@salon.com',
+                              website: 'www.salon.com',
+                              instagram: '@salon',
+                              facebook: 'Salon',
+                            ),
+                            businessHours: [
+                              SalonHours(
+                                day: 'Segunda - Sexta',
+                                isOpen: true,
+                                openTime: '9:00',
+                                closeTime: '18:00',
+                              ),
+                              SalonHours(
+                                day: 'Sábado',
+                                isOpen: true,
+                                openTime: '9:00',
+                                closeTime: '14:00',
+                              ),
+                              SalonHours(
+                                day: 'Domingo',
+                                isOpen: false,
+                              ),
+                            ],
+                            reviews: [
+                              SalonReview(
+                                id: '1',
+                                userName: 'Maria Silva',
+                                rating: 5,
+                                comment: 'Excelente atendimento!',
+                                date: '2024-03-15',
+                              ),
+                              SalonReview(
+                                id: '2',
+                                userName: 'João Santos',
+                                rating: 4,
+                                comment: 'Muito bom serviço',
+                                date: '2024-03-14',
+                              ),
+                            ],
+                            additionalInfo: {
+                              'Estacionamento': 'Gratuito',
+                              'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                              'Acessibilidade': 'Rampa de acesso',
+                            },
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                                                     child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                               Row(
-                                 children: [
-                                   Expanded(
-                                     child: Text(
-                                       location.salon.name,
-                                       style: theme.textTheme.titleMedium?.copyWith(
-                                         fontWeight: FontWeight.bold,
-                                       ),
-                                     ),
-                                   ),
-                                   if (isCheckedIn)
-                                     Container(
-                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                       decoration: BoxDecoration(
-                                         color: theme.colorScheme.primary,
-                                         borderRadius: BorderRadius.circular(8),
-                                       ),
-                                       child: Text(
-                                         'CHECKED IN',
-                                         style: theme.textTheme.labelSmall?.copyWith(
-                                           color: Colors.white,
-                                           fontWeight: FontWeight.bold,
-                                           fontSize: 10,
-                                         ),
-                                       ),
-                                     ),
-                                   const SizedBox(width: 4),
-                                   GestureDetector(
-                                     onTap: () {
-                                       setState(() {
-                                         if (_favoriteSalons.contains(location.salon.name)) {
-                                           _favoriteSalons.remove(location.salon.name);
-                                         } else {
-                                           _favoriteSalons.add(location.salon.name);
-                                         }
-                                       });
-                                     },
-                                     child: Icon(
-                                       _favoriteSalons.contains(location.salon.name)
-                                           ? Icons.favorite
-                                           : Icons.favorite_border,
-                                       color: theme.colorScheme.primary,
-                                       size: 20,
-                                     ),
-                                   ),
-                                 ],
-                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                location.salon.address,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: location.salon.isOpen 
-                                          ? Colors.green.withOpacity(0.1) 
-                                          : Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isCheckedIn 
+                              ? theme.colorScheme.primary.withOpacity(0.3)
+                              : theme.colorScheme.outline.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: location.salon.isOpen 
+                                  ? theme.colorScheme.primary.withOpacity(0.1)
+                                  : Colors.grey.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Icon(
+                              Icons.store,
+                              color: location.salon.isOpen 
+                                  ? theme.colorScheme.primary 
+                                  : Colors.grey,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        location.salon.name,
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                    child: Text(
-                                      location.salon.isOpen ? 'Aberto' : 'Fechado',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: location.salon.isOpen ? Colors.green : Colors.red,
+                                    if (isCheckedIn)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'CHECKED IN',
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    const SizedBox(width: 4),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          if (_favoriteSalons.contains(location.salon.name)) {
+                                            _favoriteSalons.remove(location.salon.name);
+                                          } else {
+                                            _favoriteSalons.add(location.salon.name);
+                                          }
+                                        });
+                                      },
+                                      child: Icon(
+                                        _favoriteSalons.contains(location.salon.name)
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: theme.colorScheme.primary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  location.salon.address,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: location.salon.isOpen 
+                                            ? Colors.green.withOpacity(0.1) 
+                                            : Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        location.salon.isOpen ? 'Aberto' : 'Fechado',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: location.salon.isOpen ? Colors.green : Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${location.salon.distance.toStringAsFixed(1)} km',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: location.salon.waitTime <= 10 
+                                      ? Colors.green.withOpacity(0.1)
+                                      : location.salon.waitTime <= 25 
+                                          ? Colors.orange.withOpacity(0.1)
+                                          : Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      '${location.salon.waitTime} min',
+                                      style: theme.textTheme.titleSmall?.copyWith(
+                                        color: location.salon.waitTime <= 10 
+                                            ? Colors.green 
+                                            : location.salon.waitTime <= 25 
+                                                ? Colors.orange 
+                                                : Colors.red,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${location.salon.distance.toStringAsFixed(1)} km',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
+                                    Text(
+                                      'ESPERA',
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: 80,
+                                child: ElevatedButton(
+                                  onPressed: location.salon.isOpen ? () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => CheckInScreen(salon: location.salon),
+                                      ),
+                                    );
+                                  } : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.primary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
                                   ),
-                                ],
+                                  child: const Text(
+                                    'Check In',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                        Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: location.salon.waitTime <= 10 
-                                    ? Colors.green.withOpacity(0.1)
-                                    : location.salon.waitTime <= 25 
-                                        ? Colors.orange.withOpacity(0.1)
-                                        : Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    '${location.salon.waitTime} min',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      color: location.salon.waitTime <= 10 
-                                          ? Colors.green 
-                                          : location.salon.waitTime <= 25 
-                                              ? Colors.orange 
-                                              : Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    'ESPERA',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: 80,
-                              child: ElevatedButton(
-                                onPressed: location.salon.isOpen ? () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => CheckInScreen(salon: location.salon),
-                                    ),
-                                  );
-                                } : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.primary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                ),
-                                child: const Text(
-                                  'Check In',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },
