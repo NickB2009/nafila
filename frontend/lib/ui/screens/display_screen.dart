@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../theme/app_theme.dart';
 
 class DisplayScreen extends StatefulWidget {
   const DisplayScreen({super.key});
@@ -9,14 +10,11 @@ class DisplayScreen extends StatefulWidget {
 }
 
 class _DisplayScreenState extends State<DisplayScreen> {
-  int themeMode = 2; // 0: Claro, 1: Escuro, 2: Sistema
-  int fontSize = 1; // 0: Pequeno, 1: Médio, 2: Grande
-  bool highContrast = false;
-  bool animations = true;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: theme.colorScheme.primary,
@@ -58,11 +56,11 @@ class _DisplayScreenState extends State<DisplayScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          _buildThemeChip(theme, 0, 'Claro', Icons.light_mode),
+                          _buildThemeChip(theme, ThemeMode.light, 'Claro', Icons.light_mode, themeProvider),
                           const SizedBox(width: 8),
-                          _buildThemeChip(theme, 1, 'Escuro', Icons.dark_mode),
+                          _buildThemeChip(theme, ThemeMode.dark, 'Escuro', Icons.dark_mode, themeProvider),
                           const SizedBox(width: 8),
-                          _buildThemeChip(theme, 2, 'Sistema', Icons.phone_android),
+                          _buildThemeChip(theme, ThemeMode.system, 'Sistema', Icons.phone_android, themeProvider),
                         ],
                       ),
                       const SizedBox(height: 22),
@@ -70,25 +68,25 @@ class _DisplayScreenState extends State<DisplayScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          _buildFontChip(theme, 0, 'Pequeno'),
+                          _buildFontChip(theme, 0.9, 'Pequeno', themeProvider),
                           const SizedBox(width: 8),
-                          _buildFontChip(theme, 1, 'Médio'),
+                          _buildFontChip(theme, 1.0, 'Médio', themeProvider),
                           const SizedBox(width: 8),
-                          _buildFontChip(theme, 2, 'Grande'),
+                          _buildFontChip(theme, 1.2, 'Grande', themeProvider),
                         ],
                       ),
                       const SizedBox(height: 22),
                       SwitchListTile.adaptive(
-                        value: highContrast,
-                        onChanged: (v) => setState(() => highContrast = v),
+                        value: themeProvider.highContrast,
+                        onChanged: (v) => themeProvider.setHighContrast(v),
                         title: Text('Modo alto contraste', style: theme.textTheme.bodyLarge),
                         secondary: Icon(Icons.contrast, color: theme.colorScheme.primary),
                         contentPadding: EdgeInsets.zero,
                       ),
                       const Divider(height: 1),
                       SwitchListTile.adaptive(
-                        value: animations,
-                        onChanged: (v) => setState(() => animations = v),
+                        value: themeProvider.animations,
+                        onChanged: (v) => themeProvider.setAnimations(v),
                         title: Text('Animações', style: theme.textTheme.bodyLarge),
                         secondary: Icon(Icons.animation, color: theme.colorScheme.primary),
                         contentPadding: EdgeInsets.zero,
@@ -103,7 +101,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                 style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              _buildPreviewCard(theme),
+              _buildPreviewCard(theme, themeProvider),
             ],
           ),
         ),
@@ -111,15 +109,15 @@ class _DisplayScreenState extends State<DisplayScreen> {
     );
   }
 
-  Widget _buildThemeChip(ThemeData theme, int value, String label, IconData icon) {
-    final isSelected = themeMode == value;
+  Widget _buildThemeChip(ThemeData theme, ThemeMode mode, String label, IconData icon, ThemeProvider provider) {
+    final isSelected = provider.themeMode == mode;
     return ChoiceChip(
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [Icon(icon, size: 18), const SizedBox(width: 4), Text(label)],
       ),
       selected: isSelected,
-      onSelected: (_) => setState(() => themeMode = value),
+      onSelected: (_) => provider.setThemeMode(mode),
       selectedColor: theme.colorScheme.primary,
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
         color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
@@ -131,12 +129,12 @@ class _DisplayScreenState extends State<DisplayScreen> {
     );
   }
 
-  Widget _buildFontChip(ThemeData theme, int value, String label) {
-    final isSelected = fontSize == value;
+  Widget _buildFontChip(ThemeData theme, double size, String label, ThemeProvider provider) {
+    final isSelected = provider.fontSize == size;
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: (_) => setState(() => fontSize = value),
+      onSelected: (_) => provider.setFontSize(size),
       selectedColor: theme.colorScheme.primary,
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
         color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
@@ -148,10 +146,9 @@ class _DisplayScreenState extends State<DisplayScreen> {
     );
   }
 
-  Widget _buildPreviewCard(ThemeData theme) {
-    double fontScale = fontSize == 0 ? 0.9 : fontSize == 2 ? 1.2 : 1.0;
-    Color previewBg = highContrast ? Colors.black : theme.colorScheme.surfaceContainerHighest;
-    Color previewText = highContrast ? Colors.yellow : theme.colorScheme.onSurface;
+  Widget _buildPreviewCard(ThemeData theme, ThemeProvider provider) {
+    Color previewBg = provider.highContrast ? Colors.black : theme.colorScheme.surfaceContainerHighest;
+    Color previewText = provider.highContrast ? Colors.yellow : theme.colorScheme.onSurface;
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -166,7 +163,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: previewText,
-                fontSize: 18 * fontScale,
+                fontSize: 18 * provider.fontSize,
               ),
             ),
             const SizedBox(height: 8),
@@ -174,7 +171,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
               'Veja como suas preferências afetam a aparência do app.',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: previewText,
-                fontSize: 15 * fontScale,
+                fontSize: 15 * provider.fontSize,
               ),
             ),
           ],
