@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
 import '../../models/salon_service.dart';
