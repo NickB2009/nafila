@@ -101,32 +101,32 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    'Favoritos',
+          'Favoritos',
                     style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+            color: theme.colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+          ),
                   ),
                 ],
-              ),
-            ),
+        ),
+      ),
             // Content
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                child: favoritos.isEmpty
-                    ? _buildEmptyState(theme)
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(24),
-                        itemCount: favoritos.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: favoritos.isEmpty
+              ? _buildEmptyState(theme)
+              : ListView.separated(
+                  padding: const EdgeInsets.all(24),
+                  itemCount: favoritos.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 18),
                         itemBuilder: (context, index) => _buildSalonCard(theme, favoritos[index], index),
                       ),
               ),
-            ),
+                ),
           ],
         ),
       ),
@@ -140,33 +140,33 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
       child: SlideTransition(
         position: _slideAnimation,
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
                 Icon(
                   Icons.favorite_border,
                   size: 64,
                   color: theme.colorScheme.primary.withOpacity(0.5),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Nenhum salão favorito ainda',
+            const SizedBox(height: 24),
+            Text(
+              'Nenhum salão favorito ainda',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Toque na estrela em um salão para adicioná-lo aos seus favoritos.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Toque na estrela em um salão para adicioná-lo aos seus favoritos.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+              textAlign: TextAlign.center,
+            ),
+          ],
             ),
           ),
         ),
@@ -270,13 +270,13 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
             );
           },
           borderRadius: BorderRadius.circular(16),
-          child: Padding(
+      child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
                     Container(
                       width: 50,
                       height: 50,
@@ -291,7 +291,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
+                Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -299,15 +299,15 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                             salon.name,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                  ),
+            ),
                           const SizedBox(height: 4),
-                          Text(
+            Text(
                             salon.address,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
-                          ),
+            ),
                         ],
                       ),
                     ),
@@ -325,8 +325,8 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                   ],
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
+            Row(
+              children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -344,17 +344,17 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                             color: salon.isOpen ? Colors.green : theme.colorScheme.error,
                           ),
                           const SizedBox(width: 4),
-                          Text(
+                Text(
                             salon.isOpen ? 'Aberto' : 'Fechado',
                             style: theme.textTheme.labelMedium?.copyWith(
                               color: salon.isOpen ? Colors.green : theme.colorScheme.error,
-                              fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+                  ),
+                ),
+                const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -377,25 +377,25 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
+              ],
                       ),
-                    ),
+            ),
                     const SizedBox(width: 8),
-                    Container(
+                Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
+                  decoration: BoxDecoration(
                         color: theme.colorScheme.secondary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
+                  ),
+                  child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: [
+                    children: [
                           Icon(
                             Icons.people_outline,
                             size: 16,
                             color: theme.colorScheme.secondary,
                           ),
-                          const SizedBox(width: 4),
+                      const SizedBox(width: 4),
                           Text(
                             '${salon.queueLength} na fila',
                             style: theme.textTheme.labelMedium?.copyWith(
@@ -403,8 +403,8 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
-                      ),
+                    ],
+                  ),
                     ),
                   ],
                 ),
@@ -434,18 +434,18 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: () {
+                  onPressed: () {
                         // TODO: Implement share functionality
-                      },
+                  },
                       icon: const Icon(Icons.share),
                       style: IconButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                         padding: const EdgeInsets.all(12),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
+            ),
+          ],
             ),
           ),
         ),

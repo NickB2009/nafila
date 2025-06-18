@@ -23,34 +23,92 @@
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="nafila">
+  <meta name="apple-mobile-web-app-title" content="nafila_frontend">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Nafila</title>
   <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
   <script>
     // The value below is injected by flutter build, do not touch.
     const serviceWorkerVersion = "{{flutter_service_worker_version}}";
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+  <style>
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+    
+    .loading-text {
+      font-family: sans-serif;
+      color: #444444;
+      margin-left: 12px;
+    }
+
+    .loader {
+      border: 8px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 8px solid #DAA520;
+      width: 40px;
+      height: 40px;
+      -webkit-animation: spin 1s linear infinite;
+      animation: spin 1s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
+  <div id="loading" class="loading">
+    <div class="loader"></div>
+    <p class="loading-text">Carregando Nafila...</p>
+  </div>
   <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
-      });
+    window.addEventListener('load', async function() {
+      const loading = document.getElementById('loading');
+
+      try {
+        // Initialize Flutter
+        await _flutter.loader.loadEntrypoint({
+          serviceWorker: { serviceWorkerVersion: serviceWorkerVersion },
+          onEntrypointLoaded: async function(engineInitializer) {
+            try {
+              // Initialize the Flutter engine
+              const appRunner = await engineInitializer.initializeEngine({
+                useColorEmoji: true,
+              });
+              loading.remove();
+              // Run the app
+              await appRunner.runApp();
+            } catch (e) {
+              console.error('Error running app:', e);
+              loading.innerHTML = `<div style="color:red;text-align:center;">Erro ao carregar o aplicativo.<br/><button onclick="location.reload()" style="padding:8px 16px;margin-top:12px;">Tentar Novamente</button></div>`;
+            }
+          }
+        });
+      } catch (e) {
+        console.error('Flutter web initialization error:', e);
+        loading.innerHTML = `<div style="color:red;text-align:center;">Erro ao carregar o aplicativo.<br/><button onclick="location.reload()" style="padding:8px 16px;margin-top:12px;">Tentar Novamente</button></div>`;
+      }
     });
   </script>
 </body>

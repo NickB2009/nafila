@@ -225,7 +225,7 @@ class ThemeProvider extends ChangeNotifier {
   static const String _animationsKey = 'animations';
 
   late SharedPreferences? _prefs;
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.light;
   double _fontSize = 1.0;
   bool _highContrast = false;
   bool _animations = true;
@@ -242,13 +242,13 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> _loadSettings() async {
     try {
       _prefs = await SharedPreferences.getInstance();
-      _themeMode = ThemeMode.values[_prefs?.getInt(_themeModeKey) ?? 2];
+      _themeMode = ThemeMode.values[_prefs?.getInt(_themeModeKey) ?? 1];
       _fontSize = _prefs?.getDouble(_fontSizeKey) ?? 1.0;
       _highContrast = _prefs?.getBool(_highContrastKey) ?? false;
       _animations = _prefs?.getBool(_animationsKey) ?? true;
     } catch (e) {
       // If shared_preferences fails, use default values
-      _themeMode = ThemeMode.system;
+      _themeMode = ThemeMode.light;
       _fontSize = 1.0;
       _highContrast = false;
       _animations = true;
