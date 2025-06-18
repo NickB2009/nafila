@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 import '../../models/salon.dart';
 import 'check_in_success_screen.dart';
 
 class CheckInScreen extends StatefulWidget {
   final Salon salon;
-  const CheckInScreen({Key? key, required this.salon}) : super(key: key);
+  const CheckInScreen({super.key, required this.salon});
 
   @override
   State<CheckInScreen> createState() => _CheckInScreenState();
@@ -31,7 +30,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     final theme = Theme.of(context);
     final salon = widget.salon;
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,7 +68,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.check_circle, color: AppTheme.primaryColor, size: 36),
+                      Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 36),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -166,7 +165,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                         smsOptIn = value ?? false;
                       });
                     },
-                    activeColor: AppTheme.primaryColor,
+                    activeColor: theme.colorScheme.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                   ),
                   const SizedBox(width: 8),
@@ -189,7 +188,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                               TextSpan(
                                 text: "Política de Privacidade.",
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.primaryColor,
+                                  color: theme.colorScheme.primary,
                                   decoration: TextDecoration.underline,
                                 ),
                               ),
@@ -228,7 +227,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor: theme.colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),

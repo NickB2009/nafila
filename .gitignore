@@ -2,58 +2,12 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-# Visual Studio
-.vs/
-*.user
-*.userosscache
-*.sln.docstates
-*.userprefs
-bin/
-obj/
-*.cache
-*.dll
-*.exe
-*.pdb
-*.tmp
-
-# .NET Core
-*.swp
-*.swo
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# Flutter/Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-build/
-.metadata
-*.g.dart
-*.freezed.dart
-
-# IDE
-.idea/
-.vscode/
-.DS_Store
-
-# Logs
-*.log
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Environment files
-*.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Node modules (if any web dependencies)
-node_modules/
+/.vs/nafila/CopilotIndices/17.14.734.62261/CodeChunks.db
+/.vs/nafila/CopilotIndices/17.14.734.62261/CodeChunks.db-shm
+/.vs/nafila/CopilotIndices/17.14.734.62261/CodeChunks.db-wal
+/.vs/nafila/CopilotIndices/17.14.734.62261/SemanticSymbols.db
+/.vs/nafila/CopilotIndices/17.14.734.62261
+/.vs/nafila/FileContentIndex
+/.vs/slnx.sqlite
+/.vs/slnx.sqlite-journal
+.vs/nafila/v17/DocumentLayout.backup.json

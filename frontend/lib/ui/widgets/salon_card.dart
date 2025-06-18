@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../models/salon.dart';
-import '../theme/app_theme.dart';
-import '../screens/check_in_screen.dart';
 
 /// Card widget displaying salon information with wait time and check-in option
 class SalonCard extends StatelessWidget {
   final Salon salon;
   final bool isSelected;
   final VoidCallback? onTap;
+  final VoidCallback? onCheckIn;
+  final bool isFavorite;
+  final VoidCallback? onToggleFavorite;
 
   const SalonCard({
     super.key,
     required this.salon,
     this.isSelected = false,
     this.onTap,
+    this.onCheckIn,
+    this.isFavorite = false,
+    this.onToggleFavorite,
   });
 
   @override
@@ -21,17 +25,17 @@ class SalonCard extends StatelessWidget {
     final theme = Theme.of(context);
     
     return Card(
-      elevation: isSelected ? 4 : 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
           width: 2,
         ),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -39,16 +43,20 @@ class SalonCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
                     child: Icon(
-                      Icons.store,
-                      color: AppTheme.primaryColor,
+                      Icons.cut,
+                      color: theme.colorScheme.primary,
                       size: 24,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,50 +75,61 @@ class SalonCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: theme.colorScheme.primary,
+                    ),
+                    onPressed: onToggleFavorite,
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildInfoChip(
                     context,
                     Icons.access_time,
                     '${salon.waitTime} min',
+                    theme.colorScheme.primary,
                   ),
-                  const SizedBox(width: 8),
+                  _buildInfoChip(
+                    context,
+                    Icons.location_on,
+                    '${salon.distance} km',
+                    theme.colorScheme.primary,
+                  ),
                   _buildInfoChip(
                     context,
                     Icons.people,
-                    '${salon.queueLength} in queue',
+                    '${salon.queueLength} na fila',
+                    theme.colorScheme.primary,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              // Check In button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.check_circle, color: theme.colorScheme.onPrimary),
-                  label: const Text('Check In'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: theme.colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Fechamento: ${salon.closingTime}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => CheckInScreen(
-                          salon: salon,
-                        ),
+                  ElevatedButton(
+                    onPressed: onCheckIn,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                    child: const Text('Check-in'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -119,14 +138,14 @@ class SalonCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoChip(BuildContext context, IconData icon, String label) {
+  Widget _buildInfoChip(BuildContext context, IconData icon, String label, Color color) {
     final theme = Theme.of(context);
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        color: theme.colorScheme.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -134,14 +153,13 @@ class SalonCard extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: AppTheme.primaryColor,
+            color: theme.colorScheme.primary,
           ),
           const SizedBox(width: 4),
           Text(
             label,
             style: theme.textTheme.labelMedium?.copyWith(
-              color: AppTheme.primaryColor,
-              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.primary,
             ),
           ),
         ],
