@@ -12,6 +12,7 @@ using GrandeTech.QueueHub.API.Application.Auth;
 using GrandeTech.QueueHub.API.Application.Queues;
 using GrandeTech.QueueHub.API.Domain.Queues;
 using GrandeTech.QueueHub.API.Domain.Users;
+using GrandeTech.QueueHub.API.Domain.Customers;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -56,6 +57,10 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                         services.AddSingleton<GrandeTech.QueueHub.API.Domain.Queues.IQueueRepository, BogusQueueRepository>(); // Use singleton for queue repo
                         services.AddScoped<AddQueueService>();
                         services.AddScoped<AuthService>();
+                        
+                        // Add services needed for join queue functionality
+                        services.AddScoped<JoinQueueService>();
+                        services.AddScoped<GrandeTech.QueueHub.API.Domain.Customers.ICustomerRepository, BogusCustomerRepository>();
                     });
                 });
         }
@@ -191,6 +196,230 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var client = _factory.CreateClient();
             var response = await client.GetAsync($"/api/queues/{Guid.NewGuid()}");
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        // UC-ENTRY: Client enters queue integration tests
+        [TestMethod]
+        public async Task JoinQueue_ValidRequest_ReturnsSuccess()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            // First create a queue
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Now join the queue
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "John Doe",
+                PhoneNumber = "+5511999999999",
+                Email = "john@example.com",
+                IsAnonymous = false,
+                Notes = "Regular customer"
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.OK, joinResponse.StatusCode);
+            Assert.IsNotNull(joinResult);
+            Assert.IsTrue(joinResult.Success);
+            Assert.IsNotNull(joinResult.QueueEntryId);
+            Assert.AreEqual(1, joinResult.Position);
+            Assert.IsTrue(joinResult.EstimatedWaitTimeMinutes >= 0);
+        }
+
+        [TestMethod]
+        public async Task JoinQueue_AnonymousCustomer_ReturnsSuccess()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            // Join queue anonymously
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "Anonymous Customer",
+                IsAnonymous = true
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.OK, joinResponse.StatusCode);
+            Assert.IsTrue(joinResult.Success);
+            Assert.AreEqual(1, joinResult.Position);
+        }
+
+        [TestMethod]
+        public async Task JoinQueue_InvalidQueueId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = "invalid-guid",
+                CustomerName = "John Doe",
+                PhoneNumber = "+5511999999999"
+            };
+
+            var joinResponse = await client.PostAsJsonAsync("/api/queues/invalid-guid/join", joinRequest);
+            Assert.AreEqual(HttpStatusCode.BadRequest, joinResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task JoinQueue_NonExistentQueue_ReturnsNotFound()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            var nonExistentQueueId = Guid.NewGuid();
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = nonExistentQueueId.ToString(),
+                CustomerName = "John Doe",
+                PhoneNumber = "+5511999999999"
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{nonExistentQueueId}/join", joinRequest);
+            Assert.AreEqual(HttpStatusCode.NotFound, joinResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task JoinQueue_EmptyCustomerName_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "", // Empty name
+                PhoneNumber = "+5511999999999"
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, joinResponse.StatusCode);
+            Assert.IsFalse(joinResult.Success);
+            Assert.IsTrue(joinResult.FieldErrors.ContainsKey("CustomerName"));
+        }
+
+        [TestMethod]
+        public async Task JoinQueue_WithoutAuthentication_ReturnsUnauthorized()
+        {
+            var client = _factory.CreateClient();
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = Guid.NewGuid().ToString(),
+                CustomerName = "John Doe",
+                PhoneNumber = "+5511999999999"
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{Guid.NewGuid()}/join", joinRequest);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, joinResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task JoinQueue_FullQueue_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            // Create a queue with max size 1
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 1, // Only one spot
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            // First customer joins successfully
+            var firstJoinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "First Customer",
+                PhoneNumber = "+5511111111111"
+            };
+
+            var firstJoinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", firstJoinRequest);
+            Assert.AreEqual(HttpStatusCode.OK, firstJoinResponse.StatusCode);
+
+            // Second customer tries to join - should fail
+            var secondJoinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "Second Customer",
+                PhoneNumber = "+5522222222222"
+            };
+
+            var secondJoinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", secondJoinRequest);
+            var secondJoinResult = await secondJoinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, secondJoinResponse.StatusCode);
+            Assert.IsFalse(secondJoinResult.Success);
+            Assert.IsTrue(secondJoinResult.Errors.Any(e => e.Contains("maximum size")));
         }
 
         private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)

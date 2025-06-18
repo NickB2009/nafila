@@ -80,5 +80,50 @@ namespace GrandeTech.QueueHub.API.Controllers
 
             return Ok(dto);
         }
+
+        [HttpPost("{id}/join")]
+        [RequireClient] // Allow any authenticated user to join queues
+        public async Task<IActionResult> JoinQueue(
+            string id,
+            [FromBody] JoinQueueRequest request,
+            CancellationToken cancellationToken)
+        {
+            // Validate queue id
+            if (!Guid.TryParse(id, out var queueId))
+                return BadRequest("Invalid queue id.");
+
+            // Ensure request.QueueId matches route id
+            if (request.QueueId != id)
+                request.QueueId = id;
+
+            // Get user id (or anonymous)
+            var userId = User?.Identity?.IsAuthenticated == true
+                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                : "anonymous";
+
+            // Get queue
+            var queue = await _queueRepository.GetByIdAsync(queueId, cancellationToken);
+            if (queue == null)
+                return NotFound();
+
+            // Use JoinQueueService (resolve from DI if needed)
+            var joinQueueService = HttpContext.RequestServices.GetService(typeof(JoinQueueService)) as JoinQueueService;
+            if (joinQueueService == null)
+                return StatusCode(500, "JoinQueueService not available");
+
+            var result = await joinQueueService.JoinQueueAsync(request, userId, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Any(e => e.Contains("maximum size")))
+                    return BadRequest(result);
+                if (result.Errors.Any())
+                    return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
     }
 } 
