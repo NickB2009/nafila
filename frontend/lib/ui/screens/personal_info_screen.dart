@@ -65,57 +65,111 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     const String email = 'rommel@email.com';
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+            // Clean Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withOpacity(0.8),
+                  ],
+                ),
+              ),
+              child: Column(
                 children: [
-                  IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                        shape: BoxShape.circle,
+                  // Back button and title
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
                       ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: theme.colorScheme.onPrimary,
+                      const SizedBox(width: 16),
+                      Text(
+                        'Meu Perfil',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Perfil',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(height: 24),
+                  // Profile avatar and name
+                  Center(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.2),
+                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                          ),
+                          child: Icon(
+                            Icons.person,
+                            size: 36,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          name,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Membro desde 2024',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            // Tab Bar
+            // Minimal Tab Bar
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.onPrimary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  color: theme.colorScheme.onPrimary,
-                  borderRadius: BorderRadius.circular(12),
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                labelColor: theme.colorScheme.primary,
-                unselectedLabelColor: theme.colorScheme.onPrimary,
+                labelColor: Colors.white,
+                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                 labelStyle: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
                 unselectedLabelStyle: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w500,
@@ -124,312 +178,199 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                 dividerColor: Colors.transparent,
                 tabs: const [
                   Tab(text: 'Informações'),
-                  Tab(text: 'Cut Notes'),
+                  Tab(text: 'Preferências'),
                 ],
               ),
             ),
             // Content
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(top: 16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // Tab 1: Informações Pessoais
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Profile Header
-                              Center(
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      width: 100,
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: theme.colorScheme.primary.withOpacity(0.1),
-                                        border: Border.all(
-                                          color: theme.colorScheme.primary.withOpacity(0.2),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: Icon(
-                                        Icons.person,
-                                        size: 48,
-                                        color: theme.colorScheme.primary,
-                                      ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Tab 1: Informações Pessoais
+                  FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            // Info Cards
+                            _buildInfoCard(
+                              theme,
+                              'Informações Pessoais',
+                              [
+                                _buildInfoRow(theme, Icons.person_outline, 'Nome completo', name),
+                                _buildInfoRow(theme, Icons.phone, 'Telefone', phone),
+                                _buildInfoRow(theme, Icons.location_on_outlined, 'Cidade', city),
+                                _buildInfoRow(theme, Icons.email_outlined, 'Email', email),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            // Edit Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Edição em breve!'),
+                                      duration: Duration(seconds: 1),
                                     ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      name,
-                                      style: theme.textTheme.headlineSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Membro desde 2024',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                              // Info Card
-                              Card(
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(
-                                    color: theme.colorScheme.outline.withOpacity(0.2),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    children: [
-                                      _buildInfoRow(theme, Icons.person_outline, 'Nome completo', name),
-                                      const Divider(height: 28),
-                                      _buildInfoRow(theme, Icons.phone, 'Telefone', phone),
-                                      const Divider(height: 28),
-                                      _buildInfoRow(theme, Icons.location_on_outlined, 'Cidade', city),
-                                      const Divider(height: 28),
-                                      _buildInfoRow(theme, Icons.email_outlined, 'Email (opcional)', email),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              // Edit Button
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Edição em breve!'), duration: Duration(seconds: 1)),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.edit, size: 18),
-                                  label: const Text('Editar Perfil'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.primary,
-                                    foregroundColor: theme.colorScheme.onPrimary,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Tab 2: Cut Notes
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Main Title
-                              Center(
-                                child: Text(
-                                  'Preferências de Corte',
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              // Modelos de Corte
-                              Text(
-                                'Modelos de Corte',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                height: 140,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: _buildCutTemplates(theme),
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                              // Foto de Referência
-                              Text(
-                                'Foto de Referência',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Center(
-                                child: Column(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          modelPhotoUrl = modelPhotoUrl == null
-                                            ? 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=facearea&w=400&h=400'
-                                            : null;
-                                        });
-                                      },
-                                      child: Container(
-                                        width: 160,
-                                        height: 160,
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.surface,
-                                          borderRadius: BorderRadius.circular(22),
-                                          border: Border.all(
-                                            color: theme.colorScheme.outline.withOpacity(0.3),
-                                            width: 1.5,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.06),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: modelPhotoUrl == null
-                                          ? Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.add_a_photo,
-                                                  color: theme.colorScheme.primary,
-                                                  size: 36,
-                                                ),
-                                                const SizedBox(height: 10),
-                                                Text(
-                                                  'Adicionar foto',
-                                                  style: theme.textTheme.labelMedium?.copyWith(
-                                                    color: theme.colorScheme.primary,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ],
-                                            )
-                                          : ClipRRect(
-                                              borderRadius: BorderRadius.circular(20),
-                                              child: Image.network(
-                                                modelPhotoUrl!,
-                                                width: 160,
-                                                height: 160,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                      ),
-                                    ),
-                                    if (modelPhotoUrl != null)
-                                      TextButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            modelPhotoUrl = null;
-                                          });
-                                        },
-                                        child: Text(
-                                          'Remover',
-                                          style: TextStyle(
-                                            color: theme.colorScheme.error,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                              // Preferências Personalizadas
-                              Text(
-                                'Preferências Personalizadas',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              _buildChipsSection(theme, 'Laterais', sides, sidesOptions, (v) => _onChipChanged('sides', v)),
-                              const SizedBox(height: 24),
-                              _buildChipsSection(theme, 'Fade', fade, fadeOptions, (v) => _onChipChanged('fade', v)),
-                              const SizedBox(height: 24),
-                              _buildChipsSection(theme, 'Topo', top, topOptions, (v) => _onChipChanged('top', v)),
-                              const SizedBox(height: 24),
-                              _buildChipsSection(theme, 'Franja', franja, franjaOptions, (v) => _onChipChanged('franja', v)),
-                              const SizedBox(height: 32),
-                              // Resumo
-                              Center(
-                                child: Card(
+                                  );
+                                },
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                label: const Text('Editar Perfil'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: Colors.white,
                                   elevation: 0,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    side: BorderSide(
-                                      color: theme.colorScheme.outline.withOpacity(0.2),
-                                    ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.content_cut,
-                                          color: theme.colorScheme.primary,
-                                          size: 22,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja',
-                                          style: theme.textTheme.bodyLarge?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.copy_rounded, size: 20),
-                                          color: theme.colorScheme.primary,
-                                          onPressed: () {
-                                            final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja';
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text('Copiado!'), duration: Duration(seconds: 1)),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Tab 2: Cut Notes
+                  FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Cut Templates
+                            Text(
+                              'Modelos de Corte',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 120,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: _buildCutTemplates(theme),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            // Reference Photo
+                            Text(
+                              'Foto de Referência',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    modelPhotoUrl = modelPhotoUrl == null
+                                      ? 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=facearea&w=400&h=400'
+                                      : null;
+                                  });
+                                },
+                                child: Container(
+                                  width: 140,
+                                  height: 140,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: theme.colorScheme.outline.withOpacity(0.2),
+                                      width: 1,
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: modelPhotoUrl == null
+                                    ? Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.add_a_photo_outlined,
+                                            color: theme.colorScheme.primary,
+                                            size: 32,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Adicionar foto',
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: theme.colorScheme.primary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : ClipRRect(
+                                        borderRadius: BorderRadius.circular(19),
+                                        child: Image.network(
+                                          modelPhotoUrl!,
+                                          width: 140,
+                                          height: 140,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                            ),
+                            if (modelPhotoUrl != null) ...[
+                              const SizedBox(height: 12),
+                              Center(
+                                child: TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      modelPhotoUrl = null;
+                                    });
+                                  },
+                                  icon: const Icon(Icons.delete_outline, size: 16),
+                                  label: const Text('Remover'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: theme.colorScheme.error,
                                   ),
                                 ),
                               ),
                             ],
-                          ),
+                            const SizedBox(height: 32),
+                            // Preferences
+                            Text(
+                              'Preferências de Corte',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _buildPreferencesSection(theme),
+                            const SizedBox(height: 32),
+                            // Summary Card
+                            _buildSummaryCard(theme),
+                            const SizedBox(height: 20),
+                          ],
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -438,89 +379,186 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     );
   }
 
+  Widget _buildInfoCard(ThemeData theme, String title, List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoRow(ThemeData theme, IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: theme.colorScheme.primary,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferencesSection(ThemeData theme) {
+    return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: theme.colorScheme.primary,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
+        _buildPreferenceRow(theme, 'Laterais', sides, sidesOptions, (v) => _onChipChanged('sides', v)),
+        const SizedBox(height: 20),
+        _buildPreferenceRow(theme, 'Fade', fade, fadeOptions, (v) => _onChipChanged('fade', v)),
+        const SizedBox(height: 20),
+        _buildPreferenceRow(theme, 'Topo', top, topOptions, (v) => _onChipChanged('top', v)),
+        const SizedBox(height: 20),
+        _buildPreferenceRow(theme, 'Franja', franja, franjaOptions, (v) => _onChipChanged('franja', v)),
       ],
     );
   }
 
-  Widget _buildChipsSection(ThemeData theme, String label, String selected, List<String> options, ValueChanged<String> onChanged) {
+  Widget _buildPreferenceRow(ThemeData theme, String label, String selected, List<String> options, ValueChanged<String> onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: theme.textTheme.labelMedium?.copyWith(
+          style: theme.textTheme.titleSmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 12),
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: 8,
+          runSpacing: 8,
           children: options.map((option) {
             final isSelected = selected == option;
-            return ChoiceChip(
-              label: Text(option),
-              selected: isSelected,
-              onSelected: (_) => onChanged(option),
-              selectedColor: theme.colorScheme.primary,
-              labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              backgroundColor: theme.colorScheme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outline.withOpacity(0.2),
+            return GestureDetector(
+              onTap: () => onChanged(option),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  option,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
                 ),
               ),
-              elevation: 0,
             );
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildSummaryCard(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.content_cut,
+            color: theme.colorScheme.primary,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy_outlined, size: 20),
+            color: theme.colorScheme.primary,
+            onPressed: () {
+              final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja';
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Copiado!'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -593,19 +631,19 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
           });
         },
         child: Container(
-          width: 110,
-          margin: const EdgeInsets.only(right: 16),
+          width: 100,
+          margin: const EdgeInsets.only(right: 12),
           decoration: BoxDecoration(
             color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.2),
+              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.1),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: [
               if (isSelected)
                 BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  color: theme.colorScheme.primary.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -615,11 +653,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (t['isCustom'] == true)
-                Icon(Icons.edit, size: 48, color: theme.colorScheme.primary)
+                Icon(Icons.edit_outlined, size: 32, color: theme.colorScheme.primary)
               else
                 Container(
-                  width: 70,
-                  height: 70,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -627,14 +665,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                   child: Icon(
                     Icons.content_cut,
                     color: theme.colorScheme.primary,
-                    size: 32,
+                    size: 24,
                   ),
                 ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 t['name'],
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
                   color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,

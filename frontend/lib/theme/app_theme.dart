@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppTheme {
   // Single source of truth for the app's color
-  static const Color brandColor = Color(0xFFB8860B); // DarkGoldenrod
+  static const Color brandColor = Color.from(alpha: 1, red: 0.702, green: 0.576, blue: 0.063); // DarkGoldenrod
 
   // Derived colors
   static Color get primaryColor => brandColor;
