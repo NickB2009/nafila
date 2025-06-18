@@ -201,7 +201,7 @@ class AccessibilityNoticeScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: theme.colorScheme.primary, size: 20),
@@ -235,7 +235,7 @@ class AccessibilityNoticeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.1),
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -298,8 +298,49 @@ class AccessibilityNoticeScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AtendimentoScreen()),
+                  print('Button pressed! Testing navigation...');
+                  // First, let's test if the button works by showing a dialog
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Teste de Botão'),
+                      content: const Text('O botão está funcionando! Tentando navegar...'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cancelar'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close dialog
+                            // Now try to navigate
+                            try {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const AtendimentoScreen(),
+                                ),
+                              );
+                            } catch (e) {
+                              print('Navigation error: $e');
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Erro de Navegação'),
+                                  content: Text('Erro ao abrir tela de atendimento: $e'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Tentar Navegar'),
+                        ),
+                      ],
+                    ),
                   );
                 },
                 icon: const Icon(Icons.support_agent),

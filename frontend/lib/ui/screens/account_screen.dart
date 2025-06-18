@@ -5,6 +5,7 @@ import 'comunicacoes_screen.dart';
 import 'display_screen.dart';
 import 'atendimento_screen.dart';
 import 'accessibility_notice_screen.dart';
+import 'legal_privacy_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -83,7 +84,11 @@ class _AccountScreenState extends State<AccountScreen> {
                           MaterialPageRoute(builder: (_) => const AccessibilityNoticeScreen()),
                         );
                       }),
-                      _buildMenuItem(theme, Icons.description_outlined, 'Legal e Privacidade', onTap: () {}),
+                      _buildMenuItem(theme, Icons.description_outlined, 'Legal e Privacidade', onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const LegalPrivacyScreen()),
+                        );
+                      }),
                       
                       const SizedBox(height: 30),
                       
