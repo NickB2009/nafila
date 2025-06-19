@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppTheme {
@@ -17,12 +16,10 @@ class AppTheme {
       primary: primaryColor,
       secondary: secondaryColor,
       surface: Colors.white,
-      background: Colors.grey[50]!,
       error: Colors.red[700]!,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onSurface: Colors.black87,
-      onBackground: Colors.black87,
     ),
     scaffoldBackgroundColor: Colors.grey[50],
     appBarTheme: AppBarTheme(
@@ -78,12 +75,10 @@ class AppTheme {
       primary: primaryColor,
       secondary: secondaryColor,
       surface: Colors.grey[900]!,
-      background: Colors.black,
       error: Colors.red[300]!,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onSurface: Colors.white,
-      onBackground: Colors.white,
     ),
     scaffoldBackgroundColor: Colors.black,
     appBarTheme: AppBarTheme(
@@ -139,12 +134,10 @@ class AppTheme {
       primary: Colors.black,
       secondary: Colors.black,
       surface: Colors.white,
-      background: Colors.white,
       error: Colors.red[900]!,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onSurface: Colors.black,
-      onBackground: Colors.black,
     ),
     appBarTheme: const AppBarTheme(
       centerTitle: true,
@@ -181,12 +174,10 @@ class AppTheme {
       primary: Colors.yellow,
       secondary: Colors.yellow,
       surface: Colors.black,
-      background: Colors.black,
       error: Colors.red[300]!,
       onPrimary: Colors.black,
       onSecondary: Colors.black,
       onSurface: Colors.yellow,
-      onBackground: Colors.yellow,
     ),
     appBarTheme: const AppBarTheme(
       centerTitle: true,
@@ -225,7 +216,7 @@ class ThemeProvider extends ChangeNotifier {
   static const String _animationsKey = 'animations';
 
   late SharedPreferences? _prefs;
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.light;
   double _fontSize = 1.0;
   bool _highContrast = false;
   bool _animations = true;
@@ -242,13 +233,13 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> _loadSettings() async {
     try {
       _prefs = await SharedPreferences.getInstance();
-      _themeMode = ThemeMode.values[_prefs?.getInt(_themeModeKey) ?? 2];
+      _themeMode = ThemeMode.values[_prefs?.getInt(_themeModeKey) ?? 1];
       _fontSize = _prefs?.getDouble(_fontSizeKey) ?? 1.0;
       _highContrast = _prefs?.getBool(_highContrastKey) ?? false;
       _animations = _prefs?.getBool(_animationsKey) ?? true;
     } catch (e) {
       // If shared_preferences fails, use default values
-      _themeMode = ThemeMode.system;
+      _themeMode = ThemeMode.light;
       _fontSize = 1.0;
       _highContrast = false;
       _animations = true;

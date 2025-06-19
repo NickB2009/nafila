@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 import 'theme/app_theme.dart';
 import 'ui/screens/salon_finder_screen.dart';
 import 'ui/screens/salon_tv_dashboard.dart';
@@ -36,7 +35,7 @@ class MyApp extends StatelessWidget {
         builder: (context, child) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(
-              textScaleFactor: themeProvider.fontSize,
+              textScaler: TextScaler.linear(themeProvider.fontSize),
             ),
             child: child!,
           );
@@ -55,6 +54,9 @@ class MyApp extends StatelessWidget {
           Locale('en', ''),   // English (default)
           // Add more if you want
         ],
+        // Performance optimizations
+        showPerformanceOverlay: false,
+        showSemanticsDebugger: false,
       ),
     );
   }

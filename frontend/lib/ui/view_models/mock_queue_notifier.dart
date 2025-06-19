@@ -21,6 +21,7 @@ class MockQueueNotifier extends ChangeNotifier {
       _entries.where((entry) => entry.status == QueueStatus.inService).length;
 
   MockQueueNotifier() {
+    // Load data immediately without delay for better UX
     _loadMockData();
   }
 
@@ -29,8 +30,8 @@ class MockQueueNotifier extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // Simulate API delay
-    Future.delayed(const Duration(milliseconds: 500), () {
+    // Reduced delay for faster loading
+    Future.delayed(const Duration(milliseconds: 100), () {
       _entries = [
         QueueEntry(
           id: '1',

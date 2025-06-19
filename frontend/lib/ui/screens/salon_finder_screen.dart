@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/salon_card.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
 import '../../models/salon_service.dart';
@@ -150,18 +149,18 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Olá, Rommel!",
-                          style: theme.textTheme.titleLarge?.copyWith(
+                Text(
+                  "Olá, Rommel!",
+                  style: theme.textTheme.titleLarge?.copyWith(
                             color: theme.colorScheme.onPrimary.withOpacity(0.9),
-                          ),
-                        ),
+                  ),
+                ),
                         const SizedBox(height: 4),
-                        Text(
-                          "Faça cada dia\num ótimo dia para o cabelo.",
-                          style: theme.textTheme.headlineLarge?.copyWith(
+                Text(
+                  "Faça cada dia\num ótimo dia para o cabelo.",
+                  style: theme.textTheme.headlineLarge?.copyWith(
                             color: theme.colorScheme.onPrimary.withOpacity(0.9),
-                            height: 1.2,
+                    height: 1.2,
                             shadows: [
                               Shadow(
                                 color: theme.colorScheme.onPrimary.withOpacity(0.1),
@@ -189,11 +188,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                       builder: (context, value, child) {
                         return Transform.scale(
                           scale: value,
-                          child: CustomPaint(
+                    child: CustomPaint(
                             painter: SalonDecorationPainter(
                               color: theme.colorScheme.onPrimary.withOpacity(0.08),
                             ),
-                          ),
+                      ),
                         );
                       },
                     ),
@@ -287,9 +286,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                     children: [
                       Text(
                         'Ver mapa',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.primary,
-                        ),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
                       ),
                       const SizedBox(width: 4),
                       Icon(
@@ -335,7 +334,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     return List.generate(
       salons.length,
       (index) => Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.only(bottom: 16),
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
           duration: Duration(milliseconds: 600 + (index * 200)),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../theme/app_theme.dart';
 
 class AtendimentoScreen extends StatelessWidget {
   const AtendimentoScreen({super.key});

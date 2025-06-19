@@ -1,0 +1,11 @@
+{
+  "enable-web": true,
+  "enable-windows-desktop": false,
+  "enable-macos-desktop": false,
+  "enable-linux-desktop": false,
+  "enable-android": false,
+  "enable-ios": false,
+  "dart-define": {
+    "FLUTTER_WEB_USE_SKIA": "true"
+  }
+} 

@@ -4,8 +4,6 @@ import 'notifications_screen.dart';
 import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'account_screen.dart';
-import 'salon_map_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class QueueStatusScreen extends StatelessWidget {

@@ -17,41 +17,205 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Nafila - Sistema de Gerenciamento de Filas">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Performance optimizations -->
+  <link rel="preload" href="flutter.js" as="script">
+  <link rel="preload" href="main.dart.js" as="script">
+  <link rel="dns-prefetch" href="//fonts.googleapis.com">
+  <link rel="dns-prefetch" href="//fonts.gstatic.com">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="nafila">
+  <meta name="apple-mobile-web-app-title" content="Nafila">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Nafila</title>
   <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
   <script>
     // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = "{{flutter_service_worker_version}}";
+    const serviceWorkerVersion = "{{flutter_service_worker_version}}" || null;
   </script>
   <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+  <script src="flutter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .loading {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+    
+    .loading-text {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 20px;
+      text-align: center;
+      opacity: 0.9;
+    }
+
+    .loader {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    .progress-bar {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: white;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      color: #ff6b6b;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .retry-button {
+      background: white;
+      color: #DAA520;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .retry-button:hover {
+      background: #f8f9fa;
+      transform: translateY(-1px);
+    }
+  </style>
 </head>
 <body>
+  <div id="loading" class="loading">
+    <div class="loader"></div>
+    <p class="loading-text">Carregando Nafila...</p>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+  </div>
   <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
+    // Simulate progress for better UX
+    let progress = 0;
+    const progressBar = document.getElementById('progress');
+    const progressInterval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress > 90) progress = 90;
+      progressBar.style.width = progress + '%';
+    }, 200);
+
+    window.addEventListener('load', async function() {
+      const loading = document.getElementById('loading');
+
+      try {
+        // Check if Flutter is available
+        if (typeof _flutter === 'undefined') {
+          throw new Error('Flutter não está disponível');
+        }
+
+        // Try to initialize Flutter with service worker first
+        try {
+          await _flutter.loader.loadEntrypoint({
+            serviceWorker: { serviceWorkerVersion: serviceWorkerVersion },
+            onEntrypointLoaded: async function(engineInitializer) {
+              await initializeApp(engineInitializer);
+            }
+          });
+        } catch (serviceWorkerError) {
+          console.warn('Service worker failed, trying without it:', serviceWorkerError);
+          
+          // Fallback: initialize without service worker
+          await _flutter.loader.loadEntrypoint({
+            onEntrypointLoaded: async function(engineInitializer) {
+              await initializeApp(engineInitializer);
+            }
           });
         }
-      });
+      } catch (e) {
+        console.error('Flutter web initialization error:', e);
+        clearInterval(progressInterval);
+        loading.innerHTML = `
+          <div class="error">
+            <h3>Erro ao carregar o aplicativo</h3>
+            <p>${e.message}</p>
+            <button class="retry-button" onclick="location.reload()">Tentar Novamente</button>
+          </div>
+        `;
+      }
     });
+
+    async function initializeApp(engineInitializer) {
+      const loading = document.getElementById('loading');
+      
+      try {
+        // Update progress
+        progress = 95;
+        progressBar.style.width = progress + '%';
+        
+        // Initialize the Flutter engine
+        const appRunner = await engineInitializer.initializeEngine({
+          useColorEmoji: true,
+        });
+        
+        // Complete progress
+        progress = 100;
+        progressBar.style.width = progress + '%';
+        
+        // Small delay for smooth transition
+        setTimeout(() => {
+          loading.remove();
+          // Run the app
+          appRunner.runApp();
+        }, 300);
+      } catch (e) {
+        console.error('Error running app:', e);
+        clearInterval(progressInterval);
+        loading.innerHTML = `
+          <div class="error">
+            <h3>Erro ao carregar o aplicativo</h3>
+            <p>${e.message}</p>
+            <button class="retry-button" onclick="location.reload()">Tentar Novamente</button>
+          </div>
+        `;
+      }
+    }
   </script>
 </body>
 </html>
