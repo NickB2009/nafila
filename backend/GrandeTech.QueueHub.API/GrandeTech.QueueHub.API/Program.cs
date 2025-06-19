@@ -130,6 +130,11 @@ builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Organizations.Org
 // Register repositories
 builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
 builder.Services.AddScoped<AddQueueService>();
+builder.Services.AddScoped<JoinQueueService>();
+builder.Services.AddScoped<CallNextService>();
+builder.Services.AddScoped<CheckInService>();
+builder.Services.AddScoped<FinishService>();
+builder.Services.AddScoped<CancelQueueService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 
 var app = builder.Build();

@@ -295,20 +295,38 @@ namespace GrandeTech.QueueHub.API.Controllers
             [FromBody] FinishRequest request,
             CancellationToken cancellationToken)
         {
+            var result = new FinishResult();
+
             // Validate queue id
             if (!Guid.TryParse(id, out var queueId))
-                return BadRequest("Invalid queue id.");
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueId", "Invalid queue id.");
+                return BadRequest(result);
+            }
 
             // Validate queue entry id
             if (string.IsNullOrWhiteSpace(request.QueueEntryId))
-                return BadRequest("Queue entry ID is required.");
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueEntryId", "Queue entry ID is required.");
+                return BadRequest(result);
+            }
 
             if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
-                return BadRequest("Invalid queue entry ID format.");
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueEntryId", "Invalid queue entry ID format.");
+                return BadRequest(result);
+            }
 
             // Validate service duration
             if (request.ServiceDurationMinutes <= 0)
-                return BadRequest("Service duration must be greater than 0 minutes.");
+            {
+                result.Success = false;
+                result.FieldErrors.Add("ServiceDurationMinutes", "Service duration must be greater than 0 minutes.");
+                return BadRequest(result);
+            }
 
             // Get user id
             var userId = User?.Identity?.IsAuthenticated == true
@@ -340,43 +358,114 @@ namespace GrandeTech.QueueHub.API.Controllers
                 await _queueRepository.UpdateAsync(queue, cancellationToken);
 
                 // Return success result
-                var result = new FinishResult
-                {
-                    Success = true,
-                    QueueEntryId = queueEntry.Id.ToString(),
-                    CustomerName = queueEntry.CustomerName,
-                    ServiceDurationMinutes = queueEntry.ServiceDurationMinutes ?? 0,
-                    CompletedAt = queueEntry.CompletedAt,
-                    Notes = queueEntry.Notes
-                };
+                result.Success = true;
+                result.QueueEntryId = queueEntry.Id.ToString();
+                result.CustomerName = queueEntry.CustomerName;
+                result.ServiceDurationMinutes = queueEntry.ServiceDurationMinutes ?? 0;
+                result.CompletedAt = queueEntry.CompletedAt;
+                result.Notes = queueEntry.Notes;
 
                 return Ok(result);
             }
             catch (InvalidOperationException ex)
             {
-                var result = new FinishResult
-                {
-                    Success = false,
-                    Errors = new List<string> { ex.Message }
-                };
+                result.Success = false;
+                result.Errors.Add(ex.Message);
                 return BadRequest(result);
             }
             catch (ArgumentException ex)
             {
-                var result = new FinishResult
-                {
-                    Success = false,
-                    FieldErrors = new Dictionary<string, string> { { "ServiceDurationMinutes", ex.Message } }
-                };
+                result.Success = false;
+                result.FieldErrors.Add("ServiceDurationMinutes", ex.Message);
                 return BadRequest(result);
             }
             catch (Exception ex)
             {
-                var result = new FinishResult
-                {
-                    Success = false,
-                    Errors = new List<string> { $"An error occurred while completing service: {ex.Message}" }
-                };
+                result.Success = false;
+                result.Errors.Add($"An error occurred while completing service: {ex.Message}");
+                return BadRequest(result);
+            }
+        }
+
+        [HttpPost("{id}/cancel")]
+        [RequireClient] // Clients can cancel their own queue entries
+        public async Task<IActionResult> Cancel(
+            string id,
+            [FromBody] CancelQueueRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = new CancelQueueResult();
+
+            // Validate queue id
+            if (!Guid.TryParse(id, out var queueId))
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueId", "Invalid queue id.");
+                return BadRequest(result);
+            }
+
+            // Validate queue entry id
+            if (string.IsNullOrWhiteSpace(request.QueueEntryId))
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueEntryId", "Queue entry ID is required.");
+                return BadRequest(result);
+            }
+
+            if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueEntryId", "Invalid queue entry ID format.");
+                return BadRequest(result);
+            }
+
+            // Get user id
+            var userId = User?.Identity?.IsAuthenticated == true
+                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                : "anonymous";
+
+            // Get queue
+            var queue = await _queueRepository.GetByIdAsync(queueId, cancellationToken);
+            if (queue == null)
+                return NotFound();
+
+            try
+            {
+                // Find the queue entry
+                var queueEntry = queue.Entries.FirstOrDefault(e => e.Id == queueEntryId);
+                if (queueEntry == null)
+                    return NotFound();
+
+                // Cancel the queue entry using domain logic
+                queueEntry.Cancel();
+
+                // Update queue in repository
+                await _queueRepository.UpdateAsync(queue, cancellationToken);
+
+                // Return success result
+                result.Success = true;
+                result.QueueEntryId = queueEntry.Id.ToString();
+                result.CustomerName = queueEntry.CustomerName;
+                result.CancelledAt = queueEntry.CancelledAt;
+
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                result.Success = false;
+                result.Errors.Add(ex.Message);
+                return BadRequest(result);
+            }
+            catch (ArgumentException ex)
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueEntryId", ex.Message);
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Errors.Add($"An error occurred while canceling queue entry: {ex.Message}");
                 return BadRequest(result);
             }
         }

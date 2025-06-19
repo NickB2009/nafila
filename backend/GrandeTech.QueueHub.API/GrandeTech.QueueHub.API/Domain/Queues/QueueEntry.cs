@@ -108,8 +108,8 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
 
         public void Cancel()
         {
-            if (Status != QueueEntryStatus.Waiting && Status != QueueEntryStatus.Called)
-                throw new InvalidOperationException($"Cannot cancel a customer with status {Status}");
+            if (Status != QueueEntryStatus.Waiting)
+                throw new InvalidOperationException($"Cannot cancel a customer with status {Status}. Only waiting customers can be cancelled.");
 
             Status = QueueEntryStatus.Cancelled;
             CancelledAt = DateTime.UtcNow;

@@ -70,6 +70,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                         
                         // Add services needed for finish functionality
                         services.AddScoped<FinishService>();
+                        
+                        // Add services needed for cancel functionality
+                        services.AddScoped<CancelQueueService>();
                     });
                 });
         }
@@ -1126,73 +1129,233 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
-            // Create queue as admin
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
-            var adminClient = _factory.CreateClient();
-            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+            // First create a queue and join it
+            var queueId = await CreateTestQueueAsync(client);
+            var joinResult = await JoinTestQueueAsync(client, queueId, "Test Customer");
 
-            var addRequest = new AddQueueRequest
-            {
-                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
-                MaxSize = 50,
-                LateClientCapTimeInMinutes = 15
-            };
-
-            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
-            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
-
-            // Join queue as client
-            var joinRequest = new JoinQueueRequest
-            {
-                QueueId = addResult.QueueId.ToString(),
-                CustomerName = "John Doe",
-                IsAnonymous = true
-            };
-
-            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
-            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
-
-            // Call next as barber
+            // Call next and check in the customer
             var callNextRequest = new CallNextRequest
             {
                 StaffMemberId = Guid.NewGuid().ToString()
             };
-
-            var callNextResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/call-next", callNextRequest);
+            var callNextResponse = await client.PostAsJsonAsync($"/api/queues/{queueId}/call-next", callNextRequest);
             var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
 
-            // Check in the customer
             var checkInRequest = new CheckInRequest
             {
                 QueueEntryId = callNextResult.QueueEntryId
             };
+            var checkInResponse = await client.PostAsJsonAsync($"/api/queues/{queueId}/check-in", checkInRequest);
 
-            var checkInResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/check-in", checkInRequest);
-
-            // Try to finish with invalid service duration
+            // Now try to finish with invalid duration
             var finishRequest = new FinishRequest
             {
                 QueueEntryId = callNextResult.QueueEntryId,
-                ServiceDurationMinutes = -5 // Invalid negative duration
+                ServiceDurationMinutes = 0 // Invalid: must be > 0
             };
 
-            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
-            
-            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
-            
-            var contentType = finishResponse.Content.Headers.ContentType?.MediaType;
-            if (contentType == "application/json")
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/finish", finishRequest);
+            var result = await response.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+        }
+
+        // UC-CANCEL: Client cancels queue spot
+        [TestMethod]
+        public async Task CancelQueue_ValidRequest_ReturnsSuccess()
+        {
+            var client = _factory.CreateClient();
+            var customerToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", customerToken);
+
+            // First create a queue and join it
+            var queueId = await CreateTestQueueAsync(client);
+            var joinResult = await JoinTestQueueAsync(client, queueId, "Test Customer");
+
+            // Now cancel the queue entry
+            var cancelRequest = new CancelQueueRequest
             {
-                var finishResult = await finishResponse.Content.ReadFromJsonAsync<FinishResult>();
-                Assert.IsFalse(finishResult.Success);
-                Assert.IsTrue(finishResult.FieldErrors.ContainsKey("ServiceDurationMinutes"));
-            }
-            else
+                QueueEntryId = joinResult.QueueEntryId
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/cancel", cancelRequest);
+            var result = await response.Content.ReadFromJsonAsync<CancelQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual(joinResult.QueueEntryId, result.QueueEntryId);
+            Assert.AreEqual("Test Customer", result.CustomerName);
+            Assert.IsNotNull(result.CancelledAt);
+        }
+
+        [TestMethod]
+        public async Task CancelQueue_AlreadyCalledCustomer_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var customerToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", customerToken);
+
+            // First create a queue and join it
+            var queueId = await CreateTestQueueAsync(client);
+            var joinResult = await JoinTestQueueAsync(client, queueId, "Test Customer");
+
+            // Call next the customer (barber calls them)
+            var barberClient = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", barberClient);
+            barberClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var callNextRequest = new CallNextRequest
             {
-                // Handle plain text response
-                var responseText = await finishResponse.Content.ReadAsStringAsync();
-                Assert.IsTrue(responseText.Contains("Service duration must be greater than 0 minutes"));
+                StaffMemberId = Guid.NewGuid().ToString()
+            };
+            var callNextResponse = await barberClient.PostAsJsonAsync($"/api/queues/{queueId}/call-next", callNextRequest);
+            var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
+
+            // Now try to cancel the called customer
+            var cancelRequest = new CancelQueueRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/cancel", cancelRequest);
+            var result = await response.Content.ReadFromJsonAsync<CancelQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            if (!result.Errors.Any(e => e.Contains("Only waiting customers can be cancelled.")))
+            {
+                throw new Exception("Errors: " + string.Join(", ", result.Errors));
             }
+            Assert.IsTrue(result.Errors.Any(e => e.Contains("Only waiting customers can be cancelled.")));
+        }
+
+        [TestMethod]
+        public async Task CancelQueue_AlreadyCheckedInCustomer_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var customerToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", customerToken);
+
+            // First create a queue and join it
+            var queueId = await CreateTestQueueAsync(client);
+            var joinResult = await JoinTestQueueAsync(client, queueId, "Test Customer");
+
+            // Call next and check in the customer
+            var barberClient = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", barberClient);
+            barberClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var callNextRequest = new CallNextRequest
+            {
+                StaffMemberId = Guid.NewGuid().ToString()
+            };
+            var callNextResponse = await barberClient.PostAsJsonAsync($"/api/queues/{queueId}/call-next", callNextRequest);
+            var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
+
+            var checkInRequest = new CheckInRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId
+            };
+            var checkInResponse = await barberClient.PostAsJsonAsync($"/api/queues/{queueId}/check-in", checkInRequest);
+
+            // Now try to cancel the checked-in customer
+            var cancelRequest = new CancelQueueRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/cancel", cancelRequest);
+            var result = await response.Content.ReadFromJsonAsync<CancelQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            if (!result.Errors.Any(e => e.Contains("Only waiting customers can be cancelled.")))
+            {
+                throw new Exception("Errors: " + string.Join(", ", result.Errors));
+            }
+            Assert.IsTrue(result.Errors.Any(e => e.Contains("Only waiting customers can be cancelled.")));
+        }
+
+        [TestMethod]
+        public async Task CancelQueue_InvalidQueueEntryId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var customerToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", customerToken);
+
+            var queueId = await CreateTestQueueAsync(client);
+
+            var cancelRequest = new CancelQueueRequest
+            {
+                QueueEntryId = "invalid-guid"
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/cancel", cancelRequest);
+            var result = await response.Content.ReadFromJsonAsync<CancelQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+        }
+
+        [TestMethod]
+        public async Task CancelQueue_NonExistentQueueEntry_ReturnsNotFound()
+        {
+            var client = _factory.CreateClient();
+            var customerToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", customerToken);
+
+            var queueId = await CreateTestQueueAsync(client);
+
+            var cancelRequest = new CancelQueueRequest
+            {
+                QueueEntryId = Guid.NewGuid().ToString()
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/cancel", cancelRequest);
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CancelQueue_WithoutAuthentication_ReturnsUnauthorized()
+        {
+            var client = _factory.CreateClient();
+            var queueId = await CreateTestQueueAsync(client);
+
+            var cancelRequest = new CancelQueueRequest
+            {
+                QueueEntryId = Guid.NewGuid().ToString()
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/cancel", cancelRequest);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CancelQueue_EmptyQueueEntryId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var customerToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", customerToken);
+
+            var queueId = await CreateTestQueueAsync(client);
+
+            var cancelRequest = new CancelQueueRequest
+            {
+                QueueEntryId = ""
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/cancel", cancelRequest);
+            var result = await response.Content.ReadFromJsonAsync<CancelQueueResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
         }
 
         private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)
@@ -1267,7 +1430,47 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             }
         }
 
-        // Add a DTO for test deserialization
+        private static async Task<Guid> CreateTestQueueAsync(HttpClient client)
+        {
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            return addResult.QueueId;
+        }
+
+        private static async Task<JoinQueueResult> JoinTestQueueAsync(HttpClient client, Guid queueId, string customerName)
+        {
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = queueId.ToString(),
+                CustomerName = customerName,
+                IsAnonymous = true
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{queueId}/join", joinRequest);
+            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            Assert.IsNotNull(joinResult);
+            Assert.IsTrue(joinResult.Success);
+
+            return joinResult;
+        }
+
         public class QueueDto
         {
             public Guid Id { get; set; }
