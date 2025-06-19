@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'GrandeTech.QueueHub.API/**'
+      - 'backend/GrandeTech.QueueHub.API/**'
       - '.github/workflows/core-api-ci-cd.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'GrandeTech.QueueHub.API/**'
+      - 'backend/GrandeTech.QueueHub.API/**'
       - '.github/workflows/core-api-ci-cd.yml'
 
 env:
@@ -19,8 +19,8 @@ env:
   RESOURCE_GROUP: rg-p-queuehub-core-001
   ACR_NAME: acrqueuehubapi001
   IMAGE_NAME: queuehub-api
-  PROJECT_PATH: GrandeTech.QueueHub.API
-  DOCKERFILE_PATH: GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/Dockerfile
+  PROJECT_PATH: backend/GrandeTech.QueueHub.API
+  DOCKERFILE_PATH: backend/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/Dockerfile
 
 jobs:
   build-and-test:
