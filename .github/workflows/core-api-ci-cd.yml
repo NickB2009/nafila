@@ -89,8 +89,8 @@ jobs:
         tags: |
           ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.image-tag.outputs.tag }}
           ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.image-tag.outputs.latest }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:buildcache
+        cache-to: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:buildcache,mode=max
         
     - name: Set image tag output
       run: echo "IMAGE_TAG=${{ steps.image-tag.outputs.tag }}" >> $GITHUB_ENV
