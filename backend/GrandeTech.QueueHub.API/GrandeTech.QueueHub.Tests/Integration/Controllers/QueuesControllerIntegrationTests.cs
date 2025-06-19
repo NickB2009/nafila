@@ -67,6 +67,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                         
                         // Add services needed for check-in functionality
                         services.AddScoped<CheckInService>();
+                        
+                        // Add services needed for finish functionality
+                        services.AddScoped<FinishService>();
                     });
                 });
         }
@@ -870,6 +873,326 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.IsTrue(contentType == "application/json" || contentType == "text/plain");
             var responseText = await checkInResponse.Content.ReadAsStringAsync();
             Assert.IsTrue(responseText.Contains("Queue entry ID is required."));
+        }
+
+        // UC-FINISH: Complete service integration tests
+        [TestMethod]
+        public async Task Finish_ValidRequest_ReturnsSuccess()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            // Join queue as client
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "John Doe",
+                IsAnonymous = true
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            // Call next as barber
+            var callNextRequest = new CallNextRequest
+            {
+                StaffMemberId = Guid.NewGuid().ToString()
+            };
+
+            var callNextResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/call-next", callNextRequest);
+            var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
+
+            // Check in the customer
+            var checkInRequest = new CheckInRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId
+            };
+
+            var checkInResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/check-in", checkInRequest);
+            var checkInResult = await checkInResponse.Content.ReadFromJsonAsync<CheckInResult>();
+
+            // Now finish the service
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId,
+                ServiceDurationMinutes = 30,
+                Notes = "Great haircut, customer satisfied"
+            };
+
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
+            var finishResult = await finishResponse.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.OK, finishResponse.StatusCode);
+            Assert.IsNotNull(finishResult);
+            Assert.IsTrue(finishResult.Success);
+            Assert.AreEqual(callNextResult.QueueEntryId, finishResult.QueueEntryId);
+            Assert.AreEqual("John Doe", finishResult.CustomerName);
+            Assert.AreEqual(30, finishResult.ServiceDurationMinutes);
+            Assert.IsNotNull(finishResult.CompletedAt);
+        }
+
+        [TestMethod]
+        public async Task Finish_NotCheckedInCustomer_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            // Join queue as client
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "John Doe",
+                IsAnonymous = true
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            // Call next as barber
+            var callNextRequest = new CallNextRequest
+            {
+                StaffMemberId = Guid.NewGuid().ToString()
+            };
+
+            var callNextResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/call-next", callNextRequest);
+            var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
+
+            // Try to finish without checking in first
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId,
+                ServiceDurationMinutes = 30
+            };
+
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
+            var finishResult = await finishResponse.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
+            Assert.IsFalse(finishResult.Success);
+            Assert.IsTrue(finishResult.Errors.Any(e => e.Contains("Cannot complete service for a customer with status")));
+        }
+
+        [TestMethod]
+        public async Task Finish_InvalidQueueEntryId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = "invalid-guid",
+                ServiceDurationMinutes = 30
+            };
+
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
+            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Finish_NonExistentQueueEntry_ReturnsNotFound()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            var nonExistentEntryId = Guid.NewGuid();
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = nonExistentEntryId.ToString(),
+                ServiceDurationMinutes = 30
+            };
+
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
+            Assert.AreEqual(HttpStatusCode.NotFound, finishResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Finish_WithoutAuthentication_ReturnsUnauthorized()
+        {
+            var client = _factory.CreateClient();
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = Guid.NewGuid().ToString(),
+                ServiceDurationMinutes = 30
+            };
+
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{Guid.NewGuid()}/finish", finishRequest);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, finishResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Finish_EmptyQueueEntryId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = "", // Empty queue entry ID
+                ServiceDurationMinutes = 30
+            };
+
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
+            var contentType = finishResponse.Content.Headers.ContentType?.MediaType;
+            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
+            Assert.IsTrue(contentType == "application/json" || contentType == "text/plain");
+            var responseText = await finishResponse.Content.ReadAsStringAsync();
+            Assert.IsTrue(responseText.Contains("Queue entry ID is required."));
+        }
+
+        [TestMethod]
+        public async Task Finish_InvalidServiceDuration_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            // Join queue as client
+            var joinRequest = new JoinQueueRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                CustomerName = "John Doe",
+                IsAnonymous = true
+            };
+
+            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
+
+            // Call next as barber
+            var callNextRequest = new CallNextRequest
+            {
+                StaffMemberId = Guid.NewGuid().ToString()
+            };
+
+            var callNextResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/call-next", callNextRequest);
+            var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
+
+            // Check in the customer
+            var checkInRequest = new CheckInRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId
+            };
+
+            var checkInResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/check-in", checkInRequest);
+
+            // Try to finish with invalid service duration
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = callNextResult.QueueEntryId,
+                ServiceDurationMinutes = -5 // Invalid negative duration
+            };
+
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
+            
+            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
+            
+            var contentType = finishResponse.Content.Headers.ContentType?.MediaType;
+            if (contentType == "application/json")
+            {
+                var finishResult = await finishResponse.Content.ReadFromJsonAsync<FinishResult>();
+                Assert.IsFalse(finishResult.Success);
+                Assert.IsTrue(finishResult.FieldErrors.ContainsKey("ServiceDurationMinutes"));
+            }
+            else
+            {
+                // Handle plain text response
+                var responseText = await finishResponse.Content.ReadAsStringAsync();
+                Assert.IsTrue(responseText.Contains("Service duration must be greater than 0 minutes"));
+            }
         }
 
         private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)

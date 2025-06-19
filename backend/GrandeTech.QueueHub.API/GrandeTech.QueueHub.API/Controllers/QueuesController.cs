@@ -287,5 +287,98 @@ namespace GrandeTech.QueueHub.API.Controllers
                 return BadRequest(result);
             }
         }
+
+        [HttpPost("{id}/finish")]
+        [RequireBarber] // Only barbers can complete services
+        public async Task<IActionResult> Finish(
+            string id,
+            [FromBody] FinishRequest request,
+            CancellationToken cancellationToken)
+        {
+            // Validate queue id
+            if (!Guid.TryParse(id, out var queueId))
+                return BadRequest("Invalid queue id.");
+
+            // Validate queue entry id
+            if (string.IsNullOrWhiteSpace(request.QueueEntryId))
+                return BadRequest("Queue entry ID is required.");
+
+            if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
+                return BadRequest("Invalid queue entry ID format.");
+
+            // Validate service duration
+            if (request.ServiceDurationMinutes <= 0)
+                return BadRequest("Service duration must be greater than 0 minutes.");
+
+            // Get user id
+            var userId = User?.Identity?.IsAuthenticated == true
+                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                : "anonymous";
+
+            // Get queue
+            var queue = await _queueRepository.GetByIdAsync(queueId, cancellationToken);
+            if (queue == null)
+                return NotFound();
+
+            try
+            {
+                // Find the queue entry
+                var queueEntry = queue.Entries.FirstOrDefault(e => e.Id == queueEntryId);
+                if (queueEntry == null)
+                    return NotFound();
+
+                // Complete the service using domain logic
+                queueEntry.Complete(request.ServiceDurationMinutes);
+                
+                // Update notes if provided
+                if (!string.IsNullOrWhiteSpace(request.Notes))
+                {
+                    queueEntry.UpdateNotes(request.Notes);
+                }
+
+                // Update queue in repository
+                await _queueRepository.UpdateAsync(queue, cancellationToken);
+
+                // Return success result
+                var result = new FinishResult
+                {
+                    Success = true,
+                    QueueEntryId = queueEntry.Id.ToString(),
+                    CustomerName = queueEntry.CustomerName,
+                    ServiceDurationMinutes = queueEntry.ServiceDurationMinutes ?? 0,
+                    CompletedAt = queueEntry.CompletedAt,
+                    Notes = queueEntry.Notes
+                };
+
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                var result = new FinishResult
+                {
+                    Success = false,
+                    Errors = new List<string> { ex.Message }
+                };
+                return BadRequest(result);
+            }
+            catch (ArgumentException ex)
+            {
+                var result = new FinishResult
+                {
+                    Success = false,
+                    FieldErrors = new Dictionary<string, string> { { "ServiceDurationMinutes", ex.Message } }
+                };
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                var result = new FinishResult
+                {
+                    Success = false,
+                    Errors = new List<string> { $"An error occurred while completing service: {ex.Message}" }
+                };
+                return BadRequest(result);
+            }
+        }
     }
 } 
