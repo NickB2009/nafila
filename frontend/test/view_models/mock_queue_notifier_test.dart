@@ -10,14 +10,25 @@ void main() {
       notifier = MockQueueNotifier();
     });
 
-    test('initial state is correct', () {
-      expect(notifier.entries, isNotEmpty);
+    test('initial state is loading', () {
+      expect(notifier.isLoading, isTrue);
+      expect(notifier.entries, isEmpty);
+    });
+
+    test('mock data loads after delay', () async {
+      // Wait for mock data to load (100ms delay + buffer)
+      await Future.delayed(const Duration(milliseconds: 200));
+
       expect(notifier.isLoading, isFalse);
+      expect(notifier.entries, isNotEmpty);
       expect(notifier.waitingCount, greaterThan(0));
       expect(notifier.inServiceCount, greaterThan(0));
     });
 
-    test('addToQueue adds new entry correctly', () {
+    test('addToQueue adds new entry correctly', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final initialCount = notifier.entries.length;
       final initialWaitingCount = notifier.waitingCount;
 
@@ -32,7 +43,10 @@ void main() {
       expect(newEntry.position, equals(initialWaitingCount + 1));
     });
 
-    test('updateStatus changes entry status correctly', () {
+    test('updateStatus changes entry status correctly', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final entry = notifier.entries.first;
       final initialStatus = entry.status;
 
@@ -43,7 +57,10 @@ void main() {
       expect(updatedEntry.status, isNot(equals(initialStatus)));
     });
 
-    test('removeFromQueue removes entry correctly', () {
+    test('removeFromQueue removes entry correctly', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final initialCount = notifier.entries.length;
       final entryToRemove = notifier.entries.first;
 
@@ -53,7 +70,10 @@ void main() {
       expect(notifier.entries.any((e) => e.id == entryToRemove.id), isFalse);
     });
 
-    test('updatePositions works correctly when status changes', () {
+    test('updatePositions works correctly when status changes', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       // Get all waiting entries
       final waitingEntries = notifier.entries
           .where((e) => e.status == QueueStatus.waiting)
@@ -81,7 +101,10 @@ void main() {
       }
     });
 
-    test('waitingCount returns correct count', () {
+    test('waitingCount returns correct count', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final actualWaitingCount = notifier.entries
           .where((e) => e.status == QueueStatus.waiting)
           .length;
@@ -89,7 +112,10 @@ void main() {
       expect(notifier.waitingCount, equals(actualWaitingCount));
     });
 
-    test('inServiceCount returns correct count', () {
+    test('inServiceCount returns correct count', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final actualInServiceCount = notifier.entries
           .where((e) => e.status == QueueStatus.inService)
           .length;
@@ -97,7 +123,10 @@ void main() {
       expect(notifier.inServiceCount, equals(actualInServiceCount));
     });
 
-    test('refresh reloads mock data', () {
+    test('refresh reloads mock data', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final initialEntries = List<QueueEntry>.from(notifier.entries);
       
       notifier.refresh();
@@ -106,7 +135,10 @@ void main() {
       expect(notifier.entries.length, equals(initialEntries.length));
     });
 
-    test('notifyListeners is called when state changes', () {
+    test('notifyListeners is called when state changes', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       var listenerCalled = false;
       
       notifier.addListener(() {
@@ -117,7 +149,10 @@ void main() {
       expect(listenerCalled, isTrue);
     });
 
-    test('updateStatus with invalid id does nothing', () {
+    test('updateStatus with invalid id does nothing', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final initialEntries = List<QueueEntry>.from(notifier.entries);
       
       notifier.updateStatus('invalid-id', QueueStatus.completed);
@@ -125,7 +160,10 @@ void main() {
       expect(notifier.entries, equals(initialEntries));
     });
 
-    test('removeFromQueue with invalid id does nothing', () {
+    test('removeFromQueue with invalid id does nothing', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       final initialEntries = List<QueueEntry>.from(notifier.entries);
       
       notifier.removeFromQueue('invalid-id');
@@ -133,7 +171,10 @@ void main() {
       expect(notifier.entries, equals(initialEntries));
     });
 
-    test('entries are sorted correctly by status and position', () {
+    test('entries are sorted correctly by status and position', () async {
+      // Wait for initial data to load
+      await Future.delayed(const Duration(milliseconds: 200));
+      
       // Add a new entry to ensure we have multiple waiting entries
       notifier.addToQueue('New User');
 

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'queue_status_screen.dart';
 
 class CheckInSuccessScreen extends StatefulWidget {
-  const CheckInSuccessScreen({super.key});
+  final bool delayNavigation;
+  const CheckInSuccessScreen({super.key, this.delayNavigation = true});
 
   @override
   State<CheckInSuccessScreen> createState() => _CheckInSuccessScreenState();
@@ -12,13 +13,15 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const QueueStatusScreen()),
-        );
-      }
-    });
+    if (widget.delayNavigation) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const QueueStatusScreen()),
+          );
+        }
+      });
+    }
   }
 
   @override

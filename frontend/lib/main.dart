@@ -54,6 +54,9 @@ class MyApp extends StatelessWidget {
           Locale('en', ''),   // English (default)
           // Add more if you want
         ],
+        // Performance optimizations
+        showPerformanceOverlay: false,
+        showSemanticsDebugger: false,
       ),
     );
   }
