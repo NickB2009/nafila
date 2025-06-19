@@ -16,7 +16,7 @@ namespace GrandeTech.QueueHub.API.Application.ServicesOffered
         public AddServiceOfferedService(IServicesOfferedRepository serviceTypeRepository, ILocationRepository locationRepo)
         {
             _serviceTypeRepository = serviceTypeRepository ?? throw new ArgumentNullException(nameof(serviceTypeRepository));
-            _locationRepo = locationRepo;
+            _locationRepo = locationRepo ?? throw new ArgumentNullException(nameof(locationRepo));
         }
 
         public async Task<AddServiceOfferedResult> AddServiceTypeAsync(AddServiceOfferedRequest request, string userId, CancellationToken cancellationToken)
