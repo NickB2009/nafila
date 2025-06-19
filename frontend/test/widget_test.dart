@@ -7,26 +7,26 @@ import 'package:eutonafila_frontend/ui/view_models/mock_queue_notifier.dart';
 
 void main() {
   group('Eutonafila App Tests', () {
-    testWidgets('App loads and displays queue screen',
+    testWidgets('App loads and displays salon finder screen',
         (WidgetTester tester) async {
       // Build our app and trigger a frame.
-      await tester.pumpWidget(const EutonautilaApp());
+      await tester.pumpWidget(const MyApp());
 
       // Wait for the async timer to complete and pump again
       await tester.pumpAndSettle();
 
       // Verify that the app bar is displayed
-      expect(find.text('Queue Management'), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
 
-      // Verify that the refresh button is present
-      expect(find.byIcon(Icons.refresh), findsOneWidget);
+      // Verify that the TV dashboard button is present
+      expect(find.byIcon(Icons.tv), findsOneWidget);
 
-      // Verify that the floating action button is present
-      expect(find.byIcon(Icons.add), findsOneWidget);
+      // Verify that the notifications button is present
+      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
     });
     testWidgets('Loading state is displayed initially',
         (WidgetTester tester) async {
-      await tester.pumpWidget(const EutonautilaApp());
+      await tester.pumpWidget(const MyApp());
 
       // Should show loading indicator initially
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -34,9 +34,9 @@ void main() {
       // Wait for the async operations to complete
       await tester.pumpAndSettle();
     });
-    testWidgets('Queue entries are displayed after loading',
+    testWidgets('Salon finder content is displayed after loading',
         (WidgetTester tester) async {
-      await tester.pumpWidget(const EutonautilaApp());
+      await tester.pumpWidget(const MyApp());
 
       // Wait for the mock data to load
       await tester.pumpAndSettle();
@@ -44,44 +44,37 @@ void main() {
       // Should no longer show loading indicator
       expect(find.byType(CircularProgressIndicator), findsNothing);
 
-      // Should show queue entries
-      expect(find.text('John Doe'), findsOneWidget);
-      expect(find.text('Jane Smith'), findsOneWidget);
-      expect(find.text('Bob Johnson'), findsOneWidget);
+      // Should show salon finder content
+      expect(find.text('Olá, Rommel!'), findsOneWidget);
+      expect(find.text('Faça cada dia'), findsOneWidget);
     });
-    testWidgets('Add person dialog opens when FAB is tapped',
+    testWidgets('TV dashboard navigation works',
         (WidgetTester tester) async {
-      await tester.pumpWidget(const EutonautilaApp());
+      await tester.pumpWidget(const MyApp());
 
       // Wait for loading to complete
       await tester.pumpAndSettle();
 
-      // Tap the floating action button
-      await tester.tap(find.byIcon(Icons.add));
+      // Tap the TV dashboard button
+      await tester.tap(find.byIcon(Icons.tv));
       await tester.pumpAndSettle();
 
-      // Should show the add person dialog
-      expect(find.text('Add Person to Queue'), findsOneWidget);
-      expect(find.text('Name'), findsOneWidget);
-      expect(find.text('Cancel'), findsOneWidget);
-      expect(find.text('Add'), findsOneWidget);
+      // Should navigate to TV dashboard
+      expect(find.text('TV Dashboard'), findsOneWidget);
     });
-    testWidgets('Queue stats are displayed correctly',
+    testWidgets('Notifications screen navigation works',
         (WidgetTester tester) async {
-      await tester.pumpWidget(const EutonautilaApp());
+      await tester.pumpWidget(const MyApp());
 
       // Wait for loading to complete
       await tester.pumpAndSettle();
 
-      // Should show queue statistics labels - be more specific to avoid finding status text in queue entries
-      expect(find.widgetWithText(Container, 'Waiting'), findsWidgets);
-      expect(find.widgetWithText(Container, 'In Service'), findsWidgets);
-      expect(find.widgetWithText(Container, 'Total'), findsWidgets);
+      // Tap the notifications button
+      await tester.tap(find.byIcon(Icons.notifications_outlined));
+      await tester.pumpAndSettle();
 
-      // Should show correct counts (based on mock data)
-      expect(find.text('3'), findsOneWidget); // Waiting count
-      expect(find.text('1'), findsOneWidget); // In service count
-      expect(find.text('5'), findsOneWidget); // Total count
+      // Should navigate to notifications screen
+      expect(find.text('Notificações'), findsOneWidget);
     });
   });
 

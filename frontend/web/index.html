@@ -87,7 +87,7 @@
       const loading = document.getElementById('loading');
 
       try {
-        // Initialize Flutter
+        // Initialize Flutter using the stable method
         await _flutter.loader.loadEntrypoint({
           serviceWorker: { serviceWorkerVersion: serviceWorkerVersion },
           onEntrypointLoaded: async function(engineInitializer) {
