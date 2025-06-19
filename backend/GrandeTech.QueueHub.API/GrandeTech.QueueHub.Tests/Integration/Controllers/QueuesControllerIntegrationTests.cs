@@ -865,25 +865,11 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             };
 
             var checkInResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/check-in", checkInRequest);
-            
-            // Check if we got a JSON response or an HTML error page
             var contentType = checkInResponse.Content.Headers.ContentType?.MediaType;
-            if (contentType == "application/json")
-            {
-                var checkInResult = await checkInResponse.Content.ReadFromJsonAsync<CheckInResult>();
-                Assert.AreEqual(HttpStatusCode.BadRequest, checkInResponse.StatusCode);
-                Assert.IsFalse(checkInResult.Success);
-                Assert.IsTrue(checkInResult.FieldErrors.ContainsKey("QueueEntryId"));
-            }
-            else
-            {
-                // Authorization failed, likely due to location context mismatch
-                // This is expected behavior for the current authorization setup
-                System.Diagnostics.Debug.WriteLine($"CheckIn authorization failed with status: {checkInResponse.StatusCode}");
-                Assert.IsTrue(checkInResponse.StatusCode == HttpStatusCode.Forbidden || 
-                             checkInResponse.StatusCode == HttpStatusCode.Unauthorized,
-                             $"Expected Forbidden or Unauthorized, but got {checkInResponse.StatusCode}");
-            }
+            Assert.AreEqual(HttpStatusCode.BadRequest, checkInResponse.StatusCode);
+            Assert.IsTrue(contentType == "application/json" || contentType == "text/plain");
+            var responseText = await checkInResponse.Content.ReadAsStringAsync();
+            Assert.IsTrue(responseText.Contains("Queue entry ID is required."));
         }
 
         private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)
