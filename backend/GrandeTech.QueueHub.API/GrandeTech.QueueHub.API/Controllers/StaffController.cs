@@ -4,6 +4,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GrandeTech.QueueHub.API.Application.Staff;
+using GrandeTech.QueueHub.API.Infrastructure.Authorization;
+using GrandeTech.QueueHub.API.Domain.Users;
 
 namespace GrandeTech.QueueHub.API.Controllers
 {
@@ -17,15 +19,13 @@ namespace GrandeTech.QueueHub.API.Controllers
         public StaffController(AddBarberService addBarberService)
         {
             _addBarberService = addBarberService;
-        }
-        [HttpPost("barbers")]
-        [Authorize(Roles = "Admin,Owner")]
+        }        [HttpPost("barbers")]
+        [RequireOwner] // UC-ADDBARBER: Admin/Owner can add barbers
         public async Task<ActionResult<AddBarberResult>> AddBarber(
             [FromBody] AddBarberRequest request,
-            CancellationToken cancellationToken)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+            CancellationToken cancellationToken)        {
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             var result = await _addBarberService.AddBarberAsync(request, userId, userRole, cancellationToken);
 

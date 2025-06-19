@@ -497,8 +497,6 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
             var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
-            Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
-
             var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(loginResponseContent, new JsonSerializerOptions
             {
@@ -506,10 +504,45 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             });
 
             Assert.IsNotNull(loginResult);
-            Assert.IsTrue(loginResult.Success);
-            Assert.IsNotNull(loginResult.Token);
 
-            return loginResult.Token;
+            // Handle two-factor authentication for admin users
+            if (loginResult.RequiresTwoFactor)
+            {
+                Assert.IsNotNull(loginResult.TwoFactorToken);
+                
+                // Verify 2FA
+                var verifyRequest = new VerifyTwoFactorRequest
+                {
+                    Username = username,
+                    TwoFactorCode = "123456", // In a real implementation, this would be validated
+                    TwoFactorToken = loginResult.TwoFactorToken
+                };
+
+                var verifyJson = JsonSerializer.Serialize(verifyRequest);
+                var verifyContent = new StringContent(verifyJson, Encoding.UTF8, "application/json");
+
+                var verifyResponse = await _client.PostAsync("/api/auth/verify-2fa", verifyContent);
+                Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+                var verifyResponseContent = await verifyResponse.Content.ReadAsStringAsync();
+                var verifyResult = JsonSerializer.Deserialize<LoginResult>(verifyResponseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                Assert.IsNotNull(verifyResult);
+                Assert.IsTrue(verifyResult.Success);
+                Assert.IsNotNull(verifyResult.Token);
+                return verifyResult.Token;
+            }
+            else
+            {
+                // Regular user login
+                Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
+                Assert.IsTrue(loginResult.Success);
+                Assert.IsNotNull(loginResult.Token);
+                return loginResult.Token;
+            }
         }        private async Task<string> CreateLocationAsync()
         {
             Assert.IsNotNull(_factory);

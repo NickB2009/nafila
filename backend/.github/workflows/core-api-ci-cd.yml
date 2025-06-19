@@ -1,0 +1,151 @@
+name: Core API CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'GrandeTech.QueueHub.API/**'
+      - '.github/workflows/core-api-ci-cd.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'GrandeTech.QueueHub.API/**'
+      - '.github/workflows/core-api-ci-cd.yml'
+
+env:
+  PROJECT_NAME: queuehub
+  ENVIRONMENT: p
+  APP_SERVICE_NAME: app-p-queuehub-api-001
+  RESOURCE_GROUP: rg-p-queuehub-core-001
+  ACR_NAME: acrqueuehubapi001
+  IMAGE_NAME: queuehub-api
+  PROJECT_PATH: GrandeTech.QueueHub.API
+  DOCKERFILE_PATH: GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/Dockerfile
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: |
+        dotnet restore ${{ env.PROJECT_PATH }}/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj
+        
+    - name: Build
+      run: |
+        dotnet build ${{ env.PROJECT_PATH }}/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj --no-restore --configuration Release
+        
+    - name: Run tests
+      run: |
+        dotnet test ${{ env.PROJECT_PATH }}/GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj --no-build --verbosity normal --configuration Release
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: ${{ env.PROJECT_PATH }}/GrandeTech.QueueHub.Tests/TestResults/
+        retention-days: 30
+
+  build-and-push-image:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Login to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.ACR_NAME }}.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+        
+    - name: Generate image tag
+      id: image-tag
+      run: |
+        echo "tag=$(date +'%Y%m%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "latest=latest" >> $GITHUB_OUTPUT
+        
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ${{ env.DOCKERFILE_PATH }}
+        push: true
+        tags: |
+          ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.image-tag.outputs.tag }}
+          ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.image-tag.outputs.latest }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Set image tag output
+      run: echo "IMAGE_TAG=${{ steps.image-tag.outputs.tag }}" >> $GITHUB_ENV
+
+  deploy-to-azure:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: Set App Service container image
+      run: |
+        az webapp config container set \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --container-image-name ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          
+    - name: Restart App Service
+      run: |
+        az webapp restart \
+          --name ${{ env.APP_SERVICE_NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }}
+          
+    - name: Wait for deployment
+      run: |
+        echo "Waiting for App Service to be ready..."
+        sleep 30
+        
+    - name: Health check
+      run: |
+        # Wait for the app to be fully ready
+        for i in {1..10}; do
+          if curl -f https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net/health 2>/dev/null; then
+            echo "Application is healthy!"
+            break
+          fi
+          echo "Attempt $i: Application not ready yet, waiting..."
+          sleep 30
+        done
+        
+    - name: Deployment summary
+      run: |
+        echo "## 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** Production" >> $GITHUB_STEP_SUMMARY
+        echo "**App Service:** ${{ env.APP_SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Image Tag:** ${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployed At:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+        echo "**Application URL:** https://${{ env.APP_SERVICE_NAME }}.azurewebsites.net" >> $GITHUB_STEP_SUMMARY 

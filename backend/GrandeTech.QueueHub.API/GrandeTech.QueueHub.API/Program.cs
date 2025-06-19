@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using GrandeTech.QueueHub.API.Application.Auth;
+using GrandeTech.QueueHub.API.Application.Queues;
 using GrandeTech.QueueHub.API.Domain.Users;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
-using GrandeTech.QueueHub.API.Domain.Services;
+using GrandeTech.QueueHub.API.Application.ServicesOffered;
+using GrandeTech.QueueHub.API.Domain.ServicesOffered;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +71,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        // Disable automatic claim mapping to keep original JWT claim types (e.g. "role", "sub")
+        options.MapInboundClaims = false;
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -81,6 +86,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Add tenant-aware authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequirePlatformAdmin", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("PlatformAdmin", requireOrganizationContext: false)));
+    
+    options.AddPolicy("RequireAdmin", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Admin")));
+    
+    options.AddPolicy("RequireOwner", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Owner")));
+    
+    options.AddPolicy("RequireBarber", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Barber", requireLocationContext: true)));
+    
+    options.AddPolicy("RequireClient", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("Client", requireOrganizationContext: false)));
+    
+    options.AddPolicy("RequireServiceAccount", policy =>
+        policy.Requirements.Add(new GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantRequirement("ServiceAccount", requireOrganizationContext: false)));
+});
+
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantAuthorizationHandler>();
+
+// Add tenant context service
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Infrastructure.Authorization.ITenantContextService, GrandeTech.QueueHub.API.Infrastructure.Authorization.TenantContextService>();
+
 // Register services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
@@ -88,14 +121,14 @@ builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
 // Register application services
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Locations.CreateLocationService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.AddBarberService>();
-builder.Services.AddScoped<AddServiceTypeService>();
+builder.Services.AddScoped<AddServiceOfferedService>();
 
 // Register organization services
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Organizations.CreateOrganizationService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Organizations.OrganizationService>();
 
 // Register repositories
-builder.Services.AddScoped<IServiceTypeRepository, BogusServiceTypeRepository>();
+builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
 builder.Services.AddScoped<AddQueueService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 

@@ -34,23 +34,15 @@ try {
 # Build the Docker image
 Write-Host "Building Docker image..." -ForegroundColor Yellow
 try {
-    # Change to the solution root directory
-    Push-Location $projectPath
-    try {
-        # Build from the solution root with the correct context
-        docker build -t $fullImageName -f "GrandeTech.QueueHub.API/Dockerfile" .
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to build Docker image"
-        }
-    }
-    finally {
-        # Always return to the original directory
-        Pop-Location
+    # Build from the solution root with the correct context
+    docker build -t $fullImageName -f "$projectPath/GrandeTech.QueueHub.API/Dockerfile" .
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to build Docker image"
     }
 } catch {
     Write-Host "Error: Failed to build Docker image. Please check if Docker is running and the Dockerfile exists." -ForegroundColor Red
     Write-Host "Current directory: $(Get-Location)" -ForegroundColor Yellow
-    Write-Host "Dockerfile path: $dockerfilePath" -ForegroundColor Yellow
+    Write-Host "Dockerfile path: $projectPath/GrandeTech.QueueHub.API/Dockerfile" -ForegroundColor Yellow
     exit 1
 }
 

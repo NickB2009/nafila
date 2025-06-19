@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using GrandeTech.QueueHub.API.Application.Auth;
-using GrandeTech.QueueHub.API.Application.Locations;
 using GrandeTech.QueueHub.API.Application.Locations.Requests;
 using GrandeTech.QueueHub.API.Application.Locations.Results;
 using GrandeTech.QueueHub.API.Domain.Users;
@@ -19,182 +18,528 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 
 namespace GrandeTech.QueueHub.Tests.Integration.Controllers
 {
     [TestClass]
     public class LocationsControllerIntegrationTests
     {
-        private WebApplicationFactory<Program>? _factory;
-        private HttpClient? _client;
+        private static WebApplicationFactory<Program> _factory = null!;
 
-        [TestInitialize]
-        public void Setup()
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
         {
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
+                    builder.UseEnvironment("Testing");
                     builder.ConfigureAppConfiguration((context, config) =>
                     {
-                        config.AddInMemoryCollection(new[]
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
                         {
-                            new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "InMemory"),
-                            new KeyValuePair<string, string?>("Jwt:Key", "ThisIsAVeryLongSecretKeyThatShouldBeAtLeast256BitsLong12345678901234567890"),
-                            new KeyValuePair<string, string?>("Jwt:Issuer", "TestIssuer"),
-                            new KeyValuePair<string, string?>("Jwt:Audience", "TestAudience")
+                            ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
+                            ["Jwt:Issuer"] = "GrandeTech.QueueHub.API.Test",
+                            ["Jwt:Audience"] = "GrandeTech.QueueHub.API.Test"
                         });
                     });
+                    builder.ConfigureServices(services =>
+                    {
+                        // Ensure we're using the Bogus repository for testing
+                        services.AddScoped<IUserRepository, BogusUserRepository>();
+                        services.AddScoped<AuthService>();
+                    });
                 });
-            _client = _factory.CreateClient();
         }
 
-        [TestCleanup]
-        public void Cleanup()
+        [ClassCleanup]
+        public static void ClassCleanup()
         {
-            _client?.Dispose();
-            _factory?.Dispose();
+            _factory.Dispose();
         }
 
         [TestMethod]
-        public async Task CreateLocation_WithValidData_ReturnsSuccessWithLocationSlug()
+        public async Task AddLocation_AsAdmin_ReturnsCreated()
         {
-            // Arrange
-            Assert.IsNotNull(_client);
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            var createRequest = new CreateLocationRequest
+            var request = new CreateLocationRequest
             {
-                BusinessName = "Barbearia do João",
-                ContactEmail = "contato@barbeariajao.com.br",
-                ContactPhone = "+551133334444",
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
                 Address = new LocationAddressRequest
                 {
-                    Street = "Rua das Flores, 123",
-                    City = "São Paulo",
-                    State = "SP",
-                    PostalCode = "01234-567",
-                    Country = "Brasil"
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
                 },
                 BusinessHours = new Dictionary<string, string>
                 {
-                    { "Monday", "08:00-18:00" },
-                    { "Tuesday", "08:00-18:00" },
-                    { "Wednesday", "08:00-18:00" },
-                    { "Thursday", "08:00-18:00" },
-                    { "Friday", "08:00-18:00" },
-                    { "Saturday", "08:00-16:00" }
+                    ["Monday"] = "08:00-18:00"
                 },
-                MaxQueueCapacity = 20
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
             };
 
-            var json = JsonSerializer.Serialize(createRequest);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsJsonAsync("/api/locations", request);
+            var result = await response.Content.ReadFromJsonAsync<CreateLocationResult>();
 
-            // Act
-            var response = await _client.PostAsync("/api/locations", content);
-
-            // Assert
             Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var result = JsonSerializer.Deserialize<CreateLocationResult>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.LocationId);
             Assert.IsNotNull(result.LocationSlug);
-            Assert.AreEqual("barbearia-do-joao-sp", result.LocationSlug);
-            Assert.AreEqual("Barbearia do João", result.BusinessName);
+            Assert.AreEqual(request.BusinessName, result.BusinessName);
+            Assert.IsFalse(result.Errors.Any());
+            Assert.IsFalse(result.FieldErrors.Any());
         }
 
         [TestMethod]
-        public async Task CreateLocation_WithInvalidData_ReturnsBadRequestWithFieldErrors()
+        public async Task AddLocation_AsUser_ReturnsForbidden()
         {
-            // Arrange
-            Assert.IsNotNull(_client);
+            var client = _factory.CreateClient();
+            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            var createRequest = new CreateLocationRequest
+            var request = new CreateLocationRequest
             {
-                BusinessName = "",
-                ContactEmail = "invalid-email",
-                ContactPhone = "",
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
                 Address = new LocationAddressRequest
                 {
-                    Street = "",
-                    City = "",
-                    State = "",
-                    PostalCode = "",
-                    Country = ""
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
                 },
-                MaxQueueCapacity = -1
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
             };
 
-            var json = JsonSerializer.Serialize(createRequest);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            // Act
-            var response = await _client.PostAsync("/api/locations", content);
-
-            // Assert
-            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var result = JsonSerializer.Deserialize<CreateLocationResult>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            Assert.IsNotNull(result);
-            Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.Count > 0);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("BusinessName"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("ContactEmail"));
+            var response = await client.PostAsJsonAsync("/api/locations", request);
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task CreateLocation_WithoutAuthentication_ReturnsUnauthorized()
+        public async Task AddLocation_WithoutAuth_ReturnsUnauthorized()
         {
-            // Arrange
-            Assert.IsNotNull(_client);
-
-            var createRequest = new CreateLocationRequest
+            var client = _factory.CreateClient();
+            var request = new CreateLocationRequest
             {
-                BusinessName = "Test Barbershop",
-                ContactEmail = "test@barbershop.com",
-                ContactPhone = "+5511999999999",
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
                 Address = new LocationAddressRequest
                 {
-                    Street = "Test Street, 123",
-                    City = "São Paulo",
-                    State = "SP",
-                    PostalCode = "01234-567",
-                    Country = "Brasil"
-                }
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
             };
 
-            var json = JsonSerializer.Serialize(createRequest);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            // Act
-            var response = await _client.PostAsync("/api/locations", content);
-
-            // Assert
+            var response = await client.PostAsJsonAsync("/api/locations", request);
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
-        private async Task<string> CreateAndAuthenticateUserAsync(string role)
+        [TestMethod]
+        public async Task AddLocation_WithInvalidData_ReturnsBadRequest()
         {
-            Assert.IsNotNull(_client);
-            Assert.IsNotNull(_factory);
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
+            var request = new CreateLocationRequest
+            {
+                BusinessName = "", // Invalid empty name
+                ContactEmail = "invalid-email", // Invalid email format
+                ContactPhone = "", // Invalid empty phone
+                Address = new LocationAddressRequest
+                {
+                    Street = "", // Invalid empty street
+                    City = "", // Invalid empty city
+                    State = "", // Invalid empty state
+                    PostalCode = "", // Invalid empty postal code
+                    Country = "" // Invalid empty country
+                },
+                MaxQueueCapacity = 0 // Invalid capacity
+            };
+
+            var response = await client.PostAsJsonAsync("/api/locations", request);
+            var result = await response.Content.ReadFromJsonAsync<CreateLocationResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.Any());
+            Assert.IsTrue(result.FieldErrors.ContainsKey("BusinessName"));
+            Assert.IsTrue(result.FieldErrors.ContainsKey("ContactEmail"));
+            Assert.IsTrue(result.FieldErrors.ContainsKey("ContactPhone"));
+            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.Street"));
+            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.City"));
+            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.State"));
+            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.Country"));
+            Assert.IsTrue(result.FieldErrors.ContainsKey("MaxQueueCapacity"));
+        }
+
+        [TestMethod]
+        public async Task GetLocation_AsAdmin_ReturnsOk()
+        {
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location
+            var addRequest = new CreateLocationRequest
+            {
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
+                Address = new LocationAddressRequest
+                {
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
+            };
+
+            var addResponse = await client.PostAsJsonAsync("/api/locations", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Then try to get it
+            var getResponse = await client.GetAsync($"/api/locations/{addResult.LocationId}");
+            var getResult = await getResponse.Content.ReadFromJsonAsync<LocationDto>();
+
+            Assert.AreEqual(HttpStatusCode.OK, getResponse.StatusCode);
+            Assert.IsNotNull(getResult);
+            Assert.AreEqual<Guid>(Guid.Parse(addResult.LocationId!), getResult.Id);
+            Assert.AreEqual(addRequest.BusinessName, getResult.BusinessName);
+            Assert.AreEqual(addRequest.Address.Street, getResult.Address.Street);
+            Assert.AreEqual(addRequest.Address.City, getResult.Address.City);
+            Assert.AreEqual(addRequest.Address.State, getResult.Address.State);
+            Assert.AreEqual(addRequest.Address.PostalCode, getResult.Address.PostalCode);
+            Assert.AreEqual(addRequest.Address.Country, getResult.Address.Country);
+            Assert.AreEqual<int>(addRequest.BusinessHours.Count, getResult.BusinessHours.Count);
+            Assert.AreEqual<int>(addRequest.MaxQueueCapacity, getResult.MaxQueueCapacity);
+            Assert.AreEqual(addRequest.Description, getResult.Description);
+        }
+
+        [TestMethod]
+        public async Task GetLocation_AsUser_ReturnsOk()
+        {
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location as admin
+            var addRequest = new CreateLocationRequest
+            {
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
+                Address = new LocationAddressRequest
+                {
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
+            };
+
+            var addResponse = await client.PostAsJsonAsync("/api/locations", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Then try to get it as a regular user
+            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
+
+            var getResponse = await client.GetAsync($"/api/locations/{addResult.LocationId}");
+            var getResult = await getResponse.Content.ReadFromJsonAsync<LocationDto>();
+
+            Assert.AreEqual(HttpStatusCode.OK, getResponse.StatusCode);
+            Assert.IsNotNull(getResult);
+            Assert.AreEqual<Guid>(Guid.Parse(addResult.LocationId!), getResult.Id);
+        }
+
+        [TestMethod]
+        public async Task GetLocation_NonExistingId_ReturnsNotFound()
+        {
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var nonExistingId = Guid.NewGuid();
+            var response = await client.GetAsync($"/api/locations/{nonExistingId}");
+
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UpdateLocation_AsAdmin_ReturnsOk()
+        {
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location
+            var addRequest = new CreateLocationRequest
+            {
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
+                Address = new LocationAddressRequest
+                {
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
+            };
+
+            var addResponse = await client.PostAsJsonAsync("/api/locations", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Then update it
+            var updateRequest = new UpdateLocationRequest
+            {
+                BusinessName = "Updated Location",
+                Address = new LocationAddressRequest
+                {
+                    Street = "456 New St",
+                    City = "New City",
+                    State = "NS",
+                    PostalCode = "54321",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "09:00-19:00"
+                },
+                MaxQueueCapacity = 60,
+                Description = "Updated location description"
+            };
+
+            var updateResponse = await client.PutAsJsonAsync($"/api/locations/{addResult.LocationId}", updateRequest);
+            Assert.AreEqual(HttpStatusCode.OK, updateResponse.StatusCode);
+
+            // Verify the update
+            var getResponse = await client.GetAsync($"/api/locations/{addResult.LocationId}");
+            var getResult = await getResponse.Content.ReadFromJsonAsync<LocationDto>();
+
+            Assert.AreEqual(HttpStatusCode.OK, getResponse.StatusCode);
+            Assert.IsNotNull(getResult);
+            Assert.AreEqual<Guid>(Guid.Parse(addResult.LocationId!), getResult.Id);
+            Assert.AreEqual(updateRequest.BusinessName, getResult.BusinessName);
+            Assert.AreEqual(updateRequest.Address.Street, getResult.Address.Street);
+            Assert.AreEqual(updateRequest.Address.City, getResult.Address.City);
+            Assert.AreEqual(updateRequest.Address.State, getResult.Address.State);
+            Assert.AreEqual(updateRequest.Address.PostalCode, getResult.Address.PostalCode);
+            Assert.AreEqual(updateRequest.Address.Country, getResult.Address.Country);
+            Assert.AreEqual<int>(updateRequest.BusinessHours.Count, getResult.BusinessHours.Count);
+            Assert.AreEqual<int>(updateRequest.MaxQueueCapacity, getResult.MaxQueueCapacity);
+            Assert.AreEqual(updateRequest.Description, getResult.Description);
+        }
+
+        [TestMethod]
+        public async Task UpdateLocation_AsUser_ReturnsForbidden()
+        {
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location as admin
+            var addRequest = new CreateLocationRequest
+            {
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
+                Address = new LocationAddressRequest
+                {
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
+            };
+
+            var addResponse = await client.PostAsJsonAsync("/api/locations", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Try to update as regular user
+            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
+
+            var updateRequest = new UpdateLocationRequest
+            {
+                BusinessName = "Updated Location",
+                Address = new LocationAddressRequest
+                {
+                    Street = "456 New St",
+                    City = "New City",
+                    State = "NS",
+                    PostalCode = "54321",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "09:00-19:00"
+                },
+                MaxQueueCapacity = 60,
+                Description = "Updated location description"
+            };
+
+            var updateResponse = await client.PutAsJsonAsync($"/api/locations/{addResult.LocationId}", updateRequest);
+            Assert.AreEqual(HttpStatusCode.Forbidden, updateResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteLocation_AsAdmin_ReturnsOk()
+        {
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location
+            var addRequest = new CreateLocationRequest
+            {
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
+                Address = new LocationAddressRequest
+                {
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
+            };
+
+            var addResponse = await client.PostAsJsonAsync("/api/locations", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Then delete it
+            var deleteResponse = await client.DeleteAsync($"/api/locations/{addResult.LocationId}");
+            Assert.AreEqual(HttpStatusCode.OK, deleteResponse.StatusCode);
+
+            // Verify it's deleted
+            var getResponse = await client.GetAsync($"/api/locations/{addResult.LocationId}");
+            Assert.AreEqual(HttpStatusCode.NotFound, getResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteLocation_AsUser_ReturnsForbidden()
+        {
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location as admin
+            var addRequest = new CreateLocationRequest
+            {
+                BusinessName = "Test Location",
+                ContactEmail = "test@example.com",
+                ContactPhone = "123-456-7890",
+                Address = new LocationAddressRequest
+                {
+                    Street = "123 Test St",
+                    City = "Test City",
+                    State = "TS",
+                    PostalCode = "12345",
+                    Country = "US"
+                },
+                BusinessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                MaxQueueCapacity = 50,
+                Description = "Test location description"
+            };
+
+            var addResponse = await client.PostAsJsonAsync("/api/locations", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Try to delete as regular user
+            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
+
+            var deleteResponse = await client.DeleteAsync($"/api/locations/{addResult.LocationId}");
+            Assert.AreEqual(HttpStatusCode.Forbidden, deleteResponse.StatusCode);
+        }
+
+        private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)
+        {
             using var scope = _factory.Services.CreateScope();
             var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
@@ -216,14 +561,73 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var loginJson = JsonSerializer.Serialize(loginRequest);
             var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
-            var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
+            var loginResponse = await client.PostAsync("/api/auth/login", loginContent);
             var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(loginResponseContent, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
-            return loginResult?.Token ?? throw new InvalidOperationException("Failed to get authentication token");
+            Assert.IsNotNull(loginResult);
+
+            // Handle two-factor authentication for admin users
+            if (loginResult.RequiresTwoFactor)
+            {
+                Assert.IsNotNull(loginResult.TwoFactorToken);
+                
+                // Verify 2FA
+                var verifyRequest = new VerifyTwoFactorRequest
+                {
+                    Username = username,
+                    TwoFactorCode = "123456", // In a real implementation, this would be validated
+                    TwoFactorToken = loginResult.TwoFactorToken
+                };
+
+                var verifyJson = JsonSerializer.Serialize(verifyRequest);
+                var verifyContent = new StringContent(verifyJson, Encoding.UTF8, "application/json");
+
+                var verifyResponse = await client.PostAsync("/api/auth/verify-2fa", verifyContent);
+                Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+                var verifyResponseContent = await verifyResponse.Content.ReadAsStringAsync();
+                var verifyResult = JsonSerializer.Deserialize<LoginResult>(verifyResponseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                Assert.IsNotNull(verifyResult);
+                Assert.IsTrue(verifyResult.Success);
+                Assert.IsNotNull(verifyResult.Token);
+                return verifyResult.Token;
+            }
+            else
+            {
+                // Regular user login
+                Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
+                Assert.IsTrue(loginResult.Success);
+                Assert.IsNotNull(loginResult.Token);
+                return loginResult.Token;
+            }
+        }
+
+        // DTOs for test deserialization
+        public class UpdateLocationRequest
+        {
+            public string BusinessName { get; set; } = string.Empty;
+            public LocationAddressRequest Address { get; set; } = new LocationAddressRequest();
+            public Dictionary<string, string> BusinessHours { get; set; } = new Dictionary<string, string>();
+            public int MaxQueueCapacity { get; set; }
+            public string Description { get; set; } = string.Empty;
+        }
+
+        public class LocationDto
+        {
+            public Guid Id { get; set; }
+            public string BusinessName { get; set; } = string.Empty;
+            public LocationAddressRequest Address { get; set; } = new LocationAddressRequest();
+            public Dictionary<string, string> BusinessHours { get; set; } = new Dictionary<string, string>();
+            public int MaxQueueCapacity { get; set; }
+            public string Description { get; set; } = string.Empty;
         }
     }
-}
+} 
