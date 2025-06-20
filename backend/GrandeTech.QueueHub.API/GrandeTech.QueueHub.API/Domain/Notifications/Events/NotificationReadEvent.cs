@@ -1,7 +1,7 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Notifications.Events
+namespace Grande.Fila.API.Domain.Notifications.Events
 {
     /// <summary>
     /// Event raised when a notification is read by the recipient

@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GrandeTech.QueueHub.API.Domain.AuditLogs
+namespace Grande.Fila.API.Domain.AuditLogs
 {
     public interface IAuditLogRepository
     {

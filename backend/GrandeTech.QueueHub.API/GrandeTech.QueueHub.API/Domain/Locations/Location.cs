@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.Locations
+namespace Grande.Fila.API.Domain.Locations
 {
     /// <summary>
     /// Represents a location (barbershop) that belongs to an organization

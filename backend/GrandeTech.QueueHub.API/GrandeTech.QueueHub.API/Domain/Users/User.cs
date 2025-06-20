@@ -1,8 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Users
+namespace Grande.Fila.API.Domain.Users
 {
     public class User : BaseEntity, IAggregateRoot
     {

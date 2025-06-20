@@ -1,8 +1,8 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.ServicesOffered
+namespace Grande.Fila.API.Domain.ServicesOffered
 {
     /// <summary>
     /// Represents a type of service (e.g., haircut style) offered by a service provider

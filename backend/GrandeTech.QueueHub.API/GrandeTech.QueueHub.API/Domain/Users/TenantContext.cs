@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GrandeTech.QueueHub.API.Domain.Users
+namespace Grande.Fila.API.Domain.Users
 {
     /// <summary>
     /// Represents tenant-specific claims for JWT tokens

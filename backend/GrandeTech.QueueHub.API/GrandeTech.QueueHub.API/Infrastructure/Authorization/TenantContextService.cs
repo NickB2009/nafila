@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using GrandeTech.QueueHub.API.Domain.Users;
+using Grande.Fila.API.Domain.Users;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Authorization
+namespace Grande.Fila.API.Infrastructure.Authorization
 {
     /// <summary>
     /// Service to provide tenant context throughout the application

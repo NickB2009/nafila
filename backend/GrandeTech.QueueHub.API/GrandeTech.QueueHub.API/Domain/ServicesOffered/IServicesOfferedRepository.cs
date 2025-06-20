@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.ServicesOffered
+namespace Grande.Fila.API.Domain.ServicesOffered
 {
     /// <summary>
     /// Repository interface for ServiceType aggregate root

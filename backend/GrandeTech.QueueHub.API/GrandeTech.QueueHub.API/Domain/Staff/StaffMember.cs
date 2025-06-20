@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.Staff
+namespace Grande.Fila.API.Domain.Staff
 {
     /// <summary>
     /// Represents a staff member (barber) who serves customers

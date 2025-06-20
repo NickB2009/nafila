@@ -1,17 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using GrandeTech.QueueHub.API.Application.Locations;
-using GrandeTech.QueueHub.API.Application.Locations.Requests;
-using GrandeTech.QueueHub.API.Infrastructure.Authorization;
-using GrandeTech.QueueHub.API.Domain.Users;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Application.Locations;
+using Grande.Fila.API.Application.Locations.Requests;
+using Grande.Fila.API.Infrastructure.Authorization;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using System.Collections.Generic;
 using System.Threading;
-using GrandeTech.QueueHub.API.Domain.Locations;
+using Grande.Fila.API.Domain.Locations;
 using Microsoft.AspNetCore.Http;
 
-namespace GrandeTech.QueueHub.API.Controllers;
+namespace Grande.Fila.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

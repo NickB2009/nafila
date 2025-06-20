@@ -1,7 +1,7 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Application.ServicesOffered
+namespace Grande.Fila.API.Application.ServicesOffered
 {
     public class ServicesOfferedDto
     {

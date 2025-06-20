@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Locations;
+using Grande.Fila.API.Domain.Locations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using GrandeTech.QueueHub.API.Application.ServicesOffered;
-using GrandeTech.QueueHub.API.Domain.ServicesOffered;
+using Grande.Fila.API.Application.ServicesOffered;
+using Grande.Fila.API.Domain.ServicesOffered;
 
 namespace GrandeTech.QueueHub.Tests.Application
 {

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Subscriptions;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Subscriptions;
 
-namespace GrandeTech.QueueHub.API.Domain.Subscriptions
+namespace Grande.Fila.API.Domain.Subscriptions
 {
     /// <summary>
     /// Repository interface for SubscriptionPlan aggregate root

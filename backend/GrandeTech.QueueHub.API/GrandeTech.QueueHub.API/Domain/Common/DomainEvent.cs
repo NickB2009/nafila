@@ -1,6 +1,6 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Domain.Common
+namespace Grande.Fila.API.Domain.Common
 {
     /// <summary>
     /// Base class for all domain events

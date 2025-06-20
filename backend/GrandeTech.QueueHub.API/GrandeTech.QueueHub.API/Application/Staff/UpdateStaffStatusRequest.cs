@@ -1,4 +1,4 @@
-namespace GrandeTech.QueueHub.API.Application.Staff
+namespace Grande.Fila.API.Application.Staff
 {
     /// <summary>
     /// Request DTO for UC-STAFFSTATUS: Barber changes status use case

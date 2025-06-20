@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GrandeTech.QueueHub.API.Application.Staff
+namespace Grande.Fila.API.Application.Staff
 {
     public class AddBarberRequest
     {

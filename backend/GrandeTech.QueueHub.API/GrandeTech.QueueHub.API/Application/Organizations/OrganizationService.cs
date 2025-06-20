@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Organizations;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
-using GrandeTech.QueueHub.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Organizations;
+using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.AuditLogs;
 
-namespace GrandeTech.QueueHub.API.Application.Organizations
+namespace Grande.Fila.API.Application.Organizations
 {
     public class OrganizationService
     {

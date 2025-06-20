@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GrandeTech.QueueHub.API.Application.Staff
+namespace Grande.Fila.API.Application.Staff
 {
     /// <summary>
     /// Result DTO for UC-STAFFSTATUS: Barber changes status use case

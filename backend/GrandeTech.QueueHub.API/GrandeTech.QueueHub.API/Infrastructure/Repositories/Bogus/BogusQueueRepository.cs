@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Queues;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Queues;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
+namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
 {
     public class BogusQueueRepository : BogusBaseRepository<Queue>, IQueueRepository
     {

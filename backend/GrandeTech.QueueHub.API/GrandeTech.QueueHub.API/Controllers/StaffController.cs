@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using GrandeTech.QueueHub.API.Application.Staff;
-using GrandeTech.QueueHub.API.Infrastructure.Authorization;
-using GrandeTech.QueueHub.API.Domain.Users;
+using Grande.Fila.API.Application.Staff;
+using Grande.Fila.API.Infrastructure.Authorization;
+using Grande.Fila.API.Domain.Users;
 
-namespace GrandeTech.QueueHub.API.Controllers
+namespace Grande.Fila.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

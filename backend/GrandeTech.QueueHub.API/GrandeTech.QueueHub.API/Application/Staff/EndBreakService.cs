@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Staff;
+using Grande.Fila.API.Domain.Staff;
 
-namespace GrandeTech.QueueHub.API.Application.Staff
+namespace Grande.Fila.API.Application.Staff
 {
     public class EndBreakService
     {

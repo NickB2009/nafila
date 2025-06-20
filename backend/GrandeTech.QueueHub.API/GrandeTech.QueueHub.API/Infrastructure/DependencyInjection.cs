@@ -1,18 +1,18 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Users;
-using GrandeTech.QueueHub.API.Domain.Organizations;
-using GrandeTech.QueueHub.API.Domain.Locations;
-using GrandeTech.QueueHub.API.Domain.Queues;
-using GrandeTech.QueueHub.API.Domain.Customers;
-using GrandeTech.QueueHub.API.Domain.Staff;
-using GrandeTech.QueueHub.API.Domain.Subscriptions;
-using GrandeTech.QueueHub.API.Domain.AuditLogs;
-using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
-using GrandeTech.QueueHub.API.Domain.ServicesOffered;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Domain.Organizations;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Queues;
+using Grande.Fila.API.Domain.Customers;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Subscriptions;
+using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Domain.ServicesOffered;
 
-namespace GrandeTech.QueueHub.API.Infrastructure
+namespace Grande.Fila.API.Infrastructure
 {
     /// <summary>
     /// Extension methods for service registration

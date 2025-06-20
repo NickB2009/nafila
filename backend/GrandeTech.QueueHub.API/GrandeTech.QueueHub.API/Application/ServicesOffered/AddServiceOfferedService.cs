@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Locations;
-using GrandeTech.QueueHub.API.Domain.ServicesOffered;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.ServicesOffered;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Application.ServicesOffered
+namespace Grande.Fila.API.Application.ServicesOffered
 {
     public class AddServiceOfferedService
     {

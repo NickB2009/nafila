@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 using System.Text.Json.Serialization;
 
-namespace GrandeTech.QueueHub.API.Domain.Queues
+namespace Grande.Fila.API.Domain.Queues
 {
     /// <summary>
     /// Represents a queue for a service provider

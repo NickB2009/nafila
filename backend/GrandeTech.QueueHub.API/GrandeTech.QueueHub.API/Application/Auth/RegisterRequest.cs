@@ -1,4 +1,4 @@
-namespace GrandeTech.QueueHub.API.Application.Auth
+namespace Grande.Fila.API.Application.Auth
 {
     public class RegisterRequest
     {

@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GrandeTech.QueueHub.API.Domain.Users
+namespace Grande.Fila.API.Domain.Users
 {
     public interface IUserRepository
     {

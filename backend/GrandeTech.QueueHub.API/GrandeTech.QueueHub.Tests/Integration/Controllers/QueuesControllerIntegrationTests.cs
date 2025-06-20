@@ -8,12 +8,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Application.Auth;
-using GrandeTech.QueueHub.API.Application.Queues;
-using GrandeTech.QueueHub.API.Domain.Queues;
-using GrandeTech.QueueHub.API.Domain.Users;
-using GrandeTech.QueueHub.API.Domain.Customers;
-using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Application.Auth;
+using Grande.Fila.API.Application.Queues;
+using Grande.Fila.API.Domain.Queues;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Domain.Customers;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -41,26 +41,26 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                         config.AddInMemoryCollection(new Dictionary<string, string?>
                         {
                             ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
-                            ["Jwt:Issuer"] = "GrandeTech.QueueHub.API.Test",
-                            ["Jwt:Audience"] = "GrandeTech.QueueHub.API.Test"
+                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test"
                         });
                     });
                     builder.ConfigureServices(services =>
                     {
                         // Remove existing IQueueRepository registrations using fully qualified type
-                        var queueRepoDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(GrandeTech.QueueHub.API.Domain.Queues.IQueueRepository));
+                        var queueRepoDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(Grande.Fila.API.Domain.Queues.IQueueRepository));
                         if (queueRepoDescriptor != null)
                             services.Remove(queueRepoDescriptor);
 
                         // Ensure we're using the Bogus repository for testing
                         services.AddScoped<IUserRepository, BogusUserRepository>();
-                        services.AddSingleton<GrandeTech.QueueHub.API.Domain.Queues.IQueueRepository, BogusQueueRepository>(); // Use singleton for queue repo
+                        services.AddSingleton<Grande.Fila.API.Domain.Queues.IQueueRepository, BogusQueueRepository>(); // Use singleton for queue repo
                         services.AddScoped<AddQueueService>();
                         services.AddScoped<AuthService>();
                         
                         // Add services needed for join queue functionality
                         services.AddScoped<JoinQueueService>();
-                        services.AddScoped<GrandeTech.QueueHub.API.Domain.Customers.ICustomerRepository, BogusCustomerRepository>();
+                        services.AddScoped<Grande.Fila.API.Domain.Customers.ICustomerRepository, BogusCustomerRepository>();
                         
                         // Add services needed for call next functionality
                         services.AddScoped<CallNextService>();

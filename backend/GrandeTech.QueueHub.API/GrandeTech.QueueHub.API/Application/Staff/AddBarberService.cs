@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Staff;
-using GrandeTech.QueueHub.API.Domain.Locations;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
-using GrandeTech.QueueHub.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.AuditLogs;
 
-namespace GrandeTech.QueueHub.API.Application.Staff
+namespace Grande.Fila.API.Application.Staff
 {
     public class AddBarberService
     {

@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Queues;
+using Grande.Fila.API.Domain.Queues;
 
-namespace GrandeTech.QueueHub.API.Application.Queues
+namespace Grande.Fila.API.Application.Queues
 {
     /// <summary>
     /// Service for handling UC-CHECKIN: Check-in client use case

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GrandeTech.QueueHub.API.Application.Organizations
+namespace Grande.Fila.API.Application.Organizations
 {
     public class OrganizationOperationResult
     {

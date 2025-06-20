@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GrandeTech.QueueHub.API.Application.ServicesOffered
+namespace Grande.Fila.API.Application.ServicesOffered
 {
     public class AddServiceOfferedResult
     {

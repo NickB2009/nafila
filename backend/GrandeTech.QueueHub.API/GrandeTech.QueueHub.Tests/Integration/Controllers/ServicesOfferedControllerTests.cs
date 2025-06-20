@@ -1,10 +1,10 @@
-using GrandeTech.QueueHub.API.Application.Auth;
-using GrandeTech.QueueHub.API.Application.ServicesOffered;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
-using GrandeTech.QueueHub.API.Domain.Locations;
-using GrandeTech.QueueHub.API.Domain.ServicesOffered;
-using GrandeTech.QueueHub.API.Domain.Users;
-using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Application.Auth;
+using Grande.Fila.API.Application.ServicesOffered;
+using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.ServicesOffered;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;

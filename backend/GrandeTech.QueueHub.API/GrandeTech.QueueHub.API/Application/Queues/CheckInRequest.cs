@@ -1,4 +1,4 @@
-namespace GrandeTech.QueueHub.API.Application.Queues
+namespace Grande.Fila.API.Application.Queues
 {
     public class CheckInRequest
     {

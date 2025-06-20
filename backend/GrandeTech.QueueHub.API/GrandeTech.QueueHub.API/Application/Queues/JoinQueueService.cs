@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Queues;
-using GrandeTech.QueueHub.API.Domain.Customers;
+using Grande.Fila.API.Domain.Queues;
+using Grande.Fila.API.Domain.Customers;
 
-namespace GrandeTech.QueueHub.API.Application.Queues
+namespace Grande.Fila.API.Application.Queues
 {
     /// <summary>
     /// Service for handling UC-ENTRY: Client enters queue use case

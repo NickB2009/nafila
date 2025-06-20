@@ -1,6 +1,6 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Domain.AuditLogs
+namespace Grande.Fila.API.Domain.AuditLogs
 {
     public class AuditLogEntry
     {

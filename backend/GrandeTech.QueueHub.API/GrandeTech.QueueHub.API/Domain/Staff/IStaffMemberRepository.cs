@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Staff;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Staff;
 
-namespace GrandeTech.QueueHub.API.Domain.Staff
+namespace Grande.Fila.API.Domain.Staff
 {
     /// <summary>
     /// Repository interface for StaffMember aggregate root

@@ -1,8 +1,8 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Notifications.Events;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Notifications.Events;
 
-namespace GrandeTech.QueueHub.API.Domain.Notifications
+namespace Grande.Fila.API.Domain.Notifications
 {
     public enum NotificationType
     {

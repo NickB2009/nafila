@@ -5,12 +5,12 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Users;
+using Grande.Fila.API.Domain.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json;
 
-namespace GrandeTech.QueueHub.API.Application.Auth
+namespace Grande.Fila.API.Application.Auth
 {
     public class AuthService
     {

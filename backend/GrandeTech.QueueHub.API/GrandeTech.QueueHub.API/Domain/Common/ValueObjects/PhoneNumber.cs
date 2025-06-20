@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace GrandeTech.QueueHub.API.Domain.Common.ValueObjects
+namespace Grande.Fila.API.Domain.Common.ValueObjects
 {    public record PhoneNumber : ValueObject
     {
         public string Value { get; private set; } = string.Empty;

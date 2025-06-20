@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Application.Staff;
-using GrandeTech.QueueHub.API.Domain.Staff;
+using Grande.Fila.API.Application.Staff;
+using Grande.Fila.API.Domain.Staff;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 

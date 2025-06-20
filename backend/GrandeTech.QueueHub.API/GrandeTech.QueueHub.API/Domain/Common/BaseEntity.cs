@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GrandeTech.QueueHub.API.Domain.Common
+namespace Grande.Fila.API.Domain.Common
 {
     /// <summary>
     /// Base class for all domain entities providing common attributes and behavior

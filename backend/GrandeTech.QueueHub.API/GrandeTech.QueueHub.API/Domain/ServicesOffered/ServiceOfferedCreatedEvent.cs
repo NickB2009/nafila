@@ -1,7 +1,7 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.ServicesOffered
+namespace Grande.Fila.API.Domain.ServicesOffered
 {    public class ServiceOfferedCreatedEvent : DomainEvent
     {
         public Guid ServiceTypeId { get; }

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GrandeTech.QueueHub.API.Application.Locations.Requests;
+namespace Grande.Fila.API.Application.Locations.Requests;
 
 public class UpdateLocationRequest
 {

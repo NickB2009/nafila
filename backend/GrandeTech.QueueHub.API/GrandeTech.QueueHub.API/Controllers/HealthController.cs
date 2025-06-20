@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 
-namespace GrandeTech.QueueHub.API.Controllers
+namespace Grande.Fila.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]

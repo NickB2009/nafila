@@ -1,15 +1,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Application.Queues;
-using GrandeTech.QueueHub.API.Domain.Queues;
+using Grande.Fila.API.Application.Queues;
+using Grande.Fila.API.Domain.Queues;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using GrandeTech.QueueHub.API.Infrastructure.Authorization;
+using Grande.Fila.API.Infrastructure.Authorization;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GrandeTech.QueueHub.API.Controllers
+namespace Grande.Fila.API.Controllers
 {    [ApiController]
     [Route("api/[controller]")]
     public class QueuesController : ControllerBase
@@ -100,7 +100,7 @@ namespace GrandeTech.QueueHub.API.Controllers
 
             // Get user id (or anonymous)
             var userId = User?.Identity?.IsAuthenticated == true
-                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
                 : "anonymous";
 
             // Get queue
@@ -148,7 +148,7 @@ namespace GrandeTech.QueueHub.API.Controllers
 
             // Get user id
             var userId = User?.Identity?.IsAuthenticated == true
-                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
                 : "anonymous";
 
             // Get queue
@@ -226,7 +226,7 @@ namespace GrandeTech.QueueHub.API.Controllers
 
             // Get user id
             var userId = User?.Identity?.IsAuthenticated == true
-                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
                 : "anonymous";
 
             // Get queue
@@ -330,7 +330,7 @@ namespace GrandeTech.QueueHub.API.Controllers
 
             // Get user id
             var userId = User?.Identity?.IsAuthenticated == true
-                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
                 : "anonymous";
 
             // Get queue
@@ -421,7 +421,7 @@ namespace GrandeTech.QueueHub.API.Controllers
 
             // Get user id
             var userId = User?.Identity?.IsAuthenticated == true
-                ? User.FindFirst(GrandeTech.QueueHub.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
                 : "anonymous";
 
             // Get queue

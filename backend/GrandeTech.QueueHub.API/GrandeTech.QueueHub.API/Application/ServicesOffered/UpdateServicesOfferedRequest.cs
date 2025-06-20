@@ -1,6 +1,6 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Application.ServicesOffered
+namespace Grande.Fila.API.Application.ServicesOffered
 {
     public class UpdateServicesOfferedRequest
     {

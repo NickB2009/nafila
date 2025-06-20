@@ -1,4 +1,4 @@
-namespace GrandeTech.QueueHub.API.Application.Locations.Results;
+namespace Grande.Fila.API.Application.Locations.Results;
 
 public class CreateLocationResult
 {

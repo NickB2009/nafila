@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace GrandeTech.QueueHub.API.Domain.Common.ValueObjects
+namespace Grande.Fila.API.Domain.Common.ValueObjects
 {    
     [JsonConverter(typeof(MoneyJsonConverter))]
     public record Money : ValueObject

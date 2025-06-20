@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GrandeTech.QueueHub.API.Domain.Common
+namespace Grande.Fila.API.Domain.Common
 {
     /// <summary>
     /// Generic repository interface for aggregate roots
