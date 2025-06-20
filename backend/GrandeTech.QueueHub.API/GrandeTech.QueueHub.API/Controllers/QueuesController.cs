@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Grande.Fila.API.Infrastructure.Authorization;
 using System.Collections.Generic;
 using System.Linq;
+using Grande.Fila.API.Application.Services;
 
 namespace Grande.Fila.API.Controllers
 {    [ApiController]
@@ -16,13 +17,16 @@ namespace Grande.Fila.API.Controllers
     {
         private readonly AddQueueService _addQueueService;
         private readonly IQueueRepository _queueRepository;
+        private readonly EstimatedWaitTimeService _estimatedWaitTimeService;
 
         public QueuesController(
             AddQueueService addQueueService,
-            IQueueRepository queueRepository)
+            IQueueRepository queueRepository,
+            EstimatedWaitTimeService estimatedWaitTimeService)
         {
             _addQueueService = addQueueService;
             _queueRepository = queueRepository;
+            _estimatedWaitTimeService = estimatedWaitTimeService;
         }
 
         public class QueueDto
@@ -468,6 +472,18 @@ namespace Grande.Fila.API.Controllers
                 result.Errors.Add($"An error occurred while canceling queue entry: {ex.Message}");
                 return BadRequest(result);
             }
+        }
+
+        [HttpGet("{id}/entries/{entryId}/wait-time")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetEstimatedWaitTime(Guid id, Guid entryId, CancellationToken cancellationToken)
+        {
+            var waitTime = await _estimatedWaitTimeService.CalculateAsync(id, entryId, cancellationToken);
+            if (waitTime < 0)
+            {
+                return NotFound("Could not calculate wait time. Queue or queue entry not found, or no staff available.");
+            }
+            return Ok(new { estimatedWaitTimeInMinutes = waitTime });
         }
     }
 } 

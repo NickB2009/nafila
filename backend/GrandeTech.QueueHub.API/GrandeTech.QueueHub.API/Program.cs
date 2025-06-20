@@ -9,6 +9,7 @@ using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Application.ServicesOffered;
 using Grande.Fila.API.Domain.ServicesOffered;
+using Grande.Fila.API.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -138,6 +139,7 @@ builder.Services.AddScoped<CallNextService>();
 builder.Services.AddScoped<CheckInService>();
 builder.Services.AddScoped<FinishService>();
 builder.Services.AddScoped<CancelQueueService>();
+builder.Services.AddScoped<EstimatedWaitTimeService>();
 builder.Services.AddScoped<Grande.Fila.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 
 var app = builder.Build();
