@@ -85,6 +85,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
+        builder: ${{ steps.buildx.outputs.name }}
         context: .
         file: ${{ env.DOCKERFILE_PATH }}
         push: true
