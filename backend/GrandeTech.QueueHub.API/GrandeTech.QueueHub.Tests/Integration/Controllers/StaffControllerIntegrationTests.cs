@@ -769,6 +769,217 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
+        // UC-STARTBREAK: Barber starts a break integration tests
+        [TestMethod]
+        public async Task StartBreak_WithValidRequestAndBarberRole_ReturnsSuccess()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var startBreakRequest = new StartBreakRequest
+            {
+                StaffMemberId = staffMemberId,
+                DurationMinutes = 15,
+                Reason = "Lunch break"
+            };
+
+            var json = JsonSerializer.Serialize(startBreakRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/start-break", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<StartBreakResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual(staffMemberId, result.StaffMemberId);
+            Assert.IsNotNull(result.BreakId);
+            Assert.AreEqual("on-break", result.NewStatus);
+        }
+
+        [TestMethod]
+        public async Task StartBreak_WithInvalidStaffMemberId_ReturnsBadRequest()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var invalidStaffMemberId = "invalid-guid";
+
+            var startBreakRequest = new StartBreakRequest
+            {
+                StaffMemberId = invalidStaffMemberId,
+                DurationMinutes = 10
+            };
+
+            var json = JsonSerializer.Serialize(startBreakRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{invalidStaffMemberId}/start-break", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<StartBreakResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("StaffMemberId"));
+            Assert.AreEqual("Invalid staff member ID format.", result.FieldErrors["StaffMemberId"]);
+        }
+
+        [TestMethod]
+        public async Task StartBreak_WithZeroDuration_ReturnsBadRequest()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var startBreakRequest = new StartBreakRequest
+            {
+                StaffMemberId = staffMemberId,
+                DurationMinutes = 0
+            };
+
+            var json = JsonSerializer.Serialize(startBreakRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/start-break", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<StartBreakResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("DurationMinutes"));
+            Assert.AreEqual("Duration must be greater than 0.", result.FieldErrors["DurationMinutes"]);
+        }
+
+        [TestMethod]
+        public async Task StartBreak_WithNonExistentStaffMember_ReturnsBadRequest()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var nonExistentStaffMemberId = Guid.NewGuid().ToString();
+
+            var startBreakRequest = new StartBreakRequest
+            {
+                StaffMemberId = nonExistentStaffMemberId,
+                DurationMinutes = 10
+            };
+
+            var json = JsonSerializer.Serialize(startBreakRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{nonExistentStaffMemberId}/start-break", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<StartBreakResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.Errors.Contains("Staff member not found."));
+        }
+
+        [TestMethod]
+        public async Task StartBreak_WithoutAuthentication_ReturnsUnauthorized()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var startBreakRequest = new StartBreakRequest
+            {
+                StaffMemberId = staffMemberId,
+                DurationMinutes = 10
+            };
+
+            var json = JsonSerializer.Serialize(startBreakRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/start-break", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task StartBreak_WithUnauthorizedRole_ReturnsForbidden()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var userToken = await CreateAndAuthenticateUserAsync("User");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var startBreakRequest = new StartBreakRequest
+            {
+                StaffMemberId = staffMemberId,
+                DurationMinutes = 10
+            };
+
+            var json = JsonSerializer.Serialize(startBreakRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/start-break", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
         // Helper methods
 
         private async Task<string> CreateAndAuthenticateUserAsync(string role)
