@@ -90,6 +90,8 @@ jobs:
         tags: |
           ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
           ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         
     - name: Set image tag output
       run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
