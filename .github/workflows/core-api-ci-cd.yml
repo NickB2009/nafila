@@ -6,6 +6,11 @@ on:
     paths:
       - "backend/GrandeTech.QueueHub.API/**"
       - ".github/workflows/acr-build.yml"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "backend/GrandeTech.QueueHub.API/**"
+      - ".github/workflows/acr-build.yml"
 
 env:
   ACR_NAME: acrqueuehubapi001               # registry name
