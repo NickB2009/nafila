@@ -17,12 +17,14 @@ namespace GrandeTech.QueueHub.API.Controllers
         private readonly AddBarberService _addBarberService;
         private readonly UpdateStaffStatusService _updateStaffStatusService;
         private readonly StartBreakService _startBreakService;
+        private readonly EndBreakService _endBreakService;
 
-        public StaffController(AddBarberService addBarberService, UpdateStaffStatusService updateStaffStatusService, StartBreakService startBreakService)
+        public StaffController(AddBarberService addBarberService, UpdateStaffStatusService updateStaffStatusService, StartBreakService startBreakService, EndBreakService endBreakService)
         {
             _addBarberService = addBarberService;
             _updateStaffStatusService = updateStaffStatusService;
             _startBreakService = startBreakService;
+            _endBreakService = endBreakService;
         }
 
         [HttpPost("barbers")]
@@ -83,6 +85,26 @@ namespace GrandeTech.QueueHub.API.Controllers
             var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
             request.StaffMemberId = staffMemberId;
             var result = await _startBreakService.StartBreakAsync(request, userId, cancellationToken);
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Count > 0)
+                    return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [HttpPut("barbers/{staffMemberId}/end-break")]
+        [RequireBarber] // UC-ENDBREAK: Barber can end a break
+        public async Task<ActionResult<EndBreakResult>> EndBreak(
+            string staffMemberId,
+            [FromBody] EndBreakRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            request.StaffMemberId = staffMemberId;
+            var result = await _endBreakService.EndBreakAsync(request, userId, cancellationToken);
             if (!result.Success)
             {
                 if (result.FieldErrors.Count > 0)

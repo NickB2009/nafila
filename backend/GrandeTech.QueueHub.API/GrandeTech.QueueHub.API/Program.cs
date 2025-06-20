@@ -123,6 +123,7 @@ builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Locations.CreateL
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.AddBarberService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.UpdateStaffStatusService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.StartBreakService>();
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.EndBreakService>();
 builder.Services.AddScoped<AddServiceOfferedService>();
 
 // Register organization services
