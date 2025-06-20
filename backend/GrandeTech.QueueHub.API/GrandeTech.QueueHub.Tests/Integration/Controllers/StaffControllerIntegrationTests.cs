@@ -23,7 +23,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace GrandeTech.QueueHub.Tests.Integration.Controllers
+namespace Grande.Fila.Tests.Integration.Controllers
 {
     [TestClass]
     public class StaffControllerIntegrationTests

@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Queues;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Application.Queues;
 
 namespace Grande.Fila.API.Application.Queues
 {
@@ -12,60 +15,150 @@ namespace Grande.Fila.API.Application.Queues
     public class CallNextService
     {
         private readonly IQueueRepository _queueRepository;
+        private readonly IStaffMemberRepository _staffRepository;
 
-        public CallNextService(IQueueRepository queueRepository)
+        public CallNextService(IQueueRepository queueRepository, IStaffMemberRepository staffRepository)
         {
             _queueRepository = queueRepository;
+            _staffRepository = staffRepository;
         }
 
         /// <summary>
         /// Calls the next customer in the queue
         /// </summary>
-        public Task<CallNextResult> CallNextAsync(CallNextRequest request, string userId, CancellationToken cancellationToken = default)
+        public async Task<CallNextResult> CallNextAsync(CallNextRequest request, string userId, CancellationToken cancellationToken = default)
         {
-            var result = new CallNextResult();
+            var fieldErrors = new Dictionary<string, string>();
+            var errors = new List<string>();
 
-            // Input validation
+            // Validate StaffMemberId
             if (string.IsNullOrWhiteSpace(request.StaffMemberId))
             {
-                result.FieldErrors["StaffMemberId"] = "Staff member ID is required.";
+                fieldErrors["StaffMemberId"] = "Staff member ID is required.";
+            }
+            else if (!Guid.TryParse(request.StaffMemberId, out _))
+            {
+                fieldErrors["StaffMemberId"] = "Invalid staff member ID format.";
             }
 
-            if (!Guid.TryParse(request.StaffMemberId, out var staffMemberId))
+            // Validate QueueId
+            if (string.IsNullOrWhiteSpace(request.QueueId))
             {
-                result.FieldErrors["StaffMemberId"] = "Invalid staff member ID format.";
+                fieldErrors["QueueId"] = "Queue ID is required.";
+            }
+            else if (!Guid.TryParse(request.QueueId, out _))
+            {
+                fieldErrors["QueueId"] = "Invalid queue ID format.";
             }
 
-            if (result.FieldErrors.Count > 0)
-                return Task.FromResult(result);
+            if (fieldErrors.Count > 0)
+            {
+                return new CallNextResult
+                {
+                    Success = false,
+                    StaffMemberId = request.StaffMemberId,
+                    QueueId = request.QueueId,
+                    CalledCustomerId = string.Empty,
+                    FieldErrors = fieldErrors,
+                    Errors = errors
+                };
+            }
 
-            try
-            {
-                // Get queue (queue ID will be passed from controller)
-                // For now, we'll need to get the queue from the repository
-                // This will be handled by the controller
+            var staffMemberId = Guid.Parse(request.StaffMemberId);
+            var queueId = Guid.Parse(request.QueueId);
 
-                // The actual queue calling logic will be implemented in the controller
-                // since we need the queue ID from the route parameter
+            // Get staff member by ID
+            var staffMember = await _staffRepository.GetByIdAsync(staffMemberId, cancellationToken);
+            if (staffMember == null)
+            {
+                errors.Add("Staff member not found.");
+                return new CallNextResult
+                {
+                    Success = false,
+                    StaffMemberId = request.StaffMemberId,
+                    QueueId = request.QueueId,
+                    CalledCustomerId = string.Empty,
+                    FieldErrors = fieldErrors,
+                    Errors = errors
+                };
+            }
 
-                result.Success = true;
-                return Task.FromResult(result);
-            }
-            catch (InvalidOperationException ex)
+            // Check if staff member is active
+            if (!staffMember.IsActive)
             {
-                result.Errors.Add(ex.Message);
-                return Task.FromResult(result);
+                errors.Add("Cannot call next for inactive staff member.");
+                return new CallNextResult
+                {
+                    Success = false,
+                    StaffMemberId = request.StaffMemberId,
+                    QueueId = request.QueueId,
+                    CalledCustomerId = string.Empty,
+                    FieldErrors = fieldErrors,
+                    Errors = errors
+                };
             }
-            catch (ArgumentException ex)
+
+            // Check if staff member is on break
+            if (staffMember.IsOnBreak())
             {
-                result.Errors.Add(ex.Message);
-                return Task.FromResult(result);
+                errors.Add("Cannot call next while on break.");
+                return new CallNextResult
+                {
+                    Success = false,
+                    StaffMemberId = request.StaffMemberId,
+                    QueueId = request.QueueId,
+                    CalledCustomerId = string.Empty,
+                    FieldErrors = fieldErrors,
+                    Errors = errors
+                };
             }
-            catch (Exception ex)
+
+            // Get queue by ID
+            var queue = await _queueRepository.GetByIdAsync(queueId, cancellationToken);
+            if (queue == null)
             {
-                result.Errors.Add($"An error occurred while calling next customer: {ex.Message}");
-                return Task.FromResult(result);
+                errors.Add("Queue not found.");
+                return new CallNextResult
+                {
+                    Success = false,
+                    StaffMemberId = request.StaffMemberId,
+                    QueueId = request.QueueId,
+                    CalledCustomerId = string.Empty,
+                    FieldErrors = fieldErrors,
+                    Errors = errors
+                };
             }
+
+            // Check if queue is empty
+            if (queue.Entries.Count == 0)
+            {
+                errors.Add("Queue is empty. No customers to call.");
+                return new CallNextResult
+                {
+                    Success = false,
+                    StaffMemberId = request.StaffMemberId,
+                    QueueId = request.QueueId,
+                    CalledCustomerId = string.Empty,
+                    FieldErrors = fieldErrors,
+                    Errors = errors
+                };
+            }
+
+            // Call next customer from queue
+            var calledEntry = queue.CallNextCustomer(staffMemberId);
+
+            // Update queue in repository
+            await _queueRepository.UpdateAsync(queue, cancellationToken);
+
+            return new CallNextResult
+            {
+                Success = true,
+                StaffMemberId = request.StaffMemberId,
+                QueueId = request.QueueId,
+                CalledCustomerId = calledEntry.CustomerId.ToString(),
+                FieldErrors = fieldErrors,
+                Errors = errors
+            };
         }
     }
 } 

@@ -8,7 +8,7 @@ using Grande.Fila.API.Domain.AuditLogs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GrandeTech.QueueHub.Tests.Application.Organizations
+namespace Grande.Fila.Tests.Application.Organizations
 {
     [TestClass]
     public class CreateOrganizationServiceTests

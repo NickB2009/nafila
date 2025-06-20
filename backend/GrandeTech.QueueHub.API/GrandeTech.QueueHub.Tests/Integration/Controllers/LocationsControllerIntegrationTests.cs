@@ -20,7 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 
-namespace GrandeTech.QueueHub.Tests.Integration.Controllers
+namespace Grande.Fila.Tests.Integration.Controllers
 {
     [TestClass]
     public class LocationsControllerIntegrationTests

@@ -18,7 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace GrandeTech.QueueHub.Tests.Integration.Controllers;
+namespace Grande.Fila.Tests.Integration.Controllers;
 
 [TestClass]
 public class ServicesOfferedControllerTests

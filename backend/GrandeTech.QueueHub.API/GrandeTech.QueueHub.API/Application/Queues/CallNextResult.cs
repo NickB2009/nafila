@@ -11,6 +11,8 @@ namespace Grande.Fila.API.Application.Queues
         public int Position { get; set; }
         public string? StaffMemberId { get; set; }
         public DateTime? CalledAt { get; set; }
+        public string? QueueId { get; set; }
+        public string? CalledCustomerId { get; set; }
         public Dictionary<string, string> FieldErrors { get; set; } = new();
         public List<string> Errors { get; set; } = new();
     }

@@ -7,7 +7,7 @@ using Grande.Fila.API.Domain.Customers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GrandeTech.QueueHub.Tests.Application.Queues
+namespace Grande.Fila.Tests.Application.Queues
 {
     [TestClass]
     public class JoinQueueServiceTests

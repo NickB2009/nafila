@@ -9,7 +9,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 
-namespace GrandeTech.QueueHub.Tests.Integration.Controllers
+namespace Grande.Fila.Tests.Integration.Controllers
 {
     [TestClass]
     public class AuthControllerIntegrationTests

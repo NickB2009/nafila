@@ -8,7 +8,7 @@ using Moq;
 using Grande.Fila.API.Application.ServicesOffered;
 using Grande.Fila.API.Domain.ServicesOffered;
 
-namespace GrandeTech.QueueHub.Tests.Application
+namespace Grande.Fila.Tests.Application
 {
     [TestClass]
     public class AddServiceTypeServiceTests

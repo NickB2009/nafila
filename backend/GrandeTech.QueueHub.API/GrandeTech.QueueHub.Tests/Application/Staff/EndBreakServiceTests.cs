@@ -6,7 +6,7 @@ using Grande.Fila.API.Domain.Staff;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GrandeTech.QueueHub.Tests.Application.Staff
+namespace Grande.Fila.Tests.Application.Staff
 {
     [TestClass]
     public class EndBreakServiceTests

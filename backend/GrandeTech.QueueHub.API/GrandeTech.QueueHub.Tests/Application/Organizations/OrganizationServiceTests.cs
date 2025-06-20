@@ -10,7 +10,7 @@ using Grande.Fila.API.Domain.Common.ValueObjects;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GrandeTech.QueueHub.Tests.Application.Organizations
+namespace Grande.Fila.Tests.Application.Organizations
 {
     [TestClass]
     public class OrganizationServiceTests
