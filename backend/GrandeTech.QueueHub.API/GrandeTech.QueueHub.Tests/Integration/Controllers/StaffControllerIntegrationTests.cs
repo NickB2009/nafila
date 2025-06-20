@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -14,6 +15,7 @@ using GrandeTech.QueueHub.API.Domain.Users;
 using GrandeTech.QueueHub.API.Domain.Staff;
 using GrandeTech.QueueHub.API.Domain.Locations;
 using GrandeTech.QueueHub.API.Domain.AuditLogs;
+using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
 using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -62,6 +64,9 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                         
                         // Register AddBarberService
                         services.AddScoped<AddBarberService>();
+                        
+                        // Register UpdateStaffStatusService
+                        services.AddScoped<UpdateStaffStatusService>();
                         
                         // Register AuthService for JWT token generation
                         services.AddScoped<AuthService>();
@@ -468,6 +473,302 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             Assert.AreEqual("Inactive", result.Status);
         }
 
+        // UC-STAFFSTATUS: Barber changes status integration tests
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithValidRequestAndBarberRole_ReturnsSuccess()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create a staff member first
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var updateStatusRequest = new UpdateStaffStatusRequest
+            {
+                StaffMemberId = staffMemberId,
+                NewStatus = "busy",
+                Notes = "Currently serving a client"
+            };
+
+            var json = JsonSerializer.Serialize(updateStatusRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/status", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<UpdateStaffStatusResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual(staffMemberId, result.StaffMemberId);
+            Assert.AreEqual("busy", result.NewStatus);
+            Assert.AreEqual("available", result.PreviousStatus); // Default status
+        }
+
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithValidStatuses_AllReturnSuccess()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var validStatuses = new[] { "available", "busy", "away", "offline" };
+
+            foreach (var status in validStatuses)
+            {
+                // Create a new staff member for each test
+                var staffMemberId = await CreateStaffMemberAsync();
+
+                var updateStatusRequest = new UpdateStaffStatusRequest
+                {
+                    StaffMemberId = staffMemberId,
+                    NewStatus = status
+                };
+
+                var json = JsonSerializer.Serialize(updateStatusRequest);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                // Act
+                var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/status", content);
+
+                // Assert
+                Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, $"Status '{status}' should be valid");
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<UpdateStaffStatusResult>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                Assert.IsNotNull(result);
+                Assert.IsTrue(result.Success);
+                Assert.AreEqual(status, result.NewStatus);
+            }
+        }
+
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithInvalidStatus_ReturnsBadRequest()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var updateStatusRequest = new UpdateStaffStatusRequest
+            {
+                StaffMemberId = staffMemberId,
+                NewStatus = "invalid-status"
+            };
+
+            var json = JsonSerializer.Serialize(updateStatusRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/status", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<UpdateStaffStatusResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("NewStatus"));
+            Assert.AreEqual("Invalid status. Must be one of: available, busy, away, offline", result.FieldErrors["NewStatus"]);
+        }
+
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithEmptyStatus_ReturnsBadRequest()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var updateStatusRequest = new UpdateStaffStatusRequest
+            {
+                StaffMemberId = staffMemberId,
+                NewStatus = ""
+            };
+
+            var json = JsonSerializer.Serialize(updateStatusRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/status", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<UpdateStaffStatusResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("NewStatus"));
+            Assert.AreEqual("Status is required.", result.FieldErrors["NewStatus"]);
+        }
+
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithNonExistentStaffMember_ReturnsBadRequest()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var nonExistentStaffMemberId = Guid.NewGuid().ToString();
+
+            var updateStatusRequest = new UpdateStaffStatusRequest
+            {
+                StaffMemberId = nonExistentStaffMemberId,
+                NewStatus = "busy"
+            };
+
+            var json = JsonSerializer.Serialize(updateStatusRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{nonExistentStaffMemberId}/status", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<UpdateStaffStatusResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.Errors.Contains("Staff member not found."));
+        }
+
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithInvalidStaffMemberId_ReturnsBadRequest()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var invalidStaffMemberId = "invalid-guid";
+
+            var updateStatusRequest = new UpdateStaffStatusRequest
+            {
+                StaffMemberId = invalidStaffMemberId,
+                NewStatus = "busy"
+            };
+
+            var json = JsonSerializer.Serialize(updateStatusRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{invalidStaffMemberId}/status", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<UpdateStaffStatusResult>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("StaffMemberId"));
+            Assert.AreEqual("Invalid staff member ID format.", result.FieldErrors["StaffMemberId"]);
+        }
+
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithoutAuthentication_ReturnsUnauthorized()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var updateStatusRequest = new UpdateStaffStatusRequest
+            {
+                StaffMemberId = staffMemberId,
+                NewStatus = "busy"
+            };
+
+            var json = JsonSerializer.Serialize(updateStatusRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/status", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UpdateStaffStatus_WithUnauthorizedRole_ReturnsForbidden()
+        {
+            // Arrange
+            Assert.IsNotNull(_client);
+            Assert.IsNotNull(_factory);
+
+            // Create and authenticate a regular user (not Barber)
+            var userToken = await CreateAndAuthenticateUserAsync("User");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
+
+            var staffMemberId = await CreateStaffMemberAsync();
+
+            var updateStatusRequest = new UpdateStaffStatusRequest
+            {
+                StaffMemberId = staffMemberId,
+                NewStatus = "busy"
+            };
+
+            var json = JsonSerializer.Serialize(updateStatusRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PutAsync($"/api/staff/barbers/{staffMemberId}/status", content);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
         // Helper methods
 
         private async Task<string> CreateAndAuthenticateUserAsync(string role)
@@ -545,31 +846,93 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             }
         }        private async Task<string> CreateLocationAsync()
         {
-            Assert.IsNotNull(_factory);
-
             using var scope = _factory.Services.CreateScope();
-            var locationRepo = scope.ServiceProvider.GetRequiredService<ILocationRepository>();
+            var locationRepository = scope.ServiceProvider.GetRequiredService<ILocationRepository>();
 
-            // Create a location for testing
-            var location = new GrandeTech.QueueHub.API.Domain.Locations.Location(
-                "Test Barbershop",
-                "test-barbershop",
-                "Test Description",
-                Guid.NewGuid(),
-                GrandeTech.QueueHub.API.Domain.Common.ValueObjects.Address.Create(
-                    "Test Street", "123", "", "Test Neighborhood", "Test City", "Test State", "Test Country", "12345"),
-                "+5511123456789",
-                "test@barbershop.com",
-                TimeSpan.FromHours(8),
-                TimeSpan.FromHours(18),
-                50,
-                15,
-                "testuser"
+            // Create a test organization ID
+            var organizationId = Guid.NewGuid();
+
+            var address = Address.Create(
+                "123 Test Street",
+                "1",
+                "",
+                "Test Neighborhood",
+                "Test City",
+                "Test State",
+                "US",
+                "12345"
             );
 
-            await locationRepo.AddAsync(location, CancellationToken.None);
+            var testLocation = new Location(
+                name: "Test Barbershop",
+                slug: "test-barbershop",
+                description: "A test barbershop for integration tests",
+                organizationId: organizationId,
+                address: address,
+                contactPhone: "+1234567890",
+                contactEmail: "test@barbershop.com",
+                openingTime: TimeSpan.FromHours(9),
+                closingTime: TimeSpan.FromHours(17),
+                maxQueueSize: 50,
+                lateClientCapTimeInMinutes: 15,
+                createdBy: "testUser"
+            );
 
-            return location.Id.ToString();
+            await locationRepository.AddAsync(testLocation, CancellationToken.None);
+            return testLocation.Id.ToString();
+        }
+
+        private async Task<string> CreateStaffMemberAsync()
+        {
+            using var scope = _factory.Services.CreateScope();
+            var staffRepository = scope.ServiceProvider.GetRequiredService<IStaffMemberRepository>();
+            var locationRepository = scope.ServiceProvider.GetRequiredService<ILocationRepository>();
+
+            // Create a test location first
+            var organizationId = Guid.NewGuid();
+            var address = Address.Create(
+                "123 Test Street",
+                "1",
+                "",
+                "Test Neighborhood",
+                "Test City",
+                "Test State",
+                "US",
+                "12345"
+            );
+
+            var testLocation = new Location(
+                name: "Test Barbershop",
+                slug: "test-barbershop",
+                description: "A test barbershop for integration tests",
+                organizationId: organizationId,
+                address: address,
+                contactPhone: "+1234567890",
+                contactEmail: "test@barbershop.com",
+                openingTime: TimeSpan.FromHours(9),
+                closingTime: TimeSpan.FromHours(17),
+                maxQueueSize: 50,
+                lateClientCapTimeInMinutes: 15,
+                createdBy: "testUser"
+            );
+
+            await locationRepository.AddAsync(testLocation, CancellationToken.None);
+
+            // Create a test staff member
+            var testStaffMember = new StaffMember(
+                name: "Test Barber",
+                locationId: testLocation.Id,
+                email: "test.barber@barbershop.com",
+                phoneNumber: "+1234567890",
+                profilePictureUrl: null,
+                role: "Barber",
+                username: "testbarber",
+                userId: null,
+                createdBy: "testUser"
+            );
+
+            await staffRepository.AddAsync(testStaffMember, CancellationToken.None);
+            return testStaffMember.Id.ToString();
         }
     }
 }

@@ -121,6 +121,7 @@ builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
 // Register application services
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Locations.CreateLocationService>();
 builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.AddBarberService>();
+builder.Services.AddScoped<GrandeTech.QueueHub.API.Application.Staff.UpdateStaffStatusService>();
 builder.Services.AddScoped<AddServiceOfferedService>();
 
 // Register organization services
