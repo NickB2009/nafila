@@ -130,12 +130,30 @@ class QueueStatusScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Na fila', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            Text('Chegada', style: TextStyle(color: Colors.white)),
-            Text('Corte', style: TextStyle(color: Colors.white)),
+            Flexible(
+              child: Text(
+                'Na fila', 
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Flexible(
+              child: Text(
+                'Chegada', 
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Flexible(
+              child: Text(
+                'Corte', 
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       ],
@@ -303,11 +321,24 @@ class QueueStatusScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('• Fecha às $closingTime', style: theme.textTheme.bodyMedium),
+              Flexible(
+                child: Text(
+                  '• Fecha às $closingTime', 
+                  style: theme.textTheme.bodyMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               const SizedBox(width: 8),
-              Icon(Icons.directions_car, size: 16, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: 2),
-              Text('${distance.toStringAsFixed(1)} km', style: theme.textTheme.bodyMedium),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.directions_car, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 2),
+                    Text('${distance.toStringAsFixed(1)} km', style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -462,9 +493,12 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Agendar meu próximo corte para...',
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    'Agendar meu próximo corte para...',
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
