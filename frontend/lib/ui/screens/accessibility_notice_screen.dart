@@ -1,8 +1,65 @@
 import 'package:flutter/material.dart';
 import 'atendimento_screen.dart';
 
-class AccessibilityNoticeScreen extends StatelessWidget {
+class AccessibilityNoticeScreen extends StatefulWidget {
   const AccessibilityNoticeScreen({super.key});
+
+  @override
+  State<AccessibilityNoticeScreen> createState() => _AccessibilityNoticeScreenState();
+}
+
+class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late List<Animation<double>> _slideAnimations;
+  late List<Animation<double>> _fadeAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    // Create staggered animations for each section
+    _slideAnimations = List.generate(5, (index) {
+      return Tween<double>(
+        begin: -50.0,
+        end: 0.0,
+      ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(
+          index * 0.12,
+          (index * 0.12) + 0.5,
+          curve: Curves.easeOutCubic,
+        ),
+      ));
+    });
+
+    _fadeAnimations = List.generate(5, (index) {
+      return Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(
+          index * 0.12,
+          (index * 0.12) + 0.5,
+          curve: Curves.easeOut,
+        ),
+      ));
+    });
+
+    // Start the animation
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,19 +87,54 @@ class AccessibilityNoticeScreen extends StatelessWidget {
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderSection(theme),
-                const SizedBox(height: 32),
-                _buildFeatureGrid(theme),
-                const SizedBox(height: 32),
-                _buildInstructionsCard(theme),
-                const SizedBox(height: 32),
-                _buildComplianceSection(theme),
-                const SizedBox(height: 32),
-                _buildHelpCard(context, theme),
-              ],
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Transform.translate(
+                      offset: Offset(0, _slideAnimations[0].value),
+                      child: Opacity(
+                        opacity: _fadeAnimations[0].value,
+                        child: _buildHeaderSection(theme),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Transform.translate(
+                      offset: Offset(0, _slideAnimations[1].value),
+                      child: Opacity(
+                        opacity: _fadeAnimations[1].value,
+                        child: _buildFeatureGrid(theme),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Transform.translate(
+                      offset: Offset(0, _slideAnimations[2].value),
+                      child: Opacity(
+                        opacity: _fadeAnimations[2].value,
+                        child: _buildInstructionsCard(theme),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Transform.translate(
+                      offset: Offset(0, _slideAnimations[3].value),
+                      child: Opacity(
+                        opacity: _fadeAnimations[3].value,
+                        child: _buildComplianceSection(theme),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Transform.translate(
+                      offset: Offset(0, _slideAnimations[4].value),
+                      child: Opacity(
+                        opacity: _fadeAnimations[4].value,
+                        child: _buildHelpCard(context, theme),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
