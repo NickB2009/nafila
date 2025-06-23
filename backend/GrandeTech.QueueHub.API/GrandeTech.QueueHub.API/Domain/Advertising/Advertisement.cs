@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Advertising
+namespace Grande.Fila.API.Domain.Advertising
 {
     /// <summary>
     /// Represents an advertisement that can be displayed on kiosks or queue screens

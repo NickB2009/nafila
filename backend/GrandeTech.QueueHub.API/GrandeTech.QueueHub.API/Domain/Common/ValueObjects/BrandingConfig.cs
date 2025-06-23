@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GrandeTech.QueueHub.API.Domain.Common.ValueObjects
+namespace Grande.Fila.API.Domain.Common.ValueObjects
 {    public record BrandingConfig : ValueObject
     {
         public string PrimaryColor { get; private set; }

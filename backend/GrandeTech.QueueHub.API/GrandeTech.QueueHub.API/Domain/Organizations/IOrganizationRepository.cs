@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Organizations;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Organizations;
 
-namespace GrandeTech.QueueHub.API.Domain.Organizations
+namespace Grande.Fila.API.Domain.Organizations
 {
     /// <summary>
     /// Repository interface for Organization aggregate root

@@ -1,16 +1,16 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Application.Organizations;
-using GrandeTech.QueueHub.API.Domain.Organizations;
-using GrandeTech.QueueHub.API.Domain.Subscriptions;
-using GrandeTech.QueueHub.API.Domain.AuditLogs;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Application.Organizations;
+using Grande.Fila.API.Domain.Organizations;
+using Grande.Fila.API.Domain.Subscriptions;
+using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GrandeTech.QueueHub.Tests.Application.Organizations
+namespace Grande.Fila.Tests.Application.Organizations
 {
     [TestClass]
     public class OrganizationServiceTests

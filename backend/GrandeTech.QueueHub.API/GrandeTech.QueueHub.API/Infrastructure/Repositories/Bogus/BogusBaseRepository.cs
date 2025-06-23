@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
+namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
 {
     public abstract class BogusBaseRepository<T> : IRepository<T> where T : BaseEntity, IAggregateRoot
     {

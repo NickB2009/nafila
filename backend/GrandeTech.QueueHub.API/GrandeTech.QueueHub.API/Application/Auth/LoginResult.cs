@@ -1,4 +1,4 @@
-namespace GrandeTech.QueueHub.API.Application.Auth
+namespace Grande.Fila.API.Application.Auth
 {
     public class LoginResult
     {
@@ -7,5 +7,8 @@ namespace GrandeTech.QueueHub.API.Application.Auth
         public string? Error { get; set; }
         public string? Username { get; set; }
         public string? Role { get; set; }
+        public string[]? Permissions { get; set; }
+        public bool RequiresTwoFactor { get; set; }
+        public string? TwoFactorToken { get; set; }
     }
 } 

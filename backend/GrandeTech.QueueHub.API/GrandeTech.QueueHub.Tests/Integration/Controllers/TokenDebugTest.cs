@@ -8,16 +8,16 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Application.Auth;
-using GrandeTech.QueueHub.API.Domain.Users;
-using GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Application.Auth;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace GrandeTech.QueueHub.Tests.Integration.Controllers
+namespace Grande.Fila.Tests.Integration.Controllers
 {
     [TestClass]
     public class TokenDebugTest
@@ -37,8 +37,8 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
                         config.AddInMemoryCollection(new Dictionary<string, string?>
                         {
                             ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
-                            ["Jwt:Issuer"] = "GrandeTech.QueueHub.API.Test",
-                            ["Jwt:Audience"] = "GrandeTech.QueueHub.API.Test"
+                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test"
                         });
                     });
                     builder.ConfigureServices(services =>
@@ -86,8 +86,6 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
 
             var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
-            Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
-
             var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
             var loginResult = JsonSerializer.Deserialize<LoginResult>(loginResponseContent, new JsonSerializerOptions
             {
@@ -95,28 +93,77 @@ namespace GrandeTech.QueueHub.Tests.Integration.Controllers
             });
 
             Assert.IsNotNull(loginResult);
-            Assert.IsTrue(loginResult.Success);
-            Assert.IsNotNull(loginResult.Token);
 
-            // Debug the JWT token
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(loginResult.Token);
-
-            Console.WriteLine($"JWT Token: {loginResult.Token}");
-            Console.WriteLine($"Token Claims:");
-            foreach (var claim in jwtToken.Claims)
+            // Handle two-factor authentication for admin users
+            if (loginResult.RequiresTwoFactor)
             {
-                Console.WriteLine($"  {claim.Type}: {claim.Value}");
+                Assert.IsNotNull(loginResult.TwoFactorToken);
+                
+                // Verify 2FA
+                var verifyRequest = new VerifyTwoFactorRequest
+                {
+                    Username = username,
+                    TwoFactorCode = "123456", // In a real implementation, this would be validated
+                    TwoFactorToken = loginResult.TwoFactorToken
+                };
+
+                var verifyJson = JsonSerializer.Serialize(verifyRequest);
+                var verifyContent = new StringContent(verifyJson, Encoding.UTF8, "application/json");
+
+                var verifyResponse = await _client.PostAsync("/api/auth/verify-2fa", verifyContent);
+                Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+                var verifyResponseContent = await verifyResponse.Content.ReadAsStringAsync();
+                var verifyResult = JsonSerializer.Deserialize<LoginResult>(verifyResponseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                Assert.IsNotNull(verifyResult);
+                Assert.IsTrue(verifyResult.Success);
+                Assert.IsNotNull(verifyResult.Token);
+
+                // Debug the token
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(verifyResult.Token);
+
+                // Print all claims
+                foreach (var claim in jwtToken.Claims)
+                {
+                    Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
+                }
+
+                // Verify specific claims
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.UserId));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Username));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Email));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Role));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Permissions));
             }
+            else
+            {
+                // Regular user login
+                Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
+                Assert.IsTrue(loginResult.Success);
+                Assert.IsNotNull(loginResult.Token);
 
-            // Try making an authenticated request to see what User.Claims contains
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult.Token);
+                // Debug the token
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadJwtToken(loginResult.Token);
 
-            // Make a test request to any endpoint that requires authentication
-            var response = await _client.GetAsync("/api/auth/profile");
-            Console.WriteLine($"Profile response status: {response.StatusCode}");
-            var responseContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Profile response content: {responseContent}");
+                // Print all claims
+                foreach (var claim in jwtToken.Claims)
+                {
+                    Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
+                }
+
+                // Verify specific claims
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.UserId));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Username));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Email));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Role));
+                Assert.IsNotNull(jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Permissions));
+            }
         }
     }
 }

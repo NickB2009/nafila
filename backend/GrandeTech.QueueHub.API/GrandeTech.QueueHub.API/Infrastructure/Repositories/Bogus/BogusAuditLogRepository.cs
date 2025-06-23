@@ -1,8 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.AuditLogs;
 
-namespace GrandeTech.QueueHub.API.Infrastructure.Repositories.Bogus
+namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
 {
     public class BogusAuditLogRepository : IAuditLogRepository
     {

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Customers;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Customers;
 
-namespace GrandeTech.QueueHub.API.Domain.Customers
+namespace Grande.Fila.API.Domain.Customers
 {
     /// <summary>
     /// Repository interface for Customer aggregate root

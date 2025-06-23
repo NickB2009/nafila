@@ -1,8 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Users
+namespace Grande.Fila.API.Domain.Users
 {
     public class User : BaseEntity, IAggregateRoot
     {
@@ -23,6 +23,8 @@ namespace GrandeTech.QueueHub.API.Domain.Users
 
         public bool IsActive { get; private set; }
         public DateTime? LastLoginAt { get; private set; }
+        public bool IsLocked { get; private set; }
+        public bool RequiresTwoFactor { get; private set; }
 
         // For EF Core and Bogus
         private User() 
@@ -32,6 +34,8 @@ namespace GrandeTech.QueueHub.API.Domain.Users
             PasswordHash = string.Empty;
             Role = string.Empty;
             IsActive = true;
+            IsLocked = false;
+            RequiresTwoFactor = false;
         }
 
         public User(string username, string email, string passwordHash, string role)
@@ -42,6 +46,8 @@ namespace GrandeTech.QueueHub.API.Domain.Users
             PasswordHash = passwordHash;
             Role = role;
             IsActive = true;
+            IsLocked = false;
+            RequiresTwoFactor = role == UserRoles.PlatformAdmin || role == UserRoles.Admin;
         }
 
         public void UpdateLastLogin()
@@ -57,6 +63,26 @@ namespace GrandeTech.QueueHub.API.Domain.Users
         public void Activate()
         {
             IsActive = true;
+        }
+
+        public void Lock()
+        {
+            IsLocked = true;
+        }
+
+        public void Unlock()
+        {
+            IsLocked = false;
+        }
+
+        public void EnableTwoFactor()
+        {
+            RequiresTwoFactor = true;
+        }
+
+        public void DisableTwoFactor()
+        {
+            RequiresTwoFactor = false;
         }
     }
 } 

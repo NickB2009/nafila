@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
-namespace GrandeTech.QueueHub.API.Domain.Common.ValueObjects
-{    public record Money : ValueObject
+namespace Grande.Fila.API.Domain.Common.ValueObjects
+{    
+    [JsonConverter(typeof(MoneyJsonConverter))]
+    public record Money : ValueObject
     {
         public decimal Amount { get; private set; }
         public string Currency { get; private set; } = string.Empty;
 
-        // Parameterless constructor for Entity Framework
+        // Parameterless constructor for Entity Framework and JSON deserialization
         private Money()
         {
         }
@@ -67,5 +71,55 @@ namespace GrandeTech.QueueHub.API.Domain.Common.ValueObjects
         public static Money operator -(Money left, Money right) => left.Subtract(right);
         public static Money operator *(Money left, decimal right) => left.Multiply(right);
         public static Money operator *(decimal left, Money right) => right.Multiply(left);
+    }
+
+    public class MoneyJsonConverter : JsonConverter<Money>
+    {
+        public override Money Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType != JsonTokenType.StartObject)
+            {
+                throw new JsonException();
+            }
+
+            decimal amount = 0;
+            string currency = "BRL";
+
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    break;
+                }
+
+                if (reader.TokenType != JsonTokenType.PropertyName)
+                {
+                    throw new JsonException();
+                }
+
+                var propertyName = reader.GetString();
+                reader.Read();
+
+                switch (propertyName)
+                {
+                    case "amount":
+                        amount = reader.GetDecimal();
+                        break;
+                    case "currency":
+                        currency = reader.GetString() ?? "BRL";
+                        break;
+                }
+            }
+
+            return Money.Create(amount, currency);
+        }
+
+        public override void Write(Utf8JsonWriter writer, Money value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("amount", value.Amount);
+            writer.WriteString("currency", value.Currency);
+            writer.WriteEndObject();
+        }
     }
 }

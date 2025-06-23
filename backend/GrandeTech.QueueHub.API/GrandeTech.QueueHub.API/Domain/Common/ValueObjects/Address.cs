@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GrandeTech.QueueHub.API.Domain.Common.ValueObjects
+namespace Grande.Fila.API.Domain.Common.ValueObjects
 {    public record Address : ValueObject
     {
         public string Street { get; private set; } = string.Empty;

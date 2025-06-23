@@ -1,7 +1,7 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Promotions
+namespace Grande.Fila.API.Domain.Promotions
 {
     public class CouponCreatedEvent : DomainEvent
     {

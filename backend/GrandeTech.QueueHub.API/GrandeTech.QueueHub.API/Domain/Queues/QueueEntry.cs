@@ -1,7 +1,7 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Queues
+namespace Grande.Fila.API.Domain.Queues
 {
     public enum QueueEntryStatus
     {
@@ -108,8 +108,8 @@ namespace GrandeTech.QueueHub.API.Domain.Queues
 
         public void Cancel()
         {
-            if (Status != QueueEntryStatus.Waiting && Status != QueueEntryStatus.Called)
-                throw new InvalidOperationException($"Cannot cancel a customer with status {Status}");
+            if (Status != QueueEntryStatus.Waiting)
+                throw new InvalidOperationException($"Cannot cancel a customer with status {Status}. Only waiting customers can be cancelled.");
 
             Status = QueueEntryStatus.Cancelled;
             CancelledAt = DateTime.UtcNow;

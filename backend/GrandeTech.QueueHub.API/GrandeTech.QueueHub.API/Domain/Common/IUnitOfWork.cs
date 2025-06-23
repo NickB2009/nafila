@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GrandeTech.QueueHub.API.Domain.Common
+namespace Grande.Fila.API.Domain.Common
 {
     /// <summary>
     /// Unit of work interface for managing transactions across repositories

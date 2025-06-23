@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.Organizations
+namespace Grande.Fila.API.Domain.Organizations
 {
     /// <summary>
     /// Represents the top-level organization that can own multiple service providers (locations)

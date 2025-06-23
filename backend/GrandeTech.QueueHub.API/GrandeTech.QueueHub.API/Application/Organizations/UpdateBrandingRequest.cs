@@ -1,6 +1,6 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Application.Organizations
+namespace Grande.Fila.API.Application.Organizations
 {
     public class UpdateBrandingRequest
     {

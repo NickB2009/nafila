@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.Customers
+namespace Grande.Fila.API.Domain.Customers
 {
     /// <summary>
     /// Represents a customer (client) who can join queues

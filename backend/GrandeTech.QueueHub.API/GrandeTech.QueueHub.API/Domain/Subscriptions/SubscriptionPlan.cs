@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 
-namespace GrandeTech.QueueHub.API.Domain.Subscriptions
+namespace Grande.Fila.API.Domain.Subscriptions
 {
     /// <summary>
     /// Represents a subscription plan that organizations can subscribe to

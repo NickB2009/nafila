@@ -1,13 +1,13 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using GrandeTech.QueueHub.API.Application.Locations.Requests;
-using GrandeTech.QueueHub.API.Application.Locations.Results;
-using GrandeTech.QueueHub.API.Domain.Common.ValueObjects;
-using GrandeTech.QueueHub.API.Domain.Locations;
-using DomainLocation = GrandeTech.QueueHub.API.Domain.Locations.Location;
+using Grande.Fila.API.Application.Locations.Requests;
+using Grande.Fila.API.Application.Locations.Results;
+using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Locations;
+using DomainLocation = Grande.Fila.API.Domain.Locations.Location;
 
-namespace GrandeTech.QueueHub.API.Application.Locations;
+namespace Grande.Fila.API.Application.Locations;
 
 public class CreateLocationService
 {

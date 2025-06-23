@@ -1,6 +1,6 @@
 using System;
 
-namespace GrandeTech.QueueHub.API.Domain.Common
+namespace Grande.Fila.API.Domain.Common
 {
     /// <summary>
     /// Simplified version of BaseEntity for building purposes

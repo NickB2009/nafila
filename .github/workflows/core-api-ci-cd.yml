@@ -1,0 +1,118 @@
+name: Core API CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/GrandeTech.QueueHub.API/**'
+      - '.github/workflows/core-api-ci-cd.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/GrandeTech.QueueHub.API/**'
+      - '.github/workflows/core-api-ci-cd.yml'
+
+env:
+  PROJECT_NAME: queuehub
+  ENVIRONMENT: p
+  APP_SERVICE_NAME: app-p-queuehub-api-001
+  RESOURCE_GROUP: rg-p-queuehub-core-001
+  ACR_NAME: acrqueuehubapi001
+  IMAGE_NAME: queuehub-api
+  PROJECT_PATH: backend/GrandeTech.QueueHub.API
+  DOCKERFILE_PATH: backend/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/Dockerfile
+  AZURE_WEBAPP_URL: https://app-p-queuehub-api-001.azurewebsites.net
+  HEALTH_ENDPOINT: /health
+
+jobs:
+# ───────────────────────── BUILD & TEST ─────────────────────────
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ${{ env.PROJECT_PATH }} --configuration Release --no-build --logger "trx" --results-directory ./TestResults
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults/*.trx
+
+# ───────────────────────── BUILD & PUSH IMAGE ─────────────────────────
+  build-and-push-image:
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: ACR login
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build & push Docker image
+        run: |
+          COMMIT_SHA=${{ github.sha }}
+          az acr build \
+            --registry $ACR_NAME \
+            --image $IMAGE_NAME:${COMMIT_SHA} \
+            --image $IMAGE_NAME:latest \
+            --file $DOCKERFILE_PATH \
+            $PROJECT_PATH
+
+# ───────────────────────── DEPLOY TO AZURE ─────────────────────────
+  deploy-to-azure:
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set container image
+        run: |
+          COMMIT_SHA=${{ github.sha }}
+          az webapp config container set \
+            --name  $APP_SERVICE_NAME \
+            --resource-group $RESOURCE_GROUP \
+            --docker-custom-image-name "$ACR_NAME.azurecr.io/$IMAGE_NAME:$COMMIT_SHA" \
+            --docker-registry-server-url "https://$ACR_NAME.azurecr.io"
+
+      - name: Restart app
+        run: az webapp restart --name $APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
+
+      - name: Health check
+        run: |
+          for i in {1..20}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${AZURE_WEBAPP_URL}${HEALTH_ENDPOINT}")
+            if [ "$STATUS" = "200" ]; then
+              echo "Healthy ✅"
+              exit 0
+            fi
+            echo "Waiting for healthy status... (attempt $i)"
+            sleep 10
+          done
+          echo "Health check failed ❌"
+          exit 1

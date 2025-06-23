@@ -16,6 +16,9 @@ migrate_working_dir/
 *.iws
 .idea/
 
+# Visual Studio related
+.vs/
+
 # IDE - Cursor specific
 .cursor/
 .cursorignore

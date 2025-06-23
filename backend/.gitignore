@@ -272,3 +272,6 @@ local.settings.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# GitHub Actions setup files (contain sensitive credentials)
+github-actions-setup-summary.txt

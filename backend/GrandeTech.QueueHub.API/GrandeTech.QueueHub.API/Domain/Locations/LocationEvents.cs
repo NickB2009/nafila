@@ -1,7 +1,7 @@
 using System;
-using GrandeTech.QueueHub.API.Domain.Common;
+using Grande.Fila.API.Domain.Common;
 
-namespace GrandeTech.QueueHub.API.Domain.Locations
+namespace Grande.Fila.API.Domain.Locations
 {
     public class LocationCreatedEvent : DomainEvent
     {

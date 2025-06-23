@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Application.Staff;
-using GrandeTech.QueueHub.API.Domain.Staff;
-using GrandeTech.QueueHub.API.Domain.Locations;
-using GrandeTech.QueueHub.API.Domain.AuditLogs;
+using Grande.Fila.API.Application.Staff;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.AuditLogs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace GrandeTech.QueueHub.Tests.Application.Staff
+namespace Grande.Fila.Tests.Application.Staff
 {
     [TestClass]
     public class AddBarberServiceTests

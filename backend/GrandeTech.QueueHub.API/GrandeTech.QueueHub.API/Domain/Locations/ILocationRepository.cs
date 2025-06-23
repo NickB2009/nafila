@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GrandeTech.QueueHub.API.Domain.Common;
-using GrandeTech.QueueHub.API.Domain.Locations;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Locations;
 
-namespace GrandeTech.QueueHub.API.Domain.Locations
+namespace Grande.Fila.API.Domain.Locations
 {
     /// <summary>
     /// Repository interface for Location aggregate root
