@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:eutonafila_frontend/ui/screens/account_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/personal_info_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/favoritos_screen.dart';
-import 'package:eutonafila_frontend/ui/screens/comunicacoes_screen.dart';
-import 'package:eutonafila_frontend/ui/screens/atendimento_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/accessibility_notice_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/legal_privacy_screen.dart';
 import 'package:eutonafila_frontend/ui/widgets/bottom_nav_bar.dart';
@@ -175,22 +173,40 @@ void main() {
 
     testWidgets('should handle communication settings navigation with scrolling', (WidgetTester tester) async {
       await tester.pumpWidget(wrapWithProviders(const AccountScreen()));
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -500));
+      
+      // Scroll to make the button visible
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Configurações de Comunicação'), warnIfMissed: false);
+      
+      // Try to find and tap the button
+      final button = find.text('Configurações de Comunicação');
+      expect(button, findsOneWidget);
+      
+      await tester.tap(button, warnIfMissed: false);
       await tester.pumpAndSettle();
-      expect(find.byType(ComunicacoesScreen), findsOneWidget);
+      
+      // Check if the screen content is visible instead of the widget type
+      expect(find.text('Como você gostaria de receber notificações e atualizações?'), findsOneWidget);
     });
 
     // Skipping DisplayScreen navigation test due to Provider dependency
 
     testWidgets('should handle customer service navigation with scrolling', (WidgetTester tester) async {
       await tester.pumpWidget(wrapWithProviders(const AccountScreen()));
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -700));
+      
+      // Scroll to make the button visible
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Atendimento ao Cliente'), warnIfMissed: false);
+      
+      // Try to find and tap the button
+      final button = find.text('Atendimento ao Cliente');
+      expect(button, findsOneWidget);
+      
+      await tester.tap(button, warnIfMissed: false);
       await tester.pumpAndSettle();
-      expect(find.byType(AtendimentoScreen), findsOneWidget);
+      
+      // Check if the screen content is visible instead of the widget type
+      expect(find.text('Perguntas Frequentes'), findsOneWidget);
     });
 
     testWidgets('should handle accessibility notice navigation with scrolling', (WidgetTester tester) async {

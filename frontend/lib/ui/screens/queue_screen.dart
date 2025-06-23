@@ -237,7 +237,7 @@ class QueueScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(
           'Adicionar Pessoa à Fila',
           style: theme.textTheme.titleLarge,
@@ -255,7 +255,7 @@ class QueueScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
               'Cancelar',
               style: theme.textTheme.labelLarge?.copyWith(
@@ -269,7 +269,7 @@ class QueueScreen extends StatelessWidget {
                 context
                     .read<MockQueueNotifier>()
                     .addToQueue(nameController.text.trim());
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
               }
             },
             child: Text(
@@ -287,7 +287,7 @@ class QueueScreen extends StatelessWidget {
     
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
+      builder: (bottomSheetContext) => Container(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -311,7 +311,7 @@ class QueueScreen extends StatelessWidget {
                   context
                       .read<MockQueueNotifier>()
                       .updateStatus(entry.id, QueueStatus.inService);
-                  Navigator.of(context).pop();
+                  Navigator.of(bottomSheetContext).pop();
                 },
               ),
             ],
@@ -329,7 +329,7 @@ class QueueScreen extends StatelessWidget {
                   context
                       .read<MockQueueNotifier>()
                       .updateStatus(entry.id, QueueStatus.completed);
-                  Navigator.of(context).pop();
+                  Navigator.of(bottomSheetContext).pop();
                 },
               ),
             ],
@@ -346,7 +346,7 @@ class QueueScreen extends StatelessWidget {
               ),
               onTap: () {
                 context.read<MockQueueNotifier>().removeFromQueue(entry.id);
-                Navigator.of(context).pop();
+                Navigator.of(bottomSheetContext).pop();
               },
             ),
             const SizedBox(height: 16),

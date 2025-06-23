@@ -39,12 +39,16 @@ class StatusPanel extends StatelessWidget {
             color: statusInfo.color,
           ),
           const SizedBox(width: 4),
-          Text(
-            status.displayName,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: statusInfo.color,
-              fontWeight: FontWeight.w600,
-              fontSize: compact ? 11 : 12,
+          Flexible(
+            child: Text(
+              status.displayName,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: statusInfo.color,
+                fontWeight: FontWeight.w600,
+                fontSize: compact ? 11 : 12,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],

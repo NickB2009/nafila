@@ -97,11 +97,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Text(
-                        'Meu Perfil',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          'Meu Perfil',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

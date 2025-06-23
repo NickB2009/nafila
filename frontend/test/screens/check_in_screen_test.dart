@@ -1,6 +1,6 @@
-import '../../lib/ui/screens/check_in_screen.dart';
-import '../../lib/ui/screens/check_in_success_screen.dart';
-import '../../lib/models/salon.dart';
+import 'package:eutonafila_frontend/ui/screens/check_in_screen.dart';
+import 'package:eutonafila_frontend/ui/screens/check_in_success_screen.dart';
+import 'package:eutonafila_frontend/models/salon.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

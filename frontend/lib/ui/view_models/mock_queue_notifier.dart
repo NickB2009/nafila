@@ -3,36 +3,40 @@ import '../../models/queue_entry.dart';
 
 /// Mock state management for queue entries during development phase
 class MockQueueNotifier extends ChangeNotifier {
-  List<QueueEntry> _entries = [];
-  bool _isLoading = false;
+  // Changed to protected for test access
+  List<QueueEntry> entries = [];
+  bool isLoading = false;
 
   /// Current list of queue entries
-  List<QueueEntry> get entries => _entries;
+  List<QueueEntry> get _entries => entries;
 
   /// Whether the queue is currently loading
-  bool get isLoading => _isLoading;
+  bool get _isLoading => isLoading;
 
   /// Number of people currently waiting
   int get waitingCount =>
-      _entries.where((entry) => entry.status == QueueStatus.waiting).length;
+      entries.where((entry) => entry.status == QueueStatus.waiting).length;
 
   /// Number of people currently in service
   int get inServiceCount =>
-      _entries.where((entry) => entry.status == QueueStatus.inService).length;
+      entries.where((entry) => entry.status == QueueStatus.inService).length;
 
+  // Default constructor loads mock data
   MockQueueNotifier() {
-    // Load data immediately without delay for better UX
     _loadMockData();
   }
 
+  // Named constructor for tests: does not load mock data
+  MockQueueNotifier.forTest();
+
   /// Loads mock data for development
   void _loadMockData() {
-    _isLoading = true;
+    isLoading = true;
     notifyListeners();
 
     // Reduced delay for faster loading
     Future.delayed(const Duration(milliseconds: 100), () {
-      _entries = [
+      entries = [
         QueueEntry(
           id: '1',
           name: 'John Doe',
@@ -70,7 +74,7 @@ class MockQueueNotifier extends ChangeNotifier {
         ),
       ];
 
-      _isLoading = false;
+      isLoading = false;
       notifyListeners();
     });
   }
@@ -85,16 +89,16 @@ class MockQueueNotifier extends ChangeNotifier {
       position: waitingCount + 1,
     );
 
-    _entries.add(newEntry);
+    entries.add(newEntry);
     _updatePositions();
     notifyListeners();
   }
 
   /// Updates the status of a queue entry
   void updateStatus(String id, QueueStatus newStatus) {
-    final index = _entries.indexWhere((entry) => entry.id == id);
+    final index = entries.indexWhere((entry) => entry.id == id);
     if (index != -1) {
-      _entries[index] = _entries[index].copyWith(status: newStatus);
+      entries[index] = entries[index].copyWith(status: newStatus);
       _updatePositions();
       notifyListeners();
     }
@@ -102,30 +106,30 @@ class MockQueueNotifier extends ChangeNotifier {
 
   /// Removes a person from the queue
   void removeFromQueue(String id) {
-    _entries.removeWhere((entry) => entry.id == id);
+    entries.removeWhere((entry) => entry.id == id);
     _updatePositions();
     notifyListeners();
   }
 
   /// Updates positions for waiting entries
   void _updatePositions() {
-    final waitingEntries = _entries
+    final waitingEntries = entries
         .where((entry) => entry.status == QueueStatus.waiting)
         .toList()
       ..sort((a, b) => a.joinTime.compareTo(b.joinTime));
 
     for (int i = 0; i < waitingEntries.length; i++) {
       final index =
-          _entries.indexWhere((entry) => entry.id == waitingEntries[i].id);
+          entries.indexWhere((entry) => entry.id == waitingEntries[i].id);
       if (index != -1) {
-        _entries[index] = _entries[index].copyWith(position: i + 1);
+        entries[index] = entries[index].copyWith(position: i + 1);
       }
     }
 
     // Set position to 0 for non-waiting entries
-    for (int i = 0; i < _entries.length; i++) {
-      if (_entries[i].status != QueueStatus.waiting) {
-        _entries[i] = _entries[i].copyWith(position: 0);
+    for (int i = 0; i < entries.length; i++) {
+      if (entries[i].status != QueueStatus.waiting) {
+        entries[i] = entries[i].copyWith(position: 0);
       }
     }
   }
