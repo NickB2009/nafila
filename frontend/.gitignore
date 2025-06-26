@@ -59,6 +59,12 @@ lcov.info
 .env.*
 !.env.example
 
+# Deployment configuration files (contains FTP credentials)
+deploy_config.json
+*_config.json
+ftpscript.txt
+test_ftp.txt
+
 # Symbolication related
 app.*.symbols
 
