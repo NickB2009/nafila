@@ -7,8 +7,8 @@ param(
 )
 
 # Configuration
-$Host = "ftp.eutonafila.com.br"
-$Port = "21"
+$FtpHost = "ftp.eutonafila.com.br"
+$FtpPort = "21"
 $RemoteDir = "/public_html"
 $LocalBuildDir = "build\web"
 $Domain = "eutonafila.com.br"
@@ -40,18 +40,26 @@ function Write-Header {
 function Test-FlutterInstallation {
     Write-Status "Verifying Flutter installation..."
     
+    $flutterPath = "C:\tools\flutter\bin\flutter.bat"
+    
     try {
-        $flutterVersion = flutter --version 2>$null | Select-Object -First 1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Status "Flutter version: $flutterVersion"
-            return $true
+        if (Test-Path $flutterPath) {
+            $flutterVersion = & $flutterPath --version 2>$null | Select-Object -First 1
+            if ($LASTEXITCODE -eq 0) {
+                Write-Status "Flutter version: $flutterVersion"
+                return $true
+            } else {
+                Write-Error "Flutter is not working properly"
+                Write-Error "Please check Flutter installation: https://docs.flutter.dev/get-started/install"
+                return $false
+            }
         } else {
-            Write-Error "Flutter is not installed or not in PATH"
+            Write-Error "Flutter not found at: $flutterPath"
             Write-Error "Please install Flutter: https://docs.flutter.dev/get-started/install"
             return $false
         }
     } catch {
-        Write-Error "Flutter is not installed or not in PATH"
+        Write-Error "Flutter is not installed or not working"
         Write-Error "Please install Flutter: https://docs.flutter.dev/get-started/install"
         return $false
     }
@@ -59,14 +67,14 @@ function Test-FlutterInstallation {
 
 # Function to verify DNS resolution
 function Test-DnsResolution {
-    Write-Status "Verifying DNS resolution for $Host..."
+    Write-Status "Verifying DNS resolution for $FtpHost..."
     
     try {
-        $dnsResult = Resolve-DnsName -Name $Host -ErrorAction Stop | Select-Object -First 1
-        Write-Status "DNS resolved: $Host -> $($dnsResult.IPAddress)"
+        $dnsResult = Resolve-DnsName -Name $FtpHost -ErrorAction Stop | Select-Object -First 1
+        Write-Status "DNS resolved: $FtpHost -> $($dnsResult.IPAddress)"
         return $true
     } catch {
-        Write-Warning "DNS resolution failed for $Host, but continuing..."
+        Write-Warning "DNS resolution failed for $FtpHost, but continuing..."
         return $false
     }
 }
@@ -95,7 +103,7 @@ function Test-FtpConnection {
     Write-Status "Testing FTP connection..."
     
     $ftpScript = @"
-open $Host $Port
+open $FtpHost $FtpPort
 user $FtpUsername $FtpPasswordPlain
 pwd
 bye
@@ -104,7 +112,7 @@ bye
     $ftpScript | Out-File -FilePath "test_ftp.txt" -Encoding ASCII
     
     try {
-        ftp -inv < test_ftp.txt | Out-Null
+        Get-Content "test_ftp.txt" | ftp -inv | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-Status "FTP connection test successful"
             Remove-Item "test_ftp.txt" -Force
@@ -125,9 +133,11 @@ bye
 function Build-FlutterApp {
     Write-Status "Building Flutter web app..."
     
+    $flutterPath = "C:\tools\flutter\bin\flutter.bat"
+    
     # Clean previous build
     Write-Status "Cleaning previous build..."
-    flutter clean
+    & $flutterPath clean
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Flutter clean failed!"
         return $false
@@ -135,7 +145,7 @@ function Build-FlutterApp {
     
     # Build for web
     Write-Status "Building for web release..."
-    flutter build web --release
+    & $flutterPath build web --release
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Flutter build failed!"
         return $false
@@ -157,7 +167,7 @@ function New-FtpScript {
     Write-Status "Creating FTP upload script..."
     
     $ftpScript = @"
-open $Host $Port
+open $FtpHost $FtpPort
 user $FtpUsername $FtpPasswordPlain
 binary
 cd $RemoteDir
@@ -172,10 +182,10 @@ bye
 
 # Function to upload files
 function Upload-Files {
-    Write-Status "Starting FTP upload to $Host..."
+    Write-Status "Starting FTP upload to $FtpHost..."
     
     try {
-        ftp -inv < ftpscript.txt
+        Get-Content "ftpscript.txt" | ftp -inv
         if ($LASTEXITCODE -eq 0) {
             Write-Status "Upload completed successfully!"
             return $true
@@ -199,64 +209,57 @@ function Remove-TemporaryFiles {
 function Start-Deployment {
     Write-Header
     
-    # Verify Flutter installation
+    # Step 1: Verify Flutter installation
     if (-not (Test-FlutterInstallation)) {
-        Read-Host "Press Enter to exit"
-        exit 1
+        return $false
     }
     
-    # Verify DNS
-    Test-DnsResolution | Out-Null
+    # Step 2: Verify DNS resolution
+    Test-DnsResolution
     
-    # Get credentials
+    # Step 3: Get FTP credentials
     if (-not (Get-FtpCredentials)) {
-        Read-Host "Press Enter to exit"
-        exit 1
+        return $false
     }
     
-    # Test connection
+    # Step 4: Test FTP connection
     if (-not (Test-FtpConnection)) {
-        Read-Host "Press Enter to exit"
-        exit 1
+        return $false
     }
     
-    # Build the app
+    # Step 5: Build Flutter app
     if (-not (Build-FlutterApp)) {
-        Read-Host "Press Enter to exit"
-        exit 1
+        return $false
     }
     
-    # Create FTP script
+    # Step 6: Create FTP script
     New-FtpScript
     
-    # Upload files
+    # Step 7: Upload files
     if (-not (Upload-Files)) {
         Remove-TemporaryFiles
-        Read-Host "Press Enter to exit"
-        exit 1
+        return $false
     }
     
-    # Cleanup
+    # Step 8: Cleanup
     Remove-TemporaryFiles
     
-    # Success message
     Write-Host ""
-    Write-Status "========================================"
-    Write-Status "   Deployment completed successfully!"
-    Write-Status "========================================"
+    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "   Deployment completed successfully!" -ForegroundColor Green
+    Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Status "Your app should be available at: https://$Domain"
-    Write-Status "Please allow a few minutes for changes to propagate."
-    Write-Host ""
+    Write-Status "Please wait a few minutes for changes to propagate."
+    
+    return $true
 }
 
-# Handle script interruption
-trap {
+# Execute deployment
+try {
+    Start-Deployment
+} catch {
     Write-Error "Deployment interrupted: $($_.Exception.Message)"
     Remove-TemporaryFiles
-    Read-Host "Press Enter to exit"
     exit 1
-}
-
-# Run main deployment function
-Start-Deployment 
+} 
