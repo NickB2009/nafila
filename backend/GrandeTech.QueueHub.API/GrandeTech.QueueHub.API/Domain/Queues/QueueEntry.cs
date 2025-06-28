@@ -173,5 +173,11 @@ namespace Grande.Fila.API.Domain.Queues
 
             return (int)Math.Ceiling((CompletedAt.Value - EnteredAt).TotalMinutes);
         }
+
+        // Add a method to set status for testing
+        public void SetStatusForTest(QueueEntryStatus status)
+        {
+            Status = status;
+        }
     }
 }

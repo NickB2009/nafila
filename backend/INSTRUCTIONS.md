@@ -32,11 +32,11 @@ UC-BARBERLOGIN,Barber,Login to barber panel,Access dashboard to manage queue.,1,
 UC-BARBERQUEUE,Barber,View current queue,Display current waiting list.,1,MVP
 UC-BRANDING,Admin/Owner,Customize branding,Update tenant branding (name, colours, etc.).,1,MVP
 UC-CALCWAIT,Admin  Master,Calculate estimated wait,Algorithm calculates wait based on recent data.,1,MVP
-UC-CALLNEXT,Barber,Call next client,Advance queue to next client.,1,MVP
-UC-CANCEL,Client,Cancel queue spot,Client leaves the queue.,1,MVP
+UC-CALLNEXT,Barber,Call next client,Advance queue to next client.,1,MVP ✅
+UC-CANCEL,Client,Cancel queue spot,Client leaves the queue.,1,MVP ✅
 UC-CAPLATE,System,Cap late clients,Remove clients delayed beyond max time.,2,MVP
 UC-CHANGECAP,Admin,Change late cap,Set or modify max late‑time threshold.,2,MVP
-UC-CHECKIN,Client,Check‑in client,Move client from potential queue to present pool.,1,MVP
+UC-CHECKIN,Client,Check‑in client,Move client from potential queue to present pool.,1,MVP ✅
 UC-COUPONNOTIF,System,Send coupon notification,Notify clients of coupons.,1,MVP
 UC-CREATEBARBER,Admin/Owner,Create barbershop,Create new barbershop tenant (with billing).,1,MVP
 UC-DETAINACTIVE,System,Detect inactive barbers,Mark barbers inactive if idle too long with clients.,2,MVP
@@ -44,8 +44,8 @@ UC-DISABLEQ,Admin/Owner,Disable queue temporarily,Pause queue access (e.g., holi
 UC-EDITBARBER,Admin/Owner,Edit barber,Edit barber profiles or roles.,1,MVP
 UC-EDITSHOP,Admin  Master,Edit barbershop settings,Edit tenant data, configs, theme.,2,MVP
 UC-ENDBREAK,Barber,End break,Return barber to active status.,2,MVP
-UC-ENTRY,Client,Enter queue,Join queue via mobile or kiosk.,1,MVP
-UC-FINISH,Barber,Finish appointment,Mark service complete and log duration.,1,MVP
+UC-ENTRY,Client,Enter queue,Join queue via mobile or kiosk.,1,MVP ✅
+UC-FINISH,Barber,Finish appointment,Mark service complete and log duration.,1,MVP ✅
 UC-INPUTDATA,Kiosk,Input basic data,Client enters minimal info (name).,1,MVP
 UC-JWT,Auth,Issue JWT,System issues JWT after login.,1,MVP
 UC-KIOSKADS,,Run kiosk ads,Play ad playlist and credit optional % to barber,3,V2
@@ -182,4 +182,32 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 
 ---
 
-*Last updated: 2025‑06‑09*
+## 7  Implementation Progress
+
+### ✅ Completed Use Cases (MVP Priority 1)
+- **UC-ENTRY** (Client enters queue) - Complete with application service, DTOs, and integration tests
+- **UC-CALLNEXT** (Barber calls next client) - Complete with application service, DTOs, and integration tests  
+- **UC-CANCEL** (Client cancels queue entry) - Complete with application service, DTOs, and integration tests
+- **UC-FINISH** (Client finishes service) - Complete with application service, DTOs, and integration tests
+- **UC-CHECKIN** (Client check-in) - Complete with application service, DTOs, and integration tests
+
+### 🔄 Next Priority Use Cases to Implement
+Based on the use case catalogue, the next high-priority (Priority 1, MVP) use cases to implement are:
+
+1. **UC-BARBERADD** (Barber adds client to queue) - Add client to end of present pool
+2. **UC-BARBERLOGIN** (Barber login to barber panel) - Access dashboard to manage queue
+3. **UC-BARBERQUEUE** (Barber view current queue) - Display current waiting list
+4. **UC-STAFFSTATUS** (Barber change status) - Update availability (busy/free)
+5. **UC-ADMINLOGIN** (Admin login to admin panel) - Admin logs in to manage settings and view analytics
+6. **UC-ENTRY** (Client enters queue) - Join queue via mobile or kiosk (already implemented)
+7. **UC-INPUTDATA** (Kiosk input basic data) - Client enters minimal info (name)
+
+### 📋 Implementation Notes
+- All completed use cases follow TDD approach with comprehensive unit and integration tests
+- Application services are properly layered with domain-driven design
+- DTOs are used consistently for API contracts
+- Integration tests cover end-to-end scenarios with proper authentication
+
+---
+
+*Last updated: 2025-01-27*

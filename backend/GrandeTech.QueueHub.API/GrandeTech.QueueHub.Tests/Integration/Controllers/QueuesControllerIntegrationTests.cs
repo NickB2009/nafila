@@ -885,7 +885,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsTrue(responseText.Contains("Queue entry ID is required."));
         }
 
-        // UC-FINISH: Complete service integration tests
+        // UC-FINISH: Barber finishes service integration tests
         [TestMethod]
         public async Task Finish_ValidRequest_ReturnsSuccess()
         {
@@ -909,14 +909,18 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
 
             // Join queue as client
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            var clientHttpClient = _factory.CreateClient();
+            clientHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
             var joinRequest = new JoinQueueRequest
             {
                 QueueId = addResult.QueueId.ToString(),
                 CustomerName = "John Doe",
-                IsAnonymous = true
+                PhoneNumber = "+5511999999999"
             };
 
-            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResponse = await clientHttpClient.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
             var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
 
             // Call next as barber
@@ -940,9 +944,9 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Now finish the service
             var finishRequest = new FinishRequest
             {
-                QueueEntryId = callNextResult.QueueEntryId,
+                QueueEntryId = checkInResult.QueueEntryId,
                 ServiceDurationMinutes = 30,
-                Notes = "Great haircut, customer satisfied"
+                Notes = "Great haircut!"
             };
 
             var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
@@ -951,9 +955,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.OK, finishResponse.StatusCode);
             Assert.IsNotNull(finishResult);
             Assert.IsTrue(finishResult.Success);
-            Assert.AreEqual(callNextResult.QueueEntryId, finishResult.QueueEntryId);
+            Assert.AreEqual(checkInResult.QueueEntryId, finishResult.QueueEntryId);
             Assert.AreEqual("John Doe", finishResult.CustomerName);
             Assert.AreEqual(30, finishResult.ServiceDurationMinutes);
+            Assert.AreEqual("Great haircut!", finishResult.Notes);
             Assert.IsNotNull(finishResult.CompletedAt);
         }
 
@@ -980,29 +985,24 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
 
             // Join queue as client
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            var clientHttpClient = _factory.CreateClient();
+            clientHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
             var joinRequest = new JoinQueueRequest
             {
                 QueueId = addResult.QueueId.ToString(),
                 CustomerName = "John Doe",
-                IsAnonymous = true
+                PhoneNumber = "+5511999999999"
             };
 
-            var joinResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
+            var joinResponse = await clientHttpClient.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/join", joinRequest);
             var joinResult = await joinResponse.Content.ReadFromJsonAsync<JoinQueueResult>();
 
-            // Call next as barber
-            var callNextRequest = new CallNextRequest
-            {
-                StaffMemberId = Guid.NewGuid().ToString()
-            };
-
-            var callNextResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/call-next", callNextRequest);
-            var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
-
-            // Try to finish without checking in first
+            // Try to finish service without checking in (should fail)
             var finishRequest = new FinishRequest
             {
-                QueueEntryId = callNextResult.QueueEntryId,
+                QueueEntryId = joinResult.QueueEntryId,
                 ServiceDurationMinutes = 30
             };
 
@@ -1011,7 +1011,31 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
             Assert.IsFalse(finishResult.Success);
-            Assert.IsTrue(finishResult.Errors.Any(e => e.Contains("Cannot complete service for a customer with status")));
+            Assert.IsTrue(finishResult.Errors.Any(e => e.Contains("not checked in")));
+        }
+
+        [TestMethod]
+        public async Task Finish_EmptyQueueEntryId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var queueId = await CreateTestQueueDirectlyAsync();
+
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = "",
+                ServiceDurationMinutes = 30
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/finish", finishRequest);
+            var result = await response.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("QueueEntryId"));
         }
 
         [TestMethod]
@@ -1021,20 +1045,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
-            // Create queue as admin
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
-            var adminClient = _factory.CreateClient();
-            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            var addRequest = new AddQueueRequest
-            {
-                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
-                MaxSize = 50,
-                LateClientCapTimeInMinutes = 15
-            };
-
-            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
-            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+            var queueId = await CreateTestQueueDirectlyAsync();
 
             var finishRequest = new FinishRequest
             {
@@ -1042,8 +1053,78 @@ namespace Grande.Fila.Tests.Integration.Controllers
                 ServiceDurationMinutes = 30
             };
 
-            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
-            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/finish", finishRequest);
+            var result = await response.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("QueueEntryId"));
+        }
+
+        [TestMethod]
+        public async Task Finish_ZeroServiceDuration_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var queueId = await CreateTestQueueDirectlyAsync();
+
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = Guid.NewGuid().ToString(),
+                ServiceDurationMinutes = 0
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/finish", finishRequest);
+            var result = await response.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("ServiceDurationMinutes"));
+        }
+
+        [TestMethod]
+        public async Task Finish_NegativeServiceDuration_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var queueId = await CreateTestQueueDirectlyAsync();
+
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = Guid.NewGuid().ToString(),
+                ServiceDurationMinutes = -5
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/finish", finishRequest);
+            var result = await response.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("ServiceDurationMinutes"));
+        }
+
+        [TestMethod]
+        public async Task Finish_InvalidQueueId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var finishRequest = new FinishRequest
+            {
+                QueueEntryId = Guid.NewGuid().ToString(),
+                ServiceDurationMinutes = 30
+            };
+
+            var response = await client.PostAsJsonAsync("/api/queues/invalid-guid/finish", finishRequest);
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [TestMethod]
@@ -1076,7 +1157,11 @@ namespace Grande.Fila.Tests.Integration.Controllers
             };
 
             var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
-            Assert.AreEqual(HttpStatusCode.NotFound, finishResponse.StatusCode);
+            var finishResult = await finishResponse.Content.ReadFromJsonAsync<FinishResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
+            Assert.IsFalse(finishResult.Success);
+            Assert.IsTrue(finishResult.Errors.Any(e => e.Contains("not found")));
         }
 
         [TestMethod]
@@ -1094,86 +1179,20 @@ namespace Grande.Fila.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task Finish_EmptyQueueEntryId_ReturnsBadRequest()
+        public async Task Finish_WithNonBarberRole_ReturnsForbidden()
         {
             var client = _factory.CreateClient();
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
-
-            // Create queue as admin
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
-            var adminClient = _factory.CreateClient();
-            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
-
-            var addRequest = new AddQueueRequest
-            {
-                LocationId = Guid.Parse("12345678-1234-1234-1234-123456789012"),
-                MaxSize = 50,
-                LateClientCapTimeInMinutes = 15
-            };
-
-            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
-            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
 
             var finishRequest = new FinishRequest
             {
-                QueueEntryId = "", // Empty queue entry ID
+                QueueEntryId = Guid.NewGuid().ToString(),
                 ServiceDurationMinutes = 30
             };
 
-            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/finish", finishRequest);
-            var contentType = finishResponse.Content.Headers.ContentType?.MediaType;
-            Assert.AreEqual(HttpStatusCode.BadRequest, finishResponse.StatusCode);
-            Assert.IsTrue(contentType == "application/json" || contentType == "text/plain");
-            var responseText = await finishResponse.Content.ReadAsStringAsync();
-            Assert.IsTrue(responseText.Contains("Queue entry ID is required."));
-        }
-
-        [TestMethod]
-        public async Task Finish_InvalidServiceDuration_ReturnsBadRequest()
-        {
-            var client = _factory.CreateClient();
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
-
-            // First create a queue and join it
-            var queueId = await CreateTestQueueDirectlyAsync();
-            var joinResult = await JoinTestQueueAsync(client, queueId, "Test Customer");
-
-            // Call next and check in the customer
-            var callNextRequest = new CallNextRequest
-            {
-                StaffMemberId = Guid.NewGuid().ToString()
-            };
-            var callNextResponse = await client.PostAsJsonAsync($"/api/queues/{queueId}/call-next", callNextRequest);
-            var callNextResult = await callNextResponse.Content.ReadFromJsonAsync<CallNextResult>();
-
-            var checkInRequest = new CheckInRequest
-            {
-                QueueEntryId = callNextResult.QueueEntryId
-            };
-            var checkInResponse = await client.PostAsJsonAsync($"/api/queues/{queueId}/check-in", checkInRequest);
-
-            // Now try to finish with invalid duration
-            var finishRequest = new FinishRequest
-            {
-                QueueEntryId = callNextResult.QueueEntryId,
-                ServiceDurationMinutes = 0 // Invalid: must be > 0
-            };
-
-            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/finish", finishRequest);
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<FinishResult>();
-                Assert.IsNotNull(result);
-                Assert.IsFalse(result.Success);
-            }
-            else
-            {
-                var responseText = await response.Content.ReadAsStringAsync();
-                Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-                Assert.IsTrue(responseText.Contains("Service duration must be greater than zero") || responseText.Contains("duration"));
-            }
+            var finishResponse = await client.PostAsJsonAsync($"/api/queues/{Guid.NewGuid()}/finish", finishRequest);
+            Assert.AreEqual(HttpStatusCode.Forbidden, finishResponse.StatusCode);
         }
 
         // UC-CANCEL: Client cancels queue spot

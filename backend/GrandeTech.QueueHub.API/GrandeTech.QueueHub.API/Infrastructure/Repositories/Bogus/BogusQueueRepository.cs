@@ -99,5 +99,25 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             var queues = await GetAllAsync(cancellationToken);
             return queues.Where(q => q.LocationId == locationId).ToList();
         }
+
+        public async Task<QueueEntry?> GetQueueEntryById(Guid queueEntryId, CancellationToken cancellationToken)
+        {
+            var queues = await GetAllAsync(cancellationToken);
+            foreach (var queue in queues)
+            {
+                var entry = queue.Entries.FirstOrDefault(e => e.Id == queueEntryId);
+                if (entry != null)
+                {
+                    return entry;
+                }
+            }
+            return null;
+        }
+
+        public void UpdateQueueEntry(QueueEntry queueEntry)
+        {
+            // In a real implementation, this would update the entry in the database
+            // For the bogus repository, assume the entry is updated in memory
+        }
     }
 }

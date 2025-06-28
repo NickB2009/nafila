@@ -18,15 +18,18 @@ namespace Grande.Fila.API.Controllers
         private readonly AddQueueService _addQueueService;
         private readonly IQueueRepository _queueRepository;
         private readonly EstimatedWaitTimeService _estimatedWaitTimeService;
+        private readonly FinishService _finishService;
 
         public QueuesController(
             AddQueueService addQueueService,
             IQueueRepository queueRepository,
-            EstimatedWaitTimeService estimatedWaitTimeService)
+            EstimatedWaitTimeService estimatedWaitTimeService,
+            FinishService finishService)
         {
             _addQueueService = addQueueService;
             _queueRepository = queueRepository;
             _estimatedWaitTimeService = estimatedWaitTimeService;
+            _finishService = finishService;
         }
 
         public class QueueDto
@@ -299,96 +302,27 @@ namespace Grande.Fila.API.Controllers
             [FromBody] FinishRequest request,
             CancellationToken cancellationToken)
         {
-            var result = new FinishResult();
-
             // Validate queue id
             if (!Guid.TryParse(id, out var queueId))
-            {
-                result.Success = false;
-                result.FieldErrors.Add("QueueId", "Invalid queue id.");
-                return BadRequest(result);
-            }
-
-            // Validate queue entry id
-            if (string.IsNullOrWhiteSpace(request.QueueEntryId))
-            {
-                result.Success = false;
-                result.FieldErrors.Add("QueueEntryId", "Queue entry ID is required.");
-                return BadRequest(result);
-            }
-
-            if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
-            {
-                result.Success = false;
-                result.FieldErrors.Add("QueueEntryId", "Invalid queue entry ID format.");
-                return BadRequest(result);
-            }
-
-            // Validate service duration
-            if (request.ServiceDurationMinutes <= 0)
-            {
-                result.Success = false;
-                result.FieldErrors.Add("ServiceDurationMinutes", "Service duration must be greater than 0 minutes.");
-                return BadRequest(result);
-            }
+                return BadRequest("Invalid queue id.");
 
             // Get user id
             var userId = User?.Identity?.IsAuthenticated == true
                 ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
                 : "anonymous";
 
-            // Get queue
-            var queue = await _queueRepository.GetByIdAsync(queueId, cancellationToken);
-            if (queue == null)
-                return NotFound();
+            // Use the FinishService to handle the business logic
+            var result = await _finishService.FinishAsync(request, userId, cancellationToken);
 
-            try
+            if (!result.Success)
             {
-                // Find the queue entry
-                var queueEntry = queue.Entries.FirstOrDefault(e => e.Id == queueEntryId);
-                if (queueEntry == null)
-                    return NotFound();
-
-                // Complete the service using domain logic
-                queueEntry.Complete(request.ServiceDurationMinutes);
-                
-                // Update notes if provided
-                if (!string.IsNullOrWhiteSpace(request.Notes))
-                {
-                    queueEntry.UpdateNotes(request.Notes);
-                }
-
-                // Update queue in repository
-                await _queueRepository.UpdateAsync(queue, cancellationToken);
-
-                // Return success result
-                result.Success = true;
-                result.QueueEntryId = queueEntry.Id.ToString();
-                result.CustomerName = queueEntry.CustomerName;
-                result.ServiceDurationMinutes = queueEntry.ServiceDurationMinutes ?? 0;
-                result.CompletedAt = queueEntry.CompletedAt;
-                result.Notes = queueEntry.Notes;
-
-                return Ok(result);
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Count > 0)
+                    return BadRequest(result);
             }
-            catch (InvalidOperationException ex)
-            {
-                result.Success = false;
-                result.Errors.Add(ex.Message);
-                return BadRequest(result);
-            }
-            catch (ArgumentException ex)
-            {
-                result.Success = false;
-                result.FieldErrors.Add("ServiceDurationMinutes", ex.Message);
-                return BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.Errors.Add($"An error occurred while completing service: {ex.Message}");
-                return BadRequest(result);
-            }
+
+            return Ok(result);
         }
 
         [HttpPost("{id}/cancel")]

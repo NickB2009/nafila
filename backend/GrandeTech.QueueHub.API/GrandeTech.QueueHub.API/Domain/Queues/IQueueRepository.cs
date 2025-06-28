@@ -10,5 +10,7 @@ namespace Grande.Fila.API.Domain.Queues
     {
         Task<Queue?> GetByLocationIdAsync(Guid locationId, CancellationToken cancellationToken);
         Task<IList<Queue>> GetAllByLocationIdAsync(Guid locationId, CancellationToken cancellationToken);
+        Task<QueueEntry?> GetQueueEntryById(Guid queueEntryId, CancellationToken cancellationToken);
+        void UpdateQueueEntry(QueueEntry queueEntry);
     }
 } 

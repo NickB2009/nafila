@@ -21,7 +21,7 @@ namespace Grande.Fila.API.Application.Queues
         /// <summary>
         /// Checks in a customer who has been called
         /// </summary>
-        public Task<CheckInResult> CheckInAsync(CheckInRequest request, string userId, CancellationToken cancellationToken = default)
+        public async Task<CheckInResult> CheckInAsync(CheckInRequest request, string userId, CancellationToken cancellationToken = default)
         {
             var result = new CheckInResult();
 
@@ -30,37 +30,63 @@ namespace Grande.Fila.API.Application.Queues
             {
                 result.FieldErrors["QueueEntryId"] = "Queue entry ID is required.";
             }
-
-            if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
+            else if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
             {
                 result.FieldErrors["QueueEntryId"] = "Invalid queue entry ID format.";
             }
 
             if (result.FieldErrors.Count > 0)
-                return Task.FromResult(result);
+                return result;
+
+            // Parse the queue entry ID since validation passed
+            var parsedQueueEntryId = Guid.Parse(request.QueueEntryId);
 
             try
             {
-                // The actual check-in logic will be implemented in the controller
-                // since we need to find the queue entry within the queue
+                // Get the queue entry
+                var queueEntry = await _queueRepository.GetQueueEntryById(parsedQueueEntryId, cancellationToken);
+                if (queueEntry == null)
+                {
+                    result.Errors.Add("Queue entry not found.");
+                    return result;
+                }
 
+                // Validate status - customer must be called to be checked in
+                if (queueEntry.Status != QueueEntryStatus.Called)
+                {
+                    result.Errors.Add("Customer must be called before they can be checked in.");
+                    return result;
+                }
+
+                // Check in the customer
+                queueEntry.CheckIn();
+                
+                // Update the queue entry in the repository
+                _queueRepository.UpdateQueueEntry(queueEntry);
+
+                // Populate the result with success data
                 result.Success = true;
-                return Task.FromResult(result);
+                result.QueueEntryId = queueEntry.Id.ToString();
+                result.CustomerName = queueEntry.CustomerName;
+                result.Position = queueEntry.Position;
+                result.CheckedInAt = queueEntry.CheckedInAt;
+
+                return result;
             }
             catch (InvalidOperationException ex)
             {
                 result.Errors.Add(ex.Message);
-                return Task.FromResult(result);
+                return result;
             }
             catch (ArgumentException ex)
             {
                 result.Errors.Add(ex.Message);
-                return Task.FromResult(result);
+                return result;
             }
             catch (Exception ex)
             {
                 result.Errors.Add($"An error occurred while checking in customer: {ex.Message}");
-                return Task.FromResult(result);
+                return result;
             }
         }
     }

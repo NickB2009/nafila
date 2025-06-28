@@ -21,7 +21,7 @@ namespace Grande.Fila.API.Application.Queues
         /// <summary>
         /// Completes a service for a checked-in customer
         /// </summary>
-        public Task<FinishResult> FinishAsync(FinishRequest request, string userId, CancellationToken cancellationToken = default)
+        public async Task<FinishResult> FinishAsync(FinishRequest request, string userId, CancellationToken cancellationToken = default)
         {
             var result = new FinishResult();
 
@@ -30,8 +30,7 @@ namespace Grande.Fila.API.Application.Queues
             {
                 result.FieldErrors["QueueEntryId"] = "Queue entry ID is required.";
             }
-
-            if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
+            else if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
             {
                 result.FieldErrors["QueueEntryId"] = "Invalid queue entry ID format.";
             }
@@ -42,30 +41,58 @@ namespace Grande.Fila.API.Application.Queues
             }
 
             if (result.FieldErrors.Count > 0)
-                return Task.FromResult(result);
+                return result;
+
+            // Parse the queue entry ID since validation passed
+            var parsedQueueEntryId = Guid.Parse(request.QueueEntryId);
 
             try
             {
-                // The actual finish logic is implemented in the controller
-                // since we need to find the queue entry within the queue
+                // Get the queue entry
+                var queueEntry = await _queueRepository.GetQueueEntryById(parsedQueueEntryId, cancellationToken);
+                if (queueEntry == null)
+                {
+                    result.Errors.Add("Queue entry not found.");
+                    return result;
+                }
 
+                // Validate status
+                if (queueEntry.Status != QueueEntryStatus.CheckedIn)
+                {
+                    result.Errors.Add("Customer is not checked in.");
+                    return result;
+                }
+
+                // Complete the service
+                queueEntry.Complete(request.ServiceDurationMinutes);
+                
+                // Update the queue entry in the repository
+                _queueRepository.UpdateQueueEntry(queueEntry);
+
+                // Populate the result with success data
                 result.Success = true;
-                return Task.FromResult(result);
+                result.QueueEntryId = queueEntry.Id.ToString();
+                result.CustomerName = queueEntry.CustomerName;
+                result.ServiceDurationMinutes = request.ServiceDurationMinutes;
+                result.CompletedAt = queueEntry.CompletedAt;
+                result.Notes = request.Notes;
+
+                return result;
             }
             catch (InvalidOperationException ex)
             {
                 result.Errors.Add(ex.Message);
-                return Task.FromResult(result);
+                return result;
             }
             catch (ArgumentException ex)
             {
                 result.Errors.Add(ex.Message);
-                return Task.FromResult(result);
+                return result;
             }
             catch (Exception ex)
             {
                 result.Errors.Add($"An error occurred while completing service: {ex.Message}");
-                return Task.FromResult(result);
+                return result;
             }
         }
     }
