@@ -1,11 +1,11 @@
 @echo off
 cd build\web
 
-echo Uploading simplified index.html...
+echo Uploading with new password...
 
 echo open ftp.eutonafila.com.br> ftpcmd.txt
 echo user eutonafila>> ftpcmd.txt
-echo luqu1459>> ftpcmd.txt
+echo EJR827hfffhfjsjsiior>> ftpcmd.txt
 echo binary>> ftpcmd.txt
 echo cd www/app>> ftpcmd.txt
 echo put index.html>> ftpcmd.txt
