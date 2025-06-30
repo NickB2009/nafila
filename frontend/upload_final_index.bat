@@ -1,7 +1,7 @@
 @echo off
 cd build\web
 
-echo Uploading simplified index.html...
+echo Uploading index.html (final attempt)...
 
 echo open ftp.eutonafila.com.br> ftpcmd.txt
 echo user eutonafila>> ftpcmd.txt
@@ -16,8 +16,10 @@ ftp -n -s:ftpcmd.txt
 del ftpcmd.txt
 
 echo.
-echo index.html uploaded with simplified Flutter initialization
-echo Clear your browser cache and try:
+echo index.html updated with new Flutter initialization
+echo Clear your browser cache completely and try:
 echo http://eutonafila.com.br/app/
+echo.
+echo If you still see errors, please let me know the exact error message.
 echo.
 pause 
