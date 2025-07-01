@@ -198,15 +198,15 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 - **UC-KIOSKCANCEL** (Kiosk cancellation) - Complete with KioskController
 - **UC-STAFFSTATUS** (Barber change status) - Complete with application service, DTOs, and integration tests
 - **UC-ADMINLOGIN, UC-BARBERLOGIN, UC-LOGINCLIENT** (Authentication) - Complete with AuthController and JWT
+- **UC-BRANDING** (Admin/Owner customize branding) - Complete with OrganizationService and controller endpoint
+- **UC-TRACKQ** (Admin/Owner track live activity) - Complete with TrackLiveActivityService and integration tests
 
 ### 🔄 Remaining High Priority Use Cases
 Based on the use case catalogue, these high-priority MVP use cases still need implementation:
 
 1. **UC-ADDBARBER** (Admin/Owner adds barbers) - Already implemented in StaffController
-2. **UC-BRANDING** (Admin/Owner customize branding) - Not yet implemented
-3. **UC-TRACKQ** (Admin/Owner track live activity) - Not yet implemented  
-4. **UC-MANAGESERV** (Admin/Owner manage services) - Partially implemented (ServicesOfferedController exists)
-5. **UC-CREATEBARBER** (Create new barbershop tenant) - Not yet implemented
+2. **UC-MANAGESERV** (Admin/Owner manage services) - Partially implemented (ServicesOfferedController exists)
+3. **UC-CREATEBARBER** (Create new barbershop tenant) - Not yet implemented
 
 ### 📋 New API Endpoints Added
 - **GET /api/queues/{id}/entries** - Barbers can view current queue with all entries
@@ -215,6 +215,8 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 - **GET /api/queues/{id}/wait-time** - Anyone can check estimated wait time for queue
 - **POST /api/kiosk/join** - Kiosk users can join queue with basic data input
 - **POST /api/kiosk/cancel** - Kiosk users can cancel their queue entry
+- **PUT /api/organizations/{id}/branding** - Admin/Owner can update organization branding
+- **GET /api/organizations/{id}/live-activity** - Admin/Owner can track real-time queue and staff activity
 
 ### 📋 Implementation Notes
 - All completed use cases follow TDD approach with comprehensive unit and integration tests

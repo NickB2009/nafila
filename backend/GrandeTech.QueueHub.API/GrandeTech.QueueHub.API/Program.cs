@@ -130,6 +130,7 @@ builder.Services.AddScoped<AddServiceOfferedService>();
 // Register organization services
 builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.CreateOrganizationService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.OrganizationService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.TrackLiveActivityService>();
 
 // Register repositories
 builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
