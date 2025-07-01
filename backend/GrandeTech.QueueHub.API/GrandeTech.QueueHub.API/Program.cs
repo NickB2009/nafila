@@ -139,6 +139,7 @@ builder.Services.AddScoped<CallNextService>();
 builder.Services.AddScoped<CheckInService>();
 builder.Services.AddScoped<FinishService>();
 builder.Services.AddScoped<CancelQueueService>();
+builder.Services.AddScoped<BarberAddService>();
 builder.Services.AddScoped<EstimatedWaitTimeService>();
 builder.Services.AddScoped<Grande.Fila.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 

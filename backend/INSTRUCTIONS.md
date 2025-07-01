@@ -190,23 +190,39 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 - **UC-CANCEL** (Client cancels queue entry) - Complete with application service, DTOs, and integration tests
 - **UC-FINISH** (Client finishes service) - Complete with application service, DTOs, and integration tests
 - **UC-CHECKIN** (Client check-in) - Complete with application service, DTOs, and integration tests
+- **UC-BARBERADD** (Barber adds client to queue) - Complete with application service and controller endpoint
+- **UC-BARBERQUEUE** (Barber view current queue) - Complete with GET /api/queues/{id}/entries endpoint
+- **UC-QUEUELISTCLI** (Client view live queue) - Complete with GET /api/queues/{id}/public endpoint  
+- **UC-WAITTIME** (View estimated wait time) - Complete with GET /api/queues/{id}/wait-time endpoint
+- **UC-INPUTDATA** (Kiosk input basic data) - Complete with KioskController and integration tests
+- **UC-KIOSKCANCEL** (Kiosk cancellation) - Complete with KioskController
+- **UC-STAFFSTATUS** (Barber change status) - Complete with application service, DTOs, and integration tests
+- **UC-ADMINLOGIN, UC-BARBERLOGIN, UC-LOGINCLIENT** (Authentication) - Complete with AuthController and JWT
 
-### 🔄 Next Priority Use Cases to Implement
-Based on the use case catalogue, the next high-priority (Priority 1, MVP) use cases to implement are:
+### 🔄 Remaining High Priority Use Cases
+Based on the use case catalogue, these high-priority MVP use cases still need implementation:
 
-1. **UC-BARBERADD** (Barber adds client to queue) - Add client to end of present pool
-2. **UC-BARBERLOGIN** (Barber login to barber panel) - Access dashboard to manage queue
-3. **UC-BARBERQUEUE** (Barber view current queue) - Display current waiting list
-4. **UC-STAFFSTATUS** (Barber change status) - Update availability (busy/free)
-5. **UC-ADMINLOGIN** (Admin login to admin panel) - Admin logs in to manage settings and view analytics
-6. **UC-ENTRY** (Client enters queue) - Join queue via mobile or kiosk (already implemented)
-7. **UC-INPUTDATA** (Kiosk input basic data) - Client enters minimal info (name)
+1. **UC-ADDBARBER** (Admin/Owner adds barbers) - Already implemented in StaffController
+2. **UC-BRANDING** (Admin/Owner customize branding) - Not yet implemented
+3. **UC-TRACKQ** (Admin/Owner track live activity) - Not yet implemented  
+4. **UC-MANAGESERV** (Admin/Owner manage services) - Partially implemented (ServicesOfferedController exists)
+5. **UC-CREATEBARBER** (Create new barbershop tenant) - Not yet implemented
+
+### 📋 New API Endpoints Added
+- **GET /api/queues/{id}/entries** - Barbers can view current queue with all entries
+- **GET /api/queues/{id}/public** - Public endpoint for clients to view live queue status
+- **POST /api/queues/{id}/barber-add** - Barbers can add walk-in clients to queue
+- **GET /api/queues/{id}/wait-time** - Anyone can check estimated wait time for queue
+- **POST /api/kiosk/join** - Kiosk users can join queue with basic data input
+- **POST /api/kiosk/cancel** - Kiosk users can cancel their queue entry
 
 ### 📋 Implementation Notes
 - All completed use cases follow TDD approach with comprehensive unit and integration tests
 - Application services are properly layered with domain-driven design
 - DTOs are used consistently for API contracts
 - Integration tests cover end-to-end scenarios with proper authentication
+- KioskController provides anonymous access for kiosk functionality
+- Queue viewing endpoints support different authorization levels (barber vs public)
 
 ---
 
