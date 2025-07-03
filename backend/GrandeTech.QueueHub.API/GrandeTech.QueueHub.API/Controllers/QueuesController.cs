@@ -19,17 +19,20 @@ namespace Grande.Fila.API.Controllers
         private readonly IQueueRepository _queueRepository;
         private readonly EstimatedWaitTimeService _estimatedWaitTimeService;
         private readonly FinishService _finishService;
+        private readonly BarberAddService _barberAddService;
 
         public QueuesController(
             AddQueueService addQueueService,
             IQueueRepository queueRepository,
             EstimatedWaitTimeService estimatedWaitTimeService,
-            FinishService finishService)
+            FinishService finishService,
+            BarberAddService barberAddService)
         {
             _addQueueService = addQueueService;
             _queueRepository = queueRepository;
             _estimatedWaitTimeService = estimatedWaitTimeService;
             _finishService = finishService;
+            _barberAddService = barberAddService;
         }
 
         public class QueueDto
@@ -129,6 +132,40 @@ namespace Grande.Fila.API.Controllers
                 if (result.Errors.Any(e => e.Contains("maximum size")))
                     return BadRequest(result);
                 if (result.Errors.Any())
+                    return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/barber-add")]
+        [RequireBarber] // Only barbers can add customers to queue
+        public async Task<IActionResult> BarberAdd(
+            string id,
+            [FromBody] BarberAddRequest request,
+            CancellationToken cancellationToken)
+        {
+            // Validate queue id
+            if (!Guid.TryParse(id, out var queueId))
+                return BadRequest("Invalid queue id.");
+
+            // Ensure request.QueueId matches route id
+            if (request.QueueId != id)
+                request.QueueId = id;
+
+            // Get user id
+            var userId = User?.Identity?.IsAuthenticated == true
+                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                : "anonymous";
+
+            // Use BarberAddService to handle the business logic
+            var result = await _barberAddService.BarberAddAsync(request, userId, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Count > 0)
                     return BadRequest(result);
             }
 

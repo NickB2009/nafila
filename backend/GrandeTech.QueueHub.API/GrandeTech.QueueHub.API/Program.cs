@@ -135,6 +135,7 @@ builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.Organizatio
 builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
 builder.Services.AddScoped<AddQueueService>();
 builder.Services.AddScoped<JoinQueueService>();
+builder.Services.AddScoped<BarberAddService>();
 builder.Services.AddScoped<CallNextService>();
 builder.Services.AddScoped<CheckInService>();
 builder.Services.AddScoped<FinishService>();

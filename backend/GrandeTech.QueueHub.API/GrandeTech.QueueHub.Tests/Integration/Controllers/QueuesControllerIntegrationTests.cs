@@ -69,6 +69,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
                         services.AddScoped<AddQueueService>();
                         services.AddScoped<AuthService>();
                         services.AddScoped<JoinQueueService>();
+                        services.AddScoped<BarberAddService>();
                         services.AddScoped<ICustomerRepository, BogusCustomerRepository>();
                         services.AddScoped<CallNextService>();
                         services.AddScoped<CheckInService>();
@@ -1396,6 +1397,374 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
+        }
+
+        // UC-BARBERADD: Barber adds client to queue integration tests
+        [TestMethod]
+        public async Task BarberAdd_ValidRequest_ReturnsSuccess()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create location and staff member first
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = locationId,
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Barber adds customer to queue
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "John Doe",
+                PhoneNumber = "+5511999999999",
+                Notes = "Regular customer"
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/barber-add", barberAddRequest);
+            var barberAddResult = await barberAddResponse.Content.ReadFromJsonAsync<BarberAddResult>();
+
+            Assert.AreEqual(HttpStatusCode.OK, barberAddResponse.StatusCode);
+            Assert.IsNotNull(barberAddResult);
+            Assert.IsTrue(barberAddResult.Success);
+            Assert.AreNotEqual(Guid.Empty, Guid.Parse(barberAddResult.QueueEntryId));
+            Assert.AreEqual("John Doe", barberAddResult.CustomerName);
+            Assert.IsTrue(barberAddResult.Position > 0);
+            Assert.IsNotNull(barberAddResult.AddedAt);
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_AnonymousCustomer_ReturnsSuccess()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create location and staff member first
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = locationId,
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Barber adds anonymous customer to queue
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "Anonymous Customer"
+                // No phone number or email - creates anonymous customer
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/barber-add", barberAddRequest);
+            var barberAddResult = await barberAddResponse.Content.ReadFromJsonAsync<BarberAddResult>();
+
+            Assert.AreEqual(HttpStatusCode.OK, barberAddResponse.StatusCode);
+            Assert.IsNotNull(barberAddResult);
+            Assert.IsTrue(barberAddResult.Success);
+            Assert.AreNotEqual(Guid.Empty, Guid.Parse(barberAddResult.QueueEntryId));
+            Assert.AreEqual("Anonymous Customer", barberAddResult.CustomerName);
+            Assert.IsTrue(barberAddResult.Position > 0);
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_EmptyCustomerName_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create location and staff member first
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = locationId,
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Try to add customer with empty name
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "" // Empty customer name
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/barber-add", barberAddRequest);
+            var barberAddResult = await barberAddResponse.Content.ReadFromJsonAsync<BarberAddResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, barberAddResponse.StatusCode);
+            Assert.IsNotNull(barberAddResult);
+            Assert.IsFalse(barberAddResult.Success);
+            Assert.IsTrue(barberAddResult.FieldErrors.ContainsKey("CustomerName"));
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_InvalidStaffMemberId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create location (no staff member needed for this test)
+            var locationId = await CreateLocationAsync();
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = locationId,
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Try to add customer with invalid staff member id
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                StaffMemberId = "invalid-guid", // Invalid staff member ID
+                CustomerName = "John Doe"
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/barber-add", barberAddRequest);
+            var barberAddResult = await barberAddResponse.Content.ReadFromJsonAsync<BarberAddResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, barberAddResponse.StatusCode);
+            Assert.IsNotNull(barberAddResult);
+            Assert.IsFalse(barberAddResult.Success);
+            Assert.IsTrue(barberAddResult.FieldErrors.ContainsKey("StaffMemberId"));
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_InvalidQueueId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create location and staff member 
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = "invalid-guid",
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "John Doe"
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync("/api/queues/invalid-guid/barber-add", barberAddRequest);
+            
+            Assert.AreEqual(HttpStatusCode.BadRequest, barberAddResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_NonExistentQueue_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create location and staff member 
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            var nonExistentQueueId = Guid.NewGuid();
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = nonExistentQueueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "John Doe"
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync($"/api/queues/{nonExistentQueueId}/barber-add", barberAddRequest);
+            var barberAddResult = await barberAddResponse.Content.ReadFromJsonAsync<BarberAddResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, barberAddResponse.StatusCode);
+            Assert.IsNotNull(barberAddResult);
+            Assert.IsFalse(barberAddResult.Success);
+            Assert.IsTrue(barberAddResult.Errors.Any(e => e.Contains("Queue not found")));
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_WithoutAuthentication_ReturnsUnauthorized()
+        {
+            var client = _factory.CreateClient();
+
+            // Create location and staff member 
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            var queueId = Guid.NewGuid();
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = queueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "John Doe"
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync($"/api/queues/{queueId}/barber-add", barberAddRequest);
+            
+            Assert.AreEqual(HttpStatusCode.Unauthorized, barberAddResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_WithNonBarberRole_ReturnsForbidden()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            // Create location and staff member 
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            // Create queue as admin
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = locationId,
+                MaxSize = 50,
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Try to add customer as client (should be forbidden)
+            var barberAddRequest = new BarberAddRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "John Doe"
+            };
+
+            var barberAddResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/barber-add", barberAddRequest);
+            
+            Assert.AreEqual(HttpStatusCode.Forbidden, barberAddResponse.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task BarberAdd_FullQueue_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            // Create location and staff member 
+            var locationId = await CreateLocationAsync();
+            var staffMemberId = await CreateStaffMemberAsync(locationId);
+
+            // Create queue as admin with size 1
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminClient = _factory.CreateClient();
+            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var addRequest = new AddQueueRequest
+            {
+                LocationId = locationId,
+                MaxSize = 1, // Small queue
+                LateClientCapTimeInMinutes = 15
+            };
+
+            var addResponse = await adminClient.PostAsJsonAsync("/api/queues", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddQueueResult>();
+
+            Assert.IsNotNull(addResult);
+            Assert.IsTrue(addResult.Success);
+
+            // Fill the queue first
+            var firstAddRequest = new BarberAddRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "First Customer"
+            };
+
+            var firstAddResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/barber-add", firstAddRequest);
+            var firstAddResult = await firstAddResponse.Content.ReadFromJsonAsync<BarberAddResult>();
+
+            Assert.AreEqual(HttpStatusCode.OK, firstAddResponse.StatusCode);
+            Assert.IsNotNull(firstAddResult);
+            Assert.IsTrue(firstAddResult.Success);
+
+            // Try to add second customer (should fail - queue is full)
+            var secondAddRequest = new BarberAddRequest
+            {
+                QueueId = addResult.QueueId.ToString(),
+                StaffMemberId = staffMemberId.ToString(),
+                CustomerName = "Second Customer"
+            };
+
+            var secondAddResponse = await client.PostAsJsonAsync($"/api/queues/{addResult.QueueId}/barber-add", secondAddRequest);
+            var secondAddResult = await secondAddResponse.Content.ReadFromJsonAsync<BarberAddResult>();
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, secondAddResponse.StatusCode);
+            Assert.IsNotNull(secondAddResult);
+            Assert.IsFalse(secondAddResult.Success);
+            Assert.IsTrue(secondAddResult.Errors.Any(e => e.Contains("maximum size")));
         }
 
         private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)

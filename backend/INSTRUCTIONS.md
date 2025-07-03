@@ -190,17 +190,16 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 - **UC-CANCEL** (Client cancels queue entry) - Complete with application service, DTOs, and integration tests
 - **UC-FINISH** (Client finishes service) - Complete with application service, DTOs, and integration tests
 - **UC-CHECKIN** (Client check-in) - Complete with application service, DTOs, and integration tests
+- **UC-BARBERADD** (Barber adds client to queue) - Complete with application service, DTOs, API endpoint, and integration tests
 
 ### 🔄 Next Priority Use Cases to Implement
 Based on the use case catalogue, the next high-priority (Priority 1, MVP) use cases to implement are:
 
-1. **UC-BARBERADD** (Barber adds client to queue) - Add client to end of present pool
-2. **UC-BARBERLOGIN** (Barber login to barber panel) - Access dashboard to manage queue
-3. **UC-BARBERQUEUE** (Barber view current queue) - Display current waiting list
-4. **UC-STAFFSTATUS** (Barber change status) - Update availability (busy/free)
-5. **UC-ADMINLOGIN** (Admin login to admin panel) - Admin logs in to manage settings and view analytics
-6. **UC-ENTRY** (Client enters queue) - Join queue via mobile or kiosk (already implemented)
-7. **UC-INPUTDATA** (Kiosk input basic data) - Client enters minimal info (name)
+1. **UC-BARBERLOGIN** (Barber login to barber panel) - Access dashboard to manage queue
+2. **UC-BARBERQUEUE** (Barber view current queue) - Display current waiting list
+3. **UC-STAFFSTATUS** (Barber change status) - Update availability (busy/free)
+4. **UC-ADMINLOGIN** (Admin login to admin panel) - Admin logs in to manage settings and view analytics
+5. **UC-INPUTDATA** (Kiosk input basic data) - Client enters minimal info (name)
 
 ### 📋 Implementation Notes
 - All completed use cases follow TDD approach with comprehensive unit and integration tests
