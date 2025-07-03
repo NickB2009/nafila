@@ -84,7 +84,7 @@ namespace Grande.Fila.API.Application.ServicesOffered
 
                 await _serviceTypeRepository.AddAsync(serviceType, cancellationToken);
                 result.Success = true;
-                result.ServiceTypeId = serviceType.Id.ToString();
+                result.ServiceTypeId = serviceType?.Id.ToString() ?? string.Empty;
             }
             catch (Exception ex)
             {

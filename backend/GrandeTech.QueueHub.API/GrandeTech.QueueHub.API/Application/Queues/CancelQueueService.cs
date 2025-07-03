@@ -14,7 +14,7 @@ namespace Grande.Fila.API.Application.Queues
             _queueRepository = queueRepository ?? throw new ArgumentNullException(nameof(queueRepository));
         }
 
-        public async Task<CancelQueueResult> CancelQueueAsync(CancelQueueRequest request, string userId, CancellationToken cancellationToken)
+        public Task<CancelQueueResult> CancelQueueAsync(CancelQueueRequest request, string userId, CancellationToken cancellationToken)
         {
             var result = new CancelQueueResult();
 
@@ -25,14 +25,14 @@ namespace Grande.Fila.API.Application.Queues
                 {
                     result.Success = false;
                     result.FieldErrors.Add("QueueEntryId", "Queue entry ID is required.");
-                    return result;
+                    return Task.FromResult(result);
                 }
 
                 if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
                 {
                     result.Success = false;
                     result.FieldErrors.Add("QueueEntryId", "Invalid queue entry ID format.");
-                    return result;
+                    return Task.FromResult(result);
                 }
 
                 // For now, return a stub result
@@ -42,13 +42,13 @@ namespace Grande.Fila.API.Application.Queues
                 result.CustomerName = "Test Customer";
                 result.CancelledAt = DateTime.UtcNow;
 
-                return result;
+                return Task.FromResult(result);
             }
             catch (Exception ex)
             {
                 result.Success = false;
                 result.Errors.Add($"An error occurred while canceling queue entry: {ex.Message}");
-                return result;
+                return Task.FromResult(result);
             }
         }
     }
