@@ -1,10 +1,14 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Queues;
 
 namespace Grande.Fila.API.Application.Queues
 {
+    /// <summary>
+    /// Service for handling UC-CANCEL: Client cancels queue spot use case
+    /// </summary>
     public class CancelQueueService
     {
         private readonly IQueueRepository _queueRepository;
@@ -35,13 +39,39 @@ namespace Grande.Fila.API.Application.Queues
                     return result;
                 }
 
-                // For now, return a stub result
-                // TODO: Implement actual cancel logic using domain services
-                result.Success = true;
-                result.QueueEntryId = request.QueueEntryId;
-                result.CustomerName = "Test Customer";
-                result.CancelledAt = DateTime.UtcNow;
+                // Find the queue entry
+                var queueEntry = await _queueRepository.GetQueueEntryById(queueEntryId, cancellationToken);
+                if (queueEntry == null)
+                {
+                    result.Success = false;
+                    result.Errors.Add("Queue entry not found.");
+                    return result;
+                }
 
+                // Cancel the queue entry using domain logic
+                queueEntry.Cancel();
+
+                // Update queue entry in repository
+                _queueRepository.UpdateQueueEntry(queueEntry);
+
+                // Return success result
+                result.Success = true;
+                result.QueueEntryId = queueEntry.Id.ToString();
+                result.CustomerName = queueEntry.CustomerName;
+                result.CancelledAt = queueEntry.CancelledAt;
+
+                return result;
+            }
+            catch (InvalidOperationException ex)
+            {
+                result.Success = false;
+                result.Errors.Add(ex.Message);
+                return result;
+            }
+            catch (ArgumentException ex)
+            {
+                result.Success = false;
+                result.FieldErrors.Add("QueueEntryId", ex.Message);
                 return result;
             }
             catch (Exception ex)

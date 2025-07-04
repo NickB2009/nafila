@@ -21,15 +21,18 @@ namespace Grande.Fila.API.Controllers
         private readonly CreateOrganizationService _createOrganizationService;
         private readonly OrganizationService _organizationService;
         private readonly IOrganizationRepository _organizationRepository;
+        private readonly TrackLiveActivityService _trackLiveActivityService;
 
         public OrganizationsController(
             CreateOrganizationService createOrganizationService,
             OrganizationService organizationService,
-            IOrganizationRepository organizationRepository)
+            IOrganizationRepository organizationRepository,
+            TrackLiveActivityService trackLiveActivityService)
         {
             _createOrganizationService = createOrganizationService;
             _organizationService = organizationService;
             _organizationRepository = organizationRepository;
+            _trackLiveActivityService = trackLiveActivityService;
         }
 
         /// <summary>
@@ -327,6 +330,36 @@ namespace Grande.Fila.API.Controllers
                     TagLine = organization.BrandingConfig.TagLine
                 }
             };
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Gets live activity tracking for an organization (UC-TRACKQ)
+        /// </summary>
+        [HttpGet("{organizationId}/live-activity")]
+        [Authorize(Roles = "Admin,Owner")]
+        public async Task<ActionResult<TrackLiveActivityResult>> GetLiveActivity(
+            string organizationId,
+            CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
+
+            var request = new TrackLiveActivityRequest
+            {
+                OrganizationId = organizationId
+            };
+
+            var result = await _trackLiveActivityService.GetLiveActivityAsync(request, userId, userRole, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Count > 0)
+                    return BadRequest(result);
+            }
 
             return Ok(result);
         }

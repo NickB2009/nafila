@@ -1606,5 +1606,172 @@ namespace Grande.Fila.Tests.Integration.Controllers
             public int MaxSize { get; set; }
             public int LateClientCapTimeInMinutes { get; set; }
         }
+
+        // UC-BARBERQUEUE: Barber can view current queue
+        [TestMethod]
+        public async Task GetQueueEntries_ValidRequest_ReturnsQueueWithEntries()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var queueId = await CreateTestQueueDirectlyAsync();
+            
+            // Add some entries to the queue
+            var customerClient = _factory.CreateClient();
+            await JoinTestQueueAsync(customerClient, queueId, "Customer 1");
+            await JoinTestQueueAsync(customerClient, queueId, "Customer 2");
+
+            var response = await client.GetAsync($"/api/queues/{queueId}/entries");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var entries = result.GetProperty("entries");
+            Assert.IsTrue(entries.GetArrayLength() >= 2);
+            Assert.AreEqual(2, result.GetProperty("activeCount").GetInt32());
+            Assert.AreEqual(2, result.GetProperty("waitingCount").GetInt32());
+        }
+
+        [TestMethod]
+        public async Task GetQueueEntries_WithoutBarberRole_ReturnsForbidden()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            var queueId = await CreateTestQueueDirectlyAsync();
+
+            var response = await client.GetAsync($"/api/queues/{queueId}/entries");
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        // UC-QUEUELISTCLI: Clients can view live queue status
+        [TestMethod]
+        public async Task GetQueuePublic_ValidRequest_ReturnsPublicQueueInfo()
+        {
+            var client = _factory.CreateClient();
+            var queueId = await CreateTestQueueDirectlyAsync();
+            
+            // Add some entries to the queue
+            await JoinTestQueueAsync(client, queueId, "Customer 1");
+            await JoinTestQueueAsync(client, queueId, "Customer 2");
+
+            var response = await client.GetAsync($"/api/queues/{queueId}/public");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.AreEqual(queueId.ToString(), result.GetProperty("queueId").GetString());
+            Assert.AreEqual(2, result.GetProperty("queueLength").GetInt32());
+            Assert.IsTrue(result.GetProperty("isActive").GetBoolean());
+            Assert.IsTrue(result.GetProperty("estimatedWaitTime").GetInt32() >= 0);
+        }
+
+        // UC-BARBERADD: Barber adds client to queue
+        [TestMethod]
+        public async Task BarberAddClient_ValidRequest_ReturnsSuccess()
+        {
+            var client = _factory.CreateClient();
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
+
+            var locationId = await CreateLocationAsync();
+            var staffId = await CreateStaffMemberAsync(locationId);
+            var queueId = await CreateTestQueueAsync(client, locationId);
+
+            var request = new BarberAddRequest
+            {
+                QueueId = queueId.ToString(),
+                CustomerName = "Walk-in Customer",
+                PhoneNumber = "+1234567890",
+                StaffMemberId = staffId.ToString()
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/barber-add", request);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsTrue(result.GetProperty("success").GetBoolean());
+            Assert.AreEqual("Walk-in Customer", result.GetProperty("customerName").GetString());
+            Assert.IsTrue(result.GetProperty("position").GetInt32() > 0);
+        }
+
+        [TestMethod]
+        public async Task BarberAddClient_WithoutBarberRole_ReturnsForbidden()
+        {
+            var client = _factory.CreateClient();
+            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
+
+            var queueId = await CreateTestQueueDirectlyAsync();
+
+            var request = new BarberAddRequest
+            {
+                QueueId = queueId.ToString(),
+                CustomerName = "Walk-in Customer",
+                StaffMemberId = Guid.NewGuid().ToString()
+            };
+
+            var response = await client.PostAsJsonAsync($"/api/queues/{queueId}/barber-add", request);
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        // UC-WAITTIME: Anyone can view estimated wait time
+        [TestMethod]
+        public async Task GetQueueWaitTime_ValidRequest_ReturnsWaitTime()
+        {
+            var client = _factory.CreateClient();
+            var queueId = await CreateTestQueueDirectlyAsync();
+            
+            // Add some entries to the queue
+            await JoinTestQueueAsync(client, queueId, "Customer 1");
+            await JoinTestQueueAsync(client, queueId, "Customer 2");
+
+            var response = await client.GetAsync($"/api/queues/{queueId}/wait-time");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.IsTrue(result.GetProperty("estimatedWaitTimeInMinutes").GetInt32() >= 0);
+            Assert.AreEqual(2, result.GetProperty("queueLength").GetInt32());
+            Assert.IsTrue(result.GetProperty("isActive").GetBoolean());
+        }
+
+        [TestMethod]
+        public async Task GetQueueWaitTime_EmptyQueue_ReturnsZeroWaitTime()
+        {
+            var client = _factory.CreateClient();
+            var queueId = await CreateTestQueueDirectlyAsync();
+
+            var response = await client.GetAsync($"/api/queues/{queueId}/wait-time");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.AreEqual(0, result.GetProperty("estimatedWaitTimeInMinutes").GetInt32());
+            Assert.AreEqual(0, result.GetProperty("queueLength").GetInt32());
+        }
     }
 } 

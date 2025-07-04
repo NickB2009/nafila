@@ -130,6 +130,7 @@ builder.Services.AddScoped<AddServiceOfferedService>();
 // Register organization services
 builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.CreateOrganizationService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.OrganizationService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.TrackLiveActivityService>();
 
 // Register repositories
 builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
@@ -139,6 +140,7 @@ builder.Services.AddScoped<CallNextService>();
 builder.Services.AddScoped<CheckInService>();
 builder.Services.AddScoped<FinishService>();
 builder.Services.AddScoped<CancelQueueService>();
+builder.Services.AddScoped<BarberAddService>();
 builder.Services.AddScoped<EstimatedWaitTimeService>();
 builder.Services.AddScoped<Grande.Fila.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 
