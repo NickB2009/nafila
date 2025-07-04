@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Queues;
@@ -14,42 +15,42 @@ namespace Grande.Fila.API.Application.Queues
             _queueRepository = queueRepository ?? throw new ArgumentNullException(nameof(queueRepository));
         }
 
-        public Task<CancelQueueResult> CancelQueueAsync(CancelQueueRequest request, string userId, CancellationToken cancellationToken)
+        public async Task<CancelQueueResult> CancelQueueAsync(CancelQueueRequest request, string userId, CancellationToken cancellationToken)
         {
             var result = new CancelQueueResult();
 
-            try
+            if (string.IsNullOrWhiteSpace(request.QueueEntryId) || !Guid.TryParse(request.QueueEntryId, out var queueEntryId))
             {
-                // Validate request
-                if (string.IsNullOrWhiteSpace(request.QueueEntryId))
-                {
-                    result.Success = false;
-                    result.FieldErrors.Add("QueueEntryId", "Queue entry ID is required.");
-                    return Task.FromResult(result);
-                }
-
-                if (!Guid.TryParse(request.QueueEntryId, out var queueEntryId))
-                {
-                    result.Success = false;
-                    result.FieldErrors.Add("QueueEntryId", "Invalid queue entry ID format.");
-                    return Task.FromResult(result);
-                }
-
-                // For now, return a stub result
-                // TODO: Implement actual cancel logic using domain services
-                result.Success = true;
-                result.QueueEntryId = request.QueueEntryId;
-                result.CustomerName = "Test Customer";
-                result.CancelledAt = DateTime.UtcNow;
-
-                return Task.FromResult(result);
+                result.FieldErrors["QueueEntryId"] = "Invalid queue entry ID format.";
+                return result;
             }
-            catch (Exception ex)
+
+            var allQueues = await _queueRepository.GetAllAsync(cancellationToken);
+            var queueWithEntry = allQueues.FirstOrDefault(q => q.Entries.Any(e => e.Id == queueEntryId));
+
+            if (queueWithEntry == null)
             {
-                result.Success = false;
-                result.Errors.Add($"An error occurred while canceling queue entry: {ex.Message}");
-                return Task.FromResult(result);
+                result.Errors.Add("Queue entry not found.");
+                return result;
             }
+
+            var entryToCancel = queueWithEntry.Entries.First(e => e.Id == queueEntryId);
+
+            if (entryToCancel.Status != QueueEntryStatus.Waiting)
+            {
+                result.Errors.Add("Only waiting customers can be cancelled.");
+                return result;
+            }
+
+            entryToCancel.Cancel();
+            await _queueRepository.UpdateAsync(queueWithEntry, cancellationToken);
+
+            result.Success = true;
+            result.QueueEntryId = entryToCancel.Id.ToString();
+            result.CustomerName = entryToCancel.CustomerName;
+            result.CancelledAt = entryToCancel.CancelledAt;
+
+            return result;
         }
     }
 } 

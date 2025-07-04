@@ -119,5 +119,11 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             // In a real implementation, this would update the entry in the database
             // For the bogus repository, assume the entry is updated in memory
         }
+
+        public async Task<IReadOnlyList<Queue>> GetByLocationAsync(Guid locationId, CancellationToken cancellationToken = default)
+        {
+            var queues = await GetAllAsync(cancellationToken);
+            return queues.Where(q => q.LocationId == locationId).ToList();
+        }
     }
 }

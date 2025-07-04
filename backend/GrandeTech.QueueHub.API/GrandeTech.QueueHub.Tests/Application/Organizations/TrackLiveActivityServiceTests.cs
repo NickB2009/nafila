@@ -8,6 +8,7 @@ using Grande.Fila.API.Domain.Organizations;
 using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -51,6 +52,10 @@ namespace Grande.Fila.Tests.Application.Organizations
             var queue = CreateTestQueue(queueId, locationId);
             var staffMember = CreateTestStaffMember(staffId, locationId);
 
+            // Set the location ID using reflection  
+            var locationIdProperty = typeof(Location).GetProperty("Id");
+            locationIdProperty?.SetValue(location, locationId);
+
             var request = new TrackLiveActivityRequest
             {
                 OrganizationId = organizationId.ToString()
@@ -69,6 +74,13 @@ namespace Grande.Fila.Tests.Application.Organizations
             var result = await _service.GetLiveActivityAsync(request, "admin-user", "Admin", CancellationToken.None);
 
             // Assert
+            if (!result.Success)
+            {
+                var errors = string.Join(", ", result.Errors);
+                var fieldErrors = string.Join(", ", result.FieldErrors.Select(kv => $"{kv.Key}: {kv.Value}"));
+                Assert.Fail($"Test failed. Errors: [{errors}], Field Errors: [{fieldErrors}]");
+            }
+            
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.LiveActivity);
             Assert.AreEqual(1, result.LiveActivity.Locations.Count);
@@ -145,6 +157,10 @@ namespace Grande.Fila.Tests.Application.Organizations
             var activeStaff = CreateTestStaffMember(Guid.NewGuid(), locationId);
             var busyStaff = CreateTestStaffMember(Guid.NewGuid(), locationId);
             busyStaff.UpdateStatus("busy", "test");
+            
+            // Set the location ID using reflection  
+            var locationIdProperty = typeof(Location).GetProperty("Id");
+            locationIdProperty?.SetValue(location, locationId);
 
             var request = new TrackLiveActivityRequest
             {
@@ -164,6 +180,13 @@ namespace Grande.Fila.Tests.Application.Organizations
             var result = await _service.GetLiveActivityAsync(request, "admin-user", "Admin", CancellationToken.None);
 
             // Assert
+            if (!result.Success)
+            {
+                var errors = string.Join(", ", result.Errors);
+                var fieldErrors = string.Join(", ", result.FieldErrors.Select(kv => $"{kv.Key}: {kv.Value}"));
+                Assert.Fail($"Test failed. Errors: [{errors}], Field Errors: [{fieldErrors}]");
+            }
+            
             Assert.IsTrue(result.Success);
             var locationActivity = result.LiveActivity!.Locations[0];
             Assert.AreEqual(2, locationActivity.TotalCustomersWaiting);
@@ -182,27 +205,26 @@ namespace Grande.Fila.Tests.Application.Organizations
                 "+5511999999999",
                 "https://test.com",
                 null,
-                Guid.NewGuid(),
+                Guid.NewGuid(), // subscription plan ID
                 "testUser");
 
-            // Use reflection to set the Id
+            // Set the organization ID using reflection
             var idProperty = typeof(Organization).GetProperty("Id");
-            if (idProperty?.CanWrite == true)
-            {
-                idProperty.SetValue(organization, id);
-            }
+            idProperty?.SetValue(organization, id);
 
             return organization;
         }
 
         private Location CreateTestLocation(Guid id, Guid organizationId)
         {
-            var location = new Location(
+            var address = Address.Create("123 Main St", "100", "", "Downtown", "City", "State", "Country", "12345");
+            
+            return new Location(
                 "Test Location",
                 "test-location",
                 "Test Description",
                 organizationId,
-                Grande.Fila.API.Domain.Common.ValueObjects.Address.Create("123 Main St", "100", "", "Downtown", "City", "State", "Country", "12345"),
+                address,
                 "+1234567890",
                 "location@test.com",
                 new TimeSpan(9, 0, 0),
@@ -210,29 +232,11 @@ namespace Grande.Fila.Tests.Application.Organizations
                 100,
                 15,
                 "testUser");
-
-            // Use reflection to set the Id
-            var idProperty = typeof(Location).GetProperty("Id");
-            if (idProperty?.CanWrite == true)
-            {
-                idProperty.SetValue(location, id);
-            }
-
-            return location;
         }
 
         private Queue CreateTestQueue(Guid id, Guid locationId)
         {
-            var queue = new Queue(locationId, 50, 15, "testUser");
-
-            // Use reflection to set the Id
-            var idProperty = typeof(Queue).GetProperty("Id");
-            if (idProperty?.CanWrite == true)
-            {
-                idProperty.SetValue(queue, id);
-            }
-
-            return queue;
+            return new Queue(locationId, 50, 15, "testUser");
         }
 
         private Queue CreateTestQueueWithEntries(Guid id, Guid locationId)
@@ -248,7 +252,7 @@ namespace Grande.Fila.Tests.Application.Organizations
 
         private StaffMember CreateTestStaffMember(Guid id, Guid locationId)
         {
-            var staffMember = new StaffMember(
+            return new StaffMember(
                 "Test Staff",
                 locationId,
                 "staff@test.com",
@@ -258,15 +262,6 @@ namespace Grande.Fila.Tests.Application.Organizations
                 "teststaff",
                 null,
                 "testUser");
-
-            // Use reflection to set the Id
-            var idProperty = typeof(StaffMember).GetProperty("Id");
-            if (idProperty?.CanWrite == true)
-            {
-                idProperty.SetValue(staffMember, id);
-            }
-
-            return staffMember;
         }
     }
 }

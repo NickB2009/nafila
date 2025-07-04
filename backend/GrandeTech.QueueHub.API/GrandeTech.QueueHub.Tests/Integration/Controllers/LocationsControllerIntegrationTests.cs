@@ -1,35 +1,34 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Application.Locations.Requests;
 using Grande.Fila.API.Application.Locations.Results;
+using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Tests.Integration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Linq;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace Grande.Fila.Tests.Integration.Controllers
 {
     [TestClass]
+    [TestCategory("Integration")]
     public class LocationsControllerIntegrationTests
     {
-        private static WebApplicationFactory<Program> _factory = null!;
+        private static WebApplicationFactory<Program> _factory;
+        private HttpClient _client;
+        private BogusUserRepository _userRepository;
+        private BogusLocationRepository _locationRepository;
 
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
+        [TestInitialize]
+        public void TestInitialize()
         {
+            _userRepository = new BogusUserRepository();
+            _locationRepository = new BogusLocationRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
@@ -45,11 +44,19 @@ namespace Grande.Fila.Tests.Integration.Controllers
                     });
                     builder.ConfigureServices(services =>
                     {
-                        // Ensure we're using the Bogus repository for testing
-                        services.AddScoped<IUserRepository, BogusUserRepository>();
+                        var descriptors = services.Where(d => 
+                            d.ServiceType == typeof(IUserRepository) ||
+                            d.ServiceType == typeof(ILocationRepository)).ToList();
+                        foreach (var descriptor in descriptors)
+                        {
+                            services.Remove(descriptor);
+                        }
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddSingleton<ILocationRepository>(_locationRepository);
                         services.AddScoped<AuthService>();
                     });
                 });
+            _client = _factory.CreateClient();
         }
 
         [ClassCleanup]
@@ -61,9 +68,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
         [TestMethod]
         public async Task AddLocation_AsAdmin_ReturnsCreated()
         {
-            var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var request = new CreateLocationRequest
             {
@@ -86,7 +92,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
                 Description = "Test location description"
             };
 
-            var response = await client.PostAsJsonAsync("/api/locations", request);
+            var response = await _client.PostAsJsonAsync("/api/locations", request);
             var result = await response.Content.ReadFromJsonAsync<CreateLocationResult>();
 
             Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
@@ -103,7 +109,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task AddLocation_AsUser_ReturnsForbidden()
         {
             var client = _factory.CreateClient();
-            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var request = new CreateLocationRequest
@@ -164,7 +170,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task AddLocation_WithInvalidData_ReturnsBadRequest()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var request = new CreateLocationRequest
@@ -204,7 +210,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task GetLocation_AsAdmin_ReturnsOk()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.ReadStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location
@@ -257,7 +263,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task GetLocation_AsUser_ReturnsOk()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location as admin
@@ -289,7 +295,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsTrue(addResult.Success);
 
             // Then try to get it as a regular user
-            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var getResponse = await client.GetAsync($"/api/locations/{addResult.LocationId}");
@@ -304,7 +310,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task GetLocation_NonExistingId_ReturnsNotFound()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.ReadStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var nonExistingId = Guid.NewGuid();
@@ -317,7 +323,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task UpdateLocation_AsAdmin_ReturnsOk()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location
@@ -393,7 +399,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task UpdateLocation_AsUser_ReturnsForbidden()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location as admin
@@ -425,7 +431,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsTrue(addResult.Success);
 
             // Try to update as regular user
-            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var updateRequest = new UpdateLocationRequest
@@ -455,7 +461,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task DeleteLocation_AsAdmin_ReturnsOk()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.DeleteStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location
@@ -499,7 +505,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task DeleteLocation_AsUser_ReturnsForbidden()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location as admin
@@ -531,7 +537,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsTrue(addResult.Success);
 
             // Try to delete as regular user
-            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var deleteResponse = await client.DeleteAsync($"/api/locations/{addResult.LocationId}");
@@ -543,7 +549,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location
@@ -603,7 +609,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First create a location
@@ -654,7 +660,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var request = new
@@ -674,7 +680,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var request = new
@@ -694,7 +700,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var request = new
@@ -707,78 +713,6 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
-        }
-
-        private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)
-        {
-            using var scope = _factory.Services.CreateScope();
-            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-
-            // Create a user with the specified role
-            var username = $"testuser_{role.ToLower()}_{Guid.NewGuid():N}";
-            var email = $"{username}@test.com";
-            var password = "testpassword123";
-
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), role);
-            await userRepository.AddAsync(user, CancellationToken.None);
-
-            // Login to get the token
-            var loginRequest = new LoginRequest
-            {
-                Username = username,
-                Password = password
-            };
-
-            var loginJson = JsonSerializer.Serialize(loginRequest);
-            var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
-
-            var loginResponse = await client.PostAsync("/api/auth/login", loginContent);
-            var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
-            var loginResult = JsonSerializer.Deserialize<LoginResult>(loginResponseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            Assert.IsNotNull(loginResult);
-
-            // Handle two-factor authentication for admin users
-            if (loginResult.RequiresTwoFactor)
-            {
-                Assert.IsNotNull(loginResult.TwoFactorToken);
-                
-                // Verify 2FA
-                var verifyRequest = new VerifyTwoFactorRequest
-                {
-                    Username = username,
-                    TwoFactorCode = "123456", // In a real implementation, this would be validated
-                    TwoFactorToken = loginResult.TwoFactorToken
-                };
-
-                var verifyJson = JsonSerializer.Serialize(verifyRequest);
-                var verifyContent = new StringContent(verifyJson, Encoding.UTF8, "application/json");
-
-                var verifyResponse = await client.PostAsync("/api/auth/verify-2fa", verifyContent);
-                Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
-
-                var verifyResponseContent = await verifyResponse.Content.ReadAsStringAsync();
-                var verifyResult = JsonSerializer.Deserialize<LoginResult>(verifyResponseContent, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                Assert.IsNotNull(verifyResult);
-                Assert.IsTrue(verifyResult.Success);
-                Assert.IsNotNull(verifyResult.Token);
-                return verifyResult.Token;
-            }
-            else
-            {
-                // Regular user login
-                Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
-                Assert.IsTrue(loginResult.Success);
-                Assert.IsNotNull(loginResult.Token);
-                return loginResult.Token;
-            }
         }
 
         // DTOs for test deserialization
@@ -801,4 +735,4 @@ namespace Grande.Fila.Tests.Integration.Controllers
             public string Description { get; set; } = string.Empty;
         }
     }
-} 
+}

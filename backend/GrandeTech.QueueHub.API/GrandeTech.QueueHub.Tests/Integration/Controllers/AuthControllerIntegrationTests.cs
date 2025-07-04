@@ -1,5 +1,6 @@
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Infrastructure;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -8,14 +9,22 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
+using System.Threading;
+using System;
 
 namespace Grande.Fila.Tests.Integration.Controllers
 {
     [TestClass]
+    [TestCategory("Integration")]
     public class AuthControllerIntegrationTests
     {
-        private WebApplicationFactory<Program>? _factory;
-        private HttpClient? _client; [TestInitialize]
+        private WebApplicationFactory<Program> _factory;
+        private HttpClient _client;
+
+        [TestInitialize]
         public void Setup()
         {
             _factory = new WebApplicationFactory<Program>()
@@ -34,7 +43,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
                     builder.ConfigureServices(services =>
                     {
                         // Ensure we're using the Bogus repository for testing
-                        services.AddScoped<IUserRepository, BogusUserRepository>();
+                        services.AddSingleton<IUserRepository, BogusUserRepository>();
                         services.AddScoped<AuthService>();
                     });
                 });
@@ -47,12 +56,11 @@ namespace Grande.Fila.Tests.Integration.Controllers
             _client?.Dispose();
             _factory?.Dispose();
         }
+
         [TestMethod]
         public async Task Login_WithValidCredentials_ReturnsSuccessResult()
         {
-            // Arrange - First register a user to ensure we have valid credentials
-            Assert.IsNotNull(_client);
-
+            // Arrange
             var registerRequest = new RegisterRequest
             {
                 Username = "testuser123",
@@ -66,6 +74,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Register the user first
             var registerResponse = await _client.PostAsync("/api/auth/register", registerContent);
+            registerResponse.EnsureSuccessStatusCode();
 
             // Now test login
             var loginRequest = new LoginRequest
@@ -95,6 +104,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.AreEqual("testuser123", loginResult.Username);
             Assert.AreEqual("User", loginResult.Role);
         }
+
         [TestMethod]
         public async Task Login_WithInvalidCredentials_ReturnsBadRequest()
         {
@@ -126,6 +136,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsFalse(loginResult.Success);
             Assert.IsNotNull(loginResult.Error);
         }
+
         [TestMethod]
         public async Task Login_WithExistingBogusUser_ReturnsSuccessResult()
         {
@@ -167,6 +178,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult.Token);
             Assert.AreEqual("integrationtestuser", loginResult.Username);
         }
+
         [TestMethod]
         public async Task Register_WithValidData_ReturnsSuccessResult()
         {
@@ -199,6 +211,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(registerResult);
             Assert.IsTrue(registerResult.Success);
         }
+
         [TestMethod]
         public async Task Register_WithDuplicateUsername_ReturnsBadRequest()
         {

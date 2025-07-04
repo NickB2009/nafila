@@ -98,9 +98,10 @@ namespace Grande.Fila.API.Application.Organizations
                 // Calculate average wait time across all locations
                 if (locationActivities.Count > 0)
                 {
-                    organizationSummary.AverageWaitTimeMinutes = locationActivities
-                        .Where(l => l.AverageWaitTimeMinutes > 0)
-                        .Average(l => l.AverageWaitTimeMinutes);
+                    var locationsWithWaitTime = locationActivities.Where(l => l.AverageWaitTimeMinutes > 0);
+                    organizationSummary.AverageWaitTimeMinutes = locationsWithWaitTime.Any() 
+                        ? locationsWithWaitTime.Average(l => l.AverageWaitTimeMinutes)
+                        : 0;
                 }
 
                 result.LiveActivity = new LiveActivityDto

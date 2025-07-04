@@ -48,6 +48,10 @@ namespace Grande.Fila.API.Tests.Application.Locations
                 "admin"
             );
 
+            // Set the location ID using reflection
+            var idProperty = typeof(Location).GetProperty("Id");
+            idProperty?.SetValue(location, locationId);
+
             // Disable queue first
             location.DisableQueue("admin");
 
@@ -100,6 +104,10 @@ namespace Grande.Fila.API.Tests.Application.Locations
                 15,
                 "admin"
             );
+
+            // Set the location ID using reflection
+            var idProperty = typeof(Location).GetProperty("Id");
+            idProperty?.SetValue(location, locationId);
 
             _mockLocationRepository
                 .Setup(r => r.GetByIdAsync(locationId, It.IsAny<CancellationToken>()))

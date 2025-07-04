@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Grande.Fila.API.Application.Queues;
 using Grande.Fila.API.Infrastructure.Authorization;
+using Grande.Fila.API.Application.Kiosk;
 
 namespace Grande.Fila.API.Controllers
 {
@@ -15,13 +16,16 @@ namespace Grande.Fila.API.Controllers
     {
         private readonly JoinQueueService _joinQueueService;
         private readonly CancelQueueService _cancelQueueService;
+        private readonly KioskDisplayService _kioskDisplayService;
 
         public KioskController(
             JoinQueueService joinQueueService,
-            CancelQueueService cancelQueueService)
+            CancelQueueService cancelQueueService,
+            KioskDisplayService kioskDisplayService)
         {
             _joinQueueService = joinQueueService;
             _cancelQueueService = cancelQueueService;
+            _kioskDisplayService = kioskDisplayService;
         }
 
         public class KioskJoinRequest
@@ -157,6 +161,27 @@ namespace Grande.Fila.API.Controllers
                 Success = true,
                 CustomerName = result.CustomerName
             });
+        }
+
+        [HttpGet("display/{locationId}")]
+        [AllowPublicAccess] // UC-KIOSKCALL: Public display of queue
+        public async Task<IActionResult> GetKioskDisplay(
+            string locationId,
+            CancellationToken cancellationToken)
+        {
+            var request = new KioskDisplayRequest
+            {
+                LocationId = locationId
+            };
+
+            var result = await _kioskDisplayService.ExecuteAsync(request, "kiosk-display", cancellationToken);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
     }
 }

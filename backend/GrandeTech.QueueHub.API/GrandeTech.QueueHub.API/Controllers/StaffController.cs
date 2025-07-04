@@ -35,7 +35,7 @@ namespace Grande.Fila.API.Controllers
         }
 
         [HttpPost("barbers")]
-        [RequireOwner] // UC-ADDBARBER: Admin/Owner can add barbers
+        [Authorize(Policy = "HasPermission", Roles = "Admin,Owner")]
         public async Task<ActionResult<AddBarberResult>> AddBarber(
             [FromBody] AddBarberRequest request,
             CancellationToken cancellationToken)

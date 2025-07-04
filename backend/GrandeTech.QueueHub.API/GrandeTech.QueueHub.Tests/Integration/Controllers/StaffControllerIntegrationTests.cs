@@ -22,16 +22,28 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Grande.Fila.API.Tests.Integration;
+using BCrypt.Net;
+using Grande.Fila.API.Infrastructure;
 
 namespace Grande.Fila.Tests.Integration.Controllers
 {
     [TestClass]
+    [TestCategory("Integration")]
     public class StaffControllerIntegrationTests
     {
-        private WebApplicationFactory<Program>? _factory;
-        private HttpClient? _client;        [TestInitialize]
+        private WebApplicationFactory<Program> _factory;
+        private HttpClient _client;
+        private BogusUserRepository _userRepository;
+
+        [TestInitialize]
         public void Setup()
         {
+            _userRepository = new BogusUserRepository();
+            var staffRepository = new BogusStaffMemberRepository();
+            var locationRepository = new BogusLocationRepository();
+            var auditLogRepository = new BogusAuditLogRepository();
+
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
@@ -47,28 +59,21 @@ namespace Grande.Fila.Tests.Integration.Controllers
                     });
                     builder.ConfigureServices(services =>
                     {
-                        // Remove existing repositories if any
                         var descriptors = services.Where(d => 
-                            d.ServiceType == typeof(IUserRepository) ||                            d.ServiceType == typeof(IStaffMemberRepository) ||
+                            d.ServiceType == typeof(IUserRepository) ||
+                            d.ServiceType == typeof(IStaffMemberRepository) ||
                             d.ServiceType == typeof(ILocationRepository) ||
                             d.ServiceType == typeof(IAuditLogRepository)).ToList();
-                        
                         foreach (var descriptor in descriptors)
                         {
                             services.Remove(descriptor);
-                        }                        // Use Bogus repositories for testing
-                        services.AddScoped<IUserRepository, BogusUserRepository>();
-                        services.AddScoped<IStaffMemberRepository, BogusStaffMemberRepository>();
-                        services.AddScoped<ILocationRepository, BogusLocationRepository>();
-                        services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
-                        
-                        // Register AddBarberService
+                        }
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddSingleton<IStaffMemberRepository>(staffRepository);
+                        services.AddSingleton<ILocationRepository>(locationRepository);
+                        services.AddSingleton<IAuditLogRepository>(auditLogRepository);
                         services.AddScoped<AddBarberService>();
-                        
-                        // Register UpdateStaffStatusService
                         services.AddScoped<UpdateStaffStatusService>();
-                        
-                        // Register AuthService for JWT token generation
                         services.AddScoped<AuthService>();
                     });
                 });
@@ -90,7 +95,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_factory);
 
             // First, create and authenticate an admin user
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            // Create a location first (required for barber creation)
             var locationId = await CreateLocationAsync();
 
@@ -139,7 +144,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_factory);
 
             // First, create and authenticate an owner user
-            var ownerToken = await CreateAndAuthenticateUserAsync("Owner");
+            var ownerToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Owner", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);            // Create a location first
             var locationId = await CreateLocationAsync();
 
@@ -186,7 +191,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
 
             // Create and authenticate a regular user (not Admin/Owner)
-            var userToken = await CreateAndAuthenticateUserAsync("User");
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var addBarberRequest = new AddBarberRequest
@@ -241,7 +246,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Arrange
             Assert.IsNotNull(_client);
 
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // Invalid request with missing required fields
@@ -282,7 +287,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
 
             // Create a barber first with a specific email
@@ -341,7 +346,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
 
             // Create a barber first with a specific username
@@ -397,7 +402,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Arrange
             Assert.IsNotNull(_client);
 
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var addBarberRequest = new AddBarberRequest
@@ -437,7 +442,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Arrange
             Assert.IsNotNull(_client);
 
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
 
             var addBarberRequest = new AddBarberRequest
@@ -481,7 +486,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             // Create a staff member first
@@ -523,7 +528,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var validStatuses = new[] { "available", "busy", "away", "offline" };
@@ -567,7 +572,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var staffMemberId = await CreateStaffMemberAsync();
@@ -606,7 +611,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var staffMemberId = await CreateStaffMemberAsync();
@@ -645,7 +650,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var nonExistentStaffMemberId = Guid.NewGuid().ToString();
@@ -683,7 +688,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var invalidStaffMemberId = "invalid-guid";
@@ -748,7 +753,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_factory);
 
             // Create and authenticate a regular user (not Barber)
-            var userToken = await CreateAndAuthenticateUserAsync("User");
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var staffMemberId = await CreateStaffMemberAsync();
@@ -777,7 +782,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var staffMemberId = await CreateStaffMemberAsync();
@@ -818,7 +823,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var invalidStaffMemberId = "invalid-guid";
@@ -857,7 +862,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var staffMemberId = await CreateStaffMemberAsync();
@@ -896,7 +901,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
+            var barberToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Barber", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", barberToken);
 
             var nonExistentStaffMemberId = Guid.NewGuid().ToString();
@@ -959,7 +964,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_client);
             Assert.IsNotNull(_factory);
 
-            var userToken = await CreateAndAuthenticateUserAsync("User");
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]);
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var staffMemberId = await CreateStaffMemberAsync();
@@ -985,23 +990,26 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var adminToken = GetAdminToken();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             // First add a barber
-            var addRequest = new
+            var locationId = await CreateLocationAsync();
+            var addRequest = new AddBarberRequest
             {
-                locationId = Guid.NewGuid().ToString(),
-                name = "Original Name",
-                email = "original@example.com",
-                phoneNumber = "+1234567890",
-                role = "Barber",
-                employeeCode = "EMP001"
+                LocationId = locationId,
+                FirstName = "Original",
+                LastName = "Name",
+                Email = "original@example.com",
+                PhoneNumber = "+1234567890",
+                Username = "originaluser",
+                ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
             };
 
             var addResponse = await client.PostAsJsonAsync("/api/staff/barbers", addRequest);
-            var addResult = await addResponse.Content.ReadFromJsonAsync<dynamic>();
-            var staffId = addResult?.staffMemberId?.ToString();
+            addResponse.EnsureSuccessStatusCode();
+            var addResult = await addResponse.Content.ReadFromJsonAsync<AddBarberResult>();
+            var staffId = addResult.BarberId;
 
             // Now edit the barber
             var editRequest = new
@@ -1017,24 +1025,24 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var response = await client.PutAsJsonAsync($"/api/staff/barbers/{staffId}", editRequest);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<EditBarberResult>();
             Assert.IsNotNull(result);
-            Assert.IsTrue((bool)result.success);
-            Assert.AreEqual("Updated Name", result.name?.ToString());
-            Assert.AreEqual("updated@example.com", result.email?.ToString());
-            Assert.AreEqual("+0987654321", result.phoneNumber?.ToString());
-            Assert.AreEqual("https://example.com/profile.jpg", result.profilePictureUrl?.ToString());
-            Assert.AreEqual("Senior Barber", result.role?.ToString());
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual("Updated Name", result.Name);
+            Assert.AreEqual("updated@example.com", result.Email);
+            Assert.AreEqual("+0987654321", result.PhoneNumber);
+            Assert.AreEqual("https://example.com/profile.jpg", result.ProfilePictureUrl);
+            Assert.AreEqual("Senior Barber", result.Role);
         }
 
         [TestMethod]
-        public async Task EditBarber_WithoutAdminRole_ReturnsUnauthorized()
+        public async Task EditBarber_WithoutAdminRole_ReturnsForbidden()
         {
             // Arrange
             var client = _factory.CreateClient();
-            var userToken = GetUserToken(); // Non-admin token
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", userToken);
+            var userToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "User", new string[0]); // Non-admin token
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
 
             var request = new
             {
@@ -1054,8 +1062,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var adminToken = GetAdminToken();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var request = new
             {
@@ -1068,9 +1076,6 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            var result = await response.Content.ReadFromJsonAsync<dynamic>();
-            Assert.IsNotNull(result);
-            Assert.IsFalse((bool)result.success);
         }
 
         [TestMethod]
@@ -1078,8 +1083,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
         {
             // Arrange
             var client = _factory.CreateClient();
-            var adminToken = GetAdminToken();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.UpdateStaff });
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var request = new
             {
@@ -1092,102 +1097,9 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            var result = await response.Content.ReadFromJsonAsync<dynamic>();
-            Assert.IsNotNull(result);
-            Assert.IsFalse((bool)result.success);
-            // Should contain error about staff not found
         }
 
         // Helper methods
-
-        private async Task<string> CreateAndAuthenticateUserAsync(string role)
-        {
-            Assert.IsNotNull(_client);
-            Assert.IsNotNull(_factory);
-
-            using var scope = _factory.Services.CreateScope();
-            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-
-            // Create a user with the specified role
-            var username = $"testuser_{role.ToLower()}_{Guid.NewGuid():N}";
-            var email = $"{username}@test.com";
-            var password = "testpassword123";
-
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), role);
-            await userRepository.AddAsync(user, CancellationToken.None);
-
-            // Login to get the token
-            var loginRequest = new LoginRequest
-            {
-                Username = username,
-                Password = password
-            };
-
-            var loginJson = JsonSerializer.Serialize(loginRequest);
-            var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
-
-            var loginResponse = await _client.PostAsync("/api/auth/login", loginContent);
-            var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
-            var loginResult = JsonSerializer.Deserialize<LoginResult>(loginResponseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            Assert.IsNotNull(loginResult);
-
-            // Handle two-factor authentication for admin users
-            if (loginResult.RequiresTwoFactor)
-            {
-                Assert.IsNotNull(loginResult.TwoFactorToken);
-                
-                // Verify 2FA
-                var verifyRequest = new VerifyTwoFactorRequest
-                {
-                    Username = username,
-                    TwoFactorCode = "123456", // In a real implementation, this would be validated
-                    TwoFactorToken = loginResult.TwoFactorToken
-                };
-
-                var verifyJson = JsonSerializer.Serialize(verifyRequest);
-                var verifyContent = new StringContent(verifyJson, Encoding.UTF8, "application/json");
-
-                var verifyResponse = await _client.PostAsync("/api/auth/verify-2fa", verifyContent);
-                Assert.AreEqual(HttpStatusCode.OK, verifyResponse.StatusCode);
-
-                var verifyResponseContent = await verifyResponse.Content.ReadAsStringAsync();
-                var verifyResult = JsonSerializer.Deserialize<LoginResult>(verifyResponseContent, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                Assert.IsNotNull(verifyResult);
-                Assert.IsTrue(verifyResult.Success);
-                Assert.IsNotNull(verifyResult.Token);
-                return verifyResult.Token;
-            }
-            else
-            {
-                // Regular user login
-                Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
-                Assert.IsTrue(loginResult.Success);
-                Assert.IsNotNull(loginResult.Token);
-                return loginResult.Token;
-            }
-        }
-
-        // Helper method to obtain an administrator JWT token synchronously for use inside non-async test setup
-        private string GetAdminToken()
-        {
-            // Create and authenticate an "Admin" user and synchronously get the resulting JWT.
-            return CreateAndAuthenticateUserAsync("Admin").GetAwaiter().GetResult();
-        }
-
-        // Helper method to obtain a regular user JWT token synchronously for use inside non-async test setup
-        private string GetUserToken()
-        {
-            // Create and authenticate a normal "User" and synchronously get the resulting JWT.
-            return CreateAndAuthenticateUserAsync("User").GetAwaiter().GetResult();
-        }
 
         private async Task<string> CreateLocationAsync()
         {

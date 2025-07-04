@@ -145,9 +145,13 @@ namespace Grande.Fila.API.Application.Auth
                 new Claim(TenantClaims.UserId, user.Id.ToString()),
                 new Claim(TenantClaims.Username, user.Username),
                 new Claim(TenantClaims.Email, user.Email),
-                new Claim(TenantClaims.Role, mappedRole),
-                new Claim(TenantClaims.Permissions, JsonSerializer.Serialize(GetUserPermissions(mappedRole)))
+                new Claim(TenantClaims.Role, mappedRole)
             };
+
+            foreach (var permission in GetUserPermissions(mappedRole))
+            {
+                claims.Add(new Claim(TenantClaims.Permissions, permission));
+            }
 
             // Add tenant context for non-platform admin roles
             if (mappedRole != UserRoles.PlatformAdmin)
@@ -169,8 +173,7 @@ namespace Grande.Fila.API.Application.Auth
                 audience: _config["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(1),
-                signingCredentials: credentials
-            );
+                signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

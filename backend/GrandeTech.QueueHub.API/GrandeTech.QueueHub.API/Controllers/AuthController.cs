@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Authorization;
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Infrastructure.Authorization;
 using Grande.Fila.API.Domain.Users;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Grande.Fila.API.Controllers
 {
@@ -13,10 +17,12 @@ namespace Grande.Fila.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, IConfiguration configuration)
         {
             _authService = authService;
+            _configuration = configuration;
         }
 
         [HttpPost("login")]

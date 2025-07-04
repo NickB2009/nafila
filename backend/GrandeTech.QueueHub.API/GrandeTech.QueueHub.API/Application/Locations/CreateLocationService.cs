@@ -130,13 +130,8 @@ public class CreateLocationService
         if (string.IsNullOrWhiteSpace(request.BusinessName))
             errors["BusinessName"] = "Business name is required.";
 
-        if (string.IsNullOrWhiteSpace(request.ContactEmail))
-            errors["ContactEmail"] = "Contact email is required.";
-        else if (!IsValidEmail(request.ContactEmail))
+        if (!string.IsNullOrWhiteSpace(request.ContactEmail) && !IsValidEmail(request.ContactEmail))
             errors["ContactEmail"] = "Contact email format is invalid.";
-
-        if (string.IsNullOrWhiteSpace(request.ContactPhone))
-            errors["ContactPhone"] = "Contact phone is required.";
 
         if (string.IsNullOrWhiteSpace(request.Address.Street))
             errors["Address.Street"] = "Street address is required.";

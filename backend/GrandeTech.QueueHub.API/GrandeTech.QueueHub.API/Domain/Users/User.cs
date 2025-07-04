@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using Grande.Fila.API.Domain.Common;
+using System.Collections.Generic;
 
 namespace Grande.Fila.API.Domain.Users
 {
@@ -8,7 +9,7 @@ namespace Grande.Fila.API.Domain.Users
     {
         [Required]
         [StringLength(50)]
-        public string Username { get; set; }
+        public string Username { get; private set; } = string.Empty;
 
         [Required]
         [EmailAddress]
@@ -25,6 +26,8 @@ namespace Grande.Fila.API.Domain.Users
         public DateTime? LastLoginAt { get; private set; }
         public bool IsLocked { get; private set; }
         public bool RequiresTwoFactor { get; private set; }
+
+        public List<string> Permissions { get; private set; } = new List<string>();
 
         // For EF Core and Bogus
         private User() 
@@ -83,6 +86,19 @@ namespace Grande.Fila.API.Domain.Users
         public void DisableTwoFactor()
         {
             RequiresTwoFactor = false;
+        }
+
+        public void AddPermission(string permission)
+        {
+            if (!Permissions.Contains(permission))
+            {
+                Permissions.Add(permission);
+            }
+        }
+
+        public void RemovePermission(string permission)
+        {
+            Permissions.Remove(permission);
         }
     }
 } 

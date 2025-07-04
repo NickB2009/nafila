@@ -12,12 +12,24 @@ using Grande.Fila.API.Domain.ServicesOffered;
 using Grande.Fila.API.Application.Services;
 using Grande.Fila.API.Application.Locations;
 using Grande.Fila.API.Application.Services.Cache;
+using Grande.Fila.API.Application.Notifications;
+using Grande.Fila.API.Application.Notifications.Services;
+using Grande.Fila.API.Application.Kiosk;
+using Grande.Fila.API.Application.QrCode;
+using Grande.Fila.API.Application.Promotions;
+using Grande.Fila.API.Domain.Promotions;
+using Grande.Fila.API.Infrastructure.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -151,6 +163,21 @@ builder.Services.AddScoped<Grande.Fila.API.Domain.Queues.IQueueRepository, Bogus
 
 builder.Services.AddSingleton<IAverageWaitTimeCache, Grande.Fila.API.Infrastructure.InMemoryAverageWaitTimeCache>();
 builder.Services.AddScoped<UpdateCacheService>();
+builder.Services.AddScoped<CalculateWaitService>();
+builder.Services.AddScoped<SmsNotificationService>();
+builder.Services.AddScoped<KioskDisplayService>();
+builder.Services.AddScoped<QrJoinService>();
+builder.Services.AddScoped<CouponNotificationService>();
+builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.MockQrCodeGenerator>();
+builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
+builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
+
+builder.Services.AddSingleton<IAuthorizationHandler, HasPermissionHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HasPermission", policy =>
+        policy.Requirements.Add(new HasPermissionRequirement("")));
+});
 
 var app = builder.Build();
 

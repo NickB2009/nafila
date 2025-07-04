@@ -7,32 +7,51 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Application.Auth;
+using System.Threading;
+using Grande.Fila.API.Tests.Integration;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Infrastructure;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
     [TestClass]
+    [TestCategory("Integration")]
     public class OrganizationsControllerIntegrationTests
     {
-        private static WebApplicationFactory<Program> _factory = null!;
+        private static WebApplicationFactory<Program> _factory;
+        private HttpClient _client;
+        private BogusUserRepository _userRepository;
 
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
+        [TestInitialize]
+        public void TestInitialize()
         {
-            _factory = new WebApplicationFactory<Program>();
+            _userRepository = new BogusUserRepository();
+            _factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureServices(services =>
+                    {
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddScoped<AuthService>();
+                    });
+                });
+            _client = _factory.CreateClient();
         }
 
         [ClassCleanup]
         public static void ClassCleanup()
         {
-            _factory?.Dispose();
+            _factory.Dispose();
         }
 
         // UC-TRACKQ: Admin/Owner track live activity
         [TestMethod]
         public async Task GetLiveActivity_ValidOrganizationId_ReturnsSuccess()
         {
-            var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { "view:metrics" });
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create organization first
             var createOrgRequest = new
@@ -43,13 +62,12 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 WebsiteUrl = "https://testorg.com"
             };
 
-            var createResponse = await client.PostAsJsonAsync("/api/organizations", createOrgRequest);
+            var createResponse = await _client.PostAsJsonAsync("/api/organizations", createOrgRequest);
             var createResult = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
             var organizationId = createResult.GetProperty("organizationId").GetString();
 
             // Act: Get live activity
-            client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
-            var response = await client.GetAsync($"/api/organizations/{organizationId}/live-activity");
+            var response = await _client.GetAsync($"/api/organizations/{organizationId}/live-activity");
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
@@ -63,7 +81,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task GetLiveActivity_NonAdminUser_ReturnsForbidden()
         {
             var client = _factory.CreateClient();
-            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            var clientToken = await CreateAndAuthenticateUserAsync("Client");
 
             var organizationId = Guid.NewGuid().ToString();
 
@@ -79,7 +97,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task GetLiveActivity_InvalidOrganizationId_ReturnsBadRequest()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
 
             // Act
             client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
@@ -94,7 +112,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task UpdateBranding_ValidRequest_ReturnsSuccess()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
 
             // Create organization first
             var createOrgRequest = new
@@ -132,7 +150,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task UpdateBranding_NonAdminUser_ReturnsForbidden()
         {
             var client = _factory.CreateClient();
-            var clientToken = await CreateAndAuthenticateUserAsync("Client", client);
+            var clientToken = await CreateAndAuthenticateUserAsync("Client");
 
             var organizationId = Guid.NewGuid().ToString();
             var brandingRequest = new
@@ -149,34 +167,37 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
-        private async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)
+        private async Task<string> CreateAndAuthenticateUserAsync(string role)
         {
-            var registerRequest = new
-            {
-                Username = $"testuser_{Guid.NewGuid():N}",
-                Email = $"test_{Guid.NewGuid():N}@example.com",
-                Password = "TestPassword123!",
-                Role = role
-            };
+            Assert.IsNotNull(_client);
 
-            var registerResponse = await client.PostAsJsonAsync("/api/auth/register", registerRequest);
-            var registerResult = await registerResponse.Content.ReadFromJsonAsync<JsonElement>();
+            using var scope = _factory.Services.CreateScope();
+            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
 
-            if (registerResult.TryGetProperty("token", out var tokenElement))
+            var uniqueId = Guid.NewGuid().ToString("N");
+            var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), role);
+
+            if (role == "Admin" || role == "Owner")
             {
-                return tokenElement.GetString() ?? throw new InvalidOperationException("Token was null");
+                user.AddPermission(Permission.CreateStaff);
+                user.AddPermission(Permission.UpdateStaff);
             }
 
-            // If registration failed, try login instead
-            var loginRequest = new
+            await userRepository.AddAsync(user, CancellationToken.None);
+
+            var loginRequest = new LoginRequest
             {
-                Username = registerRequest.Username,
-                Password = registerRequest.Password
+                Username = user.Username,
+                Password = "TestPassword123!"
             };
 
-            var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
-            var loginResult = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
-            return loginResult.GetProperty("token").GetString() ?? throw new InvalidOperationException("Token was null");
+            var loginResult = await authService.LoginAsync(loginRequest);
+
+            Assert.IsTrue(loginResult.Success, $"Login failed for user {user.Username}");
+            Assert.IsNotNull(loginResult.Token, $"Token was null for user {user.Username}");
+
+            return loginResult.Token;
         }
     }
 }
