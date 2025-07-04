@@ -169,6 +169,11 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 8. **Domain Events**   `ClientJoinedQueueEvent`, `BarberCalledNextEvent`, etc.
 9. **Safety Gates**   Validate queue capacity, availability, etc.; tenant isolation.
 10. **Multi‑Tenant Documentation**   Update architectural notes after each change.
+11. **Implementation Sequence**   For every new use-case or feature, strictly follow this order:
+   a) Begin with failing unit tests (TDD) that describe the application-layer behavior.
+   b) Implement or update the application layer until all unit tests pass.
+   c) Add integration tests that validate end-to-end behavior through the API surface.
+   d) Finally, expose the feature through the Controller layer (routes/DTOs) once all tests are green.
 
 ---
 
