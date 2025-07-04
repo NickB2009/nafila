@@ -45,29 +45,6 @@ namespace Grande.Fila.API.Controllers
             public int LateClientCapTimeInMinutes { get; set; }
         }
 
-        public class QueueEntryDto
-        {
-            public Guid Id { get; set; }
-            public string CustomerName { get; set; } = string.Empty;
-            public string Status { get; set; } = string.Empty;
-            public int Position { get; set; }
-            public DateTime EnteredAt { get; set; }
-            public DateTime? CalledAt { get; set; }
-            public DateTime? CheckedInAt { get; set; }
-            public DateTime? CompletedAt { get; set; }
-            public DateTime? CancelledAt { get; set; }
-            public Guid? StaffMemberId { get; set; }
-            public int? EstimatedWaitTimeMinutes { get; set; }
-        }
-
-        public class QueueWithEntriesDto
-        {
-            public QueueDto Queue { get; set; } = new();
-            public List<QueueEntryDto> Entries { get; set; } = new();
-            public int ActiveCount { get; set; }
-            public int WaitingCount { get; set; }
-        }
-
         [HttpPost]
         [RequireOwner] // Admin/Owner can manage queues
         public async Task<IActionResult> AddQueue([FromBody] AddQueueRequest request, CancellationToken cancellationToken)
@@ -155,6 +132,40 @@ namespace Grande.Fila.API.Controllers
                 if (result.Errors.Any(e => e.Contains("maximum size")))
                     return BadRequest(result);
                 if (result.Errors.Any())
+                    return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/barber-add")]
+        [RequireBarber] // Only barbers can add customers to queue
+        public async Task<IActionResult> BarberAdd(
+            string id,
+            [FromBody] BarberAddRequest request,
+            CancellationToken cancellationToken)
+        {
+            // Validate queue id
+            if (!Guid.TryParse(id, out var queueId))
+                return BadRequest("Invalid queue id.");
+
+            // Ensure request.QueueId matches route id
+            if (request.QueueId != id)
+                request.QueueId = id;
+
+            // Get user id
+            var userId = User?.Identity?.IsAuthenticated == true
+                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
+                : "anonymous";
+
+            // Use BarberAddService to handle the business logic
+            var result = await _barberAddService.BarberAddAsync(request, userId, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Count > 0)
                     return BadRequest(result);
             }
 
@@ -444,174 +455,6 @@ namespace Grande.Fila.API.Controllers
                 return NotFound("Could not calculate wait time. Queue or queue entry not found, or no staff available.");
             }
             return Ok(new { estimatedWaitTimeInMinutes = waitTime });
-        }
-
-        [HttpGet("{id}/entries")]
-        [RequireBarber] // UC-BARBERQUEUE: Barber can view current queue
-        public async Task<IActionResult> GetQueueEntries(Guid id, CancellationToken cancellationToken)
-        {
-            var queue = await _queueRepository.GetByIdAsync(id, cancellationToken);
-            if (queue == null)
-            {
-                return NotFound("Queue not found.");
-            }
-
-            var queueDto = new QueueDto
-            {
-                Id = queue.Id,
-                LocationId = queue.LocationId,
-                QueueDate = queue.QueueDate,
-                IsActive = queue.IsActive,
-                MaxSize = queue.MaxSize,
-                LateClientCapTimeInMinutes = queue.LateClientCapTimeInMinutes
-            };
-
-            var entryDtos = new List<QueueEntryDto>();
-            foreach (var entry in queue.Entries.OrderBy(e => e.Position))
-            {
-                var entryDto = new QueueEntryDto
-                {
-                    Id = entry.Id,
-                    CustomerName = entry.CustomerName,
-                    Status = entry.Status.ToString(),
-                    Position = entry.Position,
-                    EnteredAt = entry.EnteredAt,
-                    CalledAt = entry.CalledAt,
-                    CheckedInAt = entry.CheckedInAt,
-                    CompletedAt = entry.CompletedAt,
-                    CancelledAt = entry.CancelledAt,
-                    StaffMemberId = entry.StaffMemberId
-                };
-
-                // Calculate estimated wait time for waiting customers
-                if (entry.Status == QueueEntryStatus.Waiting)
-                {
-                    var waitTime = await _estimatedWaitTimeService.CalculateAsync(id, entry.Id, cancellationToken);
-                    entryDto.EstimatedWaitTimeMinutes = waitTime > 0 ? waitTime : null;
-                }
-
-                entryDtos.Add(entryDto);
-            }
-
-            var result = new QueueWithEntriesDto
-            {
-                Queue = queueDto,
-                Entries = entryDtos,
-                ActiveCount = queue.Entries.Count(e => e.Status == QueueEntryStatus.Waiting || e.Status == QueueEntryStatus.Called),
-                WaitingCount = queue.Entries.Count(e => e.Status == QueueEntryStatus.Waiting)
-            };
-
-            return Ok(result);
-        }
-
-        [HttpGet("{id}/public")]
-        [AllowPublicAccess] // UC-QUEUELISTCLI: Clients can view live queue status
-        public async Task<IActionResult> GetQueuePublic(Guid id, CancellationToken cancellationToken)
-        {
-            var queue = await _queueRepository.GetByIdAsync(id, cancellationToken);
-            if (queue == null)
-            {
-                return NotFound("Queue not found.");
-            }
-
-            var activeEntries = queue.Entries
-                .Where(e => e.Status == QueueEntryStatus.Waiting || e.Status == QueueEntryStatus.Called)
-                .OrderBy(e => e.Position)
-                .ToList();
-
-            var publicEntries = new List<object>();
-            for (int i = 0; i < activeEntries.Count; i++)
-            {
-                var entry = activeEntries[i];
-                int? waitTime = null;
-                if (entry.Status == QueueEntryStatus.Waiting)
-                {
-                    waitTime = await _estimatedWaitTimeService.CalculateAsync(id, entry.Id, cancellationToken);
-                }
-                
-                publicEntries.Add(new
-                {
-                    Position = i + 1,
-                    Status = entry.Status.ToString(),
-                    EstimatedWaitTimeMinutes = waitTime
-                });
-            }
-
-            var result = new
-            {
-                QueueId = queue.Id,
-                LocationId = queue.LocationId,
-                IsActive = queue.IsActive,
-                QueueLength = activeEntries.Count,
-                EstimatedWaitTime = activeEntries.Count > 0 ? 
-                    await _estimatedWaitTimeService.CalculateAsync(id, activeEntries.Last().Id, cancellationToken) : 0,
-                Entries = publicEntries
-            };
-
-            return Ok(result);
-        }
-
-        [HttpPost("{id}/barber-add")]
-        [RequireBarber] // UC-BARBERADD: Barber adds client to queue
-        public async Task<IActionResult> BarberAddClient(
-            string id,
-            [FromBody] BarberAddRequest request,
-            CancellationToken cancellationToken)
-        {
-            // Validate queue id
-            if (!Guid.TryParse(id, out var queueId))
-                return BadRequest("Invalid queue id.");
-
-            // Ensure request.QueueId matches route id
-            request.QueueId = id;
-
-            // Get user id
-            var userId = User?.Identity?.IsAuthenticated == true
-                ? User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? "anonymous"
-                : "anonymous";
-
-            var result = await _barberAddService.BarberAddAsync(request, userId, cancellationToken);
-
-            if (!result.Success)
-            {
-                if (result.FieldErrors.Count > 0)
-                    return BadRequest(result);
-                if (result.Errors.Count > 0)
-                    return BadRequest(result);
-            }
-
-            return Ok(result);
-        }
-
-        [HttpGet("{id}/wait-time")]
-        [AllowPublicAccess] // UC-WAITTIME: Anyone can view estimated wait time
-        public async Task<IActionResult> GetQueueWaitTime(Guid id, CancellationToken cancellationToken)
-        {
-            var queue = await _queueRepository.GetByIdAsync(id, cancellationToken);
-            if (queue == null)
-            {
-                return NotFound("Queue not found.");
-            }
-
-            var activeEntries = queue.Entries
-                .Where(e => e.Status == QueueEntryStatus.Waiting)
-                .OrderBy(e => e.Position)
-                .ToList();
-
-            if (activeEntries.Count == 0)
-            {
-                return Ok(new { estimatedWaitTimeInMinutes = 0, queueLength = 0 });
-            }
-
-            // Calculate wait time for the last person in queue
-            var lastEntry = activeEntries.Last();
-            var waitTime = await _estimatedWaitTimeService.CalculateAsync(id, lastEntry.Id, cancellationToken);
-
-            return Ok(new { 
-                estimatedWaitTimeInMinutes = waitTime > 0 ? waitTime : 0,
-                queueLength = activeEntries.Count,
-                isActive = queue.IsActive
-            });
         }
     }
 } 
