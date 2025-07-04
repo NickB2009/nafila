@@ -11,6 +11,7 @@ using Grande.Fila.API.Application.ServicesOffered;
 using Grande.Fila.API.Domain.ServicesOffered;
 using Grande.Fila.API.Application.Services;
 using Grande.Fila.API.Application.Locations;
+using Grande.Fila.API.Application.Services.Cache;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -147,6 +148,9 @@ builder.Services.AddScoped<SaveHaircutDetailsService>();
 builder.Services.AddScoped<EstimatedWaitTimeService>();
 builder.Services.AddScoped<ResetAverageService>();
 builder.Services.AddScoped<Grande.Fila.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
+
+builder.Services.AddSingleton<IAverageWaitTimeCache, Grande.Fila.API.Infrastructure.InMemoryAverageWaitTimeCache>();
+builder.Services.AddScoped<UpdateCacheService>();
 
 var app = builder.Build();
 
