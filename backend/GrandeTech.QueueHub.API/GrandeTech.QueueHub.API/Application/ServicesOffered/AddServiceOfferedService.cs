@@ -39,14 +39,11 @@ namespace Grande.Fila.API.Application.ServicesOffered
             }
             else
             {
-                // Check if location exists
-                if (_locationRepo != null)
+                // Check if location exists (repository is non-null due to constructor guard)
+                var locationExists = await _locationRepo!.ExistsAsync(l => l.Id == locationGuid, cancellationToken);
+                if (!locationExists)
                 {
-                    var locationExists = await _locationRepo.ExistsAsync(l => l.Id == locationGuid, cancellationToken);
-                    if (!locationExists)
-                    {
-                        result.FieldErrors["LocationId"] = "Location not found.";
-                    }
+                    result.FieldErrors["LocationId"] = "Location not found.";
                 }
             }
 
@@ -59,12 +56,9 @@ namespace Grande.Fila.API.Application.ServicesOffered
             // Duplicate name validation (within same location)
             if (string.IsNullOrWhiteSpace(request.Name) == false && result.FieldErrors.ContainsKey("LocationId") == false)
             {
-                if (_serviceTypeRepository != null)
-                {
-                    var duplicateExists = await _serviceTypeRepository.ExistsAsync(s => s.LocationId == locationGuid && s.Name.ToLower() == request.Name.ToLower(), cancellationToken);
-                    if (duplicateExists)
-                        result.FieldErrors["Name"] = "A service with this name already exists at this location.";
-                }
+                var duplicateExists = await _serviceTypeRepository!.ExistsAsync(s => s.LocationId == locationGuid && s.Name.ToLower() == request.Name.ToLower(), cancellationToken);
+                if (duplicateExists)
+                    result.FieldErrors["Name"] = "A service with this name already exists at this location.";
             }
 
             if (result.FieldErrors.Count > 0)

@@ -9,6 +9,7 @@ using Grande.Fila.API.Infrastructure.Authorization;
 using System.Collections.Generic;
 using System.Linq;
 using Grande.Fila.API.Application.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Grande.Fila.API.Controllers
 {    [ApiController]
@@ -20,19 +21,37 @@ namespace Grande.Fila.API.Controllers
         private readonly EstimatedWaitTimeService _estimatedWaitTimeService;
         private readonly FinishService _finishService;
         private readonly BarberAddService _barberAddService;
+        private readonly JoinQueueService _joinQueueService;
+        private readonly CallNextService _callNextService;
+        private readonly CheckInService _checkInService;
+        private readonly CancelQueueService _cancelQueueService;
+        private readonly SaveHaircutDetailsService _saveHaircutDetailsService;
+        private readonly ILogger<QueuesController> _logger;
 
         public QueuesController(
             AddQueueService addQueueService,
             IQueueRepository queueRepository,
             EstimatedWaitTimeService estimatedWaitTimeService,
             FinishService finishService,
-            BarberAddService barberAddService)
+            BarberAddService barberAddService,
+            JoinQueueService joinQueueService,
+            CallNextService callNextService,
+            CheckInService checkInService,
+            CancelQueueService cancelQueueService,
+            SaveHaircutDetailsService saveHaircutDetailsService,
+            ILogger<QueuesController> logger)
         {
             _addQueueService = addQueueService;
             _queueRepository = queueRepository;
             _estimatedWaitTimeService = estimatedWaitTimeService;
             _finishService = finishService;
             _barberAddService = barberAddService;
+            _joinQueueService = joinQueueService;
+            _callNextService = callNextService;
+            _checkInService = checkInService;
+            _cancelQueueService = cancelQueueService;
+            _saveHaircutDetailsService = saveHaircutDetailsService;
+            _logger = logger;
         }
 
         public class QueueDto
@@ -455,6 +474,31 @@ namespace Grande.Fila.API.Controllers
                 return NotFound("Could not calculate wait time. Queue or queue entry not found, or no staff available.");
             }
             return Ok(new { estimatedWaitTimeInMinutes = waitTime });
+        }
+
+        [HttpPost("entries/{entryId}/haircut-details")]
+        [RequireBarber] // UC-SAVEHAIRCUT: Barber saves haircut details
+        public async Task<ActionResult<SaveHaircutDetailsResult>> SaveHaircutDetails(
+            string entryId,
+            [FromBody] SaveHaircutDetailsRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(Grande.Fila.API.Domain.Users.TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            
+            // Ensure the request uses the path parameter
+            request.QueueEntryId = entryId;
+
+            var result = await _saveHaircutDetailsService.ExecuteAsync(request, userId, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Count > 0)
+                    return BadRequest(result);
+            }
+
+            return Ok(result);
         }
     }
 } 

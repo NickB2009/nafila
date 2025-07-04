@@ -15,13 +15,20 @@ namespace Grande.Fila.API.Controllers
     public class StaffController : ControllerBase
     {
         private readonly AddBarberService _addBarberService;
+        private readonly EditBarberService _editBarberService;
         private readonly UpdateStaffStatusService _updateStaffStatusService;
         private readonly StartBreakService _startBreakService;
         private readonly EndBreakService _endBreakService;
 
-        public StaffController(AddBarberService addBarberService, UpdateStaffStatusService updateStaffStatusService, StartBreakService startBreakService, EndBreakService endBreakService)
+        public StaffController(
+            AddBarberService addBarberService, 
+            EditBarberService editBarberService,
+            UpdateStaffStatusService updateStaffStatusService, 
+            StartBreakService startBreakService, 
+            EndBreakService endBreakService)
         {
             _addBarberService = addBarberService;
+            _editBarberService = editBarberService;
             _updateStaffStatusService = updateStaffStatusService;
             _startBreakService = startBreakService;
             _endBreakService = endBreakService;
@@ -37,6 +44,32 @@ namespace Grande.Fila.API.Controllers
             var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
 
             var result = await _addBarberService.AddBarberAsync(request, userId, userRole, cancellationToken);
+
+            if (!result.Success)
+            {
+                if (result.FieldErrors.Count > 0)
+                    return BadRequest(result);
+                if (result.Errors.Count > 0)
+                    return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPut("barbers/{staffMemberId}")]
+        [RequireOwner] // UC-EDITBARBER: Admin/Owner can edit barbers
+        public async Task<ActionResult<EditBarberResult>> EditBarber(
+            string staffMemberId,
+            [FromBody] EditBarberRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "User";
+
+            // Ensure the request uses the path parameter
+            request.StaffMemberId = staffMemberId;
+
+            var result = await _editBarberService.EditBarberAsync(request, userId, userRole, cancellationToken);
 
             if (!result.Success)
             {

@@ -538,6 +538,177 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.Forbidden, deleteResponse.StatusCode);
         }
 
+        [TestMethod]
+        public async Task ToggleQueueStatus_EnableQueue_ReturnsOk()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location
+            var createRequest = new
+            {
+                organizationId = Guid.NewGuid().ToString(),
+                businessName = "Test Location",
+                address = new
+                {
+                    street = "123 Main St",
+                    city = "Test City",
+                    state = "State",
+                    postalCode = "12345",
+                    country = "Country"
+                },
+                businessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                maxQueueCapacity = 100,
+                description = "Test Description"
+            };
+
+            var createResponse = await client.PostAsJsonAsync("/api/locations", createRequest);
+            createResponse.EnsureSuccessStatusCode();
+            var createResult = await createResponse.Content.ReadFromJsonAsync<dynamic>();
+            var locationId = createResult?.locationId?.ToString();
+
+            // Now toggle queue status
+            var toggleRequest = new
+            {
+                enableQueue = false // Disable first
+            };
+
+            var disableResponse = await client.PutAsJsonAsync($"/api/locations/{locationId}/queue-status", toggleRequest);
+            disableResponse.EnsureSuccessStatusCode();
+
+            // Enable queue
+            toggleRequest = new
+            {
+                enableQueue = true
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync($"/api/locations/{locationId}/queue-status", toggleRequest);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            Assert.IsNotNull(result);
+            Assert.IsTrue((bool)result.success);
+            Assert.IsTrue((bool)result.isQueueEnabled);
+        }
+
+        [TestMethod]
+        public async Task ToggleQueueStatus_DisableQueue_ReturnsOk()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First create a location
+            var createRequest = new
+            {
+                organizationId = Guid.NewGuid().ToString(),
+                businessName = "Test Location",
+                address = new
+                {
+                    street = "123 Main St",
+                    city = "Test City",
+                    state = "State",
+                    postalCode = "12345",
+                    country = "Country"
+                },
+                businessHours = new Dictionary<string, string>
+                {
+                    ["Monday"] = "08:00-18:00"
+                },
+                maxQueueCapacity = 100,
+                description = "Test Description"
+            };
+
+            var createResponse = await client.PostAsJsonAsync("/api/locations", createRequest);
+            createResponse.EnsureSuccessStatusCode();
+            var createResult = await createResponse.Content.ReadFromJsonAsync<dynamic>();
+            var locationId = createResult?.locationId?.ToString();
+
+            // Now disable queue
+            var toggleRequest = new
+            {
+                enableQueue = false
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync($"/api/locations/{locationId}/queue-status", toggleRequest);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            Assert.IsNotNull(result);
+            Assert.IsTrue((bool)result.success);
+            Assert.IsFalse((bool)result.isQueueEnabled);
+        }
+
+        [TestMethod]
+        public async Task ToggleQueueStatus_WithoutOwnerRole_ReturnsForbidden()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var userToken = await CreateAndAuthenticateUserAsync("User", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
+
+            var request = new
+            {
+                enableQueue = false
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync($"/api/locations/{Guid.NewGuid()}/queue-status", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task ToggleQueueStatus_InvalidLocationId_ReturnsBadRequest()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var request = new
+            {
+                enableQueue = true
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync("/api/locations/invalid-guid/queue-status", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task ToggleQueueStatus_NonExistentLocation_ReturnsNotFound()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var request = new
+            {
+                enableQueue = true
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync($"/api/locations/{Guid.NewGuid()}/queue-status", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
         private static async Task<string> CreateAndAuthenticateUserAsync(string role, HttpClient client)
         {
             using var scope = _factory.Services.CreateScope();

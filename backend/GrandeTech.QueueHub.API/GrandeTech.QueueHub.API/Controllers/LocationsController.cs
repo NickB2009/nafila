@@ -19,13 +19,16 @@ namespace Grande.Fila.API.Controllers;
 public class LocationsController : ControllerBase
 {
     private readonly CreateLocationService _createLocationService;
+    private readonly ToggleQueueService _toggleQueueService;
     private readonly ILocationRepository _locationRepository;
 
     public LocationsController(
         CreateLocationService createLocationService,
+        ToggleQueueService toggleQueueService,
         ILocationRepository locationRepository)
     {
         _createLocationService = createLocationService ?? throw new ArgumentNullException(nameof(createLocationService));
+        _toggleQueueService = toggleQueueService ?? throw new ArgumentNullException(nameof(toggleQueueService));
         _locationRepository = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
     }
 
@@ -147,5 +150,33 @@ public class LocationsController : ControllerBase
             return NotFound();
 
         return Ok();
+    }
+
+    [HttpPut("{id}/queue-status")]
+    [RequireOwner] // UC-DISABLEQ: Admin/Owner can enable/disable queue
+    public async Task<IActionResult> ToggleQueueStatus(string id, [FromBody] ToggleQueueRequest request, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(id, out var locationId))
+            return BadRequest("Invalid location id.");
+
+        var currentUserId = User.FindFirst(TenantClaims.UserId)?.Value ?? throw new UnauthorizedAccessException("User ID not found in claims");
+        
+        // Ensure the request uses the path parameter
+        request.LocationId = id;
+
+        var result = await _toggleQueueService.ExecuteAsync(request, currentUserId, cancellationToken);
+
+        if (!result.Success)
+        {
+            if (result.FieldErrors.Any())
+                return BadRequest(result);
+            
+            if (result.Errors.Contains("Location not found"))
+                return NotFound(result);
+
+            return BadRequest(result);
+        }
+
+        return Ok(result);
     }
 }

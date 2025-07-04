@@ -121,7 +121,9 @@ builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
 
 // Register application services
 builder.Services.AddScoped<Grande.Fila.API.Application.Locations.CreateLocationService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Locations.ToggleQueueService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.AddBarberService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Staff.EditBarberService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.UpdateStaffStatusService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.StartBreakService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.EndBreakService>();
@@ -140,6 +142,7 @@ builder.Services.AddScoped<CallNextService>();
 builder.Services.AddScoped<CheckInService>();
 builder.Services.AddScoped<FinishService>();
 builder.Services.AddScoped<CancelQueueService>();
+builder.Services.AddScoped<SaveHaircutDetailsService>();
 builder.Services.AddScoped<EstimatedWaitTimeService>();
 builder.Services.AddScoped<Grande.Fila.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 
