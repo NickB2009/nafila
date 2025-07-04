@@ -74,6 +74,7 @@ namespace Grande.Fila.API.Application.Kiosk
                 // Find currently being served
                 var currentlyServing = activeEntries.FirstOrDefault(e => e.Status == QueueEntryStatus.CheckedIn);
                 result.CurrentlyServing = currentlyServing?.CustomerName;
+                result.CurrentPosition = currentlyServing?.Position;
 
                 // Count waiting customers
                 result.TotalWaiting = activeEntries.Count(e => e.Status == QueueEntryStatus.Waiting);

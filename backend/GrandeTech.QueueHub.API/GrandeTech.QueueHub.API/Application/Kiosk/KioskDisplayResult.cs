@@ -7,6 +7,7 @@ namespace Grande.Fila.API.Application.Kiosk
         public bool Success { get; set; }
         public List<KioskQueueEntryDto> QueueEntries { get; set; } = new();
         public string? CurrentlyServing { get; set; }
+        public int? CurrentPosition { get; set; }
         public int TotalWaiting { get; set; }
         public Dictionary<string, string> FieldErrors { get; set; } = new();
         public List<string> Errors { get; set; } = new();
