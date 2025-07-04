@@ -200,13 +200,30 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 - **UC-ADMINLOGIN, UC-BARBERLOGIN, UC-LOGINCLIENT** (Authentication) - Complete with AuthController and JWT
 - **UC-BRANDING** (Admin/Owner customize branding) - Complete with OrganizationService and controller endpoint
 - **UC-TRACKQ** (Admin/Owner track live activity) - Complete with TrackLiveActivityService and integration tests
+- **UC-ADDBARBER** (Admin/Owner adds barbers) - Complete with POST /api/staff/barbers endpoint
+- **UC-EDITBARBER** (Admin/Owner edit barber) - Complete with PUT /api/staff/barbers/{id} endpoint and integration tests
+- **UC-MANAGESERV** (Admin/Owner manage services) - Complete with ServicesOfferedController CRUD operations
+- **UC-SETDURATION** (Set service duration) - Complete as part of ServicesOffered management
+- **UC-CREATEBARBER** (Create new barbershop tenant) - Complete as CreateLocation in LocationsController
+- **UC-DISABLEQ** (Admin/Owner disable queue temporarily) - Complete with PUT /api/locations/{id}/queue-status endpoint
+- **UC-SAVEHAIRCUT** (Barber save haircut details) - Complete with POST /api/queues/entries/{id}/haircut-details endpoint
+- **UC-JWT** (Issue JWT) - Complete with AuthController
+- **UC-PROTECT** (Protect routes) - Complete with authorization attributes and middleware
 
 ### 🔄 Remaining High Priority Use Cases
 Based on the use case catalogue, these high-priority MVP use cases still need implementation:
 
-1. **UC-ADDBARBER** (Admin/Owner adds barbers) - Already implemented in StaffController
-2. **UC-MANAGESERV** (Admin/Owner manage services) - Partially implemented (ServicesOfferedController exists)
-3. **UC-CREATEBARBER** (Create new barbershop tenant) - Not yet implemented
+1. **UC-ANALYTICS** (View cross-barbershop analytics) - Priority 1
+2. **UC-APPLYUPDT** (Apply system updates) - Priority 1  
+3. **UC-ASKPROFILE** (Offer profile option) - Priority 1
+4. **UC-CALCWAIT** (Calculate estimated wait) - Priority 1
+5. **UC-COUPONNOTIF** (Send coupon notification) - Priority 1
+6. **UC-KIOSKCALL** (Display queue on kiosk) - Priority 1
+7. **UC-LOGINWEB** (Web login) - Priority 1
+8. **UC-QRJOIN** (QR code join) - Priority 1
+9. **UC-RESETAVG** (Reset wait averages) - Priority 1
+10. **UC-SMSNOTIF** (SMS notification) - Priority 1
+11. **UC-UPDATECACHE** (Update cache) - Priority 1
 
 ### 📋 New API Endpoints Added
 - **GET /api/queues/{id}/entries** - Barbers can view current queue with all entries
@@ -217,6 +234,9 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 - **POST /api/kiosk/cancel** - Kiosk users can cancel their queue entry
 - **PUT /api/organizations/{id}/branding** - Admin/Owner can update organization branding
 - **GET /api/organizations/{id}/live-activity** - Admin/Owner can track real-time queue and staff activity
+- **PUT /api/staff/barbers/{id}** - Admin/Owner can edit barber details
+- **PUT /api/locations/{id}/queue-status** - Admin/Owner can enable/disable queue
+- **POST /api/queues/entries/{id}/haircut-details** - Barbers can save haircut details
 
 ### 📋 Implementation Notes
 - All completed use cases follow TDD approach with comprehensive unit and integration tests
@@ -225,7 +245,9 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 - Integration tests cover end-to-end scenarios with proper authentication
 - KioskController provides anonymous access for kiosk functionality
 - Queue viewing endpoints support different authorization levels (barber vs public)
+- Service history functionality enables tracking customer haircut preferences over time
+- Location-level queue control allows temporary disabling for holidays/maintenance
 
 ---
 
-*Last updated: 2025-01-27*
+*Last updated: 2025-01-28*

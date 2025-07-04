@@ -980,6 +980,124 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
+        [TestMethod]
+        public async Task EditBarber_ValidRequest_ReturnsOk()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var adminToken = GetAdminToken();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+
+            // First add a barber
+            var addRequest = new
+            {
+                locationId = Guid.NewGuid().ToString(),
+                name = "Original Name",
+                email = "original@example.com",
+                phoneNumber = "+1234567890",
+                role = "Barber",
+                employeeCode = "EMP001"
+            };
+
+            var addResponse = await client.PostAsJsonAsync("/api/staff/barbers", addRequest);
+            var addResult = await addResponse.Content.ReadFromJsonAsync<dynamic>();
+            var staffId = addResult?.staffMemberId?.ToString();
+
+            // Now edit the barber
+            var editRequest = new
+            {
+                name = "Updated Name",
+                email = "updated@example.com",
+                phoneNumber = "+0987654321",
+                profilePictureUrl = "https://example.com/profile.jpg",
+                role = "Senior Barber"
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync($"/api/staff/barbers/{staffId}", editRequest);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            Assert.IsNotNull(result);
+            Assert.IsTrue((bool)result.success);
+            Assert.AreEqual("Updated Name", result.name?.ToString());
+            Assert.AreEqual("updated@example.com", result.email?.ToString());
+            Assert.AreEqual("+0987654321", result.phoneNumber?.ToString());
+            Assert.AreEqual("https://example.com/profile.jpg", result.profilePictureUrl?.ToString());
+            Assert.AreEqual("Senior Barber", result.role?.ToString());
+        }
+
+        [TestMethod]
+        public async Task EditBarber_WithoutAdminRole_ReturnsUnauthorized()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var userToken = GetUserToken(); // Non-admin token
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", userToken);
+
+            var request = new
+            {
+                name = "Updated Name",
+                email = "updated@example.com"
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync($"/api/staff/barbers/{Guid.NewGuid()}", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditBarber_InvalidStaffId_ReturnsBadRequest()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var adminToken = GetAdminToken();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+
+            var request = new
+            {
+                name = "Updated Name",
+                email = "updated@example.com"
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync("/api/staff/barbers/invalid-guid", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            Assert.IsNotNull(result);
+            Assert.IsFalse((bool)result.success);
+        }
+
+        [TestMethod]
+        public async Task EditBarber_NonExistentStaff_ReturnsBadRequest()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            var adminToken = GetAdminToken();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+
+            var request = new
+            {
+                name = "Updated Name",
+                email = "updated@example.com"
+            };
+
+            // Act
+            var response = await client.PutAsJsonAsync($"/api/staff/barbers/{Guid.NewGuid()}", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            Assert.IsNotNull(result);
+            Assert.IsFalse((bool)result.success);
+            // Should contain error about staff not found
+        }
+
         // Helper methods
 
         private async Task<string> CreateAndAuthenticateUserAsync(string role)
