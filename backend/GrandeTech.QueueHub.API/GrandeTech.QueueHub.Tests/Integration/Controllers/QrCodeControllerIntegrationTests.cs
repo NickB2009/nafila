@@ -10,6 +10,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using System.Linq;
+using Grande.Fila.API.Domain.Queues;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Application.QrCode;
+using Grande.Fila.API.Infrastructure;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -17,11 +23,34 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
     public class QrCodeControllerIntegrationTests
     {
         private static WebApplicationFactory<Program> _factory = null!;
+        private static BogusUserRepository _userRepository = null!;
+        private static BogusQueueRepository _queueRepository = null!;
+        private static BogusLocationRepository _locationRepository = null!;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
-            _factory = new WebApplicationFactory<Program>();
+            _userRepository = new BogusUserRepository();
+            _queueRepository = new BogusQueueRepository();
+            _locationRepository = new BogusLocationRepository();
+            _factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureServices(services =>
+                    {
+                        // Remove existing registrations
+                        var servicesToRemove = new[] { typeof(IUserRepository), typeof(IQueueRepository), typeof(ILocationRepository), typeof(IQrCodeGenerator) };
+                        var descriptors = services.Where(d => servicesToRemove.Contains(d.ServiceType)).ToList();
+                        descriptors.ForEach(d => services.Remove(d));
+                        
+                        // Add test-specific services
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddSingleton<IQueueRepository>(_queueRepository);
+                        services.AddSingleton<ILocationRepository>(_locationRepository);
+                        services.AddSingleton<IQrCodeGenerator, MockQrCodeGenerator>();
+                        services.AddScoped<AuthService>();
+                    });
+                });
         }
 
         [TestMethod]
@@ -32,9 +61,12 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var staffToken = await CreateAndAuthenticateUserAsync("Staff", client);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", staffToken);
 
+            var location = new Location("Test Location", Guid.NewGuid());
+            await _locationRepository.AddAsync(location, CancellationToken.None);
+
             var dto = new
             {
-                locationId = Guid.NewGuid().ToString(),
+                locationId = location.Id.ToString(),
                 serviceTypeId = Guid.NewGuid().ToString(),
                 expiryMinutes = "30"
             };
@@ -44,8 +76,11 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Act
             var response = await client.PostAsync("/api/qrcode/generate", new StringContent(json, Encoding.UTF8, "application/json"));
 
-            // Assert - Should return BadRequest due to missing location but not Unauthorized
-            Assert.AreNotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<GenerateQrResponseDto>();
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.QrCodeBase64);
         }
 
         [TestMethod]
@@ -98,6 +133,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         {
             using var scope = _factory.Services.CreateScope();
             var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
             var username = $"testuser_{role.ToLower()}_{Guid.NewGuid():N}";
             var email = $"{username}@test.com";
             var password = "testpassword123";
@@ -106,11 +142,18 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             await userRepo.AddAsync(user, CancellationToken.None);
 
             var loginReq = new LoginRequest { Username = username, Password = password };
-            var json = JsonSerializer.Serialize(loginReq);
-            var resp = await client.PostAsync("/api/auth/login", new StringContent(json, Encoding.UTF8, "application/json"));
-            var respContent = await resp.Content.ReadAsStringAsync();
-            var loginRes = JsonSerializer.Deserialize<LoginResult>(respContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return loginRes!.Token!;
+            var loginResult = await authService.LoginAsync(loginReq);
+            
+            Assert.IsTrue(loginResult.Success, $"Login failed: {loginResult.Error}");
+            Assert.IsNotNull(loginResult.Token);
+
+            return loginResult.Token!;
+        }
+
+        private class GenerateQrResponseDto
+        {
+            public bool Success { get; set; }
+            public string? QrCodeBase64 { get; set; }
         }
     }
 } 

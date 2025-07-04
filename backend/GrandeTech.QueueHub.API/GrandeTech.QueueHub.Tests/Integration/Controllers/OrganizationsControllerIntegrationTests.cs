@@ -13,6 +13,7 @@ using System.Threading;
 using Grande.Fila.API.Tests.Integration;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Infrastructure;
+using System.Linq;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -22,17 +23,25 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
     {
         private static WebApplicationFactory<Program> _factory;
         private HttpClient _client;
-        private BogusUserRepository _userRepository;
+        private static BogusUserRepository _userRepository;
 
         [TestInitialize]
         public void TestInitialize()
         {
-            _userRepository = new BogusUserRepository();
+            if (_userRepository == null)
+                _userRepository = new BogusUserRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
                     builder.ConfigureServices(services =>
                     {
+                        // Remove existing IUserRepository registrations
+                        var descriptor = services.SingleOrDefault(
+                            d => d.ServiceType == typeof(IUserRepository));
+                        if (descriptor != null)
+                        {
+                            services.Remove(descriptor);
+                        }
                         services.AddSingleton<IUserRepository>(_userRepository);
                         services.AddScoped<AuthService>();
                     });
@@ -50,7 +59,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         [TestMethod]
         public async Task GetLiveActivity_ValidOrganizationId_ReturnsSuccess()
         {
-            var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { "view:metrics" });
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create organization first

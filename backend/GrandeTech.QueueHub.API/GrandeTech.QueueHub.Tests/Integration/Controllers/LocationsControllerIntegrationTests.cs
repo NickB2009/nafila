@@ -21,14 +21,16 @@ namespace Grande.Fila.Tests.Integration.Controllers
     {
         private static WebApplicationFactory<Program> _factory;
         private HttpClient _client;
-        private BogusUserRepository _userRepository;
-        private BogusLocationRepository _locationRepository;
+        private static BogusUserRepository _userRepository;
+        private static BogusLocationRepository _locationRepository;
 
         [TestInitialize]
         public void TestInitialize()
         {
-            _userRepository = new BogusUserRepository();
-            _locationRepository = new BogusLocationRepository();
+            if (_userRepository == null)
+                _userRepository = new BogusUserRepository();
+            if (_locationRepository == null)
+                _locationRepository = new BogusLocationRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {

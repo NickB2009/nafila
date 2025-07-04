@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System;
+using System.Linq;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -17,11 +18,28 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
     public class PromotionsControllerIntegrationTests
     {
         private static WebApplicationFactory<Program> _factory = null!;
+        private static BogusUserRepository _userRepository = null!;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
-            _factory = new WebApplicationFactory<Program>();
+            _userRepository = new BogusUserRepository();
+            _factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureServices(services =>
+                    {
+                        // Remove existing IUserRepository registrations
+                        var descriptor = services.SingleOrDefault(
+                            d => d.ServiceType == typeof(IUserRepository));
+                        if (descriptor != null)
+                        {
+                            services.Remove(descriptor);
+                        }
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddScoped<AuthService>();
+                    });
+                });
         }
 
         [TestMethod]

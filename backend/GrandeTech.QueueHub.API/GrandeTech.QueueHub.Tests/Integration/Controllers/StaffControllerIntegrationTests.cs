@@ -34,47 +34,48 @@ namespace Grande.Fila.Tests.Integration.Controllers
     {
         private WebApplicationFactory<Program> _factory;
         private HttpClient _client;
-        private BogusUserRepository _userRepository;
+        private static BogusUserRepository _userRepository;
+        private static BogusStaffMemberRepository _staffMemberRepository;
+        private static BogusLocationRepository _locationRepository;
+        private static BogusAuditLogRepository _auditLogRepository;
 
         [TestInitialize]
-        public void Setup()
+        public void TestInitialize()
         {
             _userRepository = new BogusUserRepository();
-            var staffRepository = new BogusStaffMemberRepository();
-            var locationRepository = new BogusLocationRepository();
-            var auditLogRepository = new BogusAuditLogRepository();
-
+            _staffMemberRepository = new BogusStaffMemberRepository();
+            _locationRepository = new BogusLocationRepository();
+            _auditLogRepository = new BogusAuditLogRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
-                    builder.UseEnvironment("Testing");
-                    builder.ConfigureAppConfiguration((context, config) =>
-                    {
-                        config.AddInMemoryCollection(new Dictionary<string, string?>
-                        {
-                            ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
-                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
-                            ["Jwt:Audience"] = "Grande.Fila.API.Test"
-                        });
-                    });
                     builder.ConfigureServices(services =>
                     {
-                        var descriptors = services.Where(d => 
-                            d.ServiceType == typeof(IUserRepository) ||
-                            d.ServiceType == typeof(IStaffMemberRepository) ||
-                            d.ServiceType == typeof(ILocationRepository) ||
-                            d.ServiceType == typeof(IAuditLogRepository)).ToList();
-                        foreach (var descriptor in descriptors)
+                        var servicesToRemove = new[]
                         {
-                            services.Remove(descriptor);
-                        }
+                            typeof(IUserRepository),
+                            typeof(IStaffMemberRepository),
+                            typeof(ILocationRepository),
+                            typeof(IAuditLogRepository),
+                            typeof(AddBarberService),
+                            typeof(EditBarberService),
+                            typeof(UpdateStaffStatusService),
+                            typeof(StartBreakService),
+                            typeof(EndBreakService)
+                        };
+                        var descriptors = services.Where(d => servicesToRemove.Contains(d.ServiceType)).ToList();
+                        descriptors.ForEach(d => services.Remove(d));
+
                         services.AddSingleton<IUserRepository>(_userRepository);
-                        services.AddSingleton<IStaffMemberRepository>(staffRepository);
-                        services.AddSingleton<ILocationRepository>(locationRepository);
-                        services.AddSingleton<IAuditLogRepository>(auditLogRepository);
-                        services.AddScoped<AddBarberService>();
-                        services.AddScoped<UpdateStaffStatusService>();
+                        services.AddSingleton<IStaffMemberRepository>(_staffMemberRepository);
+                        services.AddSingleton<ILocationRepository>(_locationRepository);
+                        services.AddSingleton<IAuditLogRepository>(_auditLogRepository);
                         services.AddScoped<AuthService>();
+                        services.AddScoped<AddBarberService>();
+                        services.AddScoped<EditBarberService>();
+                        services.AddScoped<UpdateStaffStatusService>();
+                        services.AddScoped<StartBreakService>();
+                        services.AddScoped<EndBreakService>();
                     });
                 });
             _client = _factory.CreateClient();
@@ -440,24 +441,24 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task AddBarber_WithDeactivateOnCreation_ReturnsInactiveStatus()
         {
             // Arrange
-            Assert.IsNotNull(_client);
-
+            var location = new Location("Test Location", Guid.NewGuid());
+            await _locationRepository.AddAsync(location);
             var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
-            var addBarberRequest = new AddBarberRequest
+            var request = new AddBarberRequest
             {
                 FirstName = "Inactive",
                 LastName = "Barber",
                 Email = "inactive@barbershop.com",
                 PhoneNumber = "+5511222222222",
                 Username = "inactivebarber",
-                LocationId = locationId,
+                LocationId = location.Id.ToString(),
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() },
-                DeactivateOnCreation = true // This should make the barber inactive
+                DeactivateOnCreation = true
             };
 
-            var json = JsonSerializer.Serialize(addBarberRequest);
+            var json = JsonSerializer.Serialize(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             // Act

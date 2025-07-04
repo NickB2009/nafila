@@ -186,7 +186,7 @@ public class ServicesOfferedControllerTests
         Assert.AreEqual(addRequest.Description, getResult.Description);
         Assert.AreEqual(addRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
         Assert.AreEqual(addRequest.Price, getResult.Price.Amount);
-        Assert.AreEqual(testLocationId, getResult.LocationId);
+        Assert.AreEqual(Guid.Parse(testLocationId), getResult.LocationId);
     }
 
     [TestMethod]
@@ -249,7 +249,7 @@ public class ServicesOfferedControllerTests
         Console.WriteLine($"Status: {response.StatusCode}");
         Console.WriteLine($"Body: {responseBody}");
         Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-        var result = JsonSerializer.Deserialize<List<ServicesOfferedDto>>(responseBody, _jsonOptions);
+        var result = JsonSerializer.Deserialize<List<ServiceOfferedDto>>(responseBody, _jsonOptions);
         Assert.IsNotNull(result);
     }
 
@@ -565,9 +565,11 @@ public class ServicesOfferedControllerTests
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string LocationId { get; set; } = string.Empty;
+        public Guid LocationId { get; set; }  // Changed from string to Guid
         public int EstimatedDurationMinutes { get; set; }
         public PriceDto Price { get; set; } = new PriceDto();
+        public string? ImageUrl { get; set; }
+        public bool IsActive { get; set; }
     }
 
     public class PriceDto
