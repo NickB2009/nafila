@@ -19,7 +19,7 @@ namespace Grande.Fila.API.Tests.Application.Queues
             SetStatusForTest(status);
         }
 
-        public void SetStatusForTest(QueueEntryStatus status)
+        public new void SetStatusForTest(QueueEntryStatus status)
         {
             var statusField = typeof(QueueEntry).GetField("<Status>k__BackingField", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             statusField?.SetValue(this, status);
