@@ -78,7 +78,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                     "USA",
                     "12345"
                 ),
-                "555-1234",
+                "+5511999999999",
                 "test@location.com",
                 new TimeSpan(9, 0, 0),
                 new TimeSpan(17, 0, 0),
@@ -162,7 +162,20 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var email = $"{username}@test.com";
             var password = "testpassword123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), role);
+            // Map old test roles to new roles
+            var mappedRole = role.ToLower() switch
+            {
+                "staff" => UserRoles.Barber,
+                "admin" => UserRoles.Admin,
+                "owner" => UserRoles.Admin,
+                "barber" => UserRoles.Barber,
+                "client" => UserRoles.Client,
+                "user" => UserRoles.Client,
+                "system" => UserRoles.ServiceAccount,
+                _ => UserRoles.Client
+            };
+            
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
             await userRepo.AddAsync(user, CancellationToken.None);
 
             var loginReq = new LoginRequest { Username = username, Password = password };

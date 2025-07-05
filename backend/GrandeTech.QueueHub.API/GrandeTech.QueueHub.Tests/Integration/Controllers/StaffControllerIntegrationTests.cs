@@ -456,7 +456,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
                     "USA", // country
                     "12345" // postalCode
                 ),
-                "555-1234",
+                "+5511999999999",
                 "test@location.com",
                 new TimeSpan(9, 0, 0),
                 new TimeSpan(17, 0, 0),

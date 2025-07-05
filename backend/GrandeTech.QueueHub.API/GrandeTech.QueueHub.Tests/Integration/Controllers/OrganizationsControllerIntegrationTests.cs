@@ -36,9 +36,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                     builder.ConfigureServices(services =>
                     {
                         // Remove existing IUserRepository registrations
-                        var descriptor = services.SingleOrDefault(
-                            d => d.ServiceType == typeof(IUserRepository));
-                        if (descriptor != null)
+                        var descriptors = services.Where(d => d.ServiceType == typeof(IUserRepository)).ToList();
+                        foreach (var descriptor in descriptors)
                         {
                             services.Remove(descriptor);
                         }
@@ -185,7 +184,22 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
 
             var uniqueId = Guid.NewGuid().ToString("N");
-            var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), role);
+            // Map old test roles to new roles
+            var mappedRole = role.ToLower() switch
+            {
+                "admin" => UserRoles.Admin,
+                "owner" => UserRoles.Admin,
+                "barber" => UserRoles.Barber,
+                "client" => UserRoles.Client,
+                "user" => UserRoles.Client,
+                "system" => UserRoles.ServiceAccount,
+                _ => UserRoles.Client
+            };
+            
+            var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);
+
+            // Disable 2FA for test users to simplify integration tests
+            user.DisableTwoFactor();
 
             if (role == "Admin" || role == "Owner")
             {

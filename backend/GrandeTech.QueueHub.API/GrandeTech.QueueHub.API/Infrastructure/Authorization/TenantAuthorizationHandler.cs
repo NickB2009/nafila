@@ -90,15 +90,16 @@ namespace Grande.Fila.API.Infrastructure.Authorization
             if (userRole == UserRoles.PlatformAdmin)
                 return true;
 
-            // Check specific role requirements based on the new consolidated role structure
+            // Check specific role requirements based on the role hierarchy
             return requiredRole switch
             {
-                // Admin requirement: allow both Admin and Owner (shop owners act as admins in their own org)
-                UserRoles.Admin => userRole == UserRoles.Admin || userRole == UserRoles.Owner,
-                // Owner requirement: allow Owner itself or Admins (admins outrank owners)
-                "Owner" => userRole == UserRoles.Admin || userRole == UserRoles.Owner,
+                // Admin requirement: only Admin role
+                UserRoles.Admin => userRole == UserRoles.Admin,
+                // Barber requirement: Admin or Barber can access
                 UserRoles.Barber => userRole == UserRoles.Admin || userRole == UserRoles.Barber,
+                // Client requirement: Any authenticated user can access
                 UserRoles.Client => userRole == UserRoles.Admin || userRole == UserRoles.Barber || userRole == UserRoles.Client,
+                // Service account requirement: only service accounts
                 UserRoles.ServiceAccount => userRole == UserRoles.ServiceAccount,
                 _ => userRole == requiredRole
             };
