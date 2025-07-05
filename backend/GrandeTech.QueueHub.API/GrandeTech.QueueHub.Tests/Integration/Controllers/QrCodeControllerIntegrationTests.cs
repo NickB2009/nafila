@@ -14,8 +14,10 @@ using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using System.Linq;
 using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Application.QrCode;
 using Grande.Fila.API.Infrastructure;
+using System.Net.Http.Json;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -61,7 +63,29 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var staffToken = await CreateAndAuthenticateUserAsync("Staff", client);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", staffToken);
 
-            var location = new Location("Test Location", Guid.NewGuid());
+            var location = new Location(
+                "Test Location",
+                "test-location",
+                "A test location for integration tests.",
+                Guid.NewGuid(),
+                Address.Create(
+                    "123 Test St",
+                    "1",
+                    "",
+                    "Downtown",
+                    "Testville",
+                    "Test State",
+                    "USA",
+                    "12345"
+                ),
+                "555-1234",
+                "test@location.com",
+                new TimeSpan(9, 0, 0),
+                new TimeSpan(17, 0, 0),
+                100,
+                15,
+                "test_user"
+            );
             await _locationRepository.AddAsync(location, CancellationToken.None);
 
             var dto = new

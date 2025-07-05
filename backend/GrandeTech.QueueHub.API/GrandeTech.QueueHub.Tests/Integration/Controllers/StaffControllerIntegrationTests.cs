@@ -441,7 +441,29 @@ namespace Grande.Fila.Tests.Integration.Controllers
         public async Task AddBarber_WithDeactivateOnCreation_ReturnsInactiveStatus()
         {
             // Arrange
-            var location = new Location("Test Location", Guid.NewGuid());
+            var location = new Location(
+                "Test Location",
+                "test-location",
+                "A test location for integration tests.",
+                Guid.NewGuid(),
+                Address.Create(
+                    "123 Test St", // street
+                    "1", // number
+                    "", // complement
+                    "Downtown", // neighborhood
+                    "Testville", // city
+                    "Test State", // state
+                    "USA", // country
+                    "12345" // postalCode
+                ),
+                "555-1234",
+                "test@location.com",
+                new TimeSpan(9, 0, 0),
+                new TimeSpan(17, 0, 0),
+                100,
+                15,
+                "test_user"
+            );
             await _locationRepository.AddAsync(location);
             var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);

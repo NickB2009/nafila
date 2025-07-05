@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
