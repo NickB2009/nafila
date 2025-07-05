@@ -76,55 +76,79 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
     
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Row(
-            children: [
-              // Left Side - Queue Information
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Salon Header
-                    _buildSalonHeader(theme),
-                    
-                    const SizedBox(height: 20),
-                    
-                    // Wait Time Card
-                    _buildWaitTimeCard(theme),
-                    
-                    const SizedBox(height: 20),
-                    
-                    // Customer Queue
-                    Expanded(
-                      child: _buildCustomerQueue(theme),
-                    ),
-                  ],
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.all(constraints.maxWidth * 0.03),
+                child: isSmallScreen
+                    ? Column(
+                        children: [
+                          // Queue Information
+                          _buildSalonHeader(theme, constraints),
+                          SizedBox(height: constraints.maxHeight * 0.02),
+                          _buildWaitTimeCard(theme, constraints),
+                          SizedBox(height: constraints.maxHeight * 0.02),
+                          SizedBox(
+                            height: constraints.maxHeight * 0.4,
+                            child: _buildCustomerQueue(theme, constraints),
+                          ),
+                          SizedBox(height: constraints.maxHeight * 0.02),
+                          // Advertisement
+                          SizedBox(
+                            height: constraints.maxHeight * 0.4,
+                            child: _buildAdvertisementSection(theme, constraints),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Left Side - Queue Information
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSalonHeader(theme, constraints),
+                                SizedBox(height: constraints.maxHeight * 0.02),
+                                _buildWaitTimeCard(theme, constraints),
+                                SizedBox(height: constraints.maxHeight * 0.02),
+                                Expanded(
+                                  child: _buildCustomerQueue(theme, constraints),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: constraints.maxWidth * 0.03),
+                          // Right Side - Advertisement
+                          Expanded(
+                            flex: 1,
+                            child: _buildAdvertisementSection(theme, constraints),
+                          ),
+                        ],
+                      ),
               ),
-              
-              const SizedBox(width: 32),
-              
-              // Right Side - Advertisement
-              Expanded(
-                flex: 1,
-                child: _buildAdvertisementSection(theme),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildSalonHeader(ThemeData theme) {
+  Widget _buildSalonHeader(ThemeData theme, BoxConstraints constraints) {
+    final isSmallScreen = constraints.maxWidth < 600;
+    final iconSize = isSmallScreen ? 40.0 : 60.0;
+    final titleFontSize = isSmallScreen ? 20.0 : 24.0;
+    final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(constraints.maxWidth * 0.02),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -139,19 +163,19 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
       child: Row(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: iconSize,
+            height: iconSize,
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(iconSize / 2),
             ),
             child: Icon(
               Icons.content_cut,
               color: theme.colorScheme.primary,
-              size: 32,
+              size: iconSize * 0.6,
             ),
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: constraints.maxWidth * 0.02),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +184,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                   salonName,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 24,
+                    fontSize: titleFontSize,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -168,18 +192,18 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                   'Painel de Fila',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 14,
+                    fontSize: subtitleFontSize,
                   ),
                 ),
               ],
             ),
           ),
-          // Current time
           Text(
             _getCurrentTime(),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w500,
               color: theme.colorScheme.primary,
+              fontSize: isSmallScreen ? 18.0 : 24.0,
             ),
           ),
         ],
@@ -187,9 +211,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     );
   }
 
-  Widget _buildWaitTimeCard(ThemeData theme) {
+  Widget _buildWaitTimeCard(ThemeData theme, BoxConstraints constraints) {
+    final isSmallScreen = constraints.maxWidth < 600;
+    final waitTimeFontSize = isSmallScreen ? 36.0 : 48.0;
+    
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(constraints.maxWidth * 0.02),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(16),
@@ -213,9 +240,10 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                     color: Colors.white.withOpacity(0.9),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
+                    fontSize: isSmallScreen ? 10.0 : 12.0,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: constraints.maxHeight * 0.01),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
@@ -225,7 +253,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                       style: theme.textTheme.displayMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 48,
+                        fontSize: waitTimeFontSize,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -234,6 +262,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: Colors.white.withOpacity(0.9),
                         fontWeight: FontWeight.w600,
+                        fontSize: isSmallScreen ? 16.0 : 20.0,
                       ),
                     ),
                   ],
@@ -241,27 +270,28 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               ],
             ),
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: constraints.maxWidth * 0.02),
           Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(constraints.maxWidth * 0.015),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.people,
                   color: Colors.white,
-                  size: 32,
+                  size: isSmallScreen ? 24.0 : 32.0,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: constraints.maxHeight * 0.01),
               Text(
                 '$customersWaiting',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 20.0 : 24.0,
                 ),
               ),
               Text(
@@ -269,6 +299,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: Colors.white.withOpacity(0.8),
                   fontWeight: FontWeight.w500,
+                  fontSize: isSmallScreen ? 10.0 : 12.0,
                 ),
               ),
             ],
@@ -278,9 +309,13 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     );
   }
 
-  Widget _buildCustomerQueue(ThemeData theme) {
+  Widget _buildCustomerQueue(ThemeData theme, BoxConstraints constraints) {
+    final isSmallScreen = constraints.maxWidth < 600;
+    final headerFontSize = isSmallScreen ? 16.0 : 20.0;
+    final rowFontSize = isSmallScreen ? 16.0 : 20.0;
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(constraints.maxWidth * 0.02),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -300,13 +335,14 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
+              fontSize: headerFontSize,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: constraints.maxHeight * 0.02),
           
           // Queue header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.02),
             child: Row(
               children: [
                 Expanded(
@@ -316,6 +352,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: headerFontSize * 0.8,
                     ),
                   ),
                 ),
@@ -326,6 +363,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: headerFontSize * 0.8,
                     ),
                   ),
                 ),
@@ -336,6 +374,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: headerFontSize * 0.8,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -344,9 +383,9 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             ),
           ),
           
-          const SizedBox(height: 16),
+          SizedBox(height: constraints.maxHeight * 0.01),
           Divider(color: theme.dividerColor, thickness: 2),
-          const SizedBox(height: 16),
+          SizedBox(height: constraints.maxHeight * 0.01),
           
           // Queue list
           Expanded(
@@ -354,7 +393,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               itemCount: customerQueue.length,
               itemBuilder: (context, index) {
                 final customer = customerQueue[index];
-                return _buildCustomerRow(theme, customer, index);
+                return _buildCustomerRow(theme, customer, index, constraints);
               },
             ),
           ),
@@ -363,12 +402,17 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     );
   }
 
-  Widget _buildCustomerRow(ThemeData theme, Map<String, dynamic> customer, int index) {
+  Widget _buildCustomerRow(ThemeData theme, Map<String, dynamic> customer, int index, BoxConstraints constraints) {
     final bool isInSalon = customer["inSalon"] ?? false;
+    final isSmallScreen = constraints.maxWidth < 600;
+    final fontSize = isSmallScreen ? 16.0 : 20.0;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      margin: EdgeInsets.only(bottom: constraints.maxHeight * 0.01),
+      padding: EdgeInsets.symmetric(
+        horizontal: constraints.maxWidth * 0.02,
+        vertical: constraints.maxHeight * 0.015,
+      ),
       decoration: BoxDecoration(
         color: isInSalon 
             ? theme.colorScheme.primary.withOpacity(0.1)
@@ -388,7 +432,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               '${customer["position"]}.',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
+                fontSize: fontSize,
               ),
             ),
           ),
@@ -398,7 +442,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               customer["name"],
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 20,
+                fontSize: fontSize,
               ),
             ),
           ),
@@ -406,10 +450,10 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             flex: 2,
             child: Center(
               child: isInSalon
-                  ? const Icon(
+                  ? Icon(
                       Icons.check_circle,
                       color: AppTheme.primaryColor,
-                      size: 28,
+                      size: isSmallScreen ? 20 : 28,
                     )
                   : const SizedBox.shrink(),
             ),
@@ -419,12 +463,16 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     );
   }
 
-  Widget _buildAdvertisementSection(ThemeData theme) {
+  Widget _buildAdvertisementSection(ThemeData theme, BoxConstraints constraints) {
     final currentAd = ads[_currentAdIndex];
+    final isSmallScreen = constraints.maxWidth < 600;
+    final iconSize = isSmallScreen ? 80.0 : 120.0;
+    final titleFontSize = isSmallScreen ? 24.0 : 28.0;
+    final subtitleFontSize = isSmallScreen ? 14.0 : 18.0;
     
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(constraints.maxWidth * 0.03),
       decoration: BoxDecoration(
         color: currentAd["backgroundColor"],
         borderRadius: BorderRadius.circular(20),
@@ -446,38 +494,38 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               children: [
                 // Mock image placeholder
                 Container(
-                  width: 120,
-                  height: 120,
+                  width: iconSize,
+                  height: iconSize,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(60),
+                    borderRadius: BorderRadius.circular(iconSize / 2),
                   ),
                   child: Icon(
                     _getAdIcon(_currentAdIndex),
-                    size: 60,
+                    size: iconSize / 2,
                     color: Colors.white,
                   ),
                 ),
                 
-                const SizedBox(height: 24),
+                SizedBox(height: constraints.maxHeight * 0.02),
                 
                 Text(
                   currentAd["title"],
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 28,
+                    fontSize: titleFontSize,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 
-                const SizedBox(height: 16),
+                SizedBox(height: constraints.maxHeight * 0.015),
                 
                 Text(
                   currentAd["subtitle"],
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 18,
+                    fontSize: subtitleFontSize,
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
@@ -488,7 +536,10 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
           
           // Brand logo/name
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: constraints.maxWidth * 0.03,
+              vertical: constraints.maxHeight * 0.015,
+            ),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(25),
@@ -499,11 +550,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
+                fontSize: isSmallScreen ? 12.0 : 14.0,
               ),
             ),
           ),
           
-          const SizedBox(height: 16),
+          SizedBox(height: constraints.maxHeight * 0.015),
           
           // Ad rotation indicator
           Row(
@@ -512,8 +564,8 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               ads.length,
               (index) => Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: 8,
-                height: 8,
+                width: isSmallScreen ? 6 : 8,
+                height: isSmallScreen ? 6 : 8,
                 decoration: BoxDecoration(
                   color: index == _currentAdIndex 
                       ? Colors.white 

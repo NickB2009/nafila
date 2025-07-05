@@ -32,224 +32,217 @@ class _CheckInScreenState extends State<CheckInScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Top bar with close button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                  color: theme.colorScheme.onSurface,
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Text(
-                "Check-in",
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Salon Info Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-                color: theme.colorScheme.surface,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 36),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isSmallScreen = constraints.maxWidth < 600;
+            final horizontalPadding = isSmallScreen ? 16.0 : constraints.maxWidth * 0.15;
+            final sectionSpacing = isSmallScreen ? 16.0 : 32.0;
+            final fieldSpacing = isSmallScreen ? 12.0 : 20.0;
+            final titleFontSize = isSmallScreen ? 22.0 : 28.0;
+            final labelFontSize = isSmallScreen ? 13.0 : 16.0;
+            final inputFontSize = isSmallScreen ? 15.0 : 18.0;
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: sectionSpacing),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Top bar with close button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                          color: theme.colorScheme.onSurface,
+                          iconSize: isSmallScreen ? 24 : 32,
+                        ),
+                      ],
+                    ),
+                    Text(
+                      "Check-in",
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: titleFontSize,
+                      ),
+                    ),
+                    SizedBox(height: sectionSpacing * 0.5),
+                    // Salon Info Card
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                      color: theme.colorScheme.surface,
+                      child: Padding(
+                        padding: EdgeInsets.all(isSmallScreen ? 12.0 : 20.0),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              salon.name,
-                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              salon.address,
-                              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                            Icon(Icons.check_circle, color: theme.colorScheme.primary, size: isSmallScreen ? 28 : 36),
+                            SizedBox(width: isSmallScreen ? 8 : 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    salon.name,
+                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isSmallScreen ? 18 : 22,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    salon.address,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: isSmallScreen ? 13 : 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Divider(indent: 24, endIndent: 24, color: theme.dividerColor),
-            const SizedBox(height: 8),
-            // User Info Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Nome completo", style: theme.textTheme.labelMedium),
-                  const SizedBox(height: 2),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      hintText: "Digite seu nome",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: theme.colorScheme.primary),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  Text("Número de pessoas cortando o cabelo", style: theme.textTheme.labelMedium),
-                  DropdownButton<String>(
-                    value: selectedPeople,
-                    isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                    items: peopleOptions.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: theme.textTheme.bodyLarge),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedPeople = newValue!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text("Telefone", style: theme.textTheme.labelMedium),
-                  const SizedBox(height: 2),
-                  TextField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      hintText: "Digite seu telefone",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: theme.colorScheme.primary),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // SMS Opt-In Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Checkbox(
-                    value: smsOptIn,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        smsOptIn = value ?? false;
-                      });
-                    },
-                    activeColor: theme.colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
+                    SizedBox(height: sectionSpacing * 0.5),
+                    Divider(color: theme.dividerColor),
+                    SizedBox(height: fieldSpacing),
+                    // User Info Section
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Receba uma mensagem avisando quando for a hora de ir ao salão",
-                          style: theme.textTheme.bodyLarge,
+                        Text("Nome completo", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize)),
+                        SizedBox(height: 2),
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            hintText: "Digite seu nome",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: theme.colorScheme.primary),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmallScreen ? 10 : 14),
+                          ),
+                          style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize),
                         ),
-                        const SizedBox(height: 4),
-                        RichText(
-                          text: TextSpan(
-                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        SizedBox(height: fieldSpacing),
+                        Text("Número de pessoas cortando o cabelo", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize)),
+                        DropdownButton<String>(
+                          value: selectedPeople,
+                          isExpanded: true,
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          items: peopleOptions.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value, style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize)),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedPeople = newValue!;
+                            });
+                          },
+                        ),
+                        SizedBox(height: fieldSpacing),
+                        Text("Telefone", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize)),
+                        SizedBox(height: 2),
+                        TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            hintText: "Digite seu telefone",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: theme.colorScheme.primary),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmallScreen ? 10 : 14),
+                          ),
+                          style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: fieldSpacing),
+                    // SMS Opt-In Section
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Checkbox(
+                          value: smsOptIn,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              smsOptIn = value ?? false;
+                            });
+                          },
+                          activeColor: theme.colorScheme.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        ),
+                        SizedBox(width: isSmallScreen ? 6 : 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const TextSpan(
-                                text: "Ao fornecer seu número de celular e marcar esta caixa, você concorda em receber até duas mensagens de texto automáticas da Great Clips informando o tempo de espera para esta visita ao salão, sujeito à nossa ",
+                              Text(
+                                "Receba uma mensagem avisando quando for a hora de ir ao salão",
+                                style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize),
                               ),
-                              TextSpan(
-                                text: "Política de Privacidade.",
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  decoration: TextDecoration.underline,
+                              SizedBox(height: 4),
+                              RichText(
+                                text: TextSpan(
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: isSmallScreen ? 11 : 13,
+                                  ),
+                                  children: [
+                                    const TextSpan(
+                                      text: "Ao fornecer seu número de celular e marcar esta caixa, você concorda em receber até duas mensagens de texto automáticas da Great Clips informando o tempo de espera para esta visita ao salão, sujeito à nossa ",
+                                    ),
+                                    TextSpan(
+                                      text: "Política de Privacidade.",
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        decoration: TextDecoration.underline,
+                                        fontSize: isSmallScreen ? 11 : 13,
+                                      ),
+                                    ),
+                                    const TextSpan(
+                                      text: " Seu consentimento não é condição para compra. Tarifas de mensagem e dados podem ser aplicadas.",
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const TextSpan(
-                                text: " Seu consentimento não é condição para compra. Tarifas de mensagem e dados podem ser aplicadas.",
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            // Footer
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Powered by ICS", style: theme.textTheme.labelSmall),
-                  const SizedBox(width: 8),
-                  Icon(Icons.credit_card, size: 18, color: theme.colorScheme.onSurfaceVariant), // Placeholder for Net Check In logo
-                  const SizedBox(width: 8),
-                  Text("Net Check In™", style: theme.textTheme.labelSmall),
-                ],
-              ),
-            ),
-            // Check In Button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CheckInSuccessScreen(),
+                    SizedBox(height: sectionSpacing),
+                    // Confirm Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 14 : 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 20, fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CheckInSuccessScreen(salon: salon),
+                            ),
+                          );
+                        },
+                        child: const Text("Confirmar Check-in"),
                       ),
-                    );
-                  },
-                  child: Text(
-                    "Check-in",
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

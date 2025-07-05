@@ -21,106 +21,111 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
     return Scaffold(
       backgroundColor: theme.colorScheme.primary,
       appBar: AppBar(
         backgroundColor: theme.colorScheme.primary,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header Section
-            _buildHeader(theme),
-            
-            // Content Section
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Account Info Card
-                      _buildAccountInfoCard(context, theme),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Haircut Reminder Card
-                      _buildHaircutReminderCard(theme),
-                      
-                      const SizedBox(height: 30),
-                      
-                      // Preferences Section
-                      _buildSectionHeader(theme, 'PREFERÊNCIAS'),
-                      const SizedBox(height: 16),
-                      _buildMenuItem(theme, Icons.notifications_outlined, 'Configurações de Comunicação', onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ComunicacoesScreen()),
-                        );
-                      }),
-                      _buildMenuItem(theme, Icons.wb_sunny_outlined, 'Display', onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const DisplayScreen()),
-                        );
-                      }),
-                      
-                      const SizedBox(height: 30),
-                      
-                      // Help & Policies Section
-                      _buildSectionHeader(theme, 'AJUDA E POLÍTICAS'),
-                      const SizedBox(height: 16),
-                      _buildMenuItem(theme, Icons.help_outline, 'Atendimento ao Cliente', hasExternalIcon: true, onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AtendimentoScreen()),
-                        );
-                      }),
-                      _buildMenuItem(theme, Icons.accessibility_outlined, 'Aviso de Acessibilidade', hasExternalIcon: true, onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AccessibilityNoticeScreen()),
-                        );
-                      }),
-                      _buildMenuItem(theme, Icons.description_outlined, 'Legal e Privacidade', onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const LegalPrivacyScreen()),
-                        );
-                      }),
-                      
-                      const SizedBox(height: 30),
-                      
-                      // Developer Section (for testing)
-                      _buildSectionHeader(theme, 'DESENVOLVEDOR'),
-                      const SizedBox(height: 16),
-                      _buildMenuItem(theme, Icons.tv, 'Painel TV do Salão', onTap: () {
-                        Navigator.of(context).pushNamed('/tv-dashboard');
-                      }),
-                      
-                      const SizedBox(height: 20),
-                    ],
-                  ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isSmallScreen = constraints.maxWidth < 600;
+            final horizontalPadding = isSmallScreen ? 12.0 : constraints.maxWidth * 0.15;
+            final sectionSpacing = isSmallScreen ? 16.0 : 32.0;
+            final cardPadding = isSmallScreen ? 14.0 : 24.0;
+            final avatarSize = isSmallScreen ? 60.0 : 80.0;
+            final iconSize = isSmallScreen ? 28.0 : 40.0;
+            final titleFontSize = isSmallScreen ? 20.0 : 26.0;
+            final subtitleFontSize = isSmallScreen ? 15.0 : 18.0;
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: sectionSpacing),
+                child: Column(
+                  children: [
+                    // Header Section
+                    _buildHeader(theme, avatarSize, iconSize, titleFontSize, subtitleFontSize),
+                    SizedBox(height: sectionSpacing * 0.5),
+                    // Content Section
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(cardPadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Account Info Card
+                            _buildAccountInfoCard(context, theme, cardPadding, isSmallScreen),
+                            SizedBox(height: sectionSpacing * 0.5),
+                            // Haircut Reminder Card
+                            _buildHaircutReminderCard(theme, cardPadding, isSmallScreen, titleFontSize),
+                            SizedBox(height: sectionSpacing),
+                            // Preferences Section
+                            _buildSectionHeader(theme, 'PREFERÊNCIAS', titleFontSize),
+                            SizedBox(height: isSmallScreen ? 10 : 16),
+                            _buildMenuItem(theme, Icons.notifications_outlined, 'Configurações de Comunicação', onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ComunicacoesScreen()),
+                              );
+                            }, isSmallScreen: isSmallScreen),
+                            _buildMenuItem(theme, Icons.wb_sunny_outlined, 'Display', onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const DisplayScreen()),
+                              );
+                            }, isSmallScreen: isSmallScreen),
+                            SizedBox(height: sectionSpacing),
+                            // Help & Policies Section
+                            _buildSectionHeader(theme, 'AJUDA E POLÍTICAS', titleFontSize),
+                            SizedBox(height: isSmallScreen ? 10 : 16),
+                            _buildMenuItem(theme, Icons.help_outline, 'Atendimento ao Cliente', hasExternalIcon: true, onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const AtendimentoScreen()),
+                              );
+                            }, isSmallScreen: isSmallScreen),
+                            _buildMenuItem(theme, Icons.accessibility_outlined, 'Aviso de Acessibilidade', hasExternalIcon: true, onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const AccessibilityNoticeScreen()),
+                              );
+                            }, isSmallScreen: isSmallScreen),
+                            _buildMenuItem(theme, Icons.description_outlined, 'Legal e Privacidade', onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const LegalPrivacyScreen()),
+                              );
+                            }, isSmallScreen: isSmallScreen),
+                            SizedBox(height: sectionSpacing),
+                            // Developer Section (for testing)
+                            _buildSectionHeader(theme, 'DESENVOLVEDOR', titleFontSize),
+                            SizedBox(height: isSmallScreen ? 10 : 16),
+                            _buildMenuItem(theme, Icons.tv, 'Painel TV do Salão', onTap: () {
+                              Navigator.of(context).pushNamed('/tv-dashboard');
+                            }, isSmallScreen: isSmallScreen),
+                            SizedBox(height: isSmallScreen ? 12 : 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 2),
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader(ThemeData theme, double avatarSize, double iconSize, double titleFontSize, double subtitleFontSize) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(8),
       child: Row(
         children: [
           // Profile Avatar
           Container(
-            width: 80,
-            height: 80,
+            width: avatarSize,
+            height: avatarSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -130,13 +135,11 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             child: Icon(
               Icons.person_outline,
-              size: 40,
+              size: iconSize,
               color: theme.colorScheme.onPrimary.withOpacity(0.8),
             ),
           ),
-          
-          const SizedBox(width: 16),
-          
+          SizedBox(width: avatarSize * 0.2),
           // User Info
           Expanded(
             child: Column(
@@ -147,6 +150,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
+                    fontSize: titleFontSize,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -154,6 +158,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   'Rommel B',
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: theme.colorScheme.onPrimary.withOpacity(0.9),
+                    fontSize: subtitleFontSize,
                   ),
                 ),
               ],
@@ -164,9 +169,9 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildAccountInfoCard(BuildContext context, ThemeData theme) {
+  Widget _buildAccountInfoCard(BuildContext context, ThemeData theme, double cardPadding, bool isSmallScreen) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -190,6 +195,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 MaterialPageRoute(builder: (_) => const PersonalInfoScreen()),
               );
             },
+            isSmallScreen: isSmallScreen,
           ),
           Divider(color: theme.dividerColor),
           _buildMenuItem(
@@ -202,15 +208,16 @@ class _AccountScreenState extends State<AccountScreen> {
                 MaterialPageRoute(builder: (_) => const FavoritosScreen()),
               );
             },
+            isSmallScreen: isSmallScreen,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHaircutReminderCard(ThemeData theme) {
+  Widget _buildHaircutReminderCard(ThemeData theme, double cardPadding, bool isSmallScreen, double titleFontSize) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -232,6 +239,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   'Seu próximo lembrete de corte está definido para',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w500,
+                    fontSize: isSmallScreen ? 13 : 16,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -241,6 +249,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       _formatDate(_reminderDate),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: titleFontSize,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -265,11 +274,11 @@ class _AccountScreenState extends State<AccountScreen> {
                           );
                         }
                       },
-                      icon: const Icon(Icons.edit_calendar, size: 18),
+                      icon: Icon(Icons.edit_calendar, size: isSmallScreen ? 16 : 18),
                       label: const Text('Alterar'),
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.primary,
-                        textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                        textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: isSmallScreen ? 12 : 14),
                       ),
                     ),
                   ],
@@ -278,8 +287,8 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
           ),
           Container(
-            width: 60,
-            height: 60,
+            width: isSmallScreen ? 44 : 60,
+            height: isSmallScreen ? 44 : 60,
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withOpacity(0.1),
               shape: BoxShape.circle,
@@ -287,7 +296,7 @@ class _AccountScreenState extends State<AccountScreen> {
             child: Icon(
               Icons.content_cut,
               color: theme.colorScheme.primary,
-              size: 28,
+              size: isSmallScreen ? 20 : 28,
             ),
           ),
         ],
@@ -304,13 +313,14 @@ class _AccountScreenState extends State<AccountScreen> {
     return '${date.day} de ${months[date.month]} de ${date.year}';
   }
 
-  Widget _buildSectionHeader(ThemeData theme, String title) {
+  Widget _buildSectionHeader(ThemeData theme, String title, double titleFontSize) {
     return Text(
       title,
       style: theme.textTheme.labelLarge?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.5,
+        fontSize: titleFontSize * 0.7,
       ),
     );
   }
@@ -322,26 +332,28 @@ class _AccountScreenState extends State<AccountScreen> {
     bool hasExternalIcon = false,
     bool showDivider = true,
     VoidCallback? onTap,
+    bool isSmallScreen = false,
   }) {
     return Column(
       children: [
         ListTile(
-          contentPadding: EdgeInsets.zero,
+          contentPadding: EdgeInsets.symmetric(vertical: isSmallScreen ? 2 : 6, horizontal: 0),
           leading: Icon(
             icon,
             color: theme.colorScheme.primary,
-            size: 24,
+            size: isSmallScreen ? 20 : 24,
           ),
           title: Text(
             title,
             style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w500,
+              fontSize: isSmallScreen ? 14 : 16,
             ),
           ),
           trailing: Icon(
             hasExternalIcon ? Icons.open_in_new : Icons.chevron_right,
             color: theme.colorScheme.onSurfaceVariant,
-            size: hasExternalIcon ? 20 : 24,
+            size: hasExternalIcon ? (isSmallScreen ? 16 : 20) : (isSmallScreen ? 20 : 24),
           ),
           onTap: onTap,
         ),

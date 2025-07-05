@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  bool _editMode = false;
+  List<Map<String, String>> notifications = [
+    {
+      'title': 'Dois cortes = R\$5 de desconto*',
+      'date': '14 de maio de 2025',
+    },
+    {
+      'title': 'Quer R\$2 de desconto? Oferta exclusiva para você*!',
+      'date': '8 de maio de 2025',
+    },
+    {
+      'title': 'Fazendo você ficar incrível, esse é nosso objetivo.',
+      'date': '6 de maio de 2025',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final List<Map<String, String>> notifications = [
-      {
-        'title': 'Dois cortes = R\$5 de desconto*',
-        'date': '14 de maio de 2025',
-      },
-      {
-        'title': 'Quer R\$2 de desconto? Oferta exclusiva para você*!',
-        'date': '8 de maio de 2025',
-      },
-      {
-        'title': 'Fazendo você ficar incrível, esse é nosso objetivo.',
-        'date': '6 de maio de 2025',
-      },
-    ];
-
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
@@ -58,9 +64,13 @@ class NotificationsScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                _editMode = !_editMode;
+              });
+            },
             child: Text(
-              'Editar',
+              _editMode ? 'Concluir' : 'Editar',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
@@ -128,10 +138,19 @@ class NotificationsScreen extends StatelessWidget {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        trailing: _editMode
+                            ? IconButton(
+                                icon: Icon(Icons.delete, color: theme.colorScheme.error),
+                                onPressed: () {
+                                  setState(() {
+                                    notifications.removeAt(index);
+                                  });
+                                },
+                              )
+                            : Icon(
+                                Icons.chevron_right,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                         onTap: () {},
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       );

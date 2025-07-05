@@ -92,6 +92,8 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
     
     return Scaffold(
       backgroundColor: theme.colorScheme.primary,
@@ -124,16 +126,17 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     markers: _salonLocations.map((location) {
                       return Marker(
                         point: location.position,
-                        width: 80,
-                        height: 80,
-                        child: GestureDetector(
+                        width: isSmallScreen ? 60 : 80,
+                        height: isSmallScreen ? 60 : 80,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(isSmallScreen ? 30 : 40),
                           onTap: () {
                             setState(() {
                               _selectedSalon = location.salon;
                               _showSearch = false;
                             });
                           },
-                          child: _buildMarker(location.salon, theme),
+                          child: _buildMarker(location.salon, theme, isSmallScreen),
                         ),
                       );
                     }).toList(),
@@ -143,25 +146,357 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
             ),
             
             // Top Header
-            _buildHeader(theme),
+            _buildHeader(theme, isSmallScreen),
             
             // Search Overlay
-            if (_showSearch) _buildSearchOverlay(theme),
+            if (_showSearch) _buildSearchOverlay(theme, isSmallScreen),
             
             // Filter Chips
-            if (!_showSearch) _buildFilterChips(theme),
+            if (!_showSearch) _buildFilterChips(theme, isSmallScreen),
             
             // Zoom Controls
-            _buildZoomControls(theme),
+            _buildZoomControls(theme, isSmallScreen),
             
             // My Location Button
-            _buildMyLocationButton(theme),
+            _buildMyLocationButton(theme, isSmallScreen),
             
             // Selected Salon Card
-            if (_selectedSalon != null && !_showList) _buildSelectedSalonCard(theme),
+            if (_selectedSalon != null && !_showList) _buildSelectedSalonCard(theme, isSmallScreen),
             
-            // Bottom Sheet List
-            if (_showList) _buildBottomSheetList(theme),
+            // Bottom Sheet List (Draggable)
+            if (_showList)
+              DraggableScrollableSheet(
+                initialChildSize: 0.6,
+                minChildSize: 0.2,
+                maxChildSize: 0.95,
+                builder: (context, scrollController) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // Handle bar
+                        GestureDetector(
+                          onVerticalDragEnd: (details) {
+                            if (details.primaryVelocity != null && details.primaryVelocity! > 500) {
+                              setState(() {
+                                _showList = false;
+                              });
+                            }
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 12),
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_salonLocations.length} salões encontrados',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _showList = false;
+                                  });
+                                },
+                                child: Icon(
+                                  Icons.close,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // List
+                        Expanded(
+                          child: ListView.builder(
+                            controller: scrollController,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: _salonLocations.length,
+                            itemBuilder: (context, index) {
+                              final location = _salonLocations[index];
+                              final isCheckedIn = location.salon.name == 'Market at Mirada';
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => SalonDetailsScreen(
+                                        salon: location.salon,
+                                        services: [
+                                          SalonService(
+                                            id: '1',
+                                            name: 'Corte Feminino',
+                                            description: 'Corte e finalização',
+                                            price: 80.0,
+                                            durationMinutes: 60,
+                                            categories: ['Corte'],
+                                          ),
+                                          SalonService(
+                                            id: '2',
+                                            name: 'Coloração',
+                                            description: 'Coloração completa',
+                                            price: 150.0,
+                                            durationMinutes: 120,
+                                            categories: ['Coloração'],
+                                          ),
+                                        ],
+                                        contact: SalonContact(
+                                          phone: '(555) 123-4567',
+                                          email: 'contato@salon.com',
+                                          website: 'www.salon.com',
+                                          instagram: '@salon',
+                                          facebook: 'Salon',
+                                        ),
+                                        businessHours: [
+                                          SalonHours(
+                                            day: 'Segunda - Sexta',
+                                            isOpen: true,
+                                            openTime: '9:00',
+                                            closeTime: '18:00',
+                                          ),
+                                          SalonHours(
+                                            day: 'Sábado',
+                                            isOpen: true,
+                                            openTime: '9:00',
+                                            closeTime: '14:00',
+                                          ),
+                                          SalonHours(
+                                            day: 'Domingo',
+                                            isOpen: false,
+                                          ),
+                                        ],
+                                        reviews: [
+                                          SalonReview(
+                                            id: '1',
+                                            userName: 'Maria Silva',
+                                            rating: 5,
+                                            comment: 'Excelente atendimento!',
+                                            date: '2024-03-15',
+                                          ),
+                                          SalonReview(
+                                            id: '2',
+                                            userName: 'João Santos',
+                                            rating: 4,
+                                            comment: 'Muito bom serviço',
+                                            date: '2024-03-14',
+                                          ),
+                                        ],
+                                        additionalInfo: {
+                                          'Estacionamento': 'Gratuito',
+                                          'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                                          'Acessibilidade': 'Rampa de acesso',
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isCheckedIn 
+                                          ? theme.colorScheme.primary.withOpacity(0.3)
+                                          : theme.colorScheme.outline.withOpacity(0.2),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color: location.salon.isOpen 
+                                              ? theme.colorScheme.primary.withOpacity(0.1)
+                                              : Colors.grey.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(25),
+                                        ),
+                                        child: Icon(
+                                          Icons.store,
+                                          color: location.salon.isOpen 
+                                              ? theme.colorScheme.primary 
+                                              : Colors.grey,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    location.salon.name,
+                                                    style: theme.textTheme.titleMedium?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (isCheckedIn)
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: theme.colorScheme.primary,
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Text(
+                                                      'CHECKED IN',
+                                                      style: theme.textTheme.labelSmall?.copyWith(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 10,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                const SizedBox(width: 4),
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      if (_favoriteSalons.contains(location.salon.name)) {
+                                                        _favoriteSalons.remove(location.salon.name);
+                                                      } else {
+                                                        _favoriteSalons.add(location.salon.name);
+                                                      }
+                                                    });
+                                                  },
+                                                  child: Icon(
+                                                    _favoriteSalons.contains(location.salon.name)
+                                                        ? Icons.favorite
+                                                        : Icons.favorite_border,
+                                                    color: theme.colorScheme.primary,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              location.salon.address,
+                                              style: theme.textTheme.bodySmall?.copyWith(
+                                                color: theme.colorScheme.onSurfaceVariant,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: location.salon.isOpen 
+                                                        ? Colors.green.withOpacity(0.1) 
+                                                        : Colors.red.withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Text(
+                                                    location.salon.isOpen ? 'Aberto' : 'Fechado',
+                                                    style: theme.textTheme.labelSmall?.copyWith(
+                                                      color: location.salon.isOpen ? Colors.green : Colors.red,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  '${location.salon.distance.toStringAsFixed(1)} km',
+                                                  style: theme.textTheme.bodySmall?.copyWith(
+                                                    color: theme.colorScheme.onSurfaceVariant,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: location.salon.waitTime <= 10 
+                                                  ? Colors.green.withOpacity(0.1)
+                                                  : location.salon.waitTime <= 25 
+                                                      ? Colors.orange.withOpacity(0.1)
+                                                      : Colors.red.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              '${location.salon.waitTime} min',
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: location.salon.waitTime <= 10
+                                                    ? Colors.green
+                                                    : location.salon.waitTime <= 25
+                                                        ? Colors.orange
+                                                        : Colors.red,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          SizedBox(
+                                            width: 80,
+                                            child: ElevatedButton(
+                                              onPressed: location.salon.isOpen ? () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) => CheckInScreen(salon: location.salon),
+                                                  ),
+                                                );
+                                              } : null,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: theme.colorScheme.primary,
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(20),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                              ),
+                                              child: const Text(
+                                                'Check In',
+                                                style: TextStyle(fontSize: 10),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -169,13 +504,13 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader(ThemeData theme, bool isSmallScreen) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      margin: EdgeInsets.all(isSmallScreen ? 8 : 16),
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12 : 20, vertical: isSmallScreen ? 10 : 16),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 10 : 16),
         boxShadow: [
           BoxShadow(
             color: theme.shadowColor.withOpacity(0.1),
@@ -186,15 +521,16 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
       ),
       child: Row(
         children: [
-          GestureDetector(
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
             onTap: () => Navigator.of(context).pop(),
             child: Icon(
               Icons.arrow_back,
               color: theme.colorScheme.onPrimary,
-              size: 24,
+              size: isSmallScreen ? 20 : 24,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: isSmallScreen ? 8 : 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,6 +541,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
+                    fontSize: isSmallScreen ? 18 : 22,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -213,13 +550,14 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     Icon(
                       Icons.location_on,
                       color: theme.colorScheme.onPrimary.withOpacity(0.8),
-                      size: 16,
+                      size: isSmallScreen ? 12 : 16,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'San Antonio, FL',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                        fontSize: isSmallScreen ? 11 : 14,
                       ),
                     ),
                   ],
@@ -232,14 +570,15 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
             children: [
               // Notifications button (only show when not searching)
               if (!_showSearch) ...[
-                GestureDetector(
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const NotificationsScreen()),
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.onPrimary.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -247,14 +586,15 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     child: Icon(
                       Icons.notifications_outlined,
                       color: theme.colorScheme.onPrimary,
-                      size: 20,
+                      size: isSmallScreen ? 16 : 20,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: isSmallScreen ? 4 : 8),
               ],
               // Search button
-              GestureDetector(
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
                 onTap: () {
                   setState(() {
                     _showSearch = !_showSearch;
@@ -264,7 +604,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   });
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
                   decoration: BoxDecoration(
                     color: _showSearch 
                         ? theme.colorScheme.onPrimary.withOpacity(0.3)
@@ -274,7 +614,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   child: Icon(
                     _showSearch ? Icons.close : Icons.search,
                     color: theme.colorScheme.onPrimary,
-                    size: 20,
+                    size: isSmallScreen ? 16 : 20,
                   ),
                 ),
               ),
@@ -285,7 +625,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildFilterChips(ThemeData theme) {
+  Widget _buildFilterChips(ThemeData theme, bool isSmallScreen) {
     return Positioned(
       top: 100,
       left: 16,
@@ -294,20 +634,20 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _buildFilterChip(theme, 'Ordenar', Icons.sort, isSelected: _selectedFilter == 'Ordenar'),
+            _buildFilterChip(theme, 'Ordenar', Icons.sort, isSelected: _selectedFilter == 'Ordenar', isSmallScreen: isSmallScreen),
             const SizedBox(width: 8),
-            _buildFilterChip(theme, 'Favoritos', Icons.favorite, isSelected: _selectedFilter == 'Favoritos'),
+            _buildFilterChip(theme, 'Favoritos', Icons.favorite, isSelected: _selectedFilter == 'Favoritos', isSmallScreen: isSmallScreen),
             const SizedBox(width: 8),
-            _buildFilterChip(theme, 'Visitados recentemente', Icons.history, isSelected: _selectedFilter == 'Visitados recentemente'),
+            _buildFilterChip(theme, 'Visitados recentemente', Icons.history, isSelected: _selectedFilter == 'Visitados recentemente', isSmallScreen: isSmallScreen),
             const SizedBox(width: 8),
-            _buildFilterChip(theme, 'Aberto agora', Icons.access_time, isSelected: _selectedFilter == 'Aberto agora'),
+            _buildFilterChip(theme, 'Aberto agora', Icons.access_time, isSelected: _selectedFilter == 'Aberto agora', isSmallScreen: isSmallScreen),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFilterChip(ThemeData theme, String label, IconData icon, {required bool isSelected}) {
+  Widget _buildFilterChip(ThemeData theme, String label, IconData icon, {required bool isSelected, required bool isSmallScreen}) {
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -353,7 +693,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildMyLocationButton(ThemeData theme) {
+  Widget _buildMyLocationButton(ThemeData theme, bool isSmallScreen) {
     return Positioned(
       bottom: _selectedSalon != null || _showList ? 220 : 100,
       right: 16,
@@ -393,7 +733,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildMarker(Salon salon, ThemeData theme) {
+  Widget _buildMarker(Salon salon, ThemeData theme, bool isSmallScreen) {
     final isSelected = _selectedSalon?.name == salon.name;
     
     return Stack(
@@ -454,7 +794,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildSelectedSalonCard(ThemeData theme) {
+  Widget _buildSelectedSalonCard(ThemeData theme, bool isSmallScreen) {
     return Positioned(
       bottom: 16,
       left: 16,
@@ -718,7 +1058,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildSearchOverlay(ThemeData theme) {
+  Widget _buildSearchOverlay(ThemeData theme, bool isSmallScreen) {
     return Positioned(
       top: 100,
       left: 16,
@@ -822,7 +1162,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  Widget _buildZoomControls(ThemeData theme) {
+  Widget _buildZoomControls(ThemeData theme, bool isSmallScreen) {
     return Positioned(
       top: MediaQuery.of(context).size.height * 0.4,
       right: 16,
@@ -885,340 +1225,6 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomSheetList(ThemeData theme) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.6,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_salonLocations.length} salões encontrados',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _showList = false;
-                      });
-                    },
-                    child: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // List
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _salonLocations.length,
-                itemBuilder: (context, index) {
-                  final location = _salonLocations[index];
-                   final isCheckedIn = location.salon.name == 'Market at Mirada';
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => SalonDetailsScreen(
-                            salon: location.salon,
-                            services: [
-                              SalonService(
-                                id: '1',
-                                name: 'Corte Feminino',
-                                description: 'Corte e finalização',
-                                price: 80.0,
-                                durationMinutes: 60,
-                                categories: ['Corte'],
-                              ),
-                              SalonService(
-                                id: '2',
-                                name: 'Coloração',
-                                description: 'Coloração completa',
-                                price: 150.0,
-                                durationMinutes: 120,
-                                categories: ['Coloração'],
-                              ),
-                            ],
-                            contact: SalonContact(
-                              phone: '(555) 123-4567',
-                              email: 'contato@salon.com',
-                              website: 'www.salon.com',
-                              instagram: '@salon',
-                              facebook: 'Salon',
-                            ),
-                            businessHours: [
-                              SalonHours(
-                                day: 'Segunda - Sexta',
-                                isOpen: true,
-                                openTime: '9:00',
-                                closeTime: '18:00',
-                              ),
-                              SalonHours(
-                                day: 'Sábado',
-                                isOpen: true,
-                                openTime: '9:00',
-                                closeTime: '14:00',
-                              ),
-                              SalonHours(
-                                day: 'Domingo',
-                                isOpen: false,
-                              ),
-                            ],
-                            reviews: [
-                              SalonReview(
-                                id: '1',
-                                userName: 'Maria Silva',
-                                rating: 5,
-                                comment: 'Excelente atendimento!',
-                                date: '2024-03-15',
-                              ),
-                              SalonReview(
-                                id: '2',
-                                userName: 'João Santos',
-                                rating: 4,
-                                comment: 'Muito bom serviço',
-                                date: '2024-03-14',
-                              ),
-                            ],
-                            additionalInfo: {
-                              'Estacionamento': 'Gratuito',
-                              'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
-                              'Acessibilidade': 'Rampa de acesso',
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                     margin: const EdgeInsets.only(bottom: 16),
-                     padding: const EdgeInsets.all(16),
-                     decoration: BoxDecoration(
-                       color: theme.colorScheme.surface,
-                       borderRadius: BorderRadius.circular(12),
-                       border: Border.all(
-                         color: isCheckedIn 
-                             ? theme.colorScheme.primary.withOpacity(0.3)
-                             : theme.colorScheme.outline.withOpacity(0.2),
-                       ),
-                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: location.salon.isOpen 
-                                ? theme.colorScheme.primary.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Icon(
-                            Icons.store,
-                            color: location.salon.isOpen 
-                                ? theme.colorScheme.primary 
-                                : Colors.grey,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                                                     child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                               Row(
-                                 children: [
-                                   Expanded(
-                                     child: Text(
-                                       location.salon.name,
-                                       style: theme.textTheme.titleMedium?.copyWith(
-                                         fontWeight: FontWeight.bold,
-                                       ),
-                                     ),
-                                   ),
-                                   if (isCheckedIn)
-                                     Container(
-                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                       decoration: BoxDecoration(
-                                         color: theme.colorScheme.primary,
-                                         borderRadius: BorderRadius.circular(8),
-                                       ),
-                                       child: Text(
-                                         'CHECKED IN',
-                                         style: theme.textTheme.labelSmall?.copyWith(
-                                           color: Colors.white,
-                                           fontWeight: FontWeight.bold,
-                                           fontSize: 10,
-                                         ),
-                                       ),
-                                     ),
-                                   const SizedBox(width: 4),
-                                   GestureDetector(
-                                     onTap: () {
-                                       setState(() {
-                                         if (_favoriteSalons.contains(location.salon.name)) {
-                                           _favoriteSalons.remove(location.salon.name);
-                                         } else {
-                                           _favoriteSalons.add(location.salon.name);
-                                         }
-                                       });
-                                     },
-                                     child: Icon(
-                                       _favoriteSalons.contains(location.salon.name)
-                                           ? Icons.favorite
-                                           : Icons.favorite_border,
-                                       color: theme.colorScheme.primary,
-                                       size: 20,
-                                     ),
-                                   ),
-                                 ],
-                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                location.salon.address,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: location.salon.isOpen 
-                                          ? Colors.green.withOpacity(0.1) 
-                                          : Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      location.salon.isOpen ? 'Aberto' : 'Fechado',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: location.salon.isOpen ? Colors.green : Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${location.salon.distance.toStringAsFixed(1)} km',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: location.salon.waitTime <= 10 
-                                    ? Colors.green.withOpacity(0.1)
-                                    : location.salon.waitTime <= 25 
-                                        ? Colors.orange.withOpacity(0.1)
-                                        : Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    '${location.salon.waitTime} min',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      color: location.salon.waitTime <= 10 
-                                          ? Colors.green 
-                                          : location.salon.waitTime <= 25 
-                                              ? Colors.orange 
-                                              : Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    'ESPERA',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: 80,
-                              child: ElevatedButton(
-                                onPressed: location.salon.isOpen ? () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => CheckInScreen(salon: location.salon),
-                                    ),
-                                  );
-                                } : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.primary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                ),
-                                child: const Text(
-                                  'Check In',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
