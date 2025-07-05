@@ -10,79 +10,62 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
 {
     public abstract class BogusBaseRepository<T> : IRepository<T> where T : BaseEntity, IAggregateRoot
     {
-        protected static readonly Dictionary<Guid, T> _items = new();
-        protected static readonly object _lock = new();
-
         public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.TryGetValue(id, out var item) ? item : null);
+            return await Task.FromResult(BogusDataStore.Get<T>(id));
         }
 
         public virtual async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.Values.ToList());
+            return await Task.FromResult(BogusDataStore.GetAll<T>());
         }
 
         public virtual async Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.Values.AsQueryable().Where(predicate).ToList());
+            var allItems = BogusDataStore.GetAll<T>();
+            return await Task.FromResult(allItems.AsQueryable().Where(predicate).ToList());
         }
 
         public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
         {
-            T result;
-            lock (_lock)
+            if (entity.Id == Guid.Empty)
             {
-                if (entity.Id == Guid.Empty)
-                {
-                    result = CreateNewEntityWithId(entity, Guid.NewGuid());
-                    _items[result.Id] = result;
-                }
-                else
-                {
-                    _items[entity.Id] = entity;
-                    result = entity;
-                }
+                var newEntity = CreateNewEntityWithId(entity, Guid.NewGuid());
+                BogusDataStore.Add(newEntity);
+                return await Task.FromResult(newEntity);
             }
-            return await Task.FromResult(result);
+            else
+            {
+                BogusDataStore.Add(entity);
+                return await Task.FromResult(entity);
+            }
         }
 
         public virtual async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default)
         {
-            lock (_lock)
+            var existing = BogusDataStore.Get<T>(entity.Id);
+            if (existing == null)
             {
-                if (!_items.ContainsKey(entity.Id))
-                {
-                    throw new KeyNotFoundException($"Entity with ID {entity.Id} not found");
-                }
-                _items[entity.Id] = entity;
+                throw new KeyNotFoundException($"Entity with ID {entity.Id} not found");
             }
+            BogusDataStore.Update(entity);
             return await Task.FromResult(entity);
         }
 
         public virtual async Task<bool> DeleteAsync(T entity, CancellationToken cancellationToken = default)
         {
-            bool result;
-            lock (_lock)
-            {
-                result = _items.Remove(entity.Id);
-            }
-            return await Task.FromResult(result);
+            return await Task.FromResult(BogusDataStore.Remove<T>(entity.Id));
         }
 
         public virtual async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            bool result;
-            lock (_lock)
-            {
-                result = _items.Remove(id);
-            }
-            return await Task.FromResult(result);
+            return await Task.FromResult(BogusDataStore.Remove<T>(id));
         }
 
         public virtual async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
         {
-            return await Task.FromResult(_items.Values.AsQueryable().Any(predicate));
+            var allItems = BogusDataStore.GetAll<T>();
+            return await Task.FromResult(allItems.AsQueryable().Any(predicate));
         }
 
         // Helper method to create a new entity with a specific Id

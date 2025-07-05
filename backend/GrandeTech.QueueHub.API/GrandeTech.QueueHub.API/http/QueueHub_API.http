@@ -1,54 +1,31 @@
 @baseUrl = https://localhost:7126
 
-# ========================================
-# TOKEN GENERATION FLOW
-# ========================================
-# First, register and login to get real tokens
-# Then use those tokens in the other requests
+# ===============================
+# QUEUE HUB API TESTING GUIDE
+# ===============================
+# 1. Start the API server (Bogus data store enabled)
+# 2. Use the test admin credentials below for all admin endpoints:
+#    username: admin_test
+#    password: AdminPass123!
+# 3. Use the login token for Authorization: Bearer ...
+# 4. Test endpoints in order for dependencies (register, login, create org, etc.)
+# ===============================
 
-# ========================================
-# TEST USERS FOR DIFFERENT ROLES
-# ========================================
-# Use these credentials to test different roles:
+# --- TOKEN VARIABLES (update after login) ---
+@adminToken = YOUR_ADMIN_TOKEN_HERE
+@barberToken = YOUR_BARBER_TOKEN_HERE
+@clientToken = YOUR_CLIENT_TOKEN_HERE
+@ownerToken = YOUR_OWNER_TOKEN_HERE
 
-# Admin User:
-# Username: admin_test
-# Password: AdminPass123!
-# Role: Admin
+# --- DYNAMIC VARIABLES (set from responses) ---
+@organizationId = 
+@locationId = 
+@queueId = 
+@staffMemberId = 
+@serviceTypeId = 
+@queueEntryId = 
 
-# Barber User:
-# Username: barber_test  
-# Password: BarberPass123!
-# Role: Barber
-
-# Client User:
-# Username: client_test
-# Password: ClientPass123!
-# Role: Client
-
-# Owner User:
-# Username: owner_test
-# Password: OwnerPass123!
-# Role: Owner
-
-# ========================================
-# AUTHENTICATION ENDPOINTS
-# ========================================
-
-### Step 1: Register Admin User
-POST {{baseUrl}}/api/auth/register
-Content-Type: application/json
-
-{
-  "username": "admin_test",
-  "email": "admin@test.com",
-  "password": "AdminPass123!",
-  "confirmPassword": "AdminPass123!"
-}
-
-###
-
-### Step 2: Login as Admin (Get Admin Token)
+# --- ADMIN LOGIN (get token) ---
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
@@ -59,7 +36,7 @@ Content-Type: application/json
 
 ###
 
-### Step 3: Register Barber User
+# --- USER REGISTRATION (for other roles) ---
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
@@ -72,18 +49,6 @@ Content-Type: application/json
 
 ###
 
-### Step 4: Login as Barber (Get Barber Token)
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
-
-{
-  "username": "barber_test",
-  "password": "BarberPass123!"
-}
-
-###
-
-### Step 5: Register Client User
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
@@ -96,18 +61,6 @@ Content-Type: application/json
 
 ###
 
-### Step 6: Login as Client (Get Client Token)
-POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
-
-{
-  "username": "client_test",
-  "password": "ClientPass123!"
-}
-
-###
-
-### Step 7: Register Owner User
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
@@ -120,7 +73,27 @@ Content-Type: application/json
 
 ###
 
-### Step 8: Login as Owner (Get Owner Token)
+# --- LOGIN (other roles) ---
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "barber_test",
+  "password": "BarberPass123!"
+}
+
+###
+
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "client_test",
+  "password": "ClientPass123!"
+}
+
+###
+
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
@@ -131,210 +104,94 @@ Content-Type: application/json
 
 ###
 
-### Verify Two-Factor Authentication (if needed)
-POST {{baseUrl}}/api/auth/verify-2fa
-Content-Type: application/json
-
-{
-  "username": "admin_test",
-  "twoFactorCode": "123456"
-}
-
-###
-
-### Get User Profile (Requires Authorization)
-GET {{baseUrl}}/api/auth/profile
-Authorization: Bearer {{adminToken}}
-
-###
-
-### Verify Admin (Requires Platform Admin)
-POST {{baseUrl}}/api/auth/admin/verify
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "adminCode": "ADMIN123",
-  "verificationData": "some-verification-data"
-}
-
-### ========================================
-# TOKEN VARIABLES (Update these with real tokens from login responses)
-# ========================================
-# Copy the token from the login response and paste it here:
-
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... # Replace with actual admin token
-@barberToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... # Replace with actual barber token  
-@clientToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... # Replace with actual client token
-@ownerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... # Replace with actual owner token
-
-# Sample IDs for testing (these will be generated when you create resources)
-@locationId = 12345678-1234-1234-1234-123456789012
-@queueId = 87654321-4321-4321-4321-210987654321
-@entryId = 11111111-2222-3333-4444-555555555555
-@organizationId = 22222222-3333-4444-5555-666666666666
-@staffMemberId = 33333333-4444-5555-6666-777777777777
-@serviceTypeId = 44444444-5555-6666-7777-888888888888
-@queueEntryId = 55555555-6666-7777-8888-999999999999
-@customerId = 66666666-7777-8888-9999-aaaaaaaaaaaa
-@couponId = 77777777-8888-9999-aaaa-bbbbbbbbbbbb
-@organizationSlug = sample-organization
-
-### ========================================
-### HEALTH ENDPOINTS
-### ========================================
-
-### Health Check
+# --- HEALTH CHECKS ---
 GET {{baseUrl}}/health
-
-### Readiness Check
+###
 GET {{baseUrl}}/health/ready
-
-### Liveness Check
+###
 GET {{baseUrl}}/health/live
+###
 
-### ========================================
-### ORGANIZATIONS ENDPOINTS
-### ========================================
-
-### Create Organization (Requires Admin)
+# --- ORGANIZATION SETUP (admin only) ---
 POST {{baseUrl}}/api/organizations
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "name": "Sample Organization",
-  "description": "A sample organization for testing",
-  "contactEmail": "contact@sampleorg.com",
+  "name": "Test Salon Organization",
+  "description": "A test organization for API testing",
+  "contactEmail": "contact@testsalon.com",
   "contactPhone": "+1234567890"
 }
 
-### Update Organization (Requires Admin/Owner)
-PUT {{baseUrl}}/api/organizations/{{organizationId}}
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "name": "Updated Organization Name",
-  "description": "Updated description",
-  "contactEmail": "updated@sampleorg.com",
-  "contactPhone": "+1234567890"
-}
-
-### Update Organization Branding (Requires Admin/Owner)
-PUT {{baseUrl}}/api/organizations/{{organizationId}}/branding
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "logoUrl": "https://example.com/logo.png",
-  "primaryColor": "#FF5733",
-  "secondaryColor": "#33FF57",
-  "brandName": "Sample Brand"
-}
-
-### Change Subscription Plan (Requires Admin)
-PUT {{baseUrl}}/api/organizations/{{organizationId}}/subscription/{{serviceTypeId}}
-Authorization: Bearer {{adminToken}}
-
-### Set Analytics Sharing (Requires Admin/Owner)
-PUT {{baseUrl}}/api/organizations/{{organizationId}}/analytics-sharing
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-true
-
-### Activate Organization (Requires Admin)
-PUT {{baseUrl}}/api/organizations/{{organizationId}}/activate
-Authorization: Bearer {{adminToken}}
-
-### Deactivate Organization (Requires Admin)
-PUT {{baseUrl}}/api/organizations/{{organizationId}}/deactivate
-Authorization: Bearer {{adminToken}}
-
-### Get All Organizations (Requires Admin)
+###
 GET {{baseUrl}}/api/organizations
 Authorization: Bearer {{adminToken}}
+###
 
-### Get Organization by ID (Requires Admin/Owner)
-GET {{baseUrl}}/api/organizations/{{organizationId}}
-Authorization: Bearer {{adminToken}}
-
-### Get Organization by Slug (Public)
-GET {{baseUrl}}/api/organizations/by-slug/{{organizationSlug}}
-
-### Get Live Activity (Requires Admin/Owner)
-GET {{baseUrl}}/api/organizations/{{organizationId}}/live-activity
-Authorization: Bearer {{adminToken}}
-
-### ========================================
-### LOCATIONS ENDPOINTS
-### ========================================
-
-### Create Location (Requires Admin)
+# --- LOCATION SETUP (admin only) ---
 POST {{baseUrl}}/api/locations
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "businessName": "Sample Salon",
-  "description": "A great hair salon",
+  "businessName": "Test Hair Salon",
+  "description": "A great hair salon for testing",
   "address": {
-    "street": "123 Main St",
-    "city": "New York",
-    "state": "NY",
-    "postalCode": "10001",
+    "street": "123 Test St",
+    "city": "Test City",
+    "state": "TS",
+    "postalCode": "12345",
     "country": "USA"
   },
   "businessHours": {
-    "Monday": "09:00-18:00"
+    "Monday": "09:00-18:00",
+    "Tuesday": "09:00-18:00",
+    "Wednesday": "09:00-18:00",
+    "Thursday": "09:00-18:00",
+    "Friday": "09:00-18:00"
   },
   "maxQueueCapacity": 50
 }
 
-### Get Location by ID (Public)
+###
 GET {{baseUrl}}/api/locations/{{locationId}}
+###
 
-### Update Location (Requires Admin)
-PUT {{baseUrl}}/api/locations/{{locationId}}
+# --- STAFF SETUP (admin/owner) ---
+POST {{baseUrl}}/api/staff/barbers
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "businessName": "Updated Salon Name",
-  "description": "Updated description",
-  "address": {
-    "street": "456 Oak Ave",
-    "city": "Los Angeles",
-    "state": "CA",
-    "postalCode": "90210",
-    "country": "USA"
-  },
-  "businessHours": {
-    "Monday": "10:00-19:00"
-  },
-  "maxQueueCapacity": 75
+  "name": "John Test Barber",
+  "email": "john@testsalon.com",
+  "phone": "+1234567890",
+  "specialties": ["Fade", "Beard Trim", "Haircut"],
+  "isActive": true
 }
 
-### Delete Location (Requires Admin)
-DELETE {{baseUrl}}/api/locations/{{locationId}}
+###
+
+# --- SERVICES SETUP (admin only) ---
+POST {{baseUrl}}/api/servicesoffered
+Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
-### Toggle Queue Status (Requires Owner)
-PUT {{baseUrl}}/api/locations/{{locationId}}/queue-status
-Content-Type: application/json
-Authorization: Bearer {{ownerToken}}
-
 {
-  "locationId": "{{locationId}}",
-  "isEnabled": true
+  "name": "Basic Haircut",
+  "description": "Basic haircut service",
+  "duration": 30,
+  "price": 25.00,
+  "isActive": true
 }
 
-### ========================================
-### QUEUES ENDPOINTS
-### ========================================
+###
+GET {{baseUrl}}/api/servicesoffered
+Authorization: Bearer {{clientToken}}
+###
 
-### Add Queue (Requires Owner)
+# --- QUEUE OPERATIONS ---
 POST {{baseUrl}}/api/queues
 Content-Type: application/json
 Authorization: Bearer {{ownerToken}}
@@ -345,256 +202,37 @@ Authorization: Bearer {{ownerToken}}
   "lateClientCapTimeInMinutes": 15
 }
 
-### Get Queue by ID (Requires Client)
+###
 GET {{baseUrl}}/api/queues/{{queueId}}
 Authorization: Bearer {{clientToken}}
+###
 
-### Join Queue (Public)
 POST {{baseUrl}}/api/queues/{{queueId}}/join
 Content-Type: application/json
 
 {
   "queueId": "{{queueId}}",
-  "customerName": "John Doe",
+  "customerName": "Test Customer",
   "customerPhone": "+1234567890",
-  "serviceType": "Haircut"
+  "serviceType": "Basic Haircut"
 }
 
-### Barber Add Customer (Requires Barber)
-POST {{baseUrl}}/api/queues/{{queueId}}/barber-add
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
+###
 
-{
-  "queueId": "{{queueId}}",
-  "customerName": "Jane Smith",
-  "customerPhone": "+1234567890",
-  "serviceType": "Haircut",
-  "staffMemberId": "{{staffMemberId}}"
-}
-
-### Call Next Customer (Requires Barber)
-POST {{baseUrl}}/api/queues/{{queueId}}/call-next
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
-
-{
-  "staffMemberId": "{{staffMemberId}}"
-}
-
-### Check In Customer (Requires Barber)
-POST {{baseUrl}}/api/queues/{{queueId}}/check-in
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
-
-{
-  "queueEntryId": "{{queueEntryId}}"
-}
-
-### Finish Service (Requires Barber)
-POST {{baseUrl}}/api/queues/{{queueId}}/finish
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
-
-{
-  "queueEntryId": "{{queueEntryId}}",
-  "serviceCompleted": true,
-  "notes": "Great haircut!"
-}
-
-### Cancel Queue Entry (Requires Client)
-POST {{baseUrl}}/api/queues/{{queueId}}/cancel
-Content-Type: application/json
-Authorization: Bearer {{clientToken}}
-
-{
-  "queueEntryId": "{{queueEntryId}}",
-  "reason": "Changed my mind"
-}
-
-### Get Estimated Wait Time (Public)
-GET {{baseUrl}}/api/queues/{{queueId}}/entries/{{entryId}}/wait-time
-
-### Save Haircut Details (Requires Barber)
-POST {{baseUrl}}/api/queues/entries/{{entryId}}/haircut-details
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
-
-{
-  "haircutType": "Fade",
-  "length": "Short",
-  "style": "Modern",
-  "notes": "Customer requested a modern fade"
-}
-
-### ========================================
-### STAFF ENDPOINTS
-### ========================================
-
-### Add Barber (Requires Admin/Owner)
-POST {{baseUrl}}/api/staff/barbers
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "name": "John Barber",
-  "email": "john@salon.com",
-  "phone": "+1234567890",
-  "specialties": ["Fade", "Beard Trim"],
-  "isActive": true
-}
-
-### Edit Barber (Requires Owner)
-PUT {{baseUrl}}/api/staff/barbers/{{staffMemberId}}
-Content-Type: application/json
-Authorization: Bearer {{ownerToken}}
-
-{
-  "staffMemberId": "{{staffMemberId}}",
-  "name": "John Updated Barber",
-  "email": "john.updated@salon.com",
-  "phone": "+1234567890",
-  "specialties": ["Fade", "Beard Trim", "Haircut"],
-  "isActive": true
-}
-
-### Update Staff Status (Requires Barber)
-PUT {{baseUrl}}/api/staff/barbers/{{staffMemberId}}/status
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
-
-{
-  "staffMemberId": "{{staffMemberId}}",
-  "status": "Available"
-}
-
-### Start Break (Requires Barber)
-PUT {{baseUrl}}/api/staff/barbers/{{staffMemberId}}/start-break
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
-
-{
-  "staffMemberId": "{{staffMemberId}}",
-  "breakType": "Lunch",
-  "duration": 30
-}
-
-### End Break (Requires Barber)
-PUT {{baseUrl}}/api/staff/barbers/{{staffMemberId}}/end-break
-Content-Type: application/json
-Authorization: Bearer {{barberToken}}
-
-{
-  "staffMemberId": "{{staffMemberId}}"
-}
-
-### ========================================
-### SERVICES OFFERED ENDPOINTS
-### ========================================
-
-### Add Service Type (Requires Admin)
-POST {{baseUrl}}/api/servicesoffered
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "name": "Haircut",
-  "description": "Basic haircut service",
-  "duration": 30,
-  "price": 25.00,
-  "isActive": true
-}
-
-### Get Service Type by ID (Requires Client)
-GET {{baseUrl}}/api/servicesoffered/{{serviceTypeId}}
-Authorization: Bearer {{clientToken}}
-
-### Get All Service Types (Requires Client)
-GET {{baseUrl}}/api/servicesoffered
-Authorization: Bearer {{clientToken}}
-
-### Update Service Type (Requires Admin)
-PUT {{baseUrl}}/api/servicesoffered/{{serviceTypeId}}
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "name": "Premium Haircut",
-  "description": "Premium haircut with styling",
-  "duration": 45,
-  "price": 35.00,
-  "isActive": true
-}
-
-### Delete Service Type (Requires Admin)
-DELETE {{baseUrl}}/api/servicesoffered/{{serviceTypeId}}
-Authorization: Bearer {{adminToken}}
-
-### Activate Service Type (Requires Admin)
-PUT {{baseUrl}}/api/servicesoffered/{{serviceTypeId}}/activate
-Authorization: Bearer {{adminToken}}
-
-### ========================================
-### KIOSK ENDPOINTS
-### ========================================
-
-### Kiosk Join Queue (Public)
+# --- KIOSK & QR CODE ---
 POST {{baseUrl}}/api/kiosk/join
 Content-Type: application/json
 
 {
   "queueId": "{{queueId}}",
-  "customerName": "Walk-in Customer",
+  "customerName": "Kiosk Customer",
   "phoneNumber": "+1234567890"
 }
 
-### Kiosk Cancel Queue (Public)
-POST {{baseUrl}}/api/kiosk/cancel
-Content-Type: application/json
-
-{
-  "queueEntryId": "{{queueEntryId}}"
-}
-
-### Kiosk Display (Public)
+###
 GET {{baseUrl}}/api/kiosk/display/{{locationId}}
+###
 
-### ========================================
-### NOTIFICATIONS ENDPOINTS
-### ========================================
-
-### Send SMS Notification (Requires Service Account)
-POST {{baseUrl}}/api/notifications/sms
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "queueEntryId": "{{queueEntryId}}",
-  "message": "Your turn is coming up!",
-  "notificationType": "Reminder"
-}
-
-### ========================================
-### PROMOTIONS ENDPOINTS
-### ========================================
-
-### Send Coupon Notification (Requires Service Account)
-POST {{baseUrl}}/api/promotions/notify-coupon
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "customerId": "{{customerId}}",
-  "couponId": "{{couponId}}",
-  "message": "Enjoy 10% off your next visit!",
-  "notificationChannel": "SMS"
-}
-
-### ========================================
-### QR CODE ENDPOINTS
-### ========================================
-
-### Generate QR Code for Queue Join (Requires Staff)
 POST {{baseUrl}}/api/qrcode/generate
 Content-Type: application/json
 Authorization: Bearer {{barberToken}}
@@ -605,38 +243,9 @@ Authorization: Bearer {{barberToken}}
   "expiryMinutes": 30
 }
 
-### ========================================
-### ANALYTICS ENDPOINTS
-### ========================================
+###
 
-### Calculate Estimated Wait Time (Requires Service Account)
-POST {{baseUrl}}/api/analytics/calculate-wait
-Content-Type: application/json
+# --- USER PROFILE ---
+GET {{baseUrl}}/api/auth/profile
 Authorization: Bearer {{adminToken}}
-
-{
-  "locationId": "{{locationId}}",
-  "queueId": "{{queueId}}",
-  "entryId": "{{entryId}}"
-}
-
-### ========================================
-### CACHE ENDPOINTS
-### ========================================
-
-### Update Wait Time Average (Requires Admin)
-PUT {{baseUrl}}/api/cache/wait-time/locations/{{locationId}}
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "averageServiceTimeMinutes": 25.5
-}
-
-### ========================================
-### MAINTENANCE ENDPOINTS
-### ========================================
-
-### Reset Wait Averages (Requires Admin)
-POST {{baseUrl}}/api/maintenance/reset-averages
-Authorization: Bearer {{adminToken}} 
+### 

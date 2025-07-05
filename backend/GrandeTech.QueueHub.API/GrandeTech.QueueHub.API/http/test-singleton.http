@@ -1,0 +1,47 @@
+### Test Singleton Data Store
+
+### Get initial status
+GET {{baseUrl}}/api/test/status
+
+### Get all users
+GET {{baseUrl}}/api/test/users
+
+### Get all organizations  
+GET {{baseUrl}}/api/test/organizations
+
+### Clear all data
+POST {{baseUrl}}/api/test/clear
+
+### Check status after clear
+GET {{baseUrl}}/api/test/status
+
+### Re-initialize data
+POST {{baseUrl}}/api/test/initialize
+
+### Check status after re-initialization
+GET {{baseUrl}}/api/test/status
+
+### Test that data persists across requests
+GET {{baseUrl}}/api/test/users
+
+### Test auth endpoints with singleton data
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "TestPassword123!"
+}
+
+### Login with the registered user
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "TestPassword123!"
+}
+
+### Check users again to see if new user was added
+GET {{baseUrl}}/api/test/users 
