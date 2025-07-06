@@ -51,6 +51,21 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                         services.AddSingleton<ILocationRepository>(_locationRepository);
                         services.AddSingleton<IQrCodeGenerator, MockQrCodeGenerator>();
                         services.AddScoped<AuthService>();
+                        services.AddScoped<QrJoinService>();
+                        
+                        // Add logging
+                        services.AddLogging();
+                        
+                        // Add missing authorization policies
+                        services.AddAuthorization(options =>
+                        {
+                            options.AddPolicy("RequireStaff", policy =>
+                                policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Barber, requireLocationContext: true)));
+                        });
+                        
+                        // Add authorization handler and context service
+                        services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Grande.Fila.API.Infrastructure.Authorization.TenantAuthorizationHandler>();
+                        services.AddScoped<Grande.Fila.API.Infrastructure.Authorization.ITenantContextService, Grande.Fila.API.Infrastructure.Authorization.TenantContextService>();
                     });
                 });
         }
@@ -100,6 +115,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Act
             var response = await client.PostAsync("/api/qrcode/generate", new StringContent(json, Encoding.UTF8, "application/json"));
 
+
+
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             var result = await response.Content.ReadFromJsonAsync<GenerateQrResponseDto>();
@@ -148,6 +165,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
 
             // Act
             var response = await client.PostAsync("/api/qrcode/generate", new StringContent(json, Encoding.UTF8, "application/json"));
+
+
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);

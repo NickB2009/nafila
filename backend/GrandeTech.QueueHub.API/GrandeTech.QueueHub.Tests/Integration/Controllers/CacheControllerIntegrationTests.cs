@@ -17,11 +17,34 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
     public class CacheControllerIntegrationTests
     {
         private static WebApplicationFactory<Program> _factory = null!;
+        private static Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusUserRepository _userRepository = null!;
+        private static Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusLocationRepository _locationRepository = null!;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
-            _factory = new WebApplicationFactory<Program>();
+            _userRepository = new Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusUserRepository();
+            _locationRepository = new Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusLocationRepository();
+            
+            _factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureServices(services =>
+                    {
+                        // Remove any existing repository registrations
+                        var servicesToRemove = new[]
+                        {
+                            typeof(IUserRepository),
+                            typeof(Grande.Fila.API.Domain.Locations.ILocationRepository)
+                        };
+                        var descriptors = services.Where(d => servicesToRemove.Contains(d.ServiceType)).ToList();
+                        descriptors.ForEach(d => services.Remove(d));
+
+                        // Use shared singleton repositories for testing
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddSingleton<Grande.Fila.API.Domain.Locations.ILocationRepository>(_locationRepository);
+                    });
+                });
         }
 
         [TestMethod]
@@ -30,7 +53,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Arrange
             var client = _factory.CreateClient();
             var organizationId = Guid.NewGuid();
-            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin", client);
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var locationId = Guid.NewGuid().ToString();
@@ -65,7 +88,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task UpdateWaitAverage_InvalidId_ReturnsBadRequest()
         {
             var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin", client);
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin", client);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
             var dto = new { averageServiceTimeMinutes = 10 };
