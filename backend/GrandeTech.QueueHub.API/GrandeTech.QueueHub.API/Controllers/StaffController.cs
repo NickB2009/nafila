@@ -35,7 +35,7 @@ namespace Grande.Fila.API.Controllers
         }
 
         [HttpPost("barbers")]
-        [RequireAdmin]
+        [RequireOwner]
         public async Task<ActionResult<AddBarberResult>> AddBarber(
             [FromBody] AddBarberRequest request,
             CancellationToken cancellationToken)

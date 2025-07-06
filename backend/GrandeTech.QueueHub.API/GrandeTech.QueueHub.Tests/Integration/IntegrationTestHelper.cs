@@ -59,7 +59,7 @@ namespace Grande.Fila.API.Tests.Integration
             return testRole.ToLower() switch
             {
                 "admin" => UserRoles.Admin,
-                "owner" => UserRoles.Admin, // Owner becomes Admin in new model
+                "owner" => UserRoles.Owner, // Owner role mapped correctly
                 "barber" => UserRoles.Barber,
                 "client" => UserRoles.Client,
                 "user" => UserRoles.Client, // Default user becomes Client

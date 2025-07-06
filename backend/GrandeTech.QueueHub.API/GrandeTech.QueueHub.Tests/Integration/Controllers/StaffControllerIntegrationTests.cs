@@ -97,16 +97,42 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // First, create and authenticate an admin user
             var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            // Create a location first (required for barber creation)
-            var locationId = await CreateLocationAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            // Create a location first (required for barber creation)
+            var location = new Location(
+                "Test Location",
+                "test-location",
+                "A test location for integration tests.",
+                Guid.NewGuid(),
+                Address.Create(
+                    "123 Test St", // street
+                    "1", // number
+                    "", // complement
+                    "Downtown", // neighborhood
+                    "Testville", // city
+                    "Test State", // state
+                    "USA", // country
+                    "12345" // postalCode
+                ),
+                "+5511999999999",
+                "test@location.com",
+                new TimeSpan(9, 0, 0),
+                new TimeSpan(17, 0, 0),
+                100,
+                15,
+                "test_user"
+            );
+            await _locationRepository.AddAsync(location);
 
             var addBarberRequest = new AddBarberRequest
             {
                 FirstName = "John",
                 LastName = "Doe",
                 Email = "john.doe@barbershop.com",
-                PhoneNumber = "+5511999999999",                Username = "johndoe",
-                LocationId = locationId,
+                PhoneNumber = "+5511999999999",
+                Username = "johndoe",
+                LocationId = location.Id.ToString(),
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() },
                 DeactivateOnCreation = false,
                 Address = "Rua Exemplo, 123",
@@ -123,6 +149,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
             var responseContent = await response.Content.ReadAsStringAsync();
+
             var result = JsonSerializer.Deserialize<AddBarberResult>(responseContent, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -146,8 +173,33 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // First, create and authenticate an owner user
             var ownerToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Owner", new[] { Permission.CreateStaff });
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);            // Create a location first
-            var locationId = await CreateLocationAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ownerToken);
+
+            // Create a location first
+            var location = new Location(
+                "Test Location",
+                "test-location",
+                "A test location for integration tests.",
+                Guid.NewGuid(),
+                Address.Create(
+                    "123 Test St", // street
+                    "1", // number
+                    "", // complement
+                    "Downtown", // neighborhood
+                    "Testville", // city
+                    "Test State", // state
+                    "USA", // country
+                    "12345" // postalCode
+                ),
+                "+5511999999999",
+                "test@location.com",
+                new TimeSpan(9, 0, 0),
+                new TimeSpan(17, 0, 0),
+                100,
+                15,
+                "test_user"
+            );
+            await _locationRepository.AddAsync(location);
 
             var addBarberRequest = new AddBarberRequest
             {
@@ -156,7 +208,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
                 Email = "jane.smith@barbershop.com",
                 PhoneNumber = "+5511888888888",
                 Username = "janesmith",
-                LocationId = locationId,
+                LocationId = location.Id.ToString(),
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() },
                 DeactivateOnCreation = false,
                 Address = "Avenida Teste, 456",
@@ -199,7 +251,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
             {
                 FirstName = "Bob",
                 LastName = "Johnson",
-                Email = "bob.johnson@barbershop.com",                PhoneNumber = "+5511777777777",
+                Email = "bob.johnson@barbershop.com",
+                PhoneNumber = "+5511777777777",
                 Username = "bobjohnson",
                 LocationId = Guid.NewGuid().ToString(),
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
@@ -225,7 +278,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
             {
                 FirstName = "Test",
                 LastName = "User",
-                Email = "test.user@barbershop.com",                PhoneNumber = "+5511666666666",
+                Email = "test.user@barbershop.com",
+                PhoneNumber = "+5511666666666",
                 Username = "testuser",
                 LocationId = Guid.NewGuid().ToString(),
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }
@@ -252,7 +306,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Invalid request with missing required fields
             var addBarberRequest = new AddBarberRequest
-            {                FirstName = "", // Invalid - empty
+            {
+                FirstName = "", // Invalid - empty
                 LastName = "", // Invalid - empty
                 Email = "invalid-email", // Invalid format
                 PhoneNumber = "", // Invalid - empty
@@ -289,7 +344,9 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_factory);
 
             var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var locationId = await CreateLocationAsync();
 
             // Create a barber first with a specific email
             using var scope = _factory.Services.CreateScope();
@@ -312,7 +369,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var addBarberRequest = new AddBarberRequest
             {
                 FirstName = "New",
-                LastName = "Barber",                Email = "duplicate@barbershop.com", // Same email as existing barber
+                LastName = "Barber",
+                Email = "duplicate@barbershop.com", // Same email as existing barber
                 PhoneNumber = "+5511444444444",
                 Username = "newbarber",
                 LocationId = locationId,
@@ -348,7 +406,9 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(_factory);
 
             var adminToken = await IntegrationTestHelper.CreateAndAuthenticateUserAsync(_userRepository, _factory.Services, "Admin", new[] { Permission.CreateStaff });
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);            var locationId = await CreateLocationAsync();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var locationId = await CreateLocationAsync();
 
             // Create a barber first with a specific username
             using var scope = _factory.Services.CreateScope();
@@ -371,7 +431,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var addBarberRequest = new AddBarberRequest
             {
                 FirstName = "New",
-                LastName = "Barber",                Email = "new@barbershop.com",
+                LastName = "Barber",
+                Email = "new@barbershop.com",
                 PhoneNumber = "+5511444444444",
                 Username = "duplicateuser", // Same username as existing barber
                 LocationId = locationId,
@@ -397,7 +458,9 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsFalse(result.Success);
             Assert.IsTrue(result.FieldErrors.ContainsKey("Username"));
             Assert.AreEqual("A barber with this username already exists.", result.FieldErrors["Username"]);
-        }        [TestMethod]
+        }
+
+        [TestMethod]
         public async Task AddBarber_WithNonExistentLocation_ReturnsBadRequestWithError()
         {
             // Arrange
@@ -410,7 +473,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
             {
                 FirstName = "Test",
                 LastName = "Barber",
-                Email = "test@barbershop.com",                PhoneNumber = "+5511333333333",
+                Email = "test@barbershop.com",
+                PhoneNumber = "+5511333333333",
                 Username = "testbarber",
                 LocationId = Guid.NewGuid().ToString(), // Non-existent location
                 ServiceTypeIds = new List<string> { Guid.NewGuid().ToString() }

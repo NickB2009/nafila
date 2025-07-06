@@ -47,7 +47,7 @@ namespace Grande.Fila.API.Application.Auth
             }
 
             // Admin-specific validation
-            if (user.Role == UserRoles.PlatformAdmin || user.Role == UserRoles.Admin)
+            if (user.Role == UserRoles.PlatformAdmin || user.Role == UserRoles.Admin || user.Role == UserRoles.Owner)
             {
                 // Check if admin account is locked
                 if (user.IsLocked)
@@ -183,7 +183,7 @@ namespace Grande.Fila.API.Application.Auth
             return oldRole.ToLower() switch
             {
                 "admin" => UserRoles.Admin,
-                "owner" => UserRoles.Admin, // Owner becomes Admin in new model
+                "owner" => UserRoles.Owner, // Owner role mapped correctly
                 "barber" => UserRoles.Barber,
                 "client" => UserRoles.Client,
                 "user" => UserRoles.Client, // Default user becomes Client
@@ -215,6 +215,14 @@ namespace Grande.Fila.API.Application.Auth
                     "manage:users"
                 },
                 UserRoles.Admin => new[]
+                {
+                    "manage:locations",
+                    "manage:staff",
+                    "manage:services",
+                    "view:metrics",
+                    "manage:branding"
+                },
+                UserRoles.Owner => new[]
                 {
                     "manage:locations",
                     "manage:staff",
@@ -261,7 +269,7 @@ namespace Grande.Fila.API.Application.Auth
                 return result;
             }
 
-            if (user.Role != UserRoles.PlatformAdmin && user.Role != UserRoles.Admin)
+            if (user.Role != UserRoles.PlatformAdmin && user.Role != UserRoles.Admin && user.Role != UserRoles.Owner)
             {
                 result.Error = "User is not an admin.";
                 return result;
