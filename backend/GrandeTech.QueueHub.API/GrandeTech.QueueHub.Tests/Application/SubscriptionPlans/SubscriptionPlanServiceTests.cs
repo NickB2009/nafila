@@ -190,7 +190,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
             );
 
             // Set the ID using reflection since it's protected
-            var idProperty = typeof(Domain.Common.BaseEntity).GetProperty("Id");
+            var idProperty = typeof(Grande.Fila.API.Domain.Common.BaseEntity).GetProperty("Id");
             idProperty?.SetValue(plan, id);
 
             return plan;
