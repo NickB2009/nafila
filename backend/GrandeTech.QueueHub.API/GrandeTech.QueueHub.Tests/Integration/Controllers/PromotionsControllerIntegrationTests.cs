@@ -31,9 +31,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                     builder.ConfigureServices(services =>
                     {
                         // Remove existing IUserRepository registrations
-                        var descriptor = services.SingleOrDefault(
-                            d => d.ServiceType == typeof(IUserRepository));
-                        if (descriptor != null)
+                        var descriptors = services.Where(d => d.ServiceType == typeof(IUserRepository)).ToList();
+                        foreach (var descriptor in descriptors)
                         {
                             services.Remove(descriptor);
                         }
@@ -101,7 +100,20 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var email = $"{username}@test.com";
             var password = "testpassword123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), role);
+            // Map old test roles to new roles
+            var mappedRole = role.ToLower() switch
+            {
+                "serviceaccount" => UserRoles.ServiceAccount,
+                "admin" => UserRoles.Admin,
+                "owner" => UserRoles.Admin,
+                "barber" => UserRoles.Barber,
+                "client" => UserRoles.Client,
+                "user" => UserRoles.Client,
+                "system" => UserRoles.ServiceAccount,
+                _ => UserRoles.Client
+            };
+            
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
             await userRepo.AddAsync(user, CancellationToken.None);
 
             var loginReq = new LoginRequest { Username = username, Password = password };

@@ -105,22 +105,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequirePlatformAdmin", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement("PlatformAdmin", requireOrganizationContext: false)));
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.PlatformAdmin, requireOrganizationContext: false)));
     
     options.AddPolicy("RequireAdmin", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement("Admin")));
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Admin)));
     
     options.AddPolicy("RequireOwner", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement("Owner")));
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Admin))); // Owner is now Admin
     
     options.AddPolicy("RequireBarber", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement("Barber", requireLocationContext: true)));
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Barber, requireLocationContext: true)));
     
     options.AddPolicy("RequireClient", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement("Client", requireOrganizationContext: false)));
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Client, requireOrganizationContext: false)));
     
     options.AddPolicy("RequireServiceAccount", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement("ServiceAccount", requireOrganizationContext: false)));
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.ServiceAccount, requireOrganizationContext: false)));
 });
 
 builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Grande.Fila.API.Infrastructure.Authorization.TenantAuthorizationHandler>();
@@ -131,7 +131,7 @@ builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Authorization.ITenantC
 
 // Register services
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<IUserRepository, BogusUserRepository>();
+// IUserRepository is already registered in AddInfrastructure
 
 // Register application services
 builder.Services.AddScoped<Grande.Fila.API.Application.Locations.CreateLocationService>();

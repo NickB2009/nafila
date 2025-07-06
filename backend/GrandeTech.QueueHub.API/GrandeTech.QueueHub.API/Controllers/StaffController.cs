@@ -35,7 +35,7 @@ namespace Grande.Fila.API.Controllers
         }
 
         [HttpPost("barbers")]
-        [Authorize(Policy = "HasPermission", Roles = "Admin,Owner")]
+        [RequireAdmin]
         public async Task<ActionResult<AddBarberResult>> AddBarber(
             [FromBody] AddBarberRequest request,
             CancellationToken cancellationToken)

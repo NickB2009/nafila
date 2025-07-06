@@ -39,7 +39,7 @@ namespace Grande.Fila.API.Controllers
         /// Creates a new organization (UC-CREATEBARBER related)
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [RequireAdmin]
         public async Task<ActionResult<CreateOrganizationResult>> CreateOrganization(
             [FromBody] CreateOrganizationRequest request,
             CancellationToken cancellationToken)
@@ -64,7 +64,7 @@ namespace Grande.Fila.API.Controllers
         /// Updates organization details
         /// </summary>
         [HttpPut("{organizationId}")]
-        [Authorize(Roles = "Admin,Owner")]
+        [RequireAdmin]
         public async Task<ActionResult<OrganizationOperationResult>> UpdateOrganization(
             string organizationId,
             [FromBody] UpdateOrganizationRequest request,
@@ -91,7 +91,7 @@ namespace Grande.Fila.API.Controllers
         /// Updates organization branding (UC-BRANDING)
         /// </summary>
         [HttpPut("{organizationId}/branding")]
-        [Authorize(Roles = "Admin,Owner")]
+        [RequireAdmin]
         public async Task<ActionResult<OrganizationOperationResult>> UpdateBranding(
             string organizationId,
             [FromBody] UpdateBrandingRequest request,
@@ -118,7 +118,7 @@ namespace Grande.Fila.API.Controllers
         /// Changes organization subscription plan (UC-SUBPLAN)
         /// </summary>
         [HttpPut("{organizationId}/subscription/{subscriptionPlanId}")]
-        [Authorize(Roles = "Admin")]
+        [RequireAdmin]
         public async Task<ActionResult<OrganizationOperationResult>> ChangeSubscriptionPlan(
             string organizationId,
             string subscriptionPlanId,
@@ -144,7 +144,7 @@ namespace Grande.Fila.API.Controllers
         /// Sets analytics sharing preference (UC-ANALYTICS)
         /// </summary>
         [HttpPut("{organizationId}/analytics-sharing")]
-        [Authorize(Roles = "Admin,Owner")]
+        [RequireAdmin]
         public async Task<ActionResult<OrganizationOperationResult>> SetAnalyticsSharing(
             string organizationId,
             [FromBody] bool sharesData,
@@ -170,7 +170,7 @@ namespace Grande.Fila.API.Controllers
         /// Activates an organization
         /// </summary>
         [HttpPut("{organizationId}/activate")]
-        [Authorize(Roles = "Admin")]
+        [RequireAdmin]
         public async Task<ActionResult<OrganizationOperationResult>> ActivateOrganization(
             string organizationId,
             CancellationToken cancellationToken)
@@ -195,7 +195,7 @@ namespace Grande.Fila.API.Controllers
         /// Deactivates an organization
         /// </summary>
         [HttpPut("{organizationId}/deactivate")]
-        [Authorize(Roles = "Admin")]
+        [RequireAdmin]
         public async Task<ActionResult<OrganizationOperationResult>> DeactivateOrganization(
             string organizationId,
             CancellationToken cancellationToken)
@@ -220,7 +220,7 @@ namespace Grande.Fila.API.Controllers
         /// Gets all organizations (UC-MULTILOC, UC-ANALYTICS)
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [RequireAdmin]
         public async Task<ActionResult<IEnumerable<object>>> GetOrganizations(CancellationToken cancellationToken)
         {
             var organizations = await _organizationRepository.GetActiveOrganizationsAsync(cancellationToken);
@@ -257,7 +257,7 @@ namespace Grande.Fila.API.Controllers
         /// Gets a specific organization by ID
         /// </summary>
         [HttpGet("{organizationId}")]
-        [Authorize(Roles = "Admin,Owner")]
+        [RequireAdmin]
         public async Task<ActionResult<object>> GetOrganization(string organizationId, CancellationToken cancellationToken)
         {
             if (!Guid.TryParse(organizationId, out var orgId))
@@ -338,7 +338,7 @@ namespace Grande.Fila.API.Controllers
         /// Gets live activity tracking for an organization (UC-TRACKQ)
         /// </summary>
         [HttpGet("{organizationId}/live-activity")]
-        [Authorize(Roles = "Admin,Owner")]
+        [RequireAdmin]
         public async Task<ActionResult<TrackLiveActivityResult>> GetLiveActivity(
             string organizationId,
             CancellationToken cancellationToken)
