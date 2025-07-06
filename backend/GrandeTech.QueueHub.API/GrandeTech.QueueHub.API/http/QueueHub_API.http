@@ -12,7 +12,7 @@
 # ===============================
 
 # --- TOKEN VARIABLES (update after login) ---
-@adminToken = YOUR_ADMIN_TOKEN_HERE
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYjJhNDc5Mi0wYTAxLTRjZmMtODEyZi1jMWQxNzMzMzJmOGQiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbl90ZXN0IiwiZW1haWwiOiJhZG1pbkB0ZXN0LmNvbSIsInJvbGUiOiJBZG1pbiIsInBlcm1pc3Npb25zIjpbIm1hbmFnZTpsb2NhdGlvbnMiLCJtYW5hZ2U6c3RhZmYiLCJtYW5hZ2U6c2VydmljZXMiLCJ2aWV3Om1ldHJpY3MiLCJtYW5hZ2U6YnJhbmRpbmciXSwib3JnX2lkIjoiZmQwZmQ2Y2MtNGZhYi00MzhlLTllNzUtYzkwODdlYmY2ZjE1IiwidGVuYW50X3NsdWciOiJ0ZXN0LXRlbmFudCIsImV4cCI6MTc1MTgwOTM5NiwiaXNzIjoiR3JhbmRlVGVjaC5RdWV1ZUh1Yi5BUEkiLCJhdWQiOiJHcmFuZGVUZWNoLlF1ZXVlSHViLkFQSSJ9.yvHT789egBDmCK93SJiAwGSy1c35oQqVaABJuXoDmpA
 @barberToken = YOUR_BARBER_TOKEN_HERE
 @clientToken = YOUR_CLIENT_TOKEN_HERE
 @ownerToken = YOUR_OWNER_TOKEN_HERE
@@ -137,6 +137,8 @@ Authorization: Bearer {{adminToken}}
 {
   "businessName": "Test Hair Salon",
   "description": "A great hair salon for testing",
+  "contactPhone": "+1-555-123-4567",
+  "contactEmail": "info@testhairsalon.com",
   "address": {
     "street": "123 Test St",
     "city": "Test City",
