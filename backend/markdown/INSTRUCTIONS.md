@@ -189,7 +189,7 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 
 ## 7  Implementation Progress
 
-### ✅ Completed Use Cases (MVP Priority 1)
+### ✅ Completed Use Cases (MVP Priority 1 & 2)
 - **UC-ENTRY** (Client enters queue) - Complete with application service, DTOs, and integration tests
 - **UC-CALLNEXT** (Barber calls next client) - Complete with application service, DTOs, and integration tests  
 - **UC-CANCEL** (Client cancels queue entry) - Complete with application service, DTOs, and integration tests
@@ -214,6 +214,7 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 - **UC-SAVEHAIRCUT** (Barber save haircut details) - Complete with POST /api/queues/entries/{id}/haircut-details endpoint
 - **UC-JWT** (Issue JWT) - Complete with AuthController
 - **UC-PROTECT** (Protect routes) - Complete with authorization attributes and middleware
+- **UC-SUBPLAN** (Manage subscription plans) - Complete with CreateSubscriptionPlanService, SubscriptionPlanService, SubscriptionPlansController, and full CRUD operations
 
 ### 🔄 Remaining High Priority Use Cases
 Based on the use case catalogue, these high-priority MVP use cases still need implementation:
@@ -242,6 +243,13 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 - **PUT /api/staff/barbers/{id}** - Admin/Owner can edit barber details
 - **PUT /api/locations/{id}/queue-status** - Admin/Owner can enable/disable queue
 - **POST /api/queues/entries/{id}/haircut-details** - Barbers can save haircut details
+- **POST /api/subscriptionplans** - PlatformAdmin can create subscription plans
+- **GET /api/subscriptionplans** - PlatformAdmin can view all subscription plans
+- **GET /api/subscriptionplans/{id}** - PlatformAdmin can view specific subscription plan
+- **PUT /api/subscriptionplans/{id}** - PlatformAdmin can update subscription plan details
+- **PUT /api/subscriptionplans/{id}/activate** - PlatformAdmin can activate subscription plan
+- **PUT /api/subscriptionplans/{id}/deactivate** - PlatformAdmin can deactivate subscription plan
+- **GET /api/subscriptionplans/default** - Public endpoint to get default subscription plan
 
 ### 📋 Implementation Notes
 - All completed use cases follow TDD approach with comprehensive unit and integration tests

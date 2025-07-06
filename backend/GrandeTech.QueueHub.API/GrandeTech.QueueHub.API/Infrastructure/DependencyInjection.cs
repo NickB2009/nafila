@@ -14,6 +14,7 @@ using Grande.Fila.API.Domain.ServicesOffered;
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Application.Organizations;
 using Grande.Fila.API.Application.Locations;
+using Grande.Fila.API.Application.SubscriptionPlans;
 using Grande.Fila.API.Application.Queues;
 using Grande.Fila.API.Application.Staff;
 using Grande.Fila.API.Application.Services;
@@ -55,6 +56,10 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<CreateOrganizationService>();
             services.AddScoped<OrganizationService>();
             services.AddScoped<TrackLiveActivityService>();
+            
+            // Subscription plan services
+            services.AddScoped<CreateSubscriptionPlanService>();
+            services.AddScoped<SubscriptionPlanService>();
             
             // Location services
             services.AddScoped<CreateLocationService>();
