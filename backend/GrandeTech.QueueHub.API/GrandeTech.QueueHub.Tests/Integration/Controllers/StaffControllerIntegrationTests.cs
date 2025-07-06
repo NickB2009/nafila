@@ -32,15 +32,15 @@ namespace Grande.Fila.Tests.Integration.Controllers
     [TestCategory("Integration")]
     public class StaffControllerIntegrationTests
     {
-        private WebApplicationFactory<Program> _factory;
-        private HttpClient _client;
+        private static WebApplicationFactory<Program> _factory;
         private static BogusUserRepository _userRepository;
         private static BogusStaffMemberRepository _staffMemberRepository;
         private static BogusLocationRepository _locationRepository;
         private static BogusAuditLogRepository _auditLogRepository;
+        private HttpClient _client;
 
-        [TestInitialize]
-        public void TestInitialize()
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
         {
             _userRepository = new BogusUserRepository();
             _staffMemberRepository = new BogusStaffMemberRepository();
@@ -78,14 +78,24 @@ namespace Grande.Fila.Tests.Integration.Controllers
                         services.AddScoped<EndBreakService>();
                     });
                 });
+        }
+
+        [TestInitialize]
+        public void TestInitialize()
+        {
             _client = _factory.CreateClient();
+        }
+
+        [ClassCleanup]
+        public static void ClassCleanup()
+        {
+            _factory?.Dispose();
         }
 
         [TestCleanup]
         public void Cleanup()
         {
             _client?.Dispose();
-            _factory?.Dispose();
         }
 
         [TestMethod]
@@ -394,8 +404,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("Email"));
-            Assert.AreEqual("A barber with this email already exists.", result.FieldErrors["Email"]);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("email"));
+            Assert.AreEqual("A barber with this email already exists.", result.FieldErrors["email"]);
         }
 
         [TestMethod]
@@ -456,8 +466,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("Username"));
-            Assert.AreEqual("A barber with this username already exists.", result.FieldErrors["Username"]);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("username"));
+            Assert.AreEqual("A barber with this username already exists.", result.FieldErrors["username"]);
         }
 
         [TestMethod]
@@ -687,8 +697,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("NewStatus"));
-            Assert.AreEqual("Invalid status. Must be one of: available, busy, away, offline", result.FieldErrors["NewStatus"]);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("newStatus"));
+            Assert.AreEqual("Invalid status. Must be one of: available, busy, away, offline", result.FieldErrors["newStatus"]);
         }
 
         [TestMethod]
@@ -726,8 +736,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("NewStatus"));
-            Assert.AreEqual("Status is required.", result.FieldErrors["NewStatus"]);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("newStatus"));
+            Assert.AreEqual("Status is required.", result.FieldErrors["newStatus"]);
         }
 
         [TestMethod]
@@ -803,8 +813,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("StaffMemberId"));
-            Assert.AreEqual("Invalid staff member ID format.", result.FieldErrors["StaffMemberId"]);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("staffMemberId"));
+            Assert.AreEqual("Invalid staff member ID format.", result.FieldErrors["staffMemberId"]);
         }
 
         [TestMethod]
@@ -938,8 +948,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("StaffMemberId"));
-            Assert.AreEqual("Invalid staff member ID format.", result.FieldErrors["StaffMemberId"]);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("staffMemberId"));
+            Assert.AreEqual("Invalid staff member ID format.", result.FieldErrors["staffMemberId"]);
         }
 
         [TestMethod]
@@ -977,8 +987,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.ContainsKey("DurationMinutes"));
-            Assert.AreEqual("Duration must be greater than 0.", result.FieldErrors["DurationMinutes"]);
+            Assert.IsTrue(result.FieldErrors.ContainsKey("durationMinutes"));
+            Assert.AreEqual("Duration must be greater than 0.", result.FieldErrors["durationMinutes"]);
         }
 
         [TestMethod]

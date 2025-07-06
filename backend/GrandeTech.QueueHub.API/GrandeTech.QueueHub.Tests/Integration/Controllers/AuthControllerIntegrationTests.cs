@@ -2,6 +2,7 @@ using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Infrastructure;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using System.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -21,12 +22,14 @@ namespace Grande.Fila.Tests.Integration.Controllers
     [TestCategory("Integration")]
     public class AuthControllerIntegrationTests
     {
-        private WebApplicationFactory<Program> _factory;
+        private static WebApplicationFactory<Program> _factory;
+        private static BogusUserRepository _userRepository;
         private HttpClient _client;
 
-        [TestInitialize]
-        public void Setup()
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
         {
+            _userRepository = new BogusUserRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
@@ -42,19 +45,35 @@ namespace Grande.Fila.Tests.Integration.Controllers
                     });
                     builder.ConfigureServices(services =>
                     {
-                        // Ensure we're using the Bogus repository for testing
-                        services.AddSingleton<IUserRepository, BogusUserRepository>();
+                        // Remove existing IUserRepository registrations
+                        var descriptors = services.Where(d => d.ServiceType == typeof(IUserRepository)).ToList();
+                        foreach (var descriptor in descriptors)
+                        {
+                            services.Remove(descriptor);
+                        }
+                        // Use shared repository instance for testing
+                        services.AddSingleton<IUserRepository>(_userRepository);
                         services.AddScoped<AuthService>();
                     });
                 });
+        }
+
+        [TestInitialize]
+        public void Setup()
+        {
             _client = _factory.CreateClient();
+        }
+
+        [ClassCleanup]
+        public static void ClassCleanup()
+        {
+            _factory?.Dispose();
         }
 
         [TestCleanup]
         public void Cleanup()
         {
             _client?.Dispose();
-            _factory?.Dispose();
         }
 
         [TestMethod]
@@ -215,99 +234,97 @@ namespace Grande.Fila.Tests.Integration.Controllers
         [TestMethod]
         public async Task Register_WithDuplicateUsername_ReturnsBadRequest()
         {
-            // Arrange - First register a user
-            Assert.IsNotNull(_client);
-
-            var firstRegisterRequest = new RegisterRequest
+            // First registration
+            var firstRequest = new RegisterRequest
             {
-                Username = "duplicateuser",
+                Username = "testuser_duplicate",
                 Email = "first@example.com",
                 Password = "password123",
                 ConfirmPassword = "password123"
             };
 
-            var firstJson = JsonSerializer.Serialize(firstRegisterRequest);
+            var firstJson = JsonSerializer.Serialize(firstRequest);
             var firstContent = new StringContent(firstJson, Encoding.UTF8, "application/json");
+            var firstResponse = await _client.PostAsync("/api/auth/register", firstContent);
+            Assert.AreEqual(HttpStatusCode.OK, firstResponse.StatusCode, 
+                $"First registration should succeed but got {firstResponse.StatusCode}: {await firstResponse.Content.ReadAsStringAsync()}");
 
-            await _client.PostAsync("/api/auth/register", firstContent);
-
-            // Now try to register with the same username
-            var secondRegisterRequest = new RegisterRequest
+            // Second registration with same username
+            var secondRequest = new RegisterRequest
             {
-                Username = "duplicateuser",
-                Email = "second@example.com",
+                Username = "testuser_duplicate", // Same username
+                Email = "second@example.com",    // Different email
                 Password = "password123",
                 ConfirmPassword = "password123"
             };
 
-            var secondJson = JsonSerializer.Serialize(secondRegisterRequest);
+            var secondJson = JsonSerializer.Serialize(secondRequest);
             var secondContent = new StringContent(secondJson, Encoding.UTF8, "application/json");
+            var secondResponse = await _client.PostAsync("/api/auth/register", secondContent);
+            var responseContent = await secondResponse.Content.ReadAsStringAsync();
+            
+            // Should return BadRequest with Username field error
+            Assert.AreEqual(HttpStatusCode.BadRequest, secondResponse.StatusCode, 
+                $"Expected BadRequest but got {secondResponse.StatusCode}: {responseContent}");
 
-            // Act
-            var response = await _client.PostAsync("/api/auth/register", secondContent);
-
-            // Assert
-            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var registerResult = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
+            var result = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
-            Assert.IsNotNull(registerResult);
-            Assert.IsFalse(registerResult.Success);
-            Assert.IsNotNull(registerResult.FieldErrors);
-            Assert.IsTrue(registerResult.FieldErrors.ContainsKey("Username"));
+            Assert.IsNotNull(result, "Response should deserialize to RegisterResult");
+            Assert.IsFalse(result.Success, "Second registration should fail");
+            Assert.IsNotNull(result.FieldErrors, "Should have field errors");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("username"), 
+                $"Should have username field error. Actual errors: {string.Join(", ", result.FieldErrors.Keys)}");
         }
 
         [TestMethod]
         public async Task Register_WithDuplicateEmail_ReturnsBadRequest()
         {
-            // Arrange - First register a user
-            Assert.IsNotNull(_client);
-
-            var firstRegisterRequest = new RegisterRequest
+            // First registration
+            var firstRequest = new RegisterRequest
             {
-                Username = "user1",
+                Username = "user1_email",
                 Email = "duplicate@example.com",
                 Password = "password123",
                 ConfirmPassword = "password123"
             };
 
-            var firstJson = JsonSerializer.Serialize(firstRegisterRequest);
+            var firstJson = JsonSerializer.Serialize(firstRequest);
             var firstContent = new StringContent(firstJson, Encoding.UTF8, "application/json");
+            var firstResponse = await _client.PostAsync("/api/auth/register", firstContent);
+            Assert.AreEqual(HttpStatusCode.OK, firstResponse.StatusCode, 
+                $"First registration should succeed but got {firstResponse.StatusCode}: {await firstResponse.Content.ReadAsStringAsync()}");
 
-            await _client.PostAsync("/api/auth/register", firstContent);
-
-            // Now try to register with the same email
-            var secondRegisterRequest = new RegisterRequest
+            // Second registration with same email
+            var secondRequest = new RegisterRequest
             {
-                Username = "user2",
-                Email = "duplicate@example.com",
+                Username = "user2_email",        // Different username
+                Email = "duplicate@example.com", // Same email
                 Password = "password123",
                 ConfirmPassword = "password123"
             };
 
-            var secondJson = JsonSerializer.Serialize(secondRegisterRequest);
+            var secondJson = JsonSerializer.Serialize(secondRequest);
             var secondContent = new StringContent(secondJson, Encoding.UTF8, "application/json");
+            var secondResponse = await _client.PostAsync("/api/auth/register", secondContent);
+            var responseContent = await secondResponse.Content.ReadAsStringAsync();
+            
+            // Should return BadRequest with Email field error
+            Assert.AreEqual(HttpStatusCode.BadRequest, secondResponse.StatusCode, 
+                $"Expected BadRequest but got {secondResponse.StatusCode}: {responseContent}");
 
-            // Act
-            var response = await _client.PostAsync("/api/auth/register", secondContent);
-
-            // Assert
-            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var registerResult = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
+            var result = JsonSerializer.Deserialize<RegisterResult>(responseContent, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
-            Assert.IsNotNull(registerResult);
-            Assert.IsFalse(registerResult.Success);
-            Assert.IsNotNull(registerResult.FieldErrors);
-            Assert.IsTrue(registerResult.FieldErrors.ContainsKey("Email"));
+            Assert.IsNotNull(result, "Response should deserialize to RegisterResult");
+            Assert.IsFalse(result.Success, "Second registration should fail");
+            Assert.IsNotNull(result.FieldErrors, "Should have field errors");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("email"), 
+                $"Should have email field error. Actual errors: {string.Join(", ", result.FieldErrors.Keys)}");
         }
 
         [TestMethod]
@@ -342,7 +359,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(registerResult);
             Assert.IsFalse(registerResult.Success);
             Assert.IsNotNull(registerResult.FieldErrors);
-            Assert.IsTrue(registerResult.FieldErrors.ContainsKey("ConfirmPassword"));
+            Assert.IsTrue(registerResult.FieldErrors.ContainsKey("confirmPassword"));
         }
 
         [TestMethod]
