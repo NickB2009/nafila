@@ -33,6 +33,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 RegisterEntityType<Domain.Queues.Queue>();
                 RegisterEntityType<Domain.Customers.Customer>();
                 RegisterEntityType<Domain.Staff.StaffMember>();
+                RegisterEntityType<Domain.ServicesOffered.ServiceOffered>();
                 
                 // Generate initial data
                 GenerateInitialData();

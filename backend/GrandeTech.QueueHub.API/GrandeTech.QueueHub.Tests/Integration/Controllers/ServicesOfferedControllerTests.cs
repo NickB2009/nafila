@@ -24,11 +24,18 @@ namespace Grande.Fila.Tests.Integration.Controllers;
 public class ServicesOfferedControllerTests
 {
     private static WebApplicationFactory<Program> _factory = null!;
+    private static BogusUserRepository _userRepository = null!;
+    private static BogusServiceTypeRepository _servicesOfferedRepository = null!;
+    private static BogusLocationRepository _locationRepository = null!;
     private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
+        _userRepository = new BogusUserRepository();
+        _servicesOfferedRepository = new BogusServiceTypeRepository();
+        _locationRepository = new BogusLocationRepository();
+        
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
@@ -44,10 +51,20 @@ public class ServicesOfferedControllerTests
                 });
                 builder.ConfigureServices(services =>
                 {
-                    // Ensure we're using the Bogus repository for testing
-                    services.AddScoped<IUserRepository, BogusUserRepository>();
-                    services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
-                    services.AddScoped<ILocationRepository, BogusLocationRepository>();
+                    // Remove any existing repository registrations
+                    var servicesToRemove = new[]
+                    {
+                        typeof(IUserRepository),
+                        typeof(IServicesOfferedRepository),
+                        typeof(ILocationRepository)
+                    };
+                    var descriptors = services.Where(d => servicesToRemove.Contains(d.ServiceType)).ToList();
+                    descriptors.ForEach(d => services.Remove(d));
+
+                    // Use shared singleton repositories for testing
+                    services.AddSingleton<IUserRepository>(_userRepository);
+                    services.AddSingleton<IServicesOfferedRepository>(_servicesOfferedRepository);
+                    services.AddSingleton<ILocationRepository>(_locationRepository);
                     services.AddScoped<AuthService>();
                 });
             });
