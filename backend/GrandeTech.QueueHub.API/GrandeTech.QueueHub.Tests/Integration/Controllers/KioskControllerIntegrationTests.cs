@@ -9,6 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Grande.Fila.API.Domain.Queues;
 using System.Text;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Infrastructure;
+using System.Linq;
+using Grande.Fila.API.Domain.Customers;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -17,11 +21,31 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
     public class KioskControllerIntegrationTests
     {
         private static WebApplicationFactory<Program> _factory = null!;
+        private static BogusQueueRepository _queueRepository = null!;
+        private static BogusCustomerRepository _customerRepository = null!;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
-            _factory = new WebApplicationFactory<Program>();
+            _queueRepository = new BogusQueueRepository();
+            _customerRepository = new BogusCustomerRepository();
+            _factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureServices(services =>
+                    {
+                        // Remove existing repository registrations
+                        var descriptors = services.Where(d => 
+                            d.ServiceType == typeof(IQueueRepository) ||
+                            d.ServiceType == typeof(ICustomerRepository)).ToList();
+                        foreach (var descriptor in descriptors)
+                        {
+                            services.Remove(descriptor);
+                        }
+                        services.AddSingleton<IQueueRepository>(_queueRepository);
+                        services.AddSingleton<ICustomerRepository>(_customerRepository);
+                    });
+                });
         }
 
         [ClassCleanup]
@@ -275,9 +299,6 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
 
         private static async Task<Guid> CreateTestQueueDirectlyAsync()
         {
-            using var scope = _factory.Services.CreateScope();
-            var queueRepository = scope.ServiceProvider.GetRequiredService<IQueueRepository>();
-            
             var queue = new Queue(
                 Guid.Parse("12345678-1234-1234-1234-123456789012"),
                 50,
@@ -285,7 +306,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 "test-system"
             );
             
-            await queueRepository.AddAsync(queue);
+            await _queueRepository.AddAsync(queue);
             return queue.Id;
         }
     }

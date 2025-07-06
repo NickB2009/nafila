@@ -15,7 +15,7 @@ namespace Grande.Fila.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[RequireAdmin] // Admin/Owner can create locations
+[RequireOwner] // Admin/Owner can create locations
 public class LocationsController : ControllerBase
 {
     private readonly CreateLocationService _createLocationService;

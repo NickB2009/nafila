@@ -197,15 +197,16 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.IsNotNull(result);
             Assert.IsFalse(result.Success);
-            Assert.IsTrue(result.FieldErrors.Any());
-            Assert.IsTrue(result.FieldErrors.ContainsKey("BusinessName"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("ContactEmail"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("ContactPhone"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.Street"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.City"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.State"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("Address.Country"));
-            Assert.IsTrue(result.FieldErrors.ContainsKey("MaxQueueCapacity"));
+            Assert.IsTrue(result.FieldErrors.Any(), "No field errors found");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("businessName"), "Missing businessName error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("contactEmail"), "Missing contactEmail error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("contactPhone"), "Missing contactPhone error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("address.Street"), "Missing address.Street error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("address.City"), "Missing address.City error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("address.State"), "Missing address.State error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("address.PostalCode"), "Missing address.PostalCode error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("address.Country"), "Missing address.Country error");
+            Assert.IsTrue(result.FieldErrors.ContainsKey("maxQueueCapacity"), "Missing maxQueueCapacity error");
         }
 
         [TestMethod]
@@ -559,6 +560,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
             {
                 organizationId = Guid.NewGuid().ToString(),
                 businessName = "Test Location",
+                contactEmail = "test@test.com",
+                contactPhone = "123-456-7890",
                 address = new
                 {
                     street = "123 Main St",
@@ -576,14 +579,29 @@ namespace Grande.Fila.Tests.Integration.Controllers
             };
 
             var createResponse = await client.PostAsJsonAsync("/api/locations", createRequest);
+            
+            // Debug: Check if location creation failed
+            if (!createResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await createResponse.Content.ReadAsStringAsync();
+                Assert.Fail($"Location creation failed with {createResponse.StatusCode}: {errorContent}");
+            }
+            
             createResponse.EnsureSuccessStatusCode();
-            var createResult = await createResponse.Content.ReadFromJsonAsync<dynamic>();
-            var locationId = createResult?.locationId?.ToString();
+            var createResult = await createResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+            var locationId = createResult?.LocationId;
+            
+            // Debug: Check if locationId is null
+            if (string.IsNullOrEmpty(locationId))
+            {
+                var responseContent = await createResponse.Content.ReadAsStringAsync();
+                Assert.Fail($"LocationId is null or empty. Response: {responseContent}");
+            }
 
             // Now toggle queue status
             var toggleRequest = new
             {
-                enableQueue = false // Disable first
+                EnableQueue = false // Disable first
             };
 
             var disableResponse = await client.PutAsJsonAsync($"/api/locations/{locationId}/queue-status", toggleRequest);
@@ -592,7 +610,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Enable queue
             toggleRequest = new
             {
-                enableQueue = true
+                EnableQueue = true
             };
 
             // Act
@@ -600,10 +618,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            var result = await response.Content.ReadFromJsonAsync<ToggleQueueResult>();
             Assert.IsNotNull(result);
-            Assert.IsTrue((bool)result.success);
-            Assert.IsTrue((bool)result.isQueueEnabled);
+            Assert.IsTrue(result.Success);
+            Assert.IsTrue(result.IsQueueEnabled);
         }
 
         [TestMethod]
@@ -619,6 +637,8 @@ namespace Grande.Fila.Tests.Integration.Controllers
             {
                 organizationId = Guid.NewGuid().ToString(),
                 businessName = "Test Location",
+                contactEmail = "test@test.com",
+                contactPhone = "123-456-7890",
                 address = new
                 {
                     street = "123 Main St",
@@ -636,14 +656,29 @@ namespace Grande.Fila.Tests.Integration.Controllers
             };
 
             var createResponse = await client.PostAsJsonAsync("/api/locations", createRequest);
+            
+            // Debug: Check if location creation failed
+            if (!createResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await createResponse.Content.ReadAsStringAsync();
+                Assert.Fail($"Location creation failed with {createResponse.StatusCode}: {errorContent}");
+            }
+            
             createResponse.EnsureSuccessStatusCode();
-            var createResult = await createResponse.Content.ReadFromJsonAsync<dynamic>();
-            var locationId = createResult?.locationId?.ToString();
+            var createResult = await createResponse.Content.ReadFromJsonAsync<CreateLocationResult>();
+            var locationId = createResult?.LocationId;
+            
+            // Debug: Check if locationId is null
+            if (string.IsNullOrEmpty(locationId))
+            {
+                var responseContent = await createResponse.Content.ReadAsStringAsync();
+                Assert.Fail($"LocationId is null or empty. Response: {responseContent}");
+            }
 
             // Now disable queue
             var toggleRequest = new
             {
-                enableQueue = false
+                EnableQueue = false
             };
 
             // Act
@@ -651,10 +686,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            var result = await response.Content.ReadFromJsonAsync<ToggleQueueResult>();
             Assert.IsNotNull(result);
-            Assert.IsTrue((bool)result.success);
-            Assert.IsFalse((bool)result.isQueueEnabled);
+            Assert.IsTrue(result.Success);
+            Assert.IsFalse(result.IsQueueEnabled);
         }
 
         [TestMethod]
@@ -667,7 +702,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var request = new
             {
-                enableQueue = false
+                EnableQueue = false
             };
 
             // Act
@@ -687,7 +722,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var request = new
             {
-                enableQueue = true
+                EnableQueue = true
             };
 
             // Act
@@ -707,7 +742,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var request = new
             {
-                enableQueue = true
+                EnableQueue = true
             };
 
             // Act

@@ -133,6 +133,9 @@ public class CreateLocationService
         if (!string.IsNullOrWhiteSpace(request.ContactEmail) && !IsValidEmail(request.ContactEmail))
             errors["ContactEmail"] = "Contact email format is invalid.";
 
+        if (string.IsNullOrWhiteSpace(request.ContactPhone))
+            errors["ContactPhone"] = "Contact phone is required.";
+
         if (string.IsNullOrWhiteSpace(request.Address.Street))
             errors["Address.Street"] = "Street address is required.";
 
@@ -141,6 +144,9 @@ public class CreateLocationService
 
         if (string.IsNullOrWhiteSpace(request.Address.State))
             errors["Address.State"] = "State is required.";
+
+        if (string.IsNullOrWhiteSpace(request.Address.PostalCode))
+            errors["Address.PostalCode"] = "Postal code is required.";
 
         if (string.IsNullOrWhiteSpace(request.Address.Country))
             errors["Address.Country"] = "Country is required.";

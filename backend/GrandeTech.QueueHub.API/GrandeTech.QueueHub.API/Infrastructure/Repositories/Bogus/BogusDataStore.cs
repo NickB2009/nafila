@@ -29,6 +29,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 // Initialize data stores for each entity type
                 RegisterEntityType<User>();
                 RegisterEntityType<Organization>();
+                RegisterEntityType<Domain.Locations.Location>();
+                RegisterEntityType<Domain.Queues.Queue>();
+                RegisterEntityType<Domain.Customers.Customer>();
                 
                 // Generate initial data
                 GenerateInitialData();

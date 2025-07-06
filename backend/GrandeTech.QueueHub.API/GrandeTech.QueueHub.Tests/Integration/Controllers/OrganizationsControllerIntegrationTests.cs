@@ -13,6 +13,13 @@ using System.Threading;
 using Grande.Fila.API.Tests.Integration;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Infrastructure;
+using Grande.Fila.API.Domain.Organizations;
+using Grande.Fila.API.Application.Organizations;
+using Grande.Fila.API.Domain.Queues;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Subscriptions;
 using System.Linq;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
@@ -24,25 +31,59 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         private static WebApplicationFactory<Program> _factory;
         private HttpClient _client;
         private static BogusUserRepository _userRepository;
+        private static BogusOrganizationRepository _organizationRepository;
+        private static BogusQueueRepository _queueRepository;
+        private static BogusStaffMemberRepository _staffMemberRepository;
+        private static BogusLocationRepository _locationRepository;
+        private static BogusAuditLogRepository _auditLogRepository;
+        private static BogusSubscriptionPlanRepository _subscriptionPlanRepository;
 
         [TestInitialize]
         public void TestInitialize()
         {
             if (_userRepository == null)
                 _userRepository = new BogusUserRepository();
+            if (_organizationRepository == null)
+                _organizationRepository = new BogusOrganizationRepository();
+            if (_queueRepository == null)
+                _queueRepository = new BogusQueueRepository();
+            if (_staffMemberRepository == null)
+                _staffMemberRepository = new BogusStaffMemberRepository();
+            if (_locationRepository == null)
+                _locationRepository = new BogusLocationRepository();
+            if (_auditLogRepository == null)
+                _auditLogRepository = new BogusAuditLogRepository();
+            if (_subscriptionPlanRepository == null)
+                _subscriptionPlanRepository = new BogusSubscriptionPlanRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
                     builder.ConfigureServices(services =>
                     {
-                        // Remove existing IUserRepository registrations
-                        var descriptors = services.Where(d => d.ServiceType == typeof(IUserRepository)).ToList();
+                        // Remove existing repository registrations
+                        var descriptors = services.Where(d => 
+                            d.ServiceType == typeof(IUserRepository) ||
+                            d.ServiceType == typeof(IOrganizationRepository) ||
+                            d.ServiceType == typeof(IQueueRepository) ||
+                            d.ServiceType == typeof(IStaffMemberRepository) ||
+                            d.ServiceType == typeof(ILocationRepository) ||
+                            d.ServiceType == typeof(IAuditLogRepository) ||
+                            d.ServiceType == typeof(ISubscriptionPlanRepository)).ToList();
                         foreach (var descriptor in descriptors)
                         {
                             services.Remove(descriptor);
                         }
                         services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddSingleton<IOrganizationRepository>(_organizationRepository);
+                        services.AddSingleton<IQueueRepository>(_queueRepository);
+                        services.AddSingleton<IStaffMemberRepository>(_staffMemberRepository);
+                        services.AddSingleton<ILocationRepository>(_locationRepository);
+                        services.AddSingleton<IAuditLogRepository>(_auditLogRepository);
+                        services.AddSingleton<ISubscriptionPlanRepository>(_subscriptionPlanRepository);
                         services.AddScoped<AuthService>();
+                        services.AddScoped<TrackLiveActivityService>();
+                        services.AddScoped<OrganizationService>();
+                        services.AddScoped<CreateOrganizationService>();
                     });
                 });
             _client = _factory.CreateClient();
@@ -58,7 +99,9 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         [TestMethod]
         public async Task GetLiveActivity_ValidOrganizationId_ReturnsSuccess()
         {
+            Console.WriteLine("Debug: Starting GetLiveActivity test");
             var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            Console.WriteLine($"Debug: Got admin token: {adminToken?.Substring(0, 20)}...");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create organization first
@@ -67,18 +110,33 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 Name = "Test Organization",
                 ContactEmail = "test@testorg.com",
                 ContactPhone = "+5511999999999",
-                WebsiteUrl = "https://testorg.com"
+                WebsiteUrl = "https://testorg.com",
+                SubscriptionPlanId = Guid.NewGuid().ToString()
             };
 
             var createResponse = await _client.PostAsJsonAsync("/api/organizations", createOrgRequest);
+            Console.WriteLine($"Debug: Create org response status: {createResponse.StatusCode}");
             var createResult = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
             var organizationId = createResult.GetProperty("organizationId").GetString();
+            Console.WriteLine($"Debug: Created organization ID: {organizationId}");
 
             // Act: Get live activity
             var response = await _client.GetAsync($"/api/organizations/{organizationId}/live-activity");
 
+            // Debug: Check response content
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Assert.Fail($"Expected OK but got {response.StatusCode}. Response: {responseContent}");
+            }
+
+            // Debug: Log the actual response before any assertions
+            Console.WriteLine($"GetLiveActivity Status: {response.StatusCode}");
+            Console.WriteLine($"GetLiveActivity Response: {responseContent}");
+            
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            
             var result = await response.Content.ReadFromJsonAsync<JsonElement>();
             Assert.IsTrue(result.GetProperty("success").GetBoolean());
             Assert.IsTrue(result.TryGetProperty("liveActivity", out var liveActivity));
@@ -111,6 +169,13 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
             var response = await client.GetAsync("/api/organizations/invalid-guid/live-activity");
 
+            // Debug: Check response content
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != HttpStatusCode.BadRequest)
+            {
+                Assert.Fail($"Expected BadRequest but got {response.StatusCode}. Response: {responseContent}");
+            }
+
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -119,8 +184,10 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         [TestMethod]
         public async Task UpdateBranding_ValidRequest_ReturnsSuccess()
         {
+            Console.WriteLine("Debug: Starting UpdateBranding test");
             var client = _factory.CreateClient();
             var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            Console.WriteLine($"Debug: Got admin token: {adminToken?.Substring(0, 20)}...");
 
             // Create organization first
             var createOrgRequest = new
@@ -128,7 +195,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 Name = "Test Organization",
                 ContactEmail = "test@testorg.com",
                 ContactPhone = "+5511999999999",
-                WebsiteUrl = "https://testorg.com"
+                WebsiteUrl = "https://testorg.com",
+                SubscriptionPlanId = Guid.NewGuid().ToString()
             };
 
             var createResponse = await client.PostAsJsonAsync("/api/organizations", createOrgRequest);
@@ -148,8 +216,20 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
             var response = await client.PutAsJsonAsync($"/api/organizations/{organizationId}/branding", brandingRequest);
 
+            // Debug: Check response content
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Assert.Fail($"Expected OK but got {response.StatusCode}. Response: {responseContent}");
+            }
+
+            // Debug: Log the actual response before any assertions
+            Console.WriteLine($"UpdateBranding Status: {response.StatusCode}");
+            Console.WriteLine($"UpdateBranding Response: {responseContent}");
+            
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            
             var result = await response.Content.ReadFromJsonAsync<JsonElement>();
             Assert.IsTrue(result.GetProperty("success").GetBoolean());
         }
@@ -187,8 +267,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Map old test roles to new roles
             var mappedRole = role.ToLower() switch
             {
-                "admin" => UserRoles.Admin,
-                "owner" => UserRoles.Admin,
+                "admin" => UserRoles.Owner, // Admin tests should use Owner role for RequireOwner endpoints
+                "owner" => UserRoles.Owner,
                 "barber" => UserRoles.Barber,
                 "client" => UserRoles.Client,
                 "user" => UserRoles.Client,
