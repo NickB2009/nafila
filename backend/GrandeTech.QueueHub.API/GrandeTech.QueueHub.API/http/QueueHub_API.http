@@ -12,7 +12,7 @@
 # ===============================
 
 # --- TOKEN VARIABLES (update after login) ---
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYjJhNDc5Mi0wYTAxLTRjZmMtODEyZi1jMWQxNzMzMzJmOGQiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbl90ZXN0IiwiZW1haWwiOiJhZG1pbkB0ZXN0LmNvbSIsInJvbGUiOiJBZG1pbiIsInBlcm1pc3Npb25zIjpbIm1hbmFnZTpsb2NhdGlvbnMiLCJtYW5hZ2U6c3RhZmYiLCJtYW5hZ2U6c2VydmljZXMiLCJ2aWV3Om1ldHJpY3MiLCJtYW5hZ2U6YnJhbmRpbmciXSwib3JnX2lkIjoiZmQwZmQ2Y2MtNGZhYi00MzhlLTllNzUtYzkwODdlYmY2ZjE1IiwidGVuYW50X3NsdWciOiJ0ZXN0LXRlbmFudCIsImV4cCI6MTc1MTgwOTM5NiwiaXNzIjoiR3JhbmRlVGVjaC5RdWV1ZUh1Yi5BUEkiLCJhdWQiOiJHcmFuZGVUZWNoLlF1ZXVlSHViLkFQSSJ9.yvHT789egBDmCK93SJiAwGSy1c35oQqVaABJuXoDmpA
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYzU4ZGE5Ny1kNmEzLTQyNmEtOWFkZC1lMDJmOWMwMDU2YTgiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbl90ZXN0IiwiZW1haWwiOiJhZG1pbkB0ZXN0LmNvbSIsInJvbGUiOiJBZG1pbiIsInBlcm1pc3Npb25zIjpbIm1hbmFnZTpsb2NhdGlvbnMiLCJtYW5hZ2U6c3RhZmYiLCJtYW5hZ2U6c2VydmljZXMiLCJ2aWV3Om1ldHJpY3MiLCJtYW5hZ2U6YnJhbmRpbmciXSwib3JnX2lkIjoiYTc4Y2ZmYjMtODdjMC00MmQ0LWEyMDEtNmE0YThjODNjZTExIiwidGVuYW50X3NsdWciOiJ0ZXN0LXRlbmFudCIsImV4cCI6MTc1MTgyMDU1NSwiaXNzIjoiR3JhbmRlVGVjaC5RdWV1ZUh1Yi5BUEkiLCJhdWQiOiJHcmFuZGVUZWNoLlF1ZXVlSHViLkFQSSJ9.k8F0r5xu9TO4ZNQdw8krIInH_MjBK1bISOqG99AAFZs
 @barberToken = YOUR_BARBER_TOKEN_HERE
 @clientToken = YOUR_CLIENT_TOKEN_HERE
 @ownerToken = YOUR_OWNER_TOKEN_HERE
@@ -113,15 +113,18 @@ GET {{baseUrl}}/health/live
 ###
 
 # --- ORGANIZATION SETUP (admin only) ---
+# Note: SubscriptionPlanId and Slug are required fields
 POST {{baseUrl}}/api/organizations
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "name": "Test Salon Organization",
-  "description": "A test organization for API testing",
-  "contactEmail": "contact@testsalon.com",
-  "contactPhone": "+1234567890"
+  "Name": "Test Salon Organization",
+  "Slug": "test-salon-organization",
+  "Description": "A test organization for API testing",
+  "ContactEmail": "contact@testsalon.com",
+  "ContactPhone": "+1234567890",
+  "SubscriptionPlanId": "22222222-2222-2222-2222-222222222222"
 }
 
 ###
