@@ -112,5 +112,19 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             var staffMembers = await GetAllAsync(cancellationToken);
             return staffMembers.Any(sm => sm.Username == username);
         }
+
+        public async Task<IReadOnlyList<StaffMember>> GetStaffMembersByLocationIdsAsync(List<Guid> locationIds, CancellationToken cancellationToken = default)
+        {
+            var staffMembers = await GetAllAsync(cancellationToken);
+            return staffMembers.Where(sm => locationIds.Contains(sm.LocationId)).ToList();
+        }
+
+        public async Task<IReadOnlyList<StaffMember>> GetStaffMembersByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default)
+        {
+            // For the bogus repository, we can't directly filter by organization ID since staff only have locationId
+            // This would normally be done via a join in a real database implementation
+            var staffMembers = await GetAllAsync(cancellationToken);
+            return staffMembers.ToList();
+        }
     }
 } 

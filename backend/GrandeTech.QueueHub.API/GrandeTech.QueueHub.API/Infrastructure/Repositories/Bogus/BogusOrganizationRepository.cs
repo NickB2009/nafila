@@ -89,5 +89,11 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             var organizations = await GetAllAsync(cancellationToken);
             return !organizations.Any(o => o.Slug.Value == slug);
         }
+
+        public async Task<IReadOnlyList<Organization>> GetOrganizationsWithAnalyticsSharingAsync(CancellationToken cancellationToken = default)
+        {
+            var organizations = await GetAllAsync(cancellationToken);
+            return organizations.Where(o => o.SharesDataForAnalytics).ToList();
+        }
     }
 }

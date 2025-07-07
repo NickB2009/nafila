@@ -41,5 +41,12 @@ namespace Grande.Fila.API.Domain.Organizations
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>True if the slug is unique, false otherwise</returns>
         Task<bool> IsSlugUniqueAsync(string slug, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Gets all organizations that share data for analytics
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A collection of organizations that share data for analytics</returns>
+        Task<IReadOnlyList<Organization>> GetOrganizationsWithAnalyticsSharingAsync(CancellationToken cancellationToken = default);
     }
 }

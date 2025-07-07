@@ -112,10 +112,11 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             await subscriptionPlanRepository.AddAsync(subscriptionPlan, CancellationToken.None);
 
             // Create organization first
+            var uniqueId = Guid.NewGuid().ToString("N")[..8];
             var createOrgRequest = new
             {
-                Name = "Test Organization",
-                Slug = "test-organization",
+                Name = $"Test Organization {uniqueId}",
+                Slug = $"test-organization-{uniqueId}",
                 ContactEmail = "test@testorg.com",
                 ContactPhone = "+5511999999999",
                 WebsiteUrl = "https://testorg.com",
@@ -220,10 +221,11 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             await subscriptionPlanRepository.AddAsync(subscriptionPlan, CancellationToken.None);
 
             // Create organization first
+            var uniqueId = Guid.NewGuid().ToString("N")[..8];
             var createOrgRequest = new
             {
-                Name = "Test Organization",
-                Slug = "test-organization-branding",
+                Name = $"Test Branding Organization {uniqueId}",
+                Slug = $"test-organization-branding-{uniqueId}",
                 ContactEmail = "test@testorg.com",
                 ContactPhone = "+5511999999999",
                 WebsiteUrl = "https://testorg.com",

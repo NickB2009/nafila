@@ -60,5 +60,21 @@ namespace Grande.Fila.API.Domain.Staff
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>True if a staff member with the username exists, false otherwise</returns>
         Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Gets staff members by location IDs
+        /// </summary>
+        /// <param name="locationIds">List of location IDs</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A collection of staff members for the specified locations</returns>
+        Task<IReadOnlyList<StaffMember>> GetStaffMembersByLocationIdsAsync(List<Guid> locationIds, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Gets staff members by organization ID
+        /// </summary>
+        /// <param name="organizationId">Organization ID</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A collection of staff members for the specified organization</returns>
+        Task<IReadOnlyList<StaffMember>> GetStaffMembersByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default);
     }
 }

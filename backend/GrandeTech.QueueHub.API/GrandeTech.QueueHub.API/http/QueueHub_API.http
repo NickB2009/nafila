@@ -360,4 +360,167 @@ Authorization: Bearer {{barberToken}}
 # --- USER PROFILE ---
 GET {{baseUrl}}/api/auth/profile
 Authorization: Bearer {{adminToken}}
+###
+
+# ===============================
+# ANALYTICS ENDPOINTS (UC-ANALYTICS)
+# ===============================
+
+# --- CROSS-BARBERSHOP ANALYTICS (Platform Admin Only) ---
+POST {{baseUrl}}/api/analytics/cross-barbershop
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "IncludeActiveQueues": true,
+  "IncludeCompletedServices": true,
+  "IncludeAverageWaitTimes": true,
+  "IncludeStaffUtilization": true,
+  "IncludeLocationMetrics": true,
+  "OrganizationIds": []
+}
+
+###
+
+# --- ORGANIZATION-SPECIFIC ANALYTICS (Owner/Admin) ---
+POST {{baseUrl}}/api/analytics/organization
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "OrganizationId": "{{organizationId}}",
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "IncludeQueueMetrics": true,
+  "IncludeServiceMetrics": true,
+  "IncludeStaffMetrics": true,
+  "IncludeLocationMetrics": true
+}
+
+###
+
+# --- TOP PERFORMING ORGANIZATIONS (Platform Admin Only) ---
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "MetricType": "CompletedServices",
+  "MaxResults": 10,
+  "IncludeDetails": false
+}
+
+###
+
+# --- TOP PERFORMING ORGANIZATIONS (by average wait time) ---
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "MetricType": "AverageWaitTime",
+  "MaxResults": 5,
+  "IncludeDetails": true
+}
+
+###
+
+# --- TOP PERFORMING ORGANIZATIONS (by staff utilization) ---
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-11-01T00:00:00Z",
+  "EndDate": "2024-11-30T23:59:59Z",
+  "MetricType": "StaffUtilization",
+  "MaxResults": 20,
+  "IncludeDetails": false
+}
+
+###
+
+# --- ANALYTICS ERROR TESTING ---
+# Test with invalid date range
+POST {{baseUrl}}/api/analytics/cross-barbershop
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-12-31T00:00:00Z",
+  "EndDate": "2024-01-01T00:00:00Z",
+  "IncludeActiveQueues": true
+}
+
+###
+
+# Test with non-admin user (should return 403 Forbidden)
+POST {{baseUrl}}/api/analytics/cross-barbershop
+Content-Type: application/json
+Authorization: Bearer {{barberToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z"
+}
+
+###
+
+# Test with invalid organization ID
+POST {{baseUrl}}/api/analytics/organization
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "OrganizationId": "invalid-guid-format",
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z"
+}
+
+###
+
+# Test top organizations with excessive results (should return 400 Bad Request)
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "MetricType": "CompletedServices",
+  "MaxResults": 200
+}
+
+###
+
+# ===============================
+# ANALYTICS SETUP HELPER ENDPOINTS
+# ===============================
+
+# Enable analytics sharing for organization (Owner/Admin)
+PUT {{baseUrl}}/api/organizations/{{organizationId}}/analytics-sharing
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "sharesData": true
+}
+
+###
+
+# Disable analytics sharing for organization
+PUT {{baseUrl}}/api/organizations/{{organizationId}}/analytics-sharing
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "sharesData": false
+}
+
 ### 

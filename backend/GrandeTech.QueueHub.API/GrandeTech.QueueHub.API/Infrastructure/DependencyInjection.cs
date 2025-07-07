@@ -23,6 +23,7 @@ using Grande.Fila.API.Application.Notifications;
 using Grande.Fila.API.Application.Promotions;
 using Grande.Fila.API.Application.QrCode;
 using Grande.Fila.API.Application.Kiosk;
+using Grande.Fila.API.Application.Analytics;
 
 namespace Grande.Fila.API.Infrastructure
 {
@@ -87,6 +88,9 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<CalculateWaitService>();
             services.AddScoped<EstimatedWaitTimeService>();
             services.AddScoped<UpdateCacheService>();
+            
+            // Analytics services
+            services.AddScoped<AnalyticsService>();
             
             // Services offered
             services.AddScoped<AddServiceOfferedService>();

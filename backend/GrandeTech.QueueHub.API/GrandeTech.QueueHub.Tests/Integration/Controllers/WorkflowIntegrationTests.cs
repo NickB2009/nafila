@@ -135,8 +135,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Step 2: Create Organization using Subscription Plan
             var organizationRequest = new
             {
-                Name = "Workflow Test Salon",
-                Slug = "workflow-test-salon",
+                Name = $"Workflow Test Salon {Guid.NewGuid().ToString("N")[..8]}",
+                Slug = $"workflow-test-salon-{Guid.NewGuid().ToString("N")[..8]}",
                 Description = "Test salon for workflow integration",
                 ContactEmail = "workflow@testsalon.com",
                 ContactPhone = "+1234567890",
