@@ -1,5 +1,4 @@
 import 'package:eutonafila_frontend/ui/screens/check_in_success_screen.dart';
-import 'package:eutonafila_frontend/ui/screens/queue_status_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

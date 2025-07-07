@@ -231,7 +231,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => CheckInSuccessScreen(salon: salon),
+                              builder: (context) => const CheckInSuccessScreen(),
                             ),
                           );
                         },
