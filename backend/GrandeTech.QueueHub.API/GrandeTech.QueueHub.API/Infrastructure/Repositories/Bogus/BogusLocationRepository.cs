@@ -120,5 +120,17 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         {
             return degrees * Math.PI / 180;
         }
+
+        public async Task<IReadOnlyList<Domain.Locations.Location>> GetLocationsByOrganizationIdsAsync(List<Guid> organizationIds, CancellationToken cancellationToken = default)
+        {
+            var locations = await GetAllAsync(cancellationToken);
+            return locations.Where(l => organizationIds.Contains(l.OrganizationId)).ToList();
+        }
+
+        public async Task<IReadOnlyList<Domain.Locations.Location>> GetLocationsByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default)
+        {
+            var locations = await GetAllAsync(cancellationToken);
+            return locations.Where(l => l.OrganizationId == organizationId).ToList();
+        }
     }
 }

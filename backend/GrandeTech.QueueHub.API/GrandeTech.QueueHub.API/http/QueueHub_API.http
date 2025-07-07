@@ -12,7 +12,7 @@
 # ===============================
 
 # --- TOKEN VARIABLES (update after login) ---
-@adminToken = YOUR_ADMIN_TOKEN_HERE
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWEyMzc2ZS0xMGRhLTQ0NDQtOGJhNy04M2VmY2Y3MTQxZDciLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbl90ZXN0IiwiZW1haWwiOiJhZG1pbkB0ZXN0LmNvbSIsInJvbGUiOiJBZG1pbiIsInBlcm1pc3Npb25zIjpbIm1hbmFnZTpsb2NhdGlvbnMiLCJtYW5hZ2U6c3RhZmYiLCJtYW5hZ2U6c2VydmljZXMiLCJ2aWV3Om1ldHJpY3MiLCJtYW5hZ2U6YnJhbmRpbmciXSwib3JnX2lkIjoiNWY2YzBhNzgtYmEzZS00ZTRlLThjOWUtMmUwZDYxYWIyMTBmIiwidGVuYW50X3NsdWciOiJ0ZXN0LXRlbmFudCIsImV4cCI6MTc1MTg1Mjk3MywiaXNzIjoiR3JhbmRlVGVjaC5RdWV1ZUh1Yi5BUEkiLCJhdWQiOiJHcmFuZGVUZWNoLlF1ZXVlSHViLkFQSSJ9.e2Bb4yfCBVrLpNdZay8twzq9JpNXgghP58G0TU0Ux14
 @barberToken = YOUR_BARBER_TOKEN_HERE
 @clientToken = YOUR_CLIENT_TOKEN_HERE
 @ownerToken = YOUR_OWNER_TOKEN_HERE
@@ -24,6 +24,7 @@
 @staffMemberId = 
 @serviceTypeId = 
 @queueEntryId = 
+@subscriptionPlanId = 8b87927c-ba3d-414b-ae71-37a646db25b4
 
 # --- ADMIN LOGIN (get token) ---
 POST {{baseUrl}}/api/auth/login
@@ -113,19 +114,93 @@ GET {{baseUrl}}/health/live
 ###
 
 # --- ORGANIZATION SETUP (admin only) ---
+# Note: SubscriptionPlanId and Slug are required fields
 POST {{baseUrl}}/api/organizations
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "name": "Test Salon Organization",
-  "description": "A test organization for API testing",
-  "contactEmail": "contact@testsalon.com",
-  "contactPhone": "+1234567890"
+  "Name": "Test Salon Organization",
+  "Slug": "test-salon-organization",
+  "Description": "A test organization for API testing",
+  "ContactEmail": "contact@testsalon.com",
+  "ContactPhone": "+1234567890",
+  "SubscriptionPlanId": "22222222-2222-2222-2222-222222222222"
+}
+
+### 
+GET {{baseUrl}}/api/organizations
+Authorization: Bearer {{adminToken}}
+###
+
+# --- SUBSCRIPTION PLAN SETUP (admin only) ---
+# Create a new subscription plan
+POST {{baseUrl}}/api/subscriptionplans
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "Name": "Premium Business Plan B",
+  "Description": "Premium subscription plan for business customers",
+  "MonthlyPrice": 49.99,
+  "YearlyPrice": 499.99,
+  "MaxLocations": 5,
+  "MaxStaffPerLocation": 25,
+  "IncludesAnalytics": true,
+  "IncludesAdvancedReporting": true,
+  "IncludesCustomBranding": true,
+  "IncludesAdvertising": false,
+  "IncludesMultipleLocations": true,
+  "MaxQueueEntriesPerDay": 1000,
+  "IsFeatured": true,
+  "IsDefault": false
 }
 
 ###
-GET {{baseUrl}}/api/organizations
+# Get all subscription plans
+GET {{baseUrl}}/api/subscriptionplans
+Authorization: Bearer {{adminToken}}
+###
+
+# Get default subscription plan (public endpoint)
+GET {{baseUrl}}/api/subscriptionplans/default
+###
+
+# Get specific subscription plan
+GET {{baseUrl}}/api/subscriptionplans/{{subscriptionPlanId}}
+Authorization: Bearer {{adminToken}}
+###
+
+# Update subscription plan
+PUT {{baseUrl}}/api/subscriptionplans/{{subscriptionPlanId}}
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "Name": "Updated Premium Plan",
+  "Description": "Updated premium subscription plan",
+  "MonthlyPrice": 59.99,
+  "YearlyPrice": 599.99,
+  "MaxLocations": 10,
+  "MaxStaffPerLocation": 30,
+  "IncludesAnalytics": true,
+  "IncludesAdvancedReporting": true,
+  "IncludesCustomBranding": true,
+  "IncludesAdvertising": true,
+  "IncludesMultipleLocations": true,
+  "MaxQueueEntriesPerDay": 1500,
+  "IsFeatured": true,
+  "IsDefault": false
+}
+
+###
+# Activate subscription plan
+PUT {{baseUrl}}/api/subscriptionplans/{{subscriptionPlanId}}/activate
+Authorization: Bearer {{adminToken}}
+###
+
+# Deactivate subscription plan
+PUT {{baseUrl}}/api/subscriptionplans/{{subscriptionPlanId}}/deactivate
 Authorization: Bearer {{adminToken}}
 ###
 
@@ -137,6 +212,8 @@ Authorization: Bearer {{adminToken}}
 {
   "businessName": "Test Hair Salon",
   "description": "A great hair salon for testing",
+  "contactPhone": "+1-555-123-4567",
+  "contactEmail": "info@testhairsalon.com",
   "address": {
     "street": "123 Test St",
     "city": "Test City",
@@ -158,32 +235,67 @@ Authorization: Bearer {{adminToken}}
 GET {{baseUrl}}/api/locations/{{locationId}}
 ###
 
-# --- STAFF SETUP (admin/owner) ---
-POST {{baseUrl}}/api/staff/barbers
-Content-Type: application/json
-Authorization: Bearer {{adminToken}}
-
-{
-  "name": "John Test Barber",
-  "email": "john@testsalon.com",
-  "phone": "+1234567890",
-  "specialties": ["Fade", "Beard Trim", "Haircut"],
-  "isActive": true
-}
-
-###
-
 # --- SERVICES SETUP (admin only) ---
+# Create services first (required for barber creation)
 POST {{baseUrl}}/api/servicesoffered
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "name": "Basic Haircut",
-  "description": "Basic haircut service",
-  "duration": 30,
-  "price": 25.00,
-  "isActive": true
+  "Name": "Basic Haircut",
+  "Description": "Basic haircut service",
+  "LocationId": "{{locationId}}",
+  "EstimatedDurationMinutes": 30,
+  "Price": 25.00
+}
+
+###
+POST {{baseUrl}}/api/servicesoffered
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "Name": "Beard Trim",
+  "Description": "Professional beard trimming",
+  "LocationId": "{{locationId}}",
+  "EstimatedDurationMinutes": 15,
+  "Price": 15.00
+}
+
+###
+POST {{baseUrl}}/api/servicesoffered
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "Name": "Fade",
+  "Description": "Professional fade haircut",
+  "LocationId": "{{locationId}}",
+  "EstimatedDurationMinutes": 45,
+  "Price": 35.00
+}
+
+###
+GET {{baseUrl}}/api/servicesoffered
+Authorization: Bearer {{adminToken}}
+###
+
+# --- STAFF SETUP (admin/owner) ---
+# Note: Requires LocationId and ServiceTypeIds (use IDs from service creation above)
+POST {{baseUrl}}/api/staff/barbers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "FirstName": "John",
+  "LastName": "Test Barber",
+  "Email": "john@testsalon.com",
+  "PhoneNumber": "+1234567890",
+  "Username": "john.barber",
+  "LocationId": "{{locationId}}",
+  "ServiceTypeIds": ["{{serviceTypeId}}"],
+  "Address": "123 Main St, Test City",
+  "Notes": "Experienced barber specializing in classic cuts"
 }
 
 ###
@@ -248,4 +360,167 @@ Authorization: Bearer {{barberToken}}
 # --- USER PROFILE ---
 GET {{baseUrl}}/api/auth/profile
 Authorization: Bearer {{adminToken}}
+###
+
+# ===============================
+# ANALYTICS ENDPOINTS (UC-ANALYTICS)
+# ===============================
+
+# --- CROSS-BARBERSHOP ANALYTICS (Platform Admin Only) ---
+POST {{baseUrl}}/api/analytics/cross-barbershop
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "IncludeActiveQueues": true,
+  "IncludeCompletedServices": true,
+  "IncludeAverageWaitTimes": true,
+  "IncludeStaffUtilization": true,
+  "IncludeLocationMetrics": true,
+  "OrganizationIds": []
+}
+
+###
+
+# --- ORGANIZATION-SPECIFIC ANALYTICS (Owner/Admin) ---
+POST {{baseUrl}}/api/analytics/organization
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "OrganizationId": "{{organizationId}}",
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "IncludeQueueMetrics": true,
+  "IncludeServiceMetrics": true,
+  "IncludeStaffMetrics": true,
+  "IncludeLocationMetrics": true
+}
+
+###
+
+# --- TOP PERFORMING ORGANIZATIONS (Platform Admin Only) ---
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "MetricType": "CompletedServices",
+  "MaxResults": 10,
+  "IncludeDetails": false
+}
+
+###
+
+# --- TOP PERFORMING ORGANIZATIONS (by average wait time) ---
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "MetricType": "AverageWaitTime",
+  "MaxResults": 5,
+  "IncludeDetails": true
+}
+
+###
+
+# --- TOP PERFORMING ORGANIZATIONS (by staff utilization) ---
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-11-01T00:00:00Z",
+  "EndDate": "2024-11-30T23:59:59Z",
+  "MetricType": "StaffUtilization",
+  "MaxResults": 20,
+  "IncludeDetails": false
+}
+
+###
+
+# --- ANALYTICS ERROR TESTING ---
+# Test with invalid date range
+POST {{baseUrl}}/api/analytics/cross-barbershop
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-12-31T00:00:00Z",
+  "EndDate": "2024-01-01T00:00:00Z",
+  "IncludeActiveQueues": true
+}
+
+###
+
+# Test with non-admin user (should return 403 Forbidden)
+POST {{baseUrl}}/api/analytics/cross-barbershop
+Content-Type: application/json
+Authorization: Bearer {{barberToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z"
+}
+
+###
+
+# Test with invalid organization ID
+POST {{baseUrl}}/api/analytics/organization
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "OrganizationId": "invalid-guid-format",
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z"
+}
+
+###
+
+# Test top organizations with excessive results (should return 400 Bad Request)
+POST {{baseUrl}}/api/analytics/top-organizations
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "StartDate": "2024-01-01T00:00:00Z",
+  "EndDate": "2024-12-31T23:59:59Z",
+  "MetricType": "CompletedServices",
+  "MaxResults": 200
+}
+
+###
+
+# ===============================
+# ANALYTICS SETUP HELPER ENDPOINTS
+# ===============================
+
+# Enable analytics sharing for organization (Owner/Admin)
+PUT {{baseUrl}}/api/organizations/{{organizationId}}/analytics-sharing
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "sharesData": true
+}
+
+###
+
+# Disable analytics sharing for organization
+PUT {{baseUrl}}/api/organizations/{{organizationId}}/analytics-sharing
+Content-Type: application/json
+Authorization: Bearer {{ownerToken}}
+
+{
+  "sharesData": false
+}
+
 ### 

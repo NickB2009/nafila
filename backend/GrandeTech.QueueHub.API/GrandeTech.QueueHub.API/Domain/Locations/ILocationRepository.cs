@@ -48,5 +48,21 @@ namespace Grande.Fila.API.Domain.Locations
             double longitude, 
             double radiusInKm, 
             CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Gets locations by organization IDs
+        /// </summary>
+        /// <param name="organizationIds">List of organization IDs</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A collection of locations for the specified organizations</returns>
+        Task<IReadOnlyList<Location>> GetLocationsByOrganizationIdsAsync(List<Guid> organizationIds, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Gets locations by organization ID
+        /// </summary>
+        /// <param name="organizationId">Organization ID</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A collection of locations for the specified organization</returns>
+        Task<IReadOnlyList<Location>> GetLocationsByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default);
     }
 }

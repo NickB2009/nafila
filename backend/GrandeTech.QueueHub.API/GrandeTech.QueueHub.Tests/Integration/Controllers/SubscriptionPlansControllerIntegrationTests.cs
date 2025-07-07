@@ -20,13 +20,14 @@ using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.AuditLogs;
 using Grande.Fila.API.Domain.Subscriptions;
+using Grande.Fila.API.Application.SubscriptionPlans;
 using System.Linq;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
     [TestClass]
     [TestCategory("Integration")]
-    public class OrganizationsControllerIntegrationTests
+    public class SubscriptionPlansControllerIntegrationTests
     {
         private static WebApplicationFactory<Program> _factory;
         private static BogusUserRepository _userRepository;
@@ -79,6 +80,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                         services.AddScoped<TrackLiveActivityService>();
                         services.AddScoped<OrganizationService>();
                         services.AddScoped<CreateOrganizationService>();
+                        services.AddScoped<CreateSubscriptionPlanService>();
+                        services.AddScoped<SubscriptionPlanService>();
                     });
                 });
         }
@@ -95,174 +98,116 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             _factory.Dispose();
         }
 
-        // UC-TRACKQ: Admin/Owner track live activity
+        // UC-SUBPLAN: PlatformAdmin create subscription plan
         [TestMethod]
-        public async Task GetLiveActivity_ValidOrganizationId_ReturnsSuccess()
+        public async Task CreateSubscriptionPlan_ValidRequest_ReturnsSuccess()
         {
-            Console.WriteLine("Debug: Starting GetLiveActivity test");
+            Console.WriteLine("Debug: Starting CreateSubscriptionPlan test");
             var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
             Console.WriteLine($"Debug: Got admin token: {adminToken?.Substring(0, 20)}...");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-            // Create a subscription plan first
-            using var subscriptionScope = _factory.Services.CreateScope();
-            var subscriptionPlanRepository = subscriptionScope.ServiceProvider.GetRequiredService<ISubscriptionPlanRepository>();
-            var subscriptionPlan = new Domain.Subscriptions.SubscriptionPlan(
-                "Test Plan", "Test subscription plan", 29.99m, 299.99m, 5, 20, true, true, true, true, true, 1000, false, "test");
-            await subscriptionPlanRepository.AddAsync(subscriptionPlan, CancellationToken.None);
-
-            // Create organization first
-            var uniqueId = Guid.NewGuid().ToString("N")[..8];
-            var createOrgRequest = new
+            // Act: Create subscription plan
+            var createRequest = new
             {
-                Name = $"Test Organization {uniqueId}",
-                Slug = $"test-organization-{uniqueId}",
-                ContactEmail = "test@testorg.com",
-                ContactPhone = "+5511999999999",
-                WebsiteUrl = "https://testorg.com",
-                SubscriptionPlanId = subscriptionPlan.Id.ToString()
+                Name = "Test Premium Plan",
+                Description = "A premium test subscription plan",
+                MonthlyPrice = 49.99m,
+                YearlyPrice = 499.99m,
+                MaxLocations = 5,
+                MaxStaffPerLocation = 25,
+                IncludesAnalytics = true,
+                IncludesAdvancedReporting = true,
+                IncludesCustomBranding = true,
+                IncludesAdvertising = false,
+                IncludesMultipleLocations = true,
+                MaxQueueEntriesPerDay = 1000,
+                IsFeatured = true,
+                IsDefault = false
             };
 
-            var createResponse = await _client.PostAsJsonAsync("/api/organizations", createOrgRequest);
-            Console.WriteLine($"Debug: Create org response status: {createResponse.StatusCode}");
-            var createResponseContent = await createResponse.Content.ReadAsStringAsync();
-            if (createResponse.StatusCode != HttpStatusCode.Created && createResponse.StatusCode != HttpStatusCode.OK)
-            {
-                Assert.Fail($"Failed to create organization. Status: {createResponse.StatusCode}, Response: {createResponseContent}");
-            }
-            
-            string organizationId;
-            if (!string.IsNullOrWhiteSpace(createResponseContent))
-            {
-                var createResult = JsonSerializer.Deserialize<JsonElement>(createResponseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                organizationId = createResult.GetProperty("organizationId").GetString();
-            }
-            else
-            {
-                // If empty response, generate a test ID
-                organizationId = Guid.NewGuid().ToString();
-            }
-            Console.WriteLine($"Debug: Created organization ID: {organizationId}");
-
-            // Act: Get live activity
-            var response = await _client.GetAsync($"/api/organizations/{organizationId}/live-activity");
+            var response = await _client.PostAsJsonAsync("/api/subscriptionplans", createRequest);
 
             // Debug: Check response content
             var responseContent = await response.Content.ReadAsStringAsync();
-            if (response.StatusCode != HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.Created && response.StatusCode != HttpStatusCode.OK)
             {
-                Assert.Fail($"Expected OK but got {response.StatusCode}. Response: {responseContent}");
+                Assert.Fail($"Expected Created/OK but got {response.StatusCode}. Response: {responseContent}");
             }
 
             // Debug: Log the actual response before any assertions
-            Console.WriteLine($"GetLiveActivity Status: {response.StatusCode}");
-            Console.WriteLine($"GetLiveActivity Response: {responseContent}");
+            Console.WriteLine($"CreateSubscriptionPlan Status: {response.StatusCode}");
+            Console.WriteLine($"CreateSubscriptionPlan Response: {responseContent}");
             
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.IsTrue(response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.OK);
             
             var result = await response.Content.ReadFromJsonAsync<JsonElement>();
             Assert.IsTrue(result.GetProperty("success").GetBoolean());
-            Assert.IsTrue(result.TryGetProperty("liveActivity", out var liveActivity));
-            Assert.AreEqual(organizationId, liveActivity.GetProperty("organizationId").GetString());
+            Assert.IsTrue(result.TryGetProperty("subscriptionPlanId", out var planId));
+            Assert.AreEqual("Test Premium Plan", result.GetProperty("name").GetString());
         }
 
         [TestMethod]
-        public async Task GetLiveActivity_NonAdminUser_ReturnsForbidden()
+        public async Task CreateSubscriptionPlan_NonAdminUser_ReturnsForbidden()
         {
             var client = _factory.CreateClient();
-            var clientToken = await CreateAndAuthenticateUserAsync("Client");
+            var barberToken = await CreateAndAuthenticateUserAsync("Barber");
 
-            var organizationId = Guid.NewGuid().ToString();
+            var createRequest = new
+            {
+                Name = "Test Plan",
+                MonthlyPrice = 29.99m,
+                YearlyPrice = 299.99m,
+                MaxLocations = 1,
+                MaxStaffPerLocation = 5,
+                MaxQueueEntriesPerDay = 100
+            };
 
             // Act
-            client.DefaultRequestHeaders.Authorization = new("Bearer", clientToken);
-            var response = await client.GetAsync($"/api/organizations/{organizationId}/live-activity");
+            client.DefaultRequestHeaders.Authorization = new("Bearer", barberToken);
+            var response = await client.PostAsJsonAsync("/api/subscriptionplans", createRequest);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task GetLiveActivity_InvalidOrganizationId_ReturnsBadRequest()
+        public async Task UpdateSubscriptionPlan_ValidRequest_ReturnsSuccess()
         {
-            var client = _factory.CreateClient();
-            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
-
-            // Act
-            client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
-            var response = await client.GetAsync("/api/organizations/invalid-guid/live-activity");
-
-            // Debug: Check response content
-            var responseContent = await response.Content.ReadAsStringAsync();
-            if (response.StatusCode != HttpStatusCode.BadRequest)
-            {
-                Assert.Fail($"Expected BadRequest but got {response.StatusCode}. Response: {responseContent}");
-            }
-
-            // Assert
-            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-        }
-
-        // UC-BRANDING: Admin/Owner customize branding
-        [TestMethod]
-        public async Task UpdateBranding_ValidRequest_ReturnsSuccess()
-        {
-            Console.WriteLine("Debug: Starting UpdateBranding test");
+            Console.WriteLine("Debug: Starting UpdateSubscriptionPlan test");
             var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
             Console.WriteLine($"Debug: Got admin token: {adminToken?.Substring(0, 20)}...");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create a subscription plan first
-            using var subscriptionScope = _factory.Services.CreateScope();
-            var subscriptionPlanRepository = subscriptionScope.ServiceProvider.GetRequiredService<ISubscriptionPlanRepository>();
+            using var scope = _factory.Services.CreateScope();
+            var subscriptionPlanRepository = scope.ServiceProvider.GetRequiredService<ISubscriptionPlanRepository>();
             var subscriptionPlan = new Domain.Subscriptions.SubscriptionPlan(
-                "Test Plan", "Test subscription plan", 29.99m, 299.99m, 5, 20, true, true, true, true, true, 1000, false, "test");
+                "Original Plan", "Original description", 29.99m, 299.99m, 5, 20, true, true, true, true, true, 500, false, "test");
             await subscriptionPlanRepository.AddAsync(subscriptionPlan, CancellationToken.None);
 
-            // Create organization first
-            var uniqueId = Guid.NewGuid().ToString("N")[..8];
-            var createOrgRequest = new
+            // Act: Update subscription plan
+            var updateRequest = new
             {
-                Name = $"Test Branding Organization {uniqueId}",
-                Slug = $"test-organization-branding-{uniqueId}",
-                ContactEmail = "test@testorg.com",
-                ContactPhone = "+5511999999999",
-                WebsiteUrl = "https://testorg.com",
-                SubscriptionPlanId = subscriptionPlan.Id.ToString()
+                SubscriptionPlanId = subscriptionPlan.Id.ToString(),
+                Name = "Updated Premium Plan",
+                Description = "Updated premium subscription plan",
+                MonthlyPrice = 59.99m,
+                YearlyPrice = 599.99m,
+                MaxLocations = 10,
+                MaxStaffPerLocation = 30,
+                IncludesAnalytics = true,
+                IncludesAdvancedReporting = true,
+                IncludesCustomBranding = true,
+                IncludesAdvertising = true,
+                IncludesMultipleLocations = true,
+                MaxQueueEntriesPerDay = 1500,
+                IsFeatured = true,
+                IsDefault = false
             };
 
-            var createResponse = await _client.PostAsJsonAsync("/api/organizations", createOrgRequest);
-            var createResponseContent = await createResponse.Content.ReadAsStringAsync();
-            if (createResponse.StatusCode != HttpStatusCode.Created && createResponse.StatusCode != HttpStatusCode.OK)
-            {
-                Assert.Fail($"Failed to create organization. Status: {createResponse.StatusCode}, Response: {createResponseContent}");
-            }
-            
-            string organizationId;
-            if (!string.IsNullOrWhiteSpace(createResponseContent))
-            {
-                var createResult = JsonSerializer.Deserialize<JsonElement>(createResponseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                organizationId = createResult.GetProperty("organizationId").GetString();
-            }
-            else
-            {
-                // If empty response, generate a test ID
-                organizationId = Guid.NewGuid().ToString();
-            }
-
-            // Act: Update branding
-            var brandingRequest = new
-            {
-                OrganizationId = organizationId,
-                PrimaryColor = "#FF0000",
-                SecondaryColor = "#00FF00",
-                LogoUrl = "https://example.com/logo.png",
-                FaviconUrl = "https://example.com/favicon.ico",
-                TagLine = "Test tagline"
-            };
-
-            var response = await _client.PutAsJsonAsync($"/api/organizations/{organizationId}/branding", brandingRequest);
+            var response = await _client.PutAsJsonAsync($"/api/subscriptionplans/{subscriptionPlan.Id}", updateRequest);
 
             // Debug: Check response content
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -272,13 +217,12 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             }
 
             // Debug: Log the actual response before any assertions
-            Console.WriteLine($"UpdateBranding Status: {response.StatusCode}");
-            Console.WriteLine($"UpdateBranding Response: {responseContent}");
+            Console.WriteLine($"UpdateSubscriptionPlan Status: {response.StatusCode}");
+            Console.WriteLine($"UpdateSubscriptionPlan Response: {responseContent}");
             
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             
-            // Handle empty response content (some endpoints return 204 No Content or empty body)
             if (!string.IsNullOrWhiteSpace(responseContent))
             {
                 var result = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -287,24 +231,44 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task UpdateBranding_NonAdminUser_ReturnsForbidden()
+        public async Task GetSubscriptionPlans_ReturnsActiveList()
         {
-            var client = _factory.CreateClient();
-            var clientToken = await CreateAndAuthenticateUserAsync("Client");
+            Console.WriteLine("Debug: Starting GetSubscriptionPlans test");
+            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
+            Console.WriteLine($"Debug: Got admin token: {adminToken?.Substring(0, 20)}...");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
-            var organizationId = Guid.NewGuid().ToString();
-            var brandingRequest = new
+            // Create some subscription plans first
+            using var scope = _factory.Services.CreateScope();
+            var subscriptionPlanRepository = scope.ServiceProvider.GetRequiredService<ISubscriptionPlanRepository>();
+            var plan1 = new Domain.Subscriptions.SubscriptionPlan(
+                "Basic Plan", "Basic subscription", 19.99m, 199.99m, 1, 10, false, false, false, false, false, 200, false, "test");
+            var plan2 = new Domain.Subscriptions.SubscriptionPlan(
+                "Premium Plan", "Premium subscription", 49.99m, 499.99m, 5, 25, true, true, true, false, true, 1000, true, "test");
+            
+            await subscriptionPlanRepository.AddAsync(plan1, CancellationToken.None);
+            await subscriptionPlanRepository.AddAsync(plan2, CancellationToken.None);
+
+            // Act: Get subscription plans
+            var response = await _client.GetAsync("/api/subscriptionplans");
+
+            // Debug: Check response content
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                PrimaryColor = "#FF0000",
-                SecondaryColor = "#00FF00"
-            };
+                Assert.Fail($"Expected OK but got {response.StatusCode}. Response: {responseContent}");
+            }
 
-            // Act
-            client.DefaultRequestHeaders.Authorization = new("Bearer", clientToken);
-            var response = await client.PutAsJsonAsync($"/api/organizations/{organizationId}/branding", brandingRequest);
-
+            // Debug: Log the actual response before any assertions
+            Console.WriteLine($"GetSubscriptionPlans Status: {response.StatusCode}");
+            Console.WriteLine($"GetSubscriptionPlans Response: {responseContent}");
+            
             // Assert
-            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            
+            var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.IsTrue(result.ValueKind == JsonValueKind.Array);
+            Assert.IsTrue(result.GetArrayLength() >= 2);
         }
 
         private async Task<string> CreateAndAuthenticateUserAsync(string role)
@@ -356,4 +320,4 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             return loginResult.Token;
         }
     }
-}
+} 

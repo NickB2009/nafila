@@ -125,5 +125,23 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             var queues = await GetAllAsync(cancellationToken);
             return queues.Where(q => q.LocationId == locationId).ToList();
         }
+
+        public async Task<IReadOnlyList<Queue>> GetQueuesByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+        {
+            var queues = await GetAllAsync(cancellationToken);
+            return queues.Where(q =>
+                q.QueueDate.Date >= startDate.Date &&
+                q.QueueDate.Date <= endDate.Date).ToList();
+        }
+
+        public async Task<IReadOnlyList<Queue>> GetQueuesByOrganizationIdAsync(Guid organizationId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+        {
+            // For the bogus repository, we can't directly filter by organization ID since queues only have locationId
+            // This would normally be done via a join in a real database implementation
+            var queues = await GetAllAsync(cancellationToken);
+            return queues.Where(q =>
+                q.QueueDate.Date >= startDate.Date &&
+                q.QueueDate.Date <= endDate.Date).ToList();
+        }
     }
 }
