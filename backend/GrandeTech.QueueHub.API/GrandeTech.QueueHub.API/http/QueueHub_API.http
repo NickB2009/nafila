@@ -12,7 +12,7 @@
 # ===============================
 
 # --- TOKEN VARIABLES (update after login) ---
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYzBmNTUyNi04ZThjLTQ4YWEtYTliMC1iYzhmODg5MThmYWQiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbl90ZXN0IiwiZW1haWwiOiJhZG1pbkB0ZXN0LmNvbSIsInJvbGUiOiJBZG1pbiIsInBlcm1pc3Npb25zIjpbIm1hbmFnZTpsb2NhdGlvbnMiLCJtYW5hZ2U6c3RhZmYiLCJtYW5hZ2U6c2VydmljZXMiLCJ2aWV3Om1ldHJpY3MiLCJtYW5hZ2U6YnJhbmRpbmciXSwib3JnX2lkIjoiOWQ2MTJkZDEtMTBkOS00NzUxLTlhOTgtM2MwYjUxNGYwN2M0IiwidGVuYW50X3NsdWciOiJ0ZXN0LXRlbmFudCIsImV4cCI6MTc1MTgyODQyMCwiaXNzIjoiR3JhbmRlVGVjaC5RdWV1ZUh1Yi5BUEkiLCJhdWQiOiJHcmFuZGVUZWNoLlF1ZXVlSHViLkFQSSJ9.5j4NO8Ysn1iJwjpLZOo6U1BVKTyODx2Bsf_IQJibeDA
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWEyMzc2ZS0xMGRhLTQ0NDQtOGJhNy04M2VmY2Y3MTQxZDciLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbl90ZXN0IiwiZW1haWwiOiJhZG1pbkB0ZXN0LmNvbSIsInJvbGUiOiJBZG1pbiIsInBlcm1pc3Npb25zIjpbIm1hbmFnZTpsb2NhdGlvbnMiLCJtYW5hZ2U6c3RhZmYiLCJtYW5hZ2U6c2VydmljZXMiLCJ2aWV3Om1ldHJpY3MiLCJtYW5hZ2U6YnJhbmRpbmciXSwib3JnX2lkIjoiNWY2YzBhNzgtYmEzZS00ZTRlLThjOWUtMmUwZDYxYWIyMTBmIiwidGVuYW50X3NsdWciOiJ0ZXN0LXRlbmFudCIsImV4cCI6MTc1MTg1Mjk3MywiaXNzIjoiR3JhbmRlVGVjaC5RdWV1ZUh1Yi5BUEkiLCJhdWQiOiJHcmFuZGVUZWNoLlF1ZXVlSHViLkFQSSJ9.e2Bb4yfCBVrLpNdZay8twzq9JpNXgghP58G0TU0Ux14
 @barberToken = YOUR_BARBER_TOKEN_HERE
 @clientToken = YOUR_CLIENT_TOKEN_HERE
 @ownerToken = YOUR_OWNER_TOKEN_HERE
@@ -24,7 +24,7 @@
 @staffMemberId = 
 @serviceTypeId = 
 @queueEntryId = 
-@subscriptionPlanId = 
+@subscriptionPlanId = 8b87927c-ba3d-414b-ae71-37a646db25b4
 
 # --- ADMIN LOGIN (get token) ---
 POST {{baseUrl}}/api/auth/login
@@ -140,7 +140,7 @@ Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "Name": "Premium Business Plan",
+  "Name": "Premium Business Plan B",
   "Description": "Premium subscription plan for business customers",
   "MonthlyPrice": 49.99,
   "YearlyPrice": 499.99,
