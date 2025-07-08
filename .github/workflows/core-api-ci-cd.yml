@@ -77,7 +77,7 @@ jobs:
             --image $IMAGE_NAME:${COMMIT_SHA} \
             --image $IMAGE_NAME:latest \
             --file $DOCKERFILE_PATH \
-            $PROJECT_PATH
+            .
 
 # ───────────────────────── DEPLOY TO AZURE ─────────────────────────
   deploy-to-azure:
