@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>c8f2c9be-60ed-4e59-be26-3186cd0ecc17</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <RootNamespace>Grande.Fila.API</RootNamespace>
+    <AssemblyName>GrandeTech.QueueHub.API</AssemblyName>
   </PropertyGroup>  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Bogus" Version="35.6.3" />
