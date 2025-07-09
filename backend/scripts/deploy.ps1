@@ -4,6 +4,12 @@
 # Stop on first error
 $ErrorActionPreference = "Stop"
 
+# Ensure we're running from the repository root
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$repoRoot = Split-Path -Parent (Split-Path -Parent $scriptPath)
+Set-Location $repoRoot
+Write-Host "Working from repository root: $repoRoot" -ForegroundColor Yellow
+
 # Configuration
 $projectName = "queuehub"
 $environment = "p"
@@ -12,7 +18,7 @@ $resourceGroup = "rg-$environment-$projectName-core-001"
 $acrName = "acrqueuehubapi001"  # Using the exact name from README.md
 $imageName = "queuehub-api"
 $imageTag = "latest"
-$projectPath = "GrandeTech.QueueHub.API"
+$projectPath = "backend/GrandeTech.QueueHub"
 $dockerfilePath = "$projectPath/GrandeTech.QueueHub.API/Dockerfile"
 $fullImageName = "${acrName}.azurecr.io/${imageName}:${imageTag}"
 
@@ -33,16 +39,18 @@ try {
 
 # Build the Docker image
 Write-Host "Building Docker image..." -ForegroundColor Yellow
+Write-Host "Dockerfile path: $dockerfilePath" -ForegroundColor Yellow
+Write-Host "Build context: $(Get-Location)" -ForegroundColor Yellow
 try {
-    # Build from the solution root with the correct context
-    docker build -t $fullImageName -f "$projectPath/GrandeTech.QueueHub.API/Dockerfile" .
+    # Build from the repository root with the correct context
+    docker build -t $fullImageName -f $dockerfilePath .
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to build Docker image"
     }
 } catch {
     Write-Host "Error: Failed to build Docker image. Please check if Docker is running and the Dockerfile exists." -ForegroundColor Red
     Write-Host "Current directory: $(Get-Location)" -ForegroundColor Yellow
-    Write-Host "Dockerfile path: $projectPath/GrandeTech.QueueHub.API/Dockerfile" -ForegroundColor Yellow
+    Write-Host "Dockerfile path: $dockerfilePath" -ForegroundColor Yellow
     exit 1
 }
 
