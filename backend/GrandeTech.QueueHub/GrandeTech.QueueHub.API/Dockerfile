@@ -16,6 +16,8 @@ COPY ["backend/GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.A
 RUN dotnet restore "./GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj"
 COPY backend/GrandeTech.QueueHub/ .
 WORKDIR "/src/GrandeTech.QueueHub/GrandeTech.QueueHub.API"
+RUN ls -la
+RUN cat Program.cs | head -10
 RUN dotnet build "./GrandeTech.QueueHub.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
