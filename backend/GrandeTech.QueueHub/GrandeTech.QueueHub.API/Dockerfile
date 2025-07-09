@@ -12,9 +12,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["backend/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj", "GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/"]
+COPY ["backend/GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj", "GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/"]
 RUN dotnet restore "./GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj"
-COPY backend/GrandeTech.QueueHub.API/ .
+COPY backend/GrandeTech.QueueHub/ .
 WORKDIR "/src/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API"
 RUN dotnet build "./GrandeTech.QueueHub.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
