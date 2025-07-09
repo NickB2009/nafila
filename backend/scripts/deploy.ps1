@@ -94,4 +94,17 @@ try {
 }
 
 Write-Host "Deployment completed successfully!" -ForegroundColor Green
-Write-Host "Application URL: https://$appServiceName.azurewebsites.net" 
+
+# Get the actual application URL from Azure
+try {
+    $appUrl = az webapp show --name $appServiceName --resource-group $resourceGroup --query "defaultHostName" --output tsv
+    if ($appUrl) {
+        Write-Host "Application URL: https://$appUrl" -ForegroundColor Cyan
+        Write-Host "Swagger Documentation: https://$appUrl/swagger" -ForegroundColor Cyan
+        Write-Host "Health Check: https://$appUrl/health" -ForegroundColor Cyan
+    } else {
+        Write-Host "Application URL: https://$appServiceName.azurewebsites.net (Note: Actual URL may include unique Azure identifiers)" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "Application URL: https://$appServiceName.azurewebsites.net (Note: Actual URL may include unique Azure identifiers)" -ForegroundColor Yellow
+} 
