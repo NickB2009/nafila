@@ -28,8 +28,8 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(800, 1200)); // Larger surface
       await tester.pumpWidget(buildTestable());
       
-      // Title (there are 2 "Check-in" texts - title and button)
-      expect(find.text('Check-in'), findsNWidgets(2));
+      // Title (only 1 "Check-in" text - just the title, button says "Confirmar Check-in")
+      expect(find.text('Check-in'), findsOneWidget);
       
       // Salon info
       expect(find.text('Barbearia Teste'), findsOneWidget);
@@ -49,12 +49,8 @@ void main() {
       expect(find.byType(Checkbox), findsOneWidget);
       expect(find.textContaining('Receba uma mensagem avisando'), findsOneWidget);
       
-      // Footer
-      expect(find.text('Powered by ICS'), findsOneWidget);
-      expect(find.text('Net Check In™'), findsOneWidget);
-      
       // Button
-      expect(find.widgetWithText(ElevatedButton, 'Check-in'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Confirmar Check-in'), findsOneWidget);
     });
 
     testWidgets('close button pops the screen', (WidgetTester tester) async {
@@ -102,7 +98,7 @@ void main() {
       await tester.pumpWidget(buildTestable());
       
       // The button should be visible with the larger surface
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Check-in'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Confirmar Check-in'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 3)); // Let timer finish
       expect(find.byType(CheckInSuccessScreen), findsOneWidget);

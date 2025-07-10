@@ -5,6 +5,8 @@ import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'check_in_screen.dart';
 
 class SalonDetailsScreen extends StatefulWidget {
@@ -166,8 +168,9 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                     color: theme.colorScheme.primary,
                   ),
                 ),
-                onPressed: () {
-                  // TODO: Implement share functionality
+                onPressed: () async {
+                  final shareText = '${widget.salon.name}\n${widget.salon.address}';
+                  await Share.share(shareText);
                 },
               ),
               const SizedBox(width: 8),
@@ -604,6 +607,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 () {
                   // TODO: Implement phone call
                 },
+                copiable: true,
               ),
               const SizedBox(height: 12),
               _buildContactItem(
@@ -613,6 +617,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 () {
                   // TODO: Implement email
                 },
+                copiable: true,
               ),
               if (widget.contact.website != null) ...[
                 const SizedBox(height: 12),
@@ -632,8 +637,18 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   children: [
                     if (widget.contact.instagram != null)
                       IconButton(
-                        onPressed: () {
-                          // TODO: Implement Instagram
+                        onPressed: () async {
+                          final handle = widget.contact.instagram!.replaceAll('@', '');
+                          final url = Uri.parse('https://instagram.com/$handle');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Não foi possível abrir o Instagram')),
+                              );
+                            }
+                          }
                         },
                         icon: const Icon(Icons.camera_alt),
                         style: IconButton.styleFrom(
@@ -644,8 +659,18 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                     if (widget.contact.facebook != null) ...[
                       const SizedBox(width: 16),
                       IconButton(
-                        onPressed: () {
-                          // TODO: Implement Facebook
+                        onPressed: () async {
+                          final page = widget.contact.facebook!;
+                          final url = Uri.parse('https://facebook.com/$page');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Não foi possível abrir o Facebook')),
+                              );
+                            }
+                          }
                         },
                         icon: const Icon(Icons.facebook),
                         style: IconButton.styleFrom(
@@ -685,7 +710,17 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    // TODO: Navigate to full reviews
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => AllReviewsScreen(reviews: widget.reviews),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.arrow_forward),
                   label: const Text('Ver todas'),
@@ -887,48 +922,68 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildContactItem(BuildContext context, IconData icon, String text, VoidCallback onTap) {
+  Widget _buildContactItem(BuildContext context, IconData icon, String text, VoidCallback onTap, {bool copiable = false}) {
     final theme = Theme.of(context);
-    
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.1),
+      onLongPress: copiable
+          ? () async {
+              await Clipboard.setData(ClipboardData(text: text));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Copiado!'), duration: Duration(seconds: 1)),
+                );
+              }
+            }
+          : null,
+      child: GestureDetector(
+        onTap: copiable
+            ? () async {
+                await Clipboard.setData(ClipboardData(text: text));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Copiado!'), duration: Duration(seconds: 1)),
+                  );
+                }
+              }
+            : null,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(0.1),
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
               ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: theme.colorScheme.primary,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.bodyLarge,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                text,
-                style: theme.textTheme.bodyLarge,
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -990,4 +1045,123 @@ class SalonDecorationPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+} 
+
+class AllReviewsScreen extends StatelessWidget {
+  final List<SalonReview> reviews;
+  const AllReviewsScreen({super.key, required this.reviews});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Todas as Avaliações'),
+        backgroundColor: theme.colorScheme.surface,
+        iconTheme: IconThemeData(color: theme.colorScheme.primary),
+      ),
+      body: reviews.isEmpty
+          ? Center(
+              child: Text(
+                'Nenhuma avaliação ainda.',
+                style: theme.textTheme.bodyLarge,
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: reviews.length,
+              itemBuilder: (context, index) {
+                final review = reviews[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: theme.colorScheme.outline.withOpacity(0.1),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                              child: Text(
+                                review.userName[0].toUpperCase(),
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    review.userName,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    review.date,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.star,
+                                    size: 16,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    review.rating.toString(),
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (review.comment != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            review.comment!,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
 } 

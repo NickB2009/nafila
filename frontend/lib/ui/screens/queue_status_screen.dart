@@ -412,7 +412,9 @@ class QueueStatusScreen extends StatelessWidget {
           Divider(color: theme.dividerColor),
           _buildSalonAction(theme, Icons.phone, phone, onTap: () {}),
           Divider(color: theme.dividerColor),
-          _buildSalonAction(theme, Icons.delete_outline, 'Cancelar check-in', color: theme.colorScheme.error, onTap: () {}),
+          _buildSalonAction(theme, Icons.delete_outline, 'Cancelar check-in', color: theme.colorScheme.error, onTap: () {
+            Navigator.of(context).pop();
+          }),
         ],
       ),
     );
