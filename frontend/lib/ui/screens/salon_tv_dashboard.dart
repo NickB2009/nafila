@@ -83,58 +83,57 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.all(constraints.maxWidth * 0.03),
-                child: isSmallScreen
-                    ? Column(
-                        children: [
-                          // Queue Information
-                          _buildSalonHeader(theme, constraints),
-                          SizedBox(height: constraints.maxHeight * 0.02),
-                          _buildWaitTimeCard(theme, constraints),
-                          SizedBox(height: constraints.maxHeight * 0.02),
-                          SizedBox(
-                            height: constraints.maxHeight * 0.4,
-                            child: _buildCustomerQueue(theme, constraints),
-                          ),
-                          SizedBox(height: constraints.maxHeight * 0.02),
-                          // Advertisement
-                          SizedBox(
-                            height: constraints.maxHeight * 0.4,
-                            child: _buildAdvertisementSection(theme, constraints),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Left Side - Queue Information
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildSalonHeader(theme, constraints),
-                                SizedBox(height: constraints.maxHeight * 0.02),
-                                _buildWaitTimeCard(theme, constraints),
-                                SizedBox(height: constraints.maxHeight * 0.02),
-                                Expanded(
-                                  child: _buildCustomerQueue(theme, constraints),
-                                ),
-                              ],
+            if (isSmallScreen) {
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(constraints.maxWidth * 0.03),
+                  child: Column(
+                    children: [
+                      _buildSalonHeader(theme, constraints),
+                      SizedBox(height: constraints.maxHeight * 0.02),
+                      _buildWaitTimeCard(theme, constraints),
+                      SizedBox(height: constraints.maxHeight * 0.02),
+                      _buildCustomerQueue(theme, constraints),
+                      SizedBox(height: constraints.maxHeight * 0.02),
+                      _buildAdvertisementSection(theme, constraints, forceNoExpanded: true),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              return SizedBox.expand(
+                child: Padding(
+                  padding: EdgeInsets.all(constraints.maxWidth * 0.03),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left Side - Queue Information
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSalonHeader(theme, constraints),
+                            SizedBox(height: constraints.maxHeight * 0.02),
+                            _buildWaitTimeCard(theme, constraints),
+                            SizedBox(height: constraints.maxHeight * 0.02),
+                            Expanded(
+                              child: _buildCustomerQueue(theme, constraints),
                             ),
-                          ),
-                          SizedBox(width: constraints.maxWidth * 0.03),
-                          // Right Side - Advertisement
-                          Expanded(
-                            flex: 1,
-                            child: _buildAdvertisementSection(theme, constraints),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-              ),
-            );
+                      SizedBox(width: constraints.maxWidth * 0.03),
+                      // Right Side - Advertisement
+                      Expanded(
+                        flex: 1,
+                        child: _buildAdvertisementSection(theme, constraints, forceNoExpanded: false),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
           },
         ),
       ),
@@ -339,7 +338,6 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             ),
           ),
           SizedBox(height: constraints.maxHeight * 0.02),
-          
           // Queue header
           Padding(
             padding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.02),
@@ -382,21 +380,26 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               ],
             ),
           ),
-          
           SizedBox(height: constraints.maxHeight * 0.01),
           Divider(color: theme.dividerColor, thickness: 2),
           SizedBox(height: constraints.maxHeight * 0.01),
-          
-          // Queue list
-          Expanded(
-            child: ListView.builder(
-              itemCount: customerQueue.length,
-              itemBuilder: (context, index) {
-                final customer = customerQueue[index];
-                return _buildCustomerRow(theme, customer, index, constraints);
-              },
+          // Queue list - let it size naturally for small screens
+          if (isSmallScreen)
+            ...customerQueue.asMap().entries.map((entry) {
+              final index = entry.key;
+              final customer = entry.value;
+              return _buildCustomerRow(theme, customer, index, constraints);
+            }).toList()
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: customerQueue.length,
+                itemBuilder: (context, index) {
+                  final customer = customerQueue[index];
+                  return _buildCustomerRow(theme, customer, index, constraints);
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -463,13 +466,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     );
   }
 
-  Widget _buildAdvertisementSection(ThemeData theme, BoxConstraints constraints) {
+  Widget _buildAdvertisementSection(ThemeData theme, BoxConstraints constraints, {bool forceNoExpanded = false}) {
     final currentAd = ads[_currentAdIndex];
     final isSmallScreen = constraints.maxWidth < 600;
     final iconSize = isSmallScreen ? 80.0 : 120.0;
     final titleFontSize = isSmallScreen ? 24.0 : 28.0;
     final subtitleFontSize = isSmallScreen ? 14.0 : 18.0;
-    
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
       padding: EdgeInsets.all(constraints.maxWidth * 0.03),
@@ -488,52 +490,17 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Ad content
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Mock image placeholder
-                Container(
-                  width: iconSize,
-                  height: iconSize,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(iconSize / 2),
-                  ),
-                  child: Icon(
-                    _getAdIcon(_currentAdIndex),
-                    size: iconSize / 2,
-                    color: Colors.white,
-                  ),
+          forceNoExpanded
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _adContentChildren(theme, iconSize, titleFontSize, subtitleFontSize, constraints),
+              )
+            : Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _adContentChildren(theme, iconSize, titleFontSize, subtitleFontSize, constraints),
                 ),
-                
-                SizedBox(height: constraints.maxHeight * 0.02),
-                
-                Text(
-                  currentAd["title"],
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: titleFontSize,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                
-                SizedBox(height: constraints.maxHeight * 0.015),
-                
-                Text(
-                  currentAd["subtitle"],
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: subtitleFontSize,
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          
+              ),
           // Brand logo/name
           Container(
             padding: EdgeInsets.symmetric(
@@ -554,9 +521,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               ),
             ),
           ),
-          
           SizedBox(height: constraints.maxHeight * 0.015),
-          
           // Ad rotation indicator
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -578,6 +543,44 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
         ],
       ),
     );
+  }
+
+  List<Widget> _adContentChildren(ThemeData theme, double iconSize, double titleFontSize, double subtitleFontSize, BoxConstraints constraints) {
+    return [
+      Container(
+        width: iconSize,
+        height: iconSize,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(iconSize / 2),
+        ),
+        child: Icon(
+          _getAdIcon(_currentAdIndex),
+          size: iconSize / 2,
+          color: Colors.white,
+        ),
+      ),
+      SizedBox(height: constraints.maxHeight * 0.02),
+      Text(
+        ads[_currentAdIndex]["title"],
+        style: theme.textTheme.headlineMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: titleFontSize,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      SizedBox(height: constraints.maxHeight * 0.015),
+      Text(
+        ads[_currentAdIndex]["subtitle"],
+        style: theme.textTheme.titleLarge?.copyWith(
+          color: Colors.white.withOpacity(0.9),
+          fontSize: subtitleFontSize,
+          height: 1.4,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    ];
   }
 
   IconData _getAdIcon(int index) {

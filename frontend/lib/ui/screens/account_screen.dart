@@ -245,40 +245,45 @@ class _AccountScreenState extends State<AccountScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Text(
-                      _formatDate(_reminderDate),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: titleFontSize,
+                    Flexible(
+                      child: Text(
+                        _formatDate(_reminderDate),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: titleFontSize,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: _reminderDate,
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                          locale: const Locale('pt', 'BR'),
-                        );
-                        if (picked != null && picked != _reminderDate) {
-                          setState(() {
-                            _reminderDate = picked;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Lembrete atualizado!'),
-                              duration: Duration(seconds: 1),
-                            ),
+                    Flexible(
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _reminderDate,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            locale: const Locale('pt', 'BR'),
                           );
-                        }
-                      },
-                      icon: Icon(Icons.edit_calendar, size: isSmallScreen ? 16 : 18),
-                      label: const Text('Alterar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: theme.colorScheme.primary,
-                        textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: isSmallScreen ? 12 : 14),
+                          if (picked != null && picked != _reminderDate) {
+                            setState(() {
+                              _reminderDate = picked;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Lembrete atualizado!'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        },
+                        icon: Icon(Icons.edit_calendar, size: isSmallScreen ? 16 : 18),
+                        label: const Text('Alterar'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.primary,
+                          textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: isSmallScreen ? 12 : 14),
+                        ),
                       ),
                     ),
                   ],
