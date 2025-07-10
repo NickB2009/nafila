@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/brazilian_names_generator.dart';
 import '../theme/app_theme.dart';
 import 'dart:async';
 
@@ -21,7 +22,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
   // Mock customer queue
   final List<Map<String, dynamic>> customerQueue = [
     {"name": "David M.", "position": 1, "inSalon": false},
-    {"name": "Rommel B.", "position": 2, "inSalon": false},
+          {"name": BrazilianNamesGenerator.generateNameWithInitial(), "position": 2, "inSalon": false},
     {"name": "Wendy S.", "position": 3, "inSalon": true},
     {"name": "Tatiana T.", "position": 4, "inSalon": false},
     {"name": "Michael L.", "position": 5, "inSalon": false},

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import '../../lib/utils/brazilian_names_generator.dart';
 import 'package:eutonafila_frontend/ui/screens/account_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/personal_info_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/favoritos_screen.dart';
@@ -37,7 +38,7 @@ void main() {
       await tester.pumpWidget(wrapWithProviders(const AccountScreen()));
       expect(find.byType(AppBar), findsOneWidget);
       expect(find.text('Conta'), findsWidgets);
-      expect(find.text('Rommel B'), findsOneWidget);
+      expect(find.text(BrazilianNamesGenerator.getConsistentNameWithInitial(0)), findsOneWidget);
       expect(find.byIcon(Icons.person_outline), findsWidgets);
       expect(find.text('Informações Pessoais'), findsOneWidget);
       expect(find.text('Favoritos'), findsOneWidget);
@@ -61,7 +62,7 @@ void main() {
       await tester.pumpWidget(wrapWithProviders(const AccountScreen()));
       expect(find.byIcon(Icons.person_outline), findsWidgets);
       expect(find.text('Conta'), findsWidgets);
-      expect(find.text('Rommel B'), findsOneWidget);
+      expect(find.text(BrazilianNamesGenerator.getConsistentNameWithInitial(0)), findsOneWidget);
     });
 
     testWidgets('should have proper account info card structure', (WidgetTester tester) async {

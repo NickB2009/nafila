@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/brazilian_names_generator.dart';
 import '../theme/app_theme.dart';
 import 'notifications_screen.dart';
 import 'dart:io' show Platform;
@@ -13,7 +14,6 @@ class QueueStatusScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // Mock data
-    const String userName = "Rommel B";
     const String salonName = "Market at Mirada";
     const String salonAddress = "30921 Mirada Blvd, San Antonio, FL";
     const int waitTime = 34;
@@ -584,7 +584,7 @@ class WaitlistSheet extends StatelessWidget {
       {"name": "MP", "inSalon": true},
       {"name": "AP", "inSalon": true},
       {"name": "CM", "inSalon": false},
-      {"name": "Rommel B", "inSalon": false, "isUser": true},
+      {"name": BrazilianNamesGenerator.generateNameWithInitial(), "inSalon": false, "isUser": true},
     ];
     final int userPosition = waitlist.indexWhere((g) => g["isUser"] == true) + 1;
 

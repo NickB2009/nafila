@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/brazilian_names_generator.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -58,10 +59,10 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // Mock user data
-    const String name = 'Rommel B';
+    final String name = BrazilianNamesGenerator.generateNameWithInitial();
     const String phone = '(11) 91234-5678';
     const String city = 'São Paulo';
-    const String email = 'rommel@email.com';
+    final String email = BrazilianNamesGenerator.generateEmail();
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,

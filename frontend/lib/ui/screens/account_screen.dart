@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/brazilian_names_generator.dart';
 import 'personal_info_screen.dart';
 import 'favoritos_screen.dart';
 import 'comunicacoes_screen.dart';
@@ -155,7 +156,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Rommel B',
+                  BrazilianNamesGenerator.generateNameWithInitial(),
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: theme.colorScheme.onPrimary.withOpacity(0.9),
                     fontSize: subtitleFontSize,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/brazilian_names_generator.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
 import '../../models/salon_service.dart';
@@ -150,7 +151,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                 Text(
-                  "Olá, Rommel!",
+                  BrazilianNamesGenerator.generateGreeting(),
                   style: theme.textTheme.titleLarge?.copyWith(
                             color: theme.colorScheme.onPrimary.withOpacity(0.9),
                   ),
