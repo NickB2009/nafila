@@ -141,7 +141,9 @@ The project uses GitHub Actions for continuous integration and deployment with a
 3. **Deploy to Azure**: Updates App Service with new image
 4. **Health Check**: Verifies deployment success
 
-Refer to [CI_CD_QUICK_START.md](./CI_CD_QUICK_START.md) for detailed setup instructions.
+> **Deployment & CI/CD:**
+> For all up-to-date deployment and CI/CD instructions, see the consolidated guide at [.github/README.md](../.github/README.md).
+> For Azure credential management, see [Azure Credentials Management Guide](./markdown/AZURE_CREDENTIALS_MANAGEMENT.md).
 
 ## 🏗️ Project Structure
 
@@ -257,7 +259,7 @@ az webapp restart --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-c
 
 ### Automated Deployment
 
-The CI/CD pipeline automatically deploys on merge to `main` branch. See [CI_CD_QUICK_START.md](./CI_CD_QUICK_START.md) for setup instructions.
+The CI/CD pipeline automatically deploys on merge to `main` branch. See [.github/README.md](../../.github/README.md) for setup and troubleshooting instructions.
 
 ## 📈 Monitoring and Health Checks
 

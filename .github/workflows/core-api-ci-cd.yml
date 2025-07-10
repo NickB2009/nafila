@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'backend/GrandeTech.QueueHub.API/**'
+      - 'backend/GrandeTech.QueueHub/**'
       - '.github/workflows/core-api-ci-cd.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'backend/GrandeTech.QueueHub.API/**'
+      - 'backend/GrandeTech.QueueHub/**'
       - '.github/workflows/core-api-ci-cd.yml'
 
 env:
@@ -19,8 +19,8 @@ env:
   RESOURCE_GROUP: rg-p-queuehub-core-001
   ACR_NAME: acrqueuehubapi001
   IMAGE_NAME: queuehub-api
-  PROJECT_PATH: backend/GrandeTech.QueueHub.API
-  DOCKERFILE_PATH: backend/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/Dockerfile
+  PROJECT_PATH: backend/GrandeTech.QueueHub
+  DOCKERFILE_PATH: backend/GrandeTech.QueueHub/GrandeTech.QueueHub.API/Dockerfile
   AZURE_WEBAPP_URL: https://app-p-queuehub-api-001.azurewebsites.net
   HEALTH_ENDPOINT: /health
 
@@ -77,7 +77,7 @@ jobs:
             --image $IMAGE_NAME:${COMMIT_SHA} \
             --image $IMAGE_NAME:latest \
             --file $DOCKERFILE_PATH \
-            $PROJECT_PATH
+            .
 
 # ───────────────────────── DEPLOY TO AZURE ─────────────────────────
   deploy-to-azure:
