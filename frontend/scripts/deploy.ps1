@@ -29,10 +29,16 @@ try {
         exit 1
     }
     
-    $buildResult = flutter build web
+    # Check if WASM build is supported and preferred
+    Write-Info "Building Flutter web app with WASM support for Edge browser..."
+    $buildResult = flutter build web --wasm --release
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Flutter build failed!"
-        exit 1
+        Write-Warning "WASM build failed, falling back to standard build..."
+        $buildResult = flutter build web --release
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Flutter build failed!"
+            exit 1
+        }
     }
     Write-Success "Flutter build completed successfully!"
     
