@@ -451,7 +451,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task Login_AsAdmin_WithTwoFactor_ReturnsTwoFactorRequired()
+        public async Task Login_AsOwner_WithTwoFactor_ReturnsTwoFactorRequired()
         {
             // Arrange
             Assert.IsNotNull(_client);
@@ -460,12 +460,12 @@ namespace Grande.Fila.Tests.Integration.Controllers
             using var scope = _factory.Services.CreateScope();
             var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
-            // Create an admin user
-            var username = $"admin_{Guid.NewGuid():N}";
+            // Create an owner user
+            var username = $"owner_{Guid.NewGuid():N}";
             var email = $"{username}@test.com";
-            var password = "adminpass123";
+            var password = "ownerpass123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Admin);
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
             user.EnableTwoFactor();
             await userRepository.AddAsync(user, CancellationToken.None);
 
@@ -507,12 +507,12 @@ namespace Grande.Fila.Tests.Integration.Controllers
             using var scope = _factory.Services.CreateScope();
             var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
-            // Create an admin user
-            var username = $"admin_{Guid.NewGuid():N}";
+            // Create an owner user
+            var username = $"owner_{Guid.NewGuid():N}";
             var email = $"{username}@test.com";
-            var password = "adminpass123";
+            var password = "ownerpass123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Admin);
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
             user.EnableTwoFactor();
             await userRepository.AddAsync(user, CancellationToken.None);
 
@@ -565,13 +565,13 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsTrue(verifyResult.Success);
             Assert.IsNotNull(verifyResult.Token);
             Assert.AreEqual(username, verifyResult.Username);
-            Assert.AreEqual(UserRoles.Admin, verifyResult.Role);
+            Assert.AreEqual(UserRoles.Owner, verifyResult.Role);
             Assert.IsNotNull(verifyResult.Permissions);
             Assert.IsTrue(verifyResult.Permissions.Length > 0);
         }
 
         [TestMethod]
-        public async Task Login_AsLockedAdmin_ReturnsLockedError()
+        public async Task Login_AsLockedOwner_ReturnsLockedError()
         {
             // Arrange
             Assert.IsNotNull(_client);
@@ -580,12 +580,12 @@ namespace Grande.Fila.Tests.Integration.Controllers
             using var scope = _factory.Services.CreateScope();
             var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
-            // Create a locked admin user
-            var username = $"admin_{Guid.NewGuid():N}";
+            // Create a locked owner user
+            var username = $"owner_{Guid.NewGuid():N}";
             var email = $"{username}@test.com";
-            var password = "adminpass123";
+            var password = "ownerpass123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Admin);
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
             user.Lock();
             await userRepository.AddAsync(user, CancellationToken.None);
 
@@ -612,7 +612,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             Assert.IsNotNull(loginResult);
             Assert.IsFalse(loginResult.Success);
-            Assert.AreEqual("Admin account is locked. Please contact support.", loginResult.Error);
+            Assert.AreEqual("Account is locked. Please contact support.", loginResult.Error);
         }
     }
 }

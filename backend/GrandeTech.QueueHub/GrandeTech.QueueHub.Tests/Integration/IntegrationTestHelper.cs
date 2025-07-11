@@ -19,7 +19,20 @@ namespace Grande.Fila.API.Tests.Integration
             var uniqueId = Guid.NewGuid().ToString("N");
             
             // Map old test roles to new roles
-            var mappedRole = MapTestRoleToNewRole(role);
+            var mappedRole = role.ToLower() switch
+            {
+                "platformadmin" => UserRoles.PlatformAdmin,
+                "owner" => UserRoles.Owner,
+                "staff" => UserRoles.Staff,
+                "customer" => UserRoles.Customer,
+                "serviceaccount" => UserRoles.ServiceAccount,
+                // Legacy mappings for backward compatibility
+                "admin" => UserRoles.Owner,
+                "barber" => UserRoles.Staff,
+                "client" => UserRoles.Customer,
+                "user" => UserRoles.Customer, // Default user becomes Customer
+                _ => UserRoles.Customer // Default fallback
+            };
             
             var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);
             
@@ -52,20 +65,6 @@ namespace Grande.Fila.API.Tests.Integration
                 Console.WriteLine($"An exception occurred during login: {ex}");
                 throw;
             }
-        }
-
-        private static string MapTestRoleToNewRole(string testRole)
-        {
-            return testRole.ToLower() switch
-            {
-                "admin" => UserRoles.Admin,
-                "owner" => UserRoles.Owner, // Owner role mapped correctly
-                "barber" => UserRoles.Barber,
-                "client" => UserRoles.Client,
-                "user" => UserRoles.Client, // Default user becomes Client
-                "system" => UserRoles.ServiceAccount,
-                _ => UserRoles.Client // Default fallback
-            };
         }
     }
 } 

@@ -6,6 +6,7 @@ using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Application.Staff
 {
@@ -33,10 +34,10 @@ namespace Grande.Fila.API.Application.Staff
                 Status = "Pending"
             };
 
-            // Permissions check (to be replaced by a proper user context in the future)
-            if (userRole != "Admin" && userRole != "Owner")
+            // Permissions check
+            if (userRole != UserRoles.PlatformAdmin && userRole != UserRoles.Owner)
             {
-                result.Errors.Add("Forbidden: Only Admin/Owner can add barbers.");
+                result.Errors.Add("Forbidden: Only Admin/Owner can add staff members.");
                 return result;
             }
 

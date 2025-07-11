@@ -47,12 +47,12 @@ namespace Grande.Fila.API.Application.Auth
             }
 
             // Admin-specific validation
-            if (user.Role == UserRoles.PlatformAdmin || user.Role == UserRoles.Admin || user.Role == UserRoles.Owner)
+            if (user.Role == UserRoles.PlatformAdmin || user.Role == UserRoles.Owner)
             {
                 // Check if admin account is locked
                 if (user.IsLocked)
                 {
-                    result.Error = "Admin account is locked. Please contact support.";
+                    result.Error = "Account is locked. Please contact support.";
                     return result;
                 }
 
@@ -170,8 +170,8 @@ namespace Grande.Fila.API.Application.Auth
                 claims.Add(new Claim(TenantClaims.OrganizationId, organizationId));
                 claims.Add(new Claim(TenantClaims.TenantSlug, "test-tenant"));
 
-                // Add location context for barber role
-                if (mappedRole == UserRoles.Barber)
+                // Add location context for staff role
+                if (mappedRole == UserRoles.Staff)
                 {
                     var locationId = Guid.NewGuid().ToString();
                     claims.Add(new Claim(TenantClaims.LocationId, locationId));
@@ -193,14 +193,16 @@ namespace Grande.Fila.API.Application.Auth
             return oldRole.ToLower() switch
             {
                 "platformadmin" => UserRoles.PlatformAdmin,
-                "admin" => UserRoles.Admin,
-                "owner" => UserRoles.Owner, // Owner role mapped correctly
-                "barber" => UserRoles.Barber,
-                "client" => UserRoles.Client,
-                "user" => UserRoles.Client, // Default user becomes Client
+                "admin" => UserRoles.Owner, // Admin merged into Owner
+                "owner" => UserRoles.Owner,
+                "barber" => UserRoles.Staff, // Barber renamed to Staff
+                "staff" => UserRoles.Staff,
+                "client" => UserRoles.Customer, // Client renamed to Customer
+                "customer" => UserRoles.Customer,
+                "user" => UserRoles.Customer, // Default user becomes Customer
                 "system" => UserRoles.ServiceAccount,
                 "serviceaccount" => UserRoles.ServiceAccount,
-                _ => UserRoles.Client // Default fallback
+                _ => UserRoles.Customer // Default fallback
             };
         }
 
@@ -226,29 +228,22 @@ namespace Grande.Fila.API.Application.Auth
                     "manage:system",
                     "manage:users"
                 },
-                UserRoles.Admin => new[]
-                {
-                    "manage:locations",
-                    "manage:staff",
-                    "manage:services",
-                    "view:metrics",
-                    "manage:branding"
-                },
                 UserRoles.Owner => new[]
                 {
                     "manage:locations",
                     "manage:staff",
                     "manage:services",
                     "view:metrics",
-                    "manage:branding"
+                    "manage:branding",
+                    "view:analytics" // Added analytics for business owners
                 },
-                UserRoles.Barber => new[]
+                UserRoles.Staff => new[]
                 {
                     "manage:queue",
                     "view:queue",
                     "manage:appointments"
                 },
-                UserRoles.Client => new[]
+                UserRoles.Customer => new[]
                 {
                     "view:queue",
                     "join:queue"
@@ -287,7 +282,7 @@ namespace Grande.Fila.API.Application.Auth
                 return result;
             }
 
-            if (user.Role != UserRoles.PlatformAdmin && user.Role != UserRoles.Admin && user.Role != UserRoles.Owner)
+            if (user.Role != UserRoles.PlatformAdmin && user.Role != UserRoles.Owner)
             {
                 result.Error = "User is not an admin.";
                 return result;

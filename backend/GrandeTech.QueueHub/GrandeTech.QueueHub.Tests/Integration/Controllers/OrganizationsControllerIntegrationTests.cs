@@ -319,14 +319,17 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Map old test roles to new roles
             var mappedRole = role.ToLower() switch
             {
-                "admin" => UserRoles.Owner, // Admin tests should use Owner role for RequireOwner endpoints
-                "platformadmin" => UserRoles.Admin, // PlatformAdmin tests should use Admin role for RequireAdmin endpoints
+                "platformadmin" => UserRoles.PlatformAdmin,
                 "owner" => UserRoles.Owner,
-                "barber" => UserRoles.Barber,
-                "client" => UserRoles.Client,
-                "user" => UserRoles.Client,
-                "system" => UserRoles.ServiceAccount,
-                _ => UserRoles.Client
+                "staff" => UserRoles.Staff,
+                "customer" => UserRoles.Customer,
+                "serviceaccount" => UserRoles.ServiceAccount,
+                // Legacy mappings for backward compatibility
+                "admin" => UserRoles.Owner,
+                "barber" => UserRoles.Staff,
+                "client" => UserRoles.Customer,
+                "user" => UserRoles.Customer,
+                _ => UserRoles.Customer
             };
             
             var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);

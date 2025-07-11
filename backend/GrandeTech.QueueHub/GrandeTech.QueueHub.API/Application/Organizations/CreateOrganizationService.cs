@@ -6,6 +6,7 @@ using Grande.Fila.API.Domain.Organizations;
 using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Domain.AuditLogs;
 using Grande.Fila.API.Domain.Subscriptions;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Application.Organizations
 {    public class CreateOrganizationService
@@ -21,7 +22,7 @@ namespace Grande.Fila.API.Application.Organizations
             _subscriptionPlanRepo = subscriptionPlanRepo;
         }
 
-        public async Task<CreateOrganizationResult> CreateOrganizationAsync(CreateOrganizationRequest request, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<CreateOrganizationResult> CreateOrganizationAsync(CreateOrganizationRequest request, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new CreateOrganizationResult 
             { 
@@ -34,7 +35,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Permissions check (platform-level admin only for creating organizations)
-            if (userRole != "Admin")
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can create organizations.");
                 return result;

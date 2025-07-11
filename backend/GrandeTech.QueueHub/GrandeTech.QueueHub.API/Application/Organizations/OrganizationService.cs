@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Organizations;
 using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Application.Organizations
 {
@@ -19,7 +20,7 @@ namespace Grande.Fila.API.Application.Organizations
             _auditLogRepo = auditLogRepo;
         }
 
-        public async Task<OrganizationOperationResult> UpdateOrganizationAsync(UpdateOrganizationRequest request, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<OrganizationOperationResult> UpdateOrganizationAsync(UpdateOrganizationRequest request, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new OrganizationOperationResult 
             { 
@@ -29,7 +30,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Permissions check
-            if (userRole != "Admin" && userRole != "Owner")
+            if (userRole != UserRoles.PlatformAdmin && userRole != UserRoles.Owner)
             {
                 result.Errors.Add("Forbidden: Only Admin/Owner can update organizations.");
                 return result;
@@ -101,7 +102,7 @@ namespace Grande.Fila.API.Application.Organizations
             return result;
         }
 
-        public async Task<OrganizationOperationResult> UpdateBrandingAsync(UpdateBrandingRequest request, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<OrganizationOperationResult> UpdateBrandingAsync(UpdateBrandingRequest request, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new OrganizationOperationResult 
             { 
@@ -111,7 +112,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Permissions check
-            if (userRole != "Admin" && userRole != "Owner")
+            if (userRole != UserRoles.PlatformAdmin && userRole != UserRoles.Owner)
             {
                 result.Errors.Add("Forbidden: Only Admin/Owner can update organization branding.");
                 return result;
@@ -171,7 +172,7 @@ namespace Grande.Fila.API.Application.Organizations
             return result;
         }
 
-        public async Task<OrganizationOperationResult> ChangeSubscriptionPlanAsync(string organizationId, string subscriptionPlanId, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<OrganizationOperationResult> ChangeSubscriptionPlanAsync(string organizationId, string subscriptionPlanId, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new OrganizationOperationResult 
             { 
@@ -181,7 +182,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Permissions check (only platform admin can change subscription plans)
-            if (userRole != "Admin")
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can change subscription plans.");
                 return result;
@@ -230,7 +231,7 @@ namespace Grande.Fila.API.Application.Organizations
             return result;
         }
 
-        public async Task<OrganizationOperationResult> SetAnalyticsSharingAsync(string organizationId, bool sharesData, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<OrganizationOperationResult> SetAnalyticsSharingAsync(string organizationId, bool sharesData, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new OrganizationOperationResult 
             { 
@@ -240,7 +241,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Permissions check
-            if (userRole != "Admin" && userRole != "Owner")
+            if (userRole != UserRoles.PlatformAdmin && userRole != UserRoles.Owner)
             {
                 result.Errors.Add("Forbidden: Only Admin/Owner can change analytics sharing settings.");
                 return result;
@@ -283,7 +284,7 @@ namespace Grande.Fila.API.Application.Organizations
             return result;
         }
 
-        public async Task<OrganizationOperationResult> ActivateOrganizationAsync(string organizationId, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<OrganizationOperationResult> ActivateOrganizationAsync(string organizationId, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new OrganizationOperationResult 
             { 
@@ -293,7 +294,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Permissions check
-            if (userRole != "Admin")
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can activate organizations.");
                 return result;
@@ -336,7 +337,7 @@ namespace Grande.Fila.API.Application.Organizations
             return result;
         }
 
-        public async Task<OrganizationOperationResult> DeactivateOrganizationAsync(string organizationId, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<OrganizationOperationResult> DeactivateOrganizationAsync(string organizationId, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new OrganizationOperationResult 
             { 
@@ -346,7 +347,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Permissions check
-            if (userRole != "Admin")
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can deactivate organizations.");
                 return result;

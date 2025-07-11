@@ -60,7 +60,7 @@ namespace Grande.Fila.API.Infrastructure.Authorization
 
             // Check location context if required
             if (requirement.RequireLocationContext && 
-                tenantContext.Role == UserRoles.Barber && 
+                tenantContext.Role == UserRoles.Staff && 
                 !tenantContext.LocationId.HasValue)
             {
                 context.Fail();
@@ -86,21 +86,19 @@ namespace Grande.Fila.API.Infrastructure.Authorization
             };
         }        private static bool IsValidRole(string userRole, string requiredRole)
         {
-            // Platform admin can do anything
-            if (userRole == UserRoles.PlatformAdmin)
+            // Platform admin can do anything except service account operations
+            if (userRole == UserRoles.PlatformAdmin && requiredRole != UserRoles.ServiceAccount)
                 return true;
 
             // Check specific role requirements based on the role hierarchy
             return requiredRole switch
             {
-                // Admin requirement: PlatformAdmin or Admin role
-                UserRoles.Admin => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin,
-                // Owner requirement: PlatformAdmin, Admin or Owner can access
-                UserRoles.Owner => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin || userRole == UserRoles.Owner,
-                // Barber requirement: PlatformAdmin, Admin, Owner, or Barber can access
-                UserRoles.Barber => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin || userRole == UserRoles.Owner || userRole == UserRoles.Barber,
-                // Client requirement: Any authenticated user can access
-                UserRoles.Client => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin || userRole == UserRoles.Owner || userRole == UserRoles.Barber || userRole == UserRoles.Client,
+                // Owner requirement: PlatformAdmin or Owner can access
+                UserRoles.Owner => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Owner,
+                // Staff requirement: PlatformAdmin, Owner, or Staff can access
+                UserRoles.Staff => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Owner || userRole == UserRoles.Staff,
+                // Customer requirement: Any authenticated user can access
+                UserRoles.Customer => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Owner || userRole == UserRoles.Staff || userRole == UserRoles.Customer,
                 // Service account requirement: only service accounts
                 UserRoles.ServiceAccount => userRole == UserRoles.ServiceAccount,
                 _ => userRole == requiredRole

@@ -20,20 +20,8 @@ namespace Grande.Fila.API.Infrastructure.Authorization
     }
 
     /// <summary>
-    /// Requires Admin role within organization context
+    /// Requires Owner role within organization context
     /// Use cases: UC-CREATEBARBER, UC-ADDCOUPON, UC-CHANGECAP, UC-DISABLEQ, UC-LOCALADS
-    /// </summary>
-    public class RequireAdminAttribute : AuthorizeAttribute
-    {
-        public RequireAdminAttribute()
-        {
-            Policy = "RequireAdmin";
-        }
-    }
-
-    /// <summary>
-    /// Requires Owner or Admin role within organization context
-    /// Use cases: UC-ADDBARBER, UC-EDITBARBER, UC-BRANDING, UC-MANAGESERV, UC-SETDURATION, UC-TRACKQ, UC-METRICS, UC-MULTILOC
     /// </summary>
     public class RequireOwnerAttribute : AuthorizeAttribute
     {
@@ -44,26 +32,61 @@ namespace Grande.Fila.API.Infrastructure.Authorization
     }
 
     /// <summary>
-    /// Requires Barber role within location context
+    /// Legacy alias for RequireOwner - for backward compatibility
+    /// </summary>
+    public class RequireAdminAttribute : AuthorizeAttribute
+    {
+        public RequireAdminAttribute()
+        {
+            Policy = "RequireOwner"; // Map to Owner policy
+        }
+    }
+
+
+
+    /// <summary>
+    /// Requires Staff role within location context
     /// Use cases: UC-BARBERQUEUE, UC-CALLNEXT, UC-BARBERADD, UC-STAFFSTATUS, UC-STARTBREAK, UC-ENDBREAK, UC-FINISH, UC-SAVEHAIRCUT
+    /// </summary>
+    public class RequireStaffAttribute : AuthorizeAttribute
+    {
+        public RequireStaffAttribute()
+        {
+            Policy = "RequireStaff";
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for RequireStaff - for backward compatibility
     /// </summary>
     public class RequireBarberAttribute : AuthorizeAttribute
     {
         public RequireBarberAttribute()
         {
-            Policy = "RequireBarber";
+            Policy = "RequireStaff"; // Map to Staff policy
         }
     }
 
     /// <summary>
-    /// Allows any authenticated user (Client level access)
+    /// Allows any authenticated user (Customer level access)
     /// Use cases: UC-ENTRY, UC-CANCEL, UC-CHECKIN, UC-QUEUELISTCLI, UC-WAITTIME, UC-LOGINCLIENT
+    /// </summary>
+    public class RequireCustomerAttribute : AuthorizeAttribute
+    {
+        public RequireCustomerAttribute()
+        {
+            Policy = "RequireCustomer";
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for RequireCustomer - for backward compatibility
     /// </summary>
     public class RequireClientAttribute : AuthorizeAttribute
     {
         public RequireClientAttribute()
         {
-            Policy = "RequireClient";
+            Policy = "RequireCustomer"; // Map to Customer policy
         }
     }    /// <summary>
     /// Public access - no authentication required

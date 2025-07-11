@@ -549,3 +549,109 @@ Authorization: Bearer {{ownerToken}}
 }
 
 ### 
+
+### Authentication Examples
+
+# Test Admin User (Business Owner)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin_test",
+  "password": "AdminPass123!"
+}
+
+###
+
+# Test Service Account User (for system operations)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "service_test",
+  "password": "ServicePass123!"
+}
+
+###
+
+### Analytics Examples
+
+# Calculate Wait Time (ServiceAccount only)
+POST {{baseUrl}}/api/Analytics/calculate-wait
+Authorization: Bearer {{serviceAccountToken}}
+Content-Type: application/json
+
+{
+  "locationId": "12345678-1234-1234-1234-123456789012",
+  "queueId": "87654321-4321-4321-4321-210987654321",
+  "entryId": "11111111-2222-3333-4444-555555555555"
+}
+
+###
+
+# Cross-Barbershop Analytics (PlatformAdmin only)
+POST {{baseUrl}}/api/Analytics/cross-barbershop
+Authorization: Bearer {{platformAdminToken}}
+Content-Type: application/json
+
+{
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-01-31T23:59:59Z",
+  "includeActiveQueues": true,
+  "includeCompletedServices": true,
+  "includeAverageWaitTimes": true,
+  "includeStaffUtilization": true,
+  "includeLocationMetrics": true
+}
+
+###
+
+# Organization Analytics (Owner only)
+POST {{baseUrl}}/api/Analytics/organization
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "organizationId": "12345678-1234-1234-1234-123456789012",
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-01-31T23:59:59Z",
+  "includeQueueMetrics": true,
+  "includeServiceMetrics": true,
+  "includeStaffMetrics": true,
+  "includeLocationMetrics": true
+}
+
+###
+
+# Top Organizations (PlatformAdmin only)
+POST {{baseUrl}}/api/Analytics/top-organizations
+Authorization: Bearer {{platformAdminToken}}
+Content-Type: application/json
+
+{
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-01-31T23:59:59Z",
+  "metricType": "CompletedServices",
+  "maxResults": 10,
+  "includeDetails": false
+}
+
+###
+
+### Role Hierarchy Documentation
+
+# Simplified 5-Role System:
+# 1. PlatformAdmin - System owner, manages all organizations
+# 2. Owner - Business owner, manages their organization and locations
+# 3. Staff - Works at specific location, manages queues
+# 4. Customer - Uses the queue system
+# 5. ServiceAccount - Background processes and system operations
+
+# Authorization Levels:
+# - PlatformAdmin: Full system access except ServiceAccount operations
+# - Owner: Organization management, location management, staff management
+# - Staff: Queue operations at their assigned location
+# - Customer: Join queues, view status
+# - ServiceAccount: System calculations and background processes
+
+### 

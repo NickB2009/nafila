@@ -50,7 +50,7 @@ namespace Grande.Fila.API.Domain.Users
             Role = role;
             IsActive = true;
             IsLocked = false;
-            RequiresTwoFactor = role == UserRoles.PlatformAdmin || role == UserRoles.Admin;
+            RequiresTwoFactor = role == UserRoles.PlatformAdmin || role == UserRoles.Owner;
         }
 
         public void UpdateLastLogin()

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Application.SubscriptionPlans
 {
@@ -18,7 +19,7 @@ namespace Grande.Fila.API.Application.SubscriptionPlans
             _auditLogRepo = auditLogRepo;
         }
 
-        public async Task<SubscriptionPlanOperationResult> UpdateSubscriptionPlanAsync(UpdateSubscriptionPlanRequest request, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<SubscriptionPlanOperationResult> UpdateSubscriptionPlanAsync(UpdateSubscriptionPlanRequest request, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new SubscriptionPlanOperationResult 
             { 
@@ -27,8 +28,8 @@ namespace Grande.Fila.API.Application.SubscriptionPlans
                 Errors = new List<string>()
             };
 
-            // Permissions check (platform-level admin only)
-            if (userRole != "Admin")
+            // Permissions check (platform admin only)
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can manage subscription plans.");
                 return result;
@@ -112,7 +113,7 @@ namespace Grande.Fila.API.Application.SubscriptionPlans
             return result;
         }
 
-        public async Task<SubscriptionPlanOperationResult> ActivateSubscriptionPlanAsync(string subscriptionPlanId, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<SubscriptionPlanOperationResult> ActivateSubscriptionPlanAsync(string subscriptionPlanId, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new SubscriptionPlanOperationResult 
             { 
@@ -121,8 +122,8 @@ namespace Grande.Fila.API.Application.SubscriptionPlans
                 Errors = new List<string>()
             };
 
-            // Permissions check (platform-level admin only)
-            if (userRole != "Admin")
+            // Permissions check (platform admin only)
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can manage subscription plans.");
                 return result;
@@ -165,7 +166,7 @@ namespace Grande.Fila.API.Application.SubscriptionPlans
             return result;
         }
 
-        public async Task<SubscriptionPlanOperationResult> DeactivateSubscriptionPlanAsync(string subscriptionPlanId, string userId, string userRole = "Admin", CancellationToken cancellationToken = default)
+        public async Task<SubscriptionPlanOperationResult> DeactivateSubscriptionPlanAsync(string subscriptionPlanId, string userId, string userRole = "Owner", CancellationToken cancellationToken = default)
         {
             var result = new SubscriptionPlanOperationResult 
             { 
@@ -174,8 +175,8 @@ namespace Grande.Fila.API.Application.SubscriptionPlans
                 Errors = new List<string>()
             };
 
-            // Permissions check (platform-level admin only)
-            if (userRole != "Admin")
+            // Permissions check (platform admin only)
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can manage subscription plans.");
                 return result;

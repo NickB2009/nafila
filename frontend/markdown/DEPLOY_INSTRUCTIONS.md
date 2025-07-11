@@ -19,8 +19,8 @@ This will generate the production-ready files in `build/web`.
    - **Host:** ftp.eutonafila.com.br
    - **User:** eutonafila
    - **Password:** (see your credentials)
-3. Navigate to the `/www` directory.
-4. On your computer, open the folder: `C:/repos/nafila/frontend/build/web`
+3. Navigate to the `/` (root) directory.
+4. On your computer, open the folder: `C:\Users\romme\source\repos\nafila\frontend\build`
 5. For each file and folder in `build/web`:
    - Use the "Enviar Arquivo para seu FTP" (Upload File) button to upload files.
    - For folders (like `assets`, `canvaskit`, `icons`), you may need to compress them into a `.zip` file, upload, and then use the "Descompactar" (Unzip) option in WebFTP.

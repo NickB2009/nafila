@@ -304,12 +304,16 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var uniqueId = Guid.NewGuid().ToString("N");
             var mappedRole = role.ToLower() switch
             {
-                "platformadmin" => UserRoles.Admin,
-                "admin" => UserRoles.Owner,
+                "platformadmin" => UserRoles.PlatformAdmin,
                 "owner" => UserRoles.Owner,
-                "barber" => UserRoles.Barber,
-                "client" => UserRoles.Client,
-                _ => UserRoles.Client
+                "staff" => UserRoles.Staff,
+                "customer" => UserRoles.Customer,
+                "serviceaccount" => UserRoles.ServiceAccount,
+                // Legacy mappings for backward compatibility
+                "admin" => UserRoles.Owner,
+                "barber" => UserRoles.Staff,
+                "client" => UserRoles.Customer,
+                _ => UserRoles.Customer
             };
             
             var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);

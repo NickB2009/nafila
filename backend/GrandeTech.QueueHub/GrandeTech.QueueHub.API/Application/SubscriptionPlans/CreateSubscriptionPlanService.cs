@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Application.SubscriptionPlans
 {
@@ -29,8 +30,8 @@ namespace Grande.Fila.API.Application.SubscriptionPlans
                 Name = string.Empty
             };
 
-            // Permissions check (platform-level admin only for creating subscription plans)
-            if (userRole != "Admin")
+            // Permissions check (platform admin only)
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Errors.Add("Forbidden: Only platform Admin can create subscription plans.");
                 return result;

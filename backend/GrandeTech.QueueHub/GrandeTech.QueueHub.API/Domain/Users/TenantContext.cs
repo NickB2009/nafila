@@ -65,7 +65,7 @@ namespace Grande.Fila.API.Domain.Users
                 return true;
                 
             // Location-specific roles must match location
-            if (Role == UserRoles.Barber)
+            if (Role == UserRoles.Staff)
                 return LocationId == locationId;
                 
             // Organization-level roles can access any location in their org

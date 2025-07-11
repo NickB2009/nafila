@@ -9,6 +9,7 @@ using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.AuditLogs;
 using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Application.Analytics
 {
@@ -42,8 +43,8 @@ namespace Grande.Fila.API.Application.Analytics
         {
             var result = new CrossBarbershopAnalyticsResult();
 
-            // Authorization check
-            if (userRole != "Admin" && userRole != "PlatformAdmin")
+            // Authorization check - only platform admin can access cross-barbershop analytics
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Success = false;
                 result.Errors.Add("Forbidden: Only platform administrators can access cross-barbershop analytics.");
@@ -188,11 +189,11 @@ namespace Grande.Fila.API.Application.Analytics
         {
             var result = new TopPerformingOrganizationsResult();
 
-            // Authorization check
-            if (userRole != "Admin" && userRole != "PlatformAdmin")
+            // Authorization check - only platform admin can access top organizations analytics
+            if (userRole != UserRoles.PlatformAdmin)
             {
                 result.Success = false;
-                result.Errors.Add("Forbidden: Only platform administrators can access top performing organizations.");
+                result.Errors.Add("Forbidden: Only platform administrators can access top organizations analytics.");
                 return result;
             }
 

@@ -69,11 +69,11 @@ namespace Grande.Fila.API.Controllers
 
         // UC-ANALYTICS: Cross-barbershop analytics for platform administrators
         [HttpPost("cross-barbershop")]
-        [RequireAdmin] // Platform administrators only
+        [RequirePlatformAdmin] // Platform administrators only
         public async Task<IActionResult> GetCrossBarbershopAnalytics([FromBody] CrossBarbershopAnalyticsRequest request, CancellationToken cancellationToken)
         {
             var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? "anonymous";
-            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "Client";
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "Customer";
 
             var result = await _analyticsService.GetCrossBarbershopAnalyticsAsync(request, userId, userRole, cancellationToken);
 
@@ -94,7 +94,7 @@ namespace Grande.Fila.API.Controllers
         public async Task<IActionResult> GetOrganizationAnalytics([FromBody] OrganizationAnalyticsRequest request, CancellationToken cancellationToken)
         {
             var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? "anonymous";
-            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "Client";
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "Customer";
 
             var result = await _analyticsService.GetOrganizationAnalyticsAsync(request, userId, userRole, cancellationToken);
 
@@ -111,11 +111,11 @@ namespace Grande.Fila.API.Controllers
 
         // UC-ANALYTICS: Top performing organizations for platform administrators
         [HttpPost("top-organizations")]
-        [RequireAdmin] // Platform administrators only
+        [RequirePlatformAdmin] // Platform administrators only
         public async Task<IActionResult> GetTopPerformingOrganizations([FromBody] TopPerformingOrganizationsRequest request, CancellationToken cancellationToken)
         {
             var userId = User.FindFirst(TenantClaims.UserId)?.Value ?? "anonymous";
-            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "Client";
+            var userRole = User.FindFirst(TenantClaims.Role)?.Value ?? "Customer";
 
             var result = await _analyticsService.GetTopPerformingOrganizationsAsync(request, userId, userRole, cancellationToken);
 

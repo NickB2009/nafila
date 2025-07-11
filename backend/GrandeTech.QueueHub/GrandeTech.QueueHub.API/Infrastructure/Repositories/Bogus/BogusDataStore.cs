@@ -18,7 +18,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         private static readonly string TestAdminUsername = "admin_test";
         private static readonly string TestAdminEmail = "admin@test.com";
         private static readonly string TestAdminPassword = "AdminPass123!";
-        private static readonly string TestAdminRole = UserRoles.Admin;
+        private static readonly string TestAdminRole = UserRoles.Owner;
         
         private static readonly string TestServiceAccountUsername = "service_test";
         private static readonly string TestServiceAccountEmail = "service@test.com";

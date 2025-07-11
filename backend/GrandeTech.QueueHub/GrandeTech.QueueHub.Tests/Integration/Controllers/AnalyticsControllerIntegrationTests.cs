@@ -405,13 +405,13 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         /// <summary>
-        /// UC-ANALYTICS: Admin views cross-barbershop analytics
+        /// UC-ANALYTICS: Platform admin views cross-barbershop analytics
         /// </summary>
         [TestMethod]
-        public async Task GetCrossBarbershopAnalytics_ValidAdmin_ReturnsSuccess()
+        public async Task GetCrossBarbershopAnalytics_ValidPlatformAdmin_ReturnsSuccess()
         {
-            // Arrange: Create admin user
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            // Arrange: Create platform admin user
+            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create test data: subscription plans, organizations, locations, queues, staff
@@ -448,10 +448,10 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task GetCrossBarbershopAnalytics_NonAdmin_ReturnsForbidden()
+        public async Task GetCrossBarbershopAnalytics_NonPlatformAdmin_ReturnsForbidden()
         {
-            // Arrange: Create non-admin user
-            var userToken = await CreateAndAuthenticateUserAsync("Barber");
+            // Arrange: Create non-platform-admin user
+            var userToken = await CreateAndAuthenticateUserAsync("Staff");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", userToken);
 
             var request = new
@@ -471,7 +471,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task GetCrossBarbershopAnalytics_InvalidDateRange_ReturnsBadRequest()
         {
             // Arrange
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             var request = new
@@ -556,13 +556,13 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         /// <summary>
-        /// UC-ANALYTICS: Admin views top performing organizations
+        /// UC-ANALYTICS: Platform admin views top performing organizations
         /// </summary>
         [TestMethod]
         public async Task GetTopPerformingOrganizations_ValidRequest_ReturnsSuccess()
         {
             // Arrange
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create test data
@@ -597,7 +597,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task GetTopPerformingOrganizations_ExcessiveMaxResults_ReturnsBadRequest()
         {
             // Arrange
-            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
+            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             var request = new
@@ -616,7 +616,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task GetTopPerformingOrganizations_NonAdmin_ReturnsForbidden()
+        public async Task GetTopPerformingOrganizations_NonPlatformAdmin_ReturnsForbidden()
         {
             // Arrange
             var userToken = await CreateAndAuthenticateUserAsync("Owner");
@@ -655,16 +655,16 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task Debug_AdminTokenGeneration()
+        public async Task Debug_PlatformAdminTokenGeneration()
         {
-            // Arrange: Create admin user
+            // Arrange: Create platform admin user
             using var scope = _factory.Services.CreateScope();
             var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
             var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
 
             var uniqueId = Guid.NewGuid().ToString("N");
             var user = new User($"debug_admin_{uniqueId}", $"debug_admin_{uniqueId}@example.com", 
-                BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), UserRoles.Admin);
+                BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), UserRoles.PlatformAdmin);
             user.DisableTwoFactor();
 
             await userRepository.AddAsync(user, CancellationToken.None);
@@ -681,7 +681,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Assert: Check login result
             Assert.IsTrue(loginResult.Success, $"Login failed: {loginResult.Error}");
             Assert.IsNotNull(loginResult.Token);
-            Assert.AreEqual(UserRoles.Admin, loginResult.Role);
+            Assert.AreEqual(UserRoles.PlatformAdmin, loginResult.Role);
 
             // Decode and examine the JWT token
             var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
@@ -693,10 +693,10 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var orgIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.OrganizationId);
 
             Assert.IsNotNull(roleClaim, "Role claim is missing");
-            Assert.AreEqual(UserRoles.Admin, roleClaim.Value, "Role claim has wrong value");
+            Assert.AreEqual(UserRoles.PlatformAdmin, roleClaim.Value, "Role claim has wrong value");
             Assert.IsNotNull(isServiceAccountClaim, "IsServiceAccount claim is missing");
-            Assert.AreEqual("false", isServiceAccountClaim.Value, "IsServiceAccount claim should be false for Admin");
-            Assert.IsNotNull(orgIdClaim, "Admin should have organization context");
+            Assert.AreEqual("false", isServiceAccountClaim.Value, "IsServiceAccount claim should be false for PlatformAdmin");
+            Assert.IsNull(orgIdClaim, "PlatformAdmin should not have organization context");
 
             // Test the token with the admin endpoint
             _client.DefaultRequestHeaders.Authorization = new("Bearer", loginResult.Token);
@@ -841,18 +841,21 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var mappedRole = role.ToLower() switch
             {
                 "platformadmin" => UserRoles.PlatformAdmin,
-                "admin" => UserRoles.Admin,
                 "owner" => UserRoles.Owner,
-                "barber" => UserRoles.Barber,
-                "client" => UserRoles.Client,
+                "staff" => UserRoles.Staff,
+                "customer" => UserRoles.Customer,
                 "serviceaccount" => UserRoles.ServiceAccount,
-                _ => UserRoles.Client
+                // Legacy mappings for backward compatibility
+                "admin" => UserRoles.Owner,
+                "barber" => UserRoles.Staff,
+                "client" => UserRoles.Customer,
+                _ => UserRoles.Customer
             };
             
             var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);
             user.DisableTwoFactor();
 
-            if (role == "Admin" || role == "Owner" || role == "PlatformAdmin")
+            if (role == "Owner" || role == "PlatformAdmin" || role == "Admin")
             {
                 user.AddPermission(Permission.CreateStaff);
                 user.AddPermission(Permission.UpdateStaff);

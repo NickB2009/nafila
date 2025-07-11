@@ -60,7 +60,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                         services.AddAuthorization(options =>
                         {
                             options.AddPolicy("RequireStaff", policy =>
-                                policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Barber, requireLocationContext: true)));
+                                policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Staff, requireLocationContext: true)));
                         });
                         
                         // Add authorization handler and context service
@@ -184,14 +184,17 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Map old test roles to new roles
             var mappedRole = role.ToLower() switch
             {
-                "staff" => UserRoles.Barber,
-                "admin" => UserRoles.Admin,
-                "owner" => UserRoles.Admin,
-                "barber" => UserRoles.Barber,
-                "client" => UserRoles.Client,
-                "user" => UserRoles.Client,
-                "system" => UserRoles.ServiceAccount,
-                _ => UserRoles.Client
+                "platformadmin" => UserRoles.PlatformAdmin,
+                "owner" => UserRoles.Owner,
+                "staff" => UserRoles.Staff,
+                "customer" => UserRoles.Customer,
+                "serviceaccount" => UserRoles.ServiceAccount,
+                // Legacy mappings for backward compatibility
+                "admin" => UserRoles.Owner,
+                "barber" => UserRoles.Staff,
+                "client" => UserRoles.Customer,
+                "user" => UserRoles.Customer,
+                _ => UserRoles.Customer
             };
             
             var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), mappedRole);

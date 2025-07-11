@@ -7,6 +7,7 @@ using Grande.Fila.API.Domain.Organizations;
 using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Application.Organizations
 {
@@ -35,7 +36,7 @@ namespace Grande.Fila.API.Application.Organizations
         public async Task<TrackLiveActivityResult> GetLiveActivityAsync(
             TrackLiveActivityRequest request, 
             string userId, 
-            string userRole = "Admin", 
+            string userRole = "Owner", 
             CancellationToken cancellationToken = default)
         {
             var result = new TrackLiveActivityResult
@@ -46,7 +47,7 @@ namespace Grande.Fila.API.Application.Organizations
             };
 
             // Authorization check
-            if (userRole != "Admin" && userRole != "Owner")
+            if (userRole != UserRoles.PlatformAdmin && userRole != UserRoles.Owner)
             {
                 result.Errors.Add("Forbidden: Only Admin/Owner can track live activity.");
                 return result;

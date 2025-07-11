@@ -107,20 +107,27 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequirePlatformAdmin", policy =>
         policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.PlatformAdmin, requireOrganizationContext: false)));
     
-    options.AddPolicy("RequireAdmin", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Admin, requireOrganizationContext: false)));
-    
     options.AddPolicy("RequireOwner", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Owner))); // Owner or Admin can access
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Owner))); // Business owners with org context
     
-    options.AddPolicy("RequireBarber", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Barber, requireLocationContext: true)));
+    options.AddPolicy("RequireStaff", policy =>
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Staff, requireLocationContext: true)));
     
-    options.AddPolicy("RequireClient", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Client, requireOrganizationContext: false)));
+    options.AddPolicy("RequireCustomer", policy =>
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Customer, requireOrganizationContext: false)));
     
     options.AddPolicy("RequireServiceAccount", policy =>
         policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.ServiceAccount, requireOrganizationContext: false)));
+    
+    // Legacy policy aliases for backward compatibility
+    options.AddPolicy("RequireAdmin", policy =>
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Owner))); // Map to Owner
+    
+    options.AddPolicy("RequireBarber", policy =>
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Staff, requireLocationContext: true))); // Map to Staff
+    
+    options.AddPolicy("RequireClient", policy =>
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Customer, requireOrganizationContext: false))); // Map to Customer
 });
 
 builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Grande.Fila.API.Infrastructure.Authorization.TenantAuthorizationHandler>();

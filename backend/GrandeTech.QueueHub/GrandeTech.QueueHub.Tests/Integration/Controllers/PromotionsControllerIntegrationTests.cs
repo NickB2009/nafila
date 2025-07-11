@@ -103,14 +103,17 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             // Map old test roles to new roles
             var mappedRole = role.ToLower() switch
             {
+                "platformadmin" => UserRoles.PlatformAdmin,
+                "owner" => UserRoles.Owner,
+                "staff" => UserRoles.Staff,
+                "customer" => UserRoles.Customer,
                 "serviceaccount" => UserRoles.ServiceAccount,
-                "admin" => UserRoles.Admin,
-                "owner" => UserRoles.Admin,
-                "barber" => UserRoles.Barber,
-                "client" => UserRoles.Client,
-                "user" => UserRoles.Client,
-                "system" => UserRoles.ServiceAccount,
-                _ => UserRoles.Client
+                // Legacy mappings for backward compatibility
+                "admin" => UserRoles.Owner,
+                "barber" => UserRoles.Staff,
+                "client" => UserRoles.Customer,
+                "user" => UserRoles.Customer,
+                _ => UserRoles.Customer
             };
             
             var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
