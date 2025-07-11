@@ -93,14 +93,14 @@ namespace Grande.Fila.API.Infrastructure.Authorization
             // Check specific role requirements based on the role hierarchy
             return requiredRole switch
             {
-                // Admin requirement: only Admin role
-                UserRoles.Admin => userRole == UserRoles.Admin,
-                // Owner requirement: Admin or Owner can access (Admin has higher privileges)
-                UserRoles.Owner => userRole == UserRoles.Admin || userRole == UserRoles.Owner,
-                // Barber requirement: Admin, Owner, or Barber can access
-                UserRoles.Barber => userRole == UserRoles.Admin || userRole == UserRoles.Owner || userRole == UserRoles.Barber,
+                // Admin requirement: PlatformAdmin or Admin role
+                UserRoles.Admin => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin,
+                // Owner requirement: PlatformAdmin, Admin or Owner can access
+                UserRoles.Owner => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin || userRole == UserRoles.Owner,
+                // Barber requirement: PlatformAdmin, Admin, Owner, or Barber can access
+                UserRoles.Barber => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin || userRole == UserRoles.Owner || userRole == UserRoles.Barber,
                 // Client requirement: Any authenticated user can access
-                UserRoles.Client => userRole == UserRoles.Admin || userRole == UserRoles.Owner || userRole == UserRoles.Barber || userRole == UserRoles.Client,
+                UserRoles.Client => userRole == UserRoles.PlatformAdmin || userRole == UserRoles.Admin || userRole == UserRoles.Owner || userRole == UserRoles.Barber || userRole == UserRoles.Client,
                 // Service account requirement: only service accounts
                 UserRoles.ServiceAccount => userRole == UserRoles.ServiceAccount,
                 _ => userRole == requiredRole

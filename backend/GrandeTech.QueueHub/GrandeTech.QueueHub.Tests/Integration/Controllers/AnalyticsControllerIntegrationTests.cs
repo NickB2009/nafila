@@ -21,6 +21,7 @@ using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Application.Analytics;
 using System.Linq;
 using System.Collections.Generic;
+using Grande.Fila.API.Application.Services;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -76,6 +77,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                         services.AddSingleton<IAuditLogRepository>(_auditLogRepository);
                         services.AddSingleton<ISubscriptionPlanRepository>(_subscriptionPlanRepository);
                         services.AddScoped<AnalyticsService>();
+                        services.AddScoped<CalculateWaitService>();
                     });
                 });
         }
@@ -92,14 +94,324 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             _factory.Dispose();
         }
 
+        [TestMethod]
+        public async Task Debug_ServiceAccountTokenGeneration()
+        {
+            // Arrange: Create service account user
+            using var scope = _factory.Services.CreateScope();
+            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
+
+            var uniqueId = Guid.NewGuid().ToString("N");
+            var user = new User($"debug_service_{uniqueId}", $"debug_service_{uniqueId}@example.com", 
+                BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), UserRoles.ServiceAccount);
+            user.DisableTwoFactor();
+
+            await userRepository.AddAsync(user, CancellationToken.None);
+
+            var loginRequest = new LoginRequest
+            {
+                Username = user.Username,
+                Password = "TestPassword123!"
+            };
+
+            // Act: Login and get token
+            var loginResult = await authService.LoginAsync(loginRequest);
+
+            // Assert: Check login result
+            Assert.IsTrue(loginResult.Success, $"Login failed: {loginResult.Error}");
+            Assert.IsNotNull(loginResult.Token);
+            Assert.AreEqual(UserRoles.ServiceAccount, loginResult.Role);
+
+            // Decode and examine the JWT token
+            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(loginResult.Token);
+
+            // Check claims
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Role);
+            var isServiceAccountClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.IsServiceAccount);
+            var orgIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.OrganizationId);
+
+            Assert.IsNotNull(roleClaim, "Role claim is missing");
+            Assert.AreEqual(UserRoles.ServiceAccount, roleClaim.Value, "Role claim has wrong value");
+            Assert.IsNotNull(isServiceAccountClaim, "IsServiceAccount claim is missing");
+            Assert.AreEqual("true", isServiceAccountClaim.Value, "IsServiceAccount claim should be true");
+            Assert.IsNull(orgIdClaim, "ServiceAccount should not have organization context");
+
+            // Test the token with the endpoint
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", loginResult.Token);
+
+            var testData = await SetupTestWaitTimeDataAsync();
+            var request = new
+            {
+                LocationId = testData.LocationId.ToString(),
+                QueueId = testData.QueueId.ToString(),
+                EntryId = testData.EntryId.ToString()
+            };
+
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+            
+            // Debug: Print response details
+            var responseContent = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"Response Status: {response.StatusCode}");
+            System.Diagnostics.Debug.WriteLine($"Response Content: {responseContent}");
+            
+            // This should work now
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, 
+                $"Expected OK but got {response.StatusCode}. Response: {responseContent}");
+        }
+
         /// <summary>
-        /// UC-ANALYTICS: Platform administrator views cross-barbershop analytics
+        /// UC-CALCWAIT: Calculate estimated wait time with valid service account
         /// </summary>
         [TestMethod]
-        public async Task GetCrossBarbershopAnalytics_ValidPlatformAdmin_ReturnsSuccess()
+        public async Task CalculateWaitTime_ValidServiceAccount_ReturnsSuccess()
         {
-            // Arrange: Create platform admin user
-            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
+            // Arrange: Create service account user
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            // Create test data
+            var testData = await SetupTestWaitTimeDataAsync();
+
+            var request = new
+            {
+                LocationId = testData.LocationId.ToString(),
+                QueueId = testData.QueueId.ToString(),
+                EntryId = testData.EntryId.ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            Assert.IsTrue(result.GetProperty("success").GetBoolean());
+            Assert.IsTrue(result.GetProperty("estimatedWaitMinutes").GetInt32() >= 0);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_InvalidLocationId_ReturnsBadRequest()
+        {
+            // Arrange
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            var request = new
+            {
+                LocationId = "invalid-guid",
+                QueueId = Guid.NewGuid().ToString(),
+                EntryId = Guid.NewGuid().ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            Assert.IsFalse(result.GetProperty("success").GetBoolean());
+            Assert.IsTrue(result.GetProperty("errors").GetArrayLength() > 0);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_InvalidQueueId_ReturnsBadRequest()
+        {
+            // Arrange
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            var request = new
+            {
+                LocationId = Guid.NewGuid().ToString(),
+                QueueId = "invalid-guid",
+                EntryId = Guid.NewGuid().ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            Assert.IsFalse(result.GetProperty("success").GetBoolean());
+            Assert.IsTrue(result.GetProperty("errors").GetArrayLength() > 0);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_InvalidEntryId_ReturnsBadRequest()
+        {
+            // Arrange
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            var request = new
+            {
+                LocationId = Guid.NewGuid().ToString(),
+                QueueId = Guid.NewGuid().ToString(),
+                EntryId = "invalid-guid"
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            Assert.IsFalse(result.GetProperty("success").GetBoolean());
+            Assert.IsTrue(result.GetProperty("errors").GetArrayLength() > 0);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_NonExistentQueue_ReturnsBadRequest()
+        {
+            // Arrange
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            var request = new
+            {
+                LocationId = Guid.NewGuid().ToString(),
+                QueueId = Guid.NewGuid().ToString(),
+                EntryId = Guid.NewGuid().ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            Assert.IsFalse(result.GetProperty("success").GetBoolean());
+            Assert.IsTrue(result.GetProperty("errors").GetArrayLength() > 0);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_NonServiceAccount_ReturnsForbidden()
+        {
+            // Arrange: Create non-service account user
+            var userToken = await CreateAndAuthenticateUserAsync("Barber");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", userToken);
+
+            var request = new
+            {
+                LocationId = Guid.NewGuid().ToString(),
+                QueueId = Guid.NewGuid().ToString(),
+                EntryId = Guid.NewGuid().ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_NoAuthentication_ReturnsUnauthorized()
+        {
+            // Arrange: No authentication
+            var request = new
+            {
+                LocationId = Guid.NewGuid().ToString(),
+                QueueId = Guid.NewGuid().ToString(),
+                EntryId = Guid.NewGuid().ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_EmptyLocationId_ReturnsBadRequest()
+        {
+            // Arrange
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            var request = new
+            {
+                LocationId = "",
+                QueueId = Guid.NewGuid().ToString(),
+                EntryId = Guid.NewGuid().ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_EmptyQueueId_ReturnsBadRequest()
+        {
+            // Arrange
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            var request = new
+            {
+                LocationId = Guid.NewGuid().ToString(),
+                QueueId = "",
+                EntryId = Guid.NewGuid().ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CalculateWaitTime_EmptyEntryId_ReturnsBadRequest()
+        {
+            // Arrange
+            var serviceAccountToken = await CreateAndAuthenticateUserAsync("ServiceAccount");
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", serviceAccountToken);
+
+            var request = new
+            {
+                LocationId = Guid.NewGuid().ToString(),
+                QueueId = Guid.NewGuid().ToString(),
+                EntryId = ""
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/analytics/calculate-wait", request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        /// <summary>
+        /// UC-ANALYTICS: Admin views cross-barbershop analytics
+        /// </summary>
+        [TestMethod]
+        public async Task GetCrossBarbershopAnalytics_ValidAdmin_ReturnsSuccess()
+        {
+            // Arrange: Create admin user
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create test data: subscription plans, organizations, locations, queues, staff
@@ -136,7 +448,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task GetCrossBarbershopAnalytics_NonPlatformAdmin_ReturnsForbidden()
+        public async Task GetCrossBarbershopAnalytics_NonAdmin_ReturnsForbidden()
         {
             // Arrange: Create non-admin user
             var userToken = await CreateAndAuthenticateUserAsync("Barber");
@@ -159,7 +471,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task GetCrossBarbershopAnalytics_InvalidDateRange_ReturnsBadRequest()
         {
             // Arrange
-            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             var request = new
@@ -244,13 +556,13 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         /// <summary>
-        /// UC-ANALYTICS: Platform administrator views top performing organizations
+        /// UC-ANALYTICS: Admin views top performing organizations
         /// </summary>
         [TestMethod]
         public async Task GetTopPerformingOrganizations_ValidRequest_ReturnsSuccess()
         {
             // Arrange
-            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             // Create test data
@@ -285,7 +597,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task GetTopPerformingOrganizations_ExcessiveMaxResults_ReturnsBadRequest()
         {
             // Arrange
-            var adminToken = await CreateAndAuthenticateUserAsync("PlatformAdmin");
+            var adminToken = await CreateAndAuthenticateUserAsync("Admin");
             _client.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
 
             var request = new
@@ -304,7 +616,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         }
 
         [TestMethod]
-        public async Task GetTopPerformingOrganizations_NonPlatformAdmin_ReturnsForbidden()
+        public async Task GetTopPerformingOrganizations_NonAdmin_ReturnsForbidden()
         {
             // Arrange
             var userToken = await CreateAndAuthenticateUserAsync("Owner");
@@ -340,6 +652,119 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task Debug_AdminTokenGeneration()
+        {
+            // Arrange: Create admin user
+            using var scope = _factory.Services.CreateScope();
+            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
+
+            var uniqueId = Guid.NewGuid().ToString("N");
+            var user = new User($"debug_admin_{uniqueId}", $"debug_admin_{uniqueId}@example.com", 
+                BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), UserRoles.Admin);
+            user.DisableTwoFactor();
+
+            await userRepository.AddAsync(user, CancellationToken.None);
+
+            var loginRequest = new LoginRequest
+            {
+                Username = user.Username,
+                Password = "TestPassword123!"
+            };
+
+            // Act: Login and get token
+            var loginResult = await authService.LoginAsync(loginRequest);
+
+            // Assert: Check login result
+            Assert.IsTrue(loginResult.Success, $"Login failed: {loginResult.Error}");
+            Assert.IsNotNull(loginResult.Token);
+            Assert.AreEqual(UserRoles.Admin, loginResult.Role);
+
+            // Decode and examine the JWT token
+            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(loginResult.Token);
+
+            // Check claims
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Role);
+            var isServiceAccountClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.IsServiceAccount);
+            var orgIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.OrganizationId);
+
+            Assert.IsNotNull(roleClaim, "Role claim is missing");
+            Assert.AreEqual(UserRoles.Admin, roleClaim.Value, "Role claim has wrong value");
+            Assert.IsNotNull(isServiceAccountClaim, "IsServiceAccount claim is missing");
+            Assert.AreEqual("false", isServiceAccountClaim.Value, "IsServiceAccount claim should be false for Admin");
+            Assert.IsNotNull(orgIdClaim, "Admin should have organization context");
+
+            // Test the token with the admin endpoint
+            _client.DefaultRequestHeaders.Authorization = new("Bearer", loginResult.Token);
+
+            await SetupTestAnalyticsDataAsync();
+            var request = new
+            {
+                StartDate = DateTime.UtcNow.AddDays(-30),
+                EndDate = DateTime.UtcNow,
+                MetricType = "CompletedServices",
+                MaxResults = 10,
+                IncludeDetails = false
+            };
+
+            var response = await _client.PostAsJsonAsync("/api/analytics/top-organizations", request);
+            
+            // Debug: Print response details
+            var responseContent = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"Response Status: {response.StatusCode}");
+            System.Diagnostics.Debug.WriteLine($"Response Content: {responseContent}");
+            
+            // This should work now
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, 
+                $"Expected OK but got {response.StatusCode}. Response: {responseContent}");
+        }
+
+        private async Task<(Guid LocationId, Guid QueueId, Guid EntryId)> SetupTestWaitTimeDataAsync()
+        {
+            using var scope = _factory.Services.CreateScope();
+            var subscriptionPlanRepository = scope.ServiceProvider.GetRequiredService<ISubscriptionPlanRepository>();
+            var organizationRepository = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
+            var locationRepository = scope.ServiceProvider.GetRequiredService<ILocationRepository>();
+            var queueRepository = scope.ServiceProvider.GetRequiredService<IQueueRepository>();
+            var staffMemberRepository = scope.ServiceProvider.GetRequiredService<IStaffMemberRepository>();
+
+            // Create subscription plan
+            var subscriptionPlan = new Grande.Fila.API.Domain.Subscriptions.SubscriptionPlan(
+                "Wait Time Test Plan", "Plan for wait time testing", 49.99m, 499.99m, 3, 15, 
+                true, true, true, false, true, 1000, false, "test");
+            await subscriptionPlanRepository.AddAsync(subscriptionPlan, CancellationToken.None);
+
+            // Create organization
+            var uniqueId = Guid.NewGuid().ToString("N")[..8];
+            var organization = new Organization($"Wait Time Test Org {uniqueId}", $"wait-time-test-org-{uniqueId}", "Test organization", 
+                "waittime@test.com", "+1234567890", "https://waittime-test.com", null, subscriptionPlan.Id, "test");
+            await organizationRepository.AddAsync(organization, CancellationToken.None);
+
+            // Create location
+            var address = Grande.Fila.API.Domain.Common.ValueObjects.Address.Create(
+                "123 Wait Time St", "1", "", "Downtown", "Wait Time City", "WTC", "USA", "12345");
+            var location = new Location("Wait Time Location", "wait-time-location", "Test location", 
+                organization.Id, address, "+1234567890", "location@waittime.com", 
+                TimeSpan.FromHours(9), TimeSpan.FromHours(17), 50, 30, "test");
+            await locationRepository.AddAsync(location, CancellationToken.None);
+
+            // Create staff member
+            var staffMember = new StaffMember("Wait Time Barber", location.Id, "barber@waittime.com", 
+                "+1234567890", null, "Barber", "waittime.barber", null, "test");
+            await staffMemberRepository.AddAsync(staffMember, CancellationToken.None);
+
+            // Create queue with entries
+            var queue = new Queue(location.Id, 50, 30, "test");
+            var customerId = Guid.NewGuid();
+            queue.AddCustomerToQueue(customerId, "Test Customer for Wait Time", staffMember.Id);
+            var queueEntry = queue.Entries.First();
+            await queueRepository.AddAsync(queue, CancellationToken.None);
+
+            return (location.Id, queue.Id, queueEntry.Id);
         }
 
         private async Task<Guid> SetupTestAnalyticsDataAsync()
@@ -415,11 +840,12 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var uniqueId = Guid.NewGuid().ToString("N");
             var mappedRole = role.ToLower() switch
             {
-                "platformadmin" => UserRoles.Admin,
-                "admin" => UserRoles.Owner,
+                "platformadmin" => UserRoles.PlatformAdmin,
+                "admin" => UserRoles.Admin,
                 "owner" => UserRoles.Owner,
                 "barber" => UserRoles.Barber,
                 "client" => UserRoles.Client,
+                "serviceaccount" => UserRoles.ServiceAccount,
                 _ => UserRoles.Client
             };
             
@@ -441,8 +867,11 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             };
 
             var loginResult = await authService.LoginAsync(loginRequest);
-            Assert.IsTrue(loginResult.Success);
+            Assert.IsTrue(loginResult.Success, $"Login failed for role {role}: {loginResult.Error}");
             Assert.IsNotNull(loginResult.Token);
+            
+            // Debug: Check the role in the login result
+            Assert.AreEqual(mappedRole, loginResult.Role, $"Expected role {mappedRole} but got {loginResult.Role}");
 
             return loginResult.Token;
         }

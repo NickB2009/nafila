@@ -13,6 +13,7 @@
 
 # --- TOKEN VARIABLES (update after login) ---
 @adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWEyMzc2ZS0xMGRhLTQ0NDQtOGJhNy04M2VmY2Y3MTQxZDciLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhZG1pbl90ZXN0IiwiZW1haWwiOiJhZG1pbkB0ZXN0LmNvbSIsInJvbGUiOiJBZG1pbiIsInBlcm1pc3Npb25zIjpbIm1hbmFnZTpsb2NhdGlvbnMiLCJtYW5hZ2U6c3RhZmYiLCJtYW5hZ2U6c2VydmljZXMiLCJ2aWV3Om1ldHJpY3MiLCJtYW5hZ2U6YnJhbmRpbmciXSwib3JnX2lkIjoiNWY2YzBhNzgtYmEzZS00ZTRlLThjOWUtMmUwZDYxYWIyMTBmIiwidGVuYW50X3NsdWciOiJ0ZXN0LXRlbmFudCIsImV4cCI6MTc1MTg1Mjk3MywiaXNzIjoiR3JhbmRlVGVjaC5RdWV1ZUh1Yi5BUEkiLCJhdWQiOiJHcmFuZGVUZWNoLlF1ZXVlSHViLkFQSSJ9.e2Bb4yfCBVrLpNdZay8twzq9JpNXgghP58G0TU0Ux14
+@serviceAccountToken = YOUR_SERVICE_ACCOUNT_TOKEN_HERE
 @barberToken = YOUR_BARBER_TOKEN_HERE
 @clientToken = YOUR_CLIENT_TOKEN_HERE
 @ownerToken = YOUR_OWNER_TOKEN_HERE
@@ -33,6 +34,17 @@ Content-Type: application/json
 {
   "username": "admin_test",
   "password": "AdminPass123!"
+}
+
+###
+
+# --- SERVICE ACCOUNT LOGIN (for calculate-wait endpoint) ---
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "service_test",
+  "password": "ServicePass123!"
 }
 
 ###
@@ -365,6 +377,19 @@ Authorization: Bearer {{adminToken}}
 # ===============================
 # ANALYTICS ENDPOINTS (UC-ANALYTICS)
 # ===============================
+
+# --- CALCULATE WAIT TIME (Service Account Only) ---
+POST {{baseUrl}}/api/analytics/calculate-wait
+Content-Type: application/json
+Authorization: Bearer {{serviceAccountToken}}
+
+{
+  "locationId": "{{locationId}}",
+  "queueId": "{{queueId}}",
+  "entryId": "{{queueEntryId}}"
+}
+
+###
 
 # --- CROSS-BARBERSHOP ANALYTICS (Platform Admin Only) ---
 POST {{baseUrl}}/api/analytics/cross-barbershop

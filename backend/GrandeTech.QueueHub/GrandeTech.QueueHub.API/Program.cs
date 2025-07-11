@@ -108,7 +108,7 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.PlatformAdmin, requireOrganizationContext: false)));
     
     options.AddPolicy("RequireAdmin", policy =>
-        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Admin)));
+        policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Admin, requireOrganizationContext: false)));
     
     options.AddPolicy("RequireOwner", policy =>
         policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Owner))); // Owner or Admin can access

@@ -19,6 +19,11 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         private static readonly string TestAdminEmail = "admin@test.com";
         private static readonly string TestAdminPassword = "AdminPass123!";
         private static readonly string TestAdminRole = UserRoles.Admin;
+        
+        private static readonly string TestServiceAccountUsername = "service_test";
+        private static readonly string TestServiceAccountEmail = "service@test.com";
+        private static readonly string TestServiceAccountPassword = "ServicePass123!";
+        private static readonly string TestServiceAccountRole = UserRoles.ServiceAccount;
 
         public static void Initialize()
         {
@@ -44,6 +49,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
 
                 // Ensure test admin user exists
                 CreateOrUpdateTestAdminUser();
+                
+                // Ensure test service account user exists
+                CreateOrUpdateTestServiceAccountUser();
             }
         }
 
@@ -197,6 +205,33 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 adminUser.Activate();
                 adminUser.DisableTwoFactor();
                 users[adminUser.Id] = adminUser;
+            }
+        }
+
+        public static void CreateOrUpdateTestServiceAccountUser()
+        {
+            Initialize();
+            var users = _dataStore[typeof(User)];
+            var serviceUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestServiceAccountUsername);
+            if (serviceUser == null)
+            {
+                serviceUser = new User(
+                    TestServiceAccountUsername,
+                    TestServiceAccountEmail,
+                    BCrypt.Net.BCrypt.HashPassword(TestServiceAccountPassword),
+                    TestServiceAccountRole
+                );
+                serviceUser.Activate();
+                serviceUser.DisableTwoFactor();
+                users.TryAdd(serviceUser.Id, serviceUser);
+            }
+            else
+            {
+                serviceUser.Role = TestServiceAccountRole;
+                serviceUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestServiceAccountPassword);
+                serviceUser.Activate();
+                serviceUser.DisableTwoFactor();
+                users[serviceUser.Id] = serviceUser;
             }
         }
     }

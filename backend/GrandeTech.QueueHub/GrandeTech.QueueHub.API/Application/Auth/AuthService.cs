@@ -153,8 +153,18 @@ namespace Grande.Fila.API.Application.Auth
                 claims.Add(new Claim(TenantClaims.Permissions, permission));
             }
 
-            // Add tenant context for non-platform admin roles
-            if (mappedRole != UserRoles.PlatformAdmin)
+            // Add service account flag for service accounts
+            if (mappedRole == UserRoles.ServiceAccount)
+            {
+                claims.Add(new Claim(TenantClaims.IsServiceAccount, "true"));
+            }
+            else
+            {
+                claims.Add(new Claim(TenantClaims.IsServiceAccount, "false"));
+            }
+
+            // Add tenant context for roles that need it (excluding platform admin and service account)
+            if (mappedRole != UserRoles.PlatformAdmin && mappedRole != UserRoles.ServiceAccount)
             {
                 var organizationId = Guid.NewGuid().ToString();
                 claims.Add(new Claim(TenantClaims.OrganizationId, organizationId));
@@ -182,12 +192,14 @@ namespace Grande.Fila.API.Application.Auth
         {
             return oldRole.ToLower() switch
             {
+                "platformadmin" => UserRoles.PlatformAdmin,
                 "admin" => UserRoles.Admin,
                 "owner" => UserRoles.Owner, // Owner role mapped correctly
                 "barber" => UserRoles.Barber,
                 "client" => UserRoles.Client,
                 "user" => UserRoles.Client, // Default user becomes Client
                 "system" => UserRoles.ServiceAccount,
+                "serviceaccount" => UserRoles.ServiceAccount,
                 _ => UserRoles.Client // Default fallback
             };
         }
@@ -240,6 +252,12 @@ namespace Grande.Fila.API.Application.Auth
                 {
                     "view:queue",
                     "join:queue"
+                },
+                UserRoles.ServiceAccount => new[]
+                {
+                    "calculate:wait-time",
+                    "access:analytics",
+                    "system:operations"
                 },
                 _ => Array.Empty<string>()
             };
