@@ -76,6 +76,123 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     ),
   ];
 
+  // Filter state
+  bool _filterOpenNow = false;
+  bool _filterShortLine = false;
+  bool _filterShortWait = false;
+
+  List<SalonLocation> get _filteredSalons {
+    return _salonLocations.where((location) {
+      final salon = location.salon;
+      if (_filterOpenNow && !salon.isOpen) return false;
+      if (_filterShortLine && salon.queueLength > 3) return false;
+      if (_filterShortWait && salon.waitTime > 15) return false;
+      return true;
+    }).toList();
+  }
+
+  void _showFilterModal() async {
+    final result = await showModalBottomSheet<Map<String, bool>>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Filtros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Refine sua busca de salões próximos:',
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    value: _filterOpenNow,
+                    onChanged: (val) => setModalState(() => _filterOpenNow = val),
+                    title: const Text('Aberto agora'),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  SwitchListTile(
+                    value: _filterShortLine,
+                    onChanged: (val) => setModalState(() => _filterShortLine = val),
+                    title: const Text('Fila curta (≤ 3 pessoas)'),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  SwitchListTile(
+                    value: _filterShortWait,
+                    onChanged: (val) => setModalState(() => _filterShortWait = val),
+                    title: const Text('Espera rápida (≤ 15 min)'),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setModalState(() {
+                              _filterOpenNow = false;
+                              _filterShortLine = false;
+                              _filterShortWait = false;
+                            });
+                          },
+                          child: const Text('Limpar filtros'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop({
+                              'openNow': _filterOpenNow,
+                              'shortLine': _filterShortLine,
+                              'shortWait': _filterShortWait,
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Aplicar filtros'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (result != null) {
+      setState(() {
+        _filterOpenNow = result['openNow'] ?? false;
+        _filterShortLine = result['shortLine'] ?? false;
+        _filterShortWait = result['shortWait'] ?? false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -106,7 +223,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 tileProvider: CancellableNetworkTileProvider(),
                   ),
                   MarkerLayer(
-                    markers: _salonLocations.map((location) {
+                    markers: _filteredSalons.map((location) {
                       return Marker(
                         point: location.position,
                     width: 60,
@@ -166,180 +283,209 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
           if (_selectedSalon != null)
             Align(
               alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Material(
-                  elevation: 8,
-                  borderRadius: BorderRadius.circular(20),
-                  color: theme.colorScheme.surface,
-                  child: Container(
-                    width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                          _selectedSalon!.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _selectedSalon!.address,
-                          style: theme.textTheme.bodyMedium,
+              child: Builder(
+                builder: (context) {
+                  final isMobile = MediaQuery.of(context).size.width < 600;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: 16),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: isMobile ? double.infinity : 420,
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => SalonDetailsScreen(
-                                      salon: _selectedSalon!,
-                                        services: [
-                                          SalonService(
-                                            id: '1',
-                                            name: 'Corte Feminino',
-                                            description: 'Corte e finalização',
-                                            price: 80.0,
-                                            durationMinutes: 60,
-                                            categories: ['Corte'],
-                                          ),
-                                          SalonService(
-                                            id: '2',
-                                            name: 'Coloração',
-                                            description: 'Coloração completa',
-                                            price: 150.0,
-                                            durationMinutes: 120,
-                                            categories: ['Coloração'],
-                                          ),
-                                        ],
-                                        contact: SalonContact(
-                                          phone: '(555) 123-4567',
-                                          email: 'contato@salon.com',
-                                          website: 'www.salon.com',
-                                          instagram: '@salon',
-                                          facebook: 'Salon',
-                                        ),
-                                        businessHours: [
-                                          SalonHours(
-                                            day: 'Segunda - Sexta',
-                                            isOpen: true,
-                                            openTime: '9:00',
-                                            closeTime: '18:00',
-                                          ),
-                                          SalonHours(
-                                            day: 'Sábado',
-                                            isOpen: true,
-                                            openTime: '9:00',
-                                            closeTime: '14:00',
-                                          ),
-                                          SalonHours(
-                                            day: 'Domingo',
-                                            isOpen: false,
-                                          ),
-                                        ],
-                                        reviews: [
-                                          SalonReview(
-                                            id: '1',
-                                            userName: 'Maria Silva',
-                                            rating: 5,
-                                            comment: 'Excelente atendimento!',
-                                            date: '2024-03-15',
-                                          ),
-                                          SalonReview(
-                                            id: '2',
-                                            userName: 'João Santos',
-                                            rating: 4,
-                                            comment: 'Muito bom serviço',
-                                            date: '2024-03-14',
-                                          ),
-                                        ],
-                                        additionalInfo: {
-                                          'Estacionamento': 'Gratuito',
-                                          'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
-                                          'Acessibilidade': 'Rampa de acesso',
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                        child: Material(
+                          elevation: 8,
+                          borderRadius: BorderRadius.circular(20),
+                          color: theme.colorScheme.surface,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _selectedSalon!.name,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              child: const Text('Ver detalhes'),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                                    setState(() {
-                                  _selectedSalon = null;
-                                                    });
-                                                  },
-                            ),
-                          ],
+                                const SizedBox(height: 8),
+                                Text(
+                                  _selectedSalon!.address,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => SalonDetailsScreen(
+                                              salon: _selectedSalon!,
+                                              services: [
+                                                SalonService(
+                                                  id: '1',
+                                                  name: 'Corte Feminino',
+                                                  description: 'Corte e finalização',
+                                                  price: 80.0,
+                                                  durationMinutes: 60,
+                                                  categories: ['Corte'],
+                                                ),
+                                                SalonService(
+                                                  id: '2',
+                                                  name: 'Coloração',
+                                                  description: 'Coloração completa',
+                                                  price: 150.0,
+                                                  durationMinutes: 120,
+                                                  categories: ['Coloração'],
                                                 ),
                                               ],
+                                              contact: SalonContact(
+                                                phone: '(555) 123-4567',
+                                                email: 'contato@salon.com',
+                                                website: 'www.salon.com',
+                                                instagram: '@salon',
+                                                facebook: 'Salon',
+                                              ),
+                                              businessHours: [
+                                                SalonHours(
+                                                  day: 'Segunda - Sexta',
+                                                  isOpen: true,
+                                                  openTime: '9:00',
+                                                  closeTime: '18:00',
+                                                ),
+                                                SalonHours(
+                                                  day: 'Sábado',
+                                                  isOpen: true,
+                                                  openTime: '9:00',
+                                                  closeTime: '14:00',
+                                                ),
+                                                SalonHours(
+                                                  day: 'Domingo',
+                                                  isOpen: false,
+                                                ),
+                                              ],
+                                              reviews: [
+                                                SalonReview(
+                                                  id: '1',
+                                                  userName: 'Maria Silva',
+                                                  rating: 5,
+                                                  comment: 'Excelente atendimento!',
+                                                  date: '2024-03-15',
+                                                ),
+                                                SalonReview(
+                                                  id: '2',
+                                                  userName: 'João Santos',
+                                                  rating: 4,
+                                                  comment: 'Muito bom serviço',
+                                                  date: '2024-03-14',
+                                                ),
+                                              ],
+                                              additionalInfo: {
+                                                'Estacionamento': 'Gratuito',
+                                                'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                                                'Acessibilidade': 'Rampa de acesso',
+                                              },
                                             ),
-                  ),
-                ),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: theme.colorScheme.primary,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: const Text('Ver detalhes'),
+                                    ),
+                                    const Spacer(),
+                                    IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedSalon = null;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-          // Floating list button
+          // Floating action buttons (filter, list, location)
           Positioned(
-            bottom: 100,
-            right: 16,
-            child: FloatingActionButton(
-              heroTag: 'list_fab',
-              mini: true,
-              backgroundColor: theme.colorScheme.surface,
-              foregroundColor: theme.colorScheme.primary,
-              onPressed: () async {
-                final selected = await showModalBottomSheet<int>(
-                  context: context,
-                  isScrollControlled: true,
-                                                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  builder: (context) {
-                    return _SalonListModal(
-                      salons: _salonLocations,
-                      theme: theme,
+            bottom: 32,
+            right: 24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'filter_fab',
+                  onPressed: _showFilterModal,
+                  icon: const Icon(Icons.filter_list),
+                  label: const Text('Filtros'),
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                ),
+                const SizedBox(height: 16),
+                FloatingActionButton(
+                  heroTag: 'list_fab',
+                  mini: true,
+                  backgroundColor: theme.colorScheme.surface,
+                  foregroundColor: theme.colorScheme.primary,
+                  onPressed: () async {
+                    final selected = await showModalBottomSheet<int>(
+                      context: context,
+                      isScrollControlled: true,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                      ),
+                      builder: (context) {
+                        return _SalonListModal(
+                          salons: _salonLocations,
+                          theme: theme,
+                        );
+                      },
                     );
+                    if (selected != null) {
+                      final loc = _salonLocations[selected];
+                      _mapController.move(loc.position, 15.0);
+                      setState(() {
+                        _selectedSalon = loc.salon;
+                      });
+                    }
                   },
-                );
-                if (selected != null) {
-                  final loc = _salonLocations[selected];
-                  _mapController.move(loc.position, 15.0);
-                  setState(() {
-                    _selectedSalon = loc.salon;
-                  });
-                }
-              },
-              child: const Icon(Icons.list),
-              ),
+                  child: const Icon(Icons.list),
+                ),
+                const SizedBox(height: 16),
+                FloatingActionButton(
+                  heroTag: 'location_fab',
+                  onPressed: () {
+                    _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
+                  },
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  child: const Icon(Icons.my_location),
+                ),
+              ],
             ),
+          ),
           ],
-        ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'location_fab',
-        onPressed: () {
-          _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
-        },
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.my_location),
       ),
     );
   }

@@ -184,9 +184,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Hero App Bar with stunning gradient
+          // Hero App Bar with stunning gradient - SLIGHTLY LARGER
           SliverAppBar(
-            expandedHeight: size.height * 0.45,
+            expandedHeight: size.height * 0.29, // Up from 0.24
             floating: false,
             pinned: true,
             backgroundColor: Colors.transparent,
@@ -225,7 +225,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             ],
           ),
           
-          // Main content
+          // Main content with balanced spacing
           SliverToBoxAdapter(
             child: Container(
               decoration: BoxDecoration(
@@ -238,28 +238,49 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                   ],
                 ),
               ),
-              child: Padding(
-                padding: EdgeInsets.all(size.width > 600 ? 32.0 : 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Special offer section
-                    _buildSpecialOfferSection(context, theme),
-                    const SizedBox(height: 24),
-                    
-                    // Closest salons header
-                    _buildSectionHeader(context, theme, 'Salões mais próximos', 'Tempo real'),
-                    const SizedBox(height: 16),
-                    
-                    // Dynamic salon cards
-                    ..._buildDynamicSalonCards(context, theme),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Find salon card
-                    _buildFindSalonCard(context, theme),
-                  ],
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Stats section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                    child: _buildStatsSection(context, theme, size),
+                  ),
+                  
+                  // Divider for visual grouping
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Divider(
+                      color: Colors.grey.shade200,
+                      thickness: 1.2,
+                      height: 36, // Slightly more space
+                    ),
+                  ),
+                  
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width > 600 ? 36.0 : 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 24), // More space before section header
+                        
+                        // Closest salons header
+                        _buildSectionHeader(context, theme, 'Salões mais próximos', 'Tempo real'),
+                        const SizedBox(height: 22), // More space before cards
+                        
+                        // Dynamic salon cards
+                        ..._buildDynamicSalonCards(context, theme),
+                        
+                        const SizedBox(height: 32), // More space before find card
+                        
+                        // Find salon card
+                        _buildFindSalonCard(context, theme),
+                        
+                        const SizedBox(height: 36), // More space at bottom
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -325,11 +346,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
               // Main hero content
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(16.0), // Up from 12
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 14), // Up from 8
                       
                       // Animated greeting
                       ScaleTransition(
@@ -339,104 +360,69 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                greetingName,
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Up from 10/4
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.20),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.waving_hand, color: Colors.white, size: 16), // Up from 14
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          greetingName,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14, // Up from 12
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 10), // Up from 8/6
                               Text(
                                 "Transforme seu\nvisual hoje mesmo",
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 36,
+                                  fontSize: 24, // Up from 20
                                   fontWeight: FontWeight.bold,
                                   height: 1.2,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withOpacity(0.3),
+                                      color: Colors.black.withOpacity(0.22),
                                       offset: const Offset(0, 2),
                                       blurRadius: 4,
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                "Profissionais qualificados • Produtos premium • Resultados garantidos",
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontSize: 14,
-                                  height: 1.4,
+                              const SizedBox(height: 8), // Up from 6
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Up from 10/4
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.13),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  "Profissionais qualificados • Produtos premium • Resultados garantidos",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.90),
+                                    fontSize: 12, // Up from 10
+                                    height: 1.3,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      
-                      const Spacer(),
-                      
-                      // CTA Button
-                      SlideTransition(
-                        position: _slideAnimation,
-                        child: AnimatedBuilder(
-                          animation: _pulseAnimation,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: _pulseAnimation.value,
-                              child: Container(
-                                width: double.infinity,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Colors.white, Colors.white.withOpacity(0.9)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(28),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(28),
-                                    onTap: () {
-                                      // Navigate to booking or show salons
-                                    },
-                                    child: Center(
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.login, color: AppTheme.primaryColor),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Check-in agora',
-                                            style: TextStyle(
-                                              color: AppTheme.primaryColor,
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -612,7 +598,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     return List.generate(
       _dynamicSalons.length,
       (index) => Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.only(bottom: 20), // Up from 16
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
           duration: Duration(milliseconds: 600 + (index * 200)),
@@ -625,13 +611,13 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
               ),
             );
           },
-          child: _buildEnhancedSalonCard(context, theme, _dynamicSalons[index], index),
+          child: _buildBalancedSalonCard(context, theme, _dynamicSalons[index], index),
         ),
       ),
     );
   }
 
-  Widget _buildEnhancedSalonCard(BuildContext context, ThemeData theme, Salon salon, int index) {
+  Widget _buildBalancedSalonCard(BuildContext context, ThemeData theme, Salon salon, int index) {
     final isUrgent = salon.waitTime <= 10;
     final isPopular = salon.queueLength >= 4;
     
@@ -643,27 +629,29 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
           colors: [
             Colors.white,
             Colors.grey.shade50,
+            AppTheme.primaryColor.withOpacity(0.03),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18), // Up from 16
+        border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => SalonDetailsScreen(
                   salon: salon,
-                  services: [], // You may want to pass real services if available
+                  services: [],
                   contact: SalonContact(
                     phone: '',
                     email: '',
@@ -676,11 +664,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20), // Up from 16
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with badges
+                // Header with badges - BALANCED
                 Row(
                   children: [
                     Expanded(
@@ -692,7 +680,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               Expanded(
                                 child: Text(
                                   salon.name,
-                                  style: theme.textTheme.titleLarge?.copyWith(
+                                  style: theme.textTheme.titleLarge?.copyWith( // Up from titleMedium
                                     fontWeight: FontWeight.bold,
                                     color: Colors.grey.shade800,
                                   ),
@@ -700,16 +688,16 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               ),
                               if (isUrgent) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), // Up from 6/2
                                   decoration: BoxDecoration(
-                                    color: AppTheme.semanticColors['urgent'],
+                                    color: AppTheme.semanticColors['urgent']!.withOpacity(0.18), // Slightly more color
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'RÁPIDO',
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
+                                      color: AppTheme.semanticColors['urgent'],
+                                      fontSize: 10, // Up from 9
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -718,15 +706,15 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               ],
                               if (isPopular) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.semanticColors['popular'],
+                                    color: AppTheme.semanticColors['popular']!.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'POPULAR',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: AppTheme.semanticColors['popular'],
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -737,7 +725,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               IconButton(
                                 icon: Icon(
                                   _favoriteSalons.contains(salon.name) ? Icons.favorite : Icons.favorite_border,
-                                  color: _favoriteSalons.contains(salon.name) ? AppTheme.dangerColor : Colors.grey.shade400,
+                                  color: _favoriteSalons.contains(salon.name) ? AppTheme.dangerColor : Colors.grey.shade300,
+                                  size: 22, // Up from 20
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -748,13 +737,15 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                                     }
                                   });
                                 },
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(minWidth: 36, minHeight: 36), // Up from 32
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 4), // Up from 2
                           Text(
                             salon.address,
-                            style: theme.textTheme.bodyMedium?.copyWith(
+                            style: theme.textTheme.bodyMedium?.copyWith( // Up from bodySmall
                               color: Colors.grey.shade600,
                             ),
                           ),
@@ -764,47 +755,48 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                   ],
                 ),
                 
-                const SizedBox(height: 16),
+                const SizedBox(height: 16), // Up from 12
                 
-                // Enhanced info chips
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                // Info chips - BALANCED
+                Row(
                   children: [
-                    _buildEnhancedInfoChip(
-                      context,
-                      Icons.access_time,
-                      '${salon.waitTime} min',
-                      isUrgent ? AppTheme.semanticColors['urgent']! : AppTheme.semanticColors['time']!,
-                      isUrgent ? 'Disponível agora!' : 'Tempo estimado',
+                    Expanded(
+                      child: _buildBalancedInfoChip(
+                        context,
+                        Icons.access_time,
+                        '${salon.waitTime} min',
+                        isUrgent ? AppTheme.semanticColors['urgent']! : AppTheme.semanticColors['time']!,
+                      ),
                     ),
-                    _buildEnhancedInfoChip(
-                      context,
-                      Icons.people_outline,
-                      '${salon.queueLength} na fila',
-                      isPopular ? AppTheme.semanticColors['popular']! : AppTheme.semanticColors['queue']!,
-                      isPopular ? 'Muito procurado' : 'Fila atual',
+                    const SizedBox(width: 10), // Up from 8
+                    Expanded(
+                      child: _buildBalancedInfoChip(
+                        context,
+                        Icons.people_outline,
+                        '${salon.queueLength} fila',
+                        isPopular ? AppTheme.semanticColors['popular']! : AppTheme.semanticColors['queue']!,
+                      ),
                     ),
-                    _buildEnhancedInfoChip(
-                      context,
-                      Icons.location_on_outlined,
-                      '${salon.distance.toStringAsFixed(1)} km',
-                      AppTheme.semanticColors['distance']!,
-                      'Distância',
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildBalancedInfoChip(
+                        context,
+                        Icons.location_on_outlined,
+                        '${salon.distance.toStringAsFixed(1)} km',
+                        AppTheme.semanticColors['distance']!,
+                      ),
                     ),
                   ],
                 ),
                 
-                const SizedBox(height: 16),
+                const SizedBox(height: 16), // Up from 12
                 
-                // CTA Section
+                // CTA Section - BALANCED
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(14), // Up from 10
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: AppTheme.ctaGradient,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
+                    color: AppTheme.primaryColor.withOpacity(0.13), // Slightly more color
+                    borderRadius: BorderRadius.circular(16), // Up from 12
                   ),
                   child: Row(
                     children: [
@@ -815,22 +807,21 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                             Text(
                               isUrgent ? 'Check-in rápido!' : 'Fazer check-in',
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
+                                color: AppTheme.primaryColor,
+                                fontSize: 16, // Up from 14
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               isUrgent ? 'Sem espera' : 'Entre na fila',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 14,
+                                color: Colors.grey.shade700,
+                                fontSize: 13, // Up from 12
                               ),
                             ),
                           ],
                         ),
                       ),
-                      // Only this button should go to CheckInScreen
                       GestureDetector(
                         onTap: () {
                           Navigator.of(context).push(
@@ -840,21 +831,29 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10), // Up from 14/8
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(22), // Up from 20
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryColor.withOpacity(0.10),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.login, color: AppTheme.primaryColor, size: 18),
-                              const SizedBox(width: 6),
+                              Icon(Icons.login, color: AppTheme.primaryColor, size: 18), // Up from 16
+                              const SizedBox(width: 6), // Up from 4
                               Text(
                                 'Check-in',
                                 style: TextStyle(
                                   color: AppTheme.primaryColor,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 15, // Up from 14
                                 ),
                               ),
                             ],
@@ -872,31 +871,31 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     );
   }
 
-  Widget _buildEnhancedInfoChip(BuildContext context, IconData icon, String label, Color color, String tooltip) {
-    return Tooltip(
-      message: tooltip,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 6),
-            Text(
+  Widget _buildBalancedInfoChip(BuildContext context, IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), // Up from 8/6
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.09), // Slightly more color
+        borderRadius: BorderRadius.circular(10), // Up from 8
+        border: Border.all(color: color.withOpacity(0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color.withOpacity(0.85)), // Up from 14
+          const SizedBox(width: 6), // Up from 4
+          Expanded(
+            child: Text(
               label,
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontSize: 12, // Up from 11
               ),
+              overflow: TextOverflow.ellipsis,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -983,6 +982,60 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatsSection(BuildContext context, ThemeData theme, Size size) {
+    final int salonCount = _dynamicSalons.length;
+    final double avgQueue = salonCount > 0 ? _dynamicSalons.map((s) => s.queueLength).reduce((a, b) => a + b) / salonCount : 0;
+    final double avgWait = salonCount > 0 ? _dynamicSalons.map((s) => s.waitTime).reduce((a, b) => a + b) / salonCount : 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white, // Use white background for less visual noise
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem(context, Icons.store, '$salonCount', 'Salões', AppTheme.primaryColor),
+          _buildStatItem(context, Icons.people, '${avgQueue.round()}', 'Fila média', AppTheme.warningColor),
+          _buildStatItem(context, Icons.schedule, '${avgWait.round()}', 'Espera média', AppTheme.successColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(BuildContext context, IconData icon, String value, String label, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color.withOpacity(0.85), size: 22),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.grey.shade800,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 }

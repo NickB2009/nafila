@@ -45,6 +45,10 @@ class AppTheme {
     primaryColor, // Gold
     infoColor,    // Blue
   ];
+  static const List<Color> statsGradient = [
+    Color(0xFF667eea), // Soft blue
+    Color(0xFF764ba2), // Purple
+  ];
   static const List<Color> darkGradient = [
     Color(0xFF2C3E50), // Dark Blue
     Color(0xFF34495E), // Darker Blue

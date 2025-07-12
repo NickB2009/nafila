@@ -412,8 +412,29 @@ class QueueStatusScreen extends StatelessWidget {
           Divider(color: theme.dividerColor),
           _buildSalonAction(theme, Icons.phone, phone, onTap: () {}),
           Divider(color: theme.dividerColor),
-          _buildSalonAction(theme, Icons.delete_outline, 'Cancelar check-in', color: theme.colorScheme.error, onTap: () {
-            Navigator.of(context).pop();
+          _buildSalonAction(theme, Icons.delete_outline, 'Cancelar check-in', color: theme.colorScheme.error, onTap: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Cancelar check-in'),
+                content: const Text('Tem certeza que deseja cancelar seu check-in?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text('Voltar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                    child: const Text('Cancelar'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            }
           }),
         ],
       ),
