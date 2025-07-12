@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Application.Services.Cache;
+using System.Collections.Generic; // Added for List<QueueEntry>
 
 namespace Grande.Fila.API.Application.Kiosk
 {
@@ -12,15 +16,21 @@ namespace Grande.Fila.API.Application.Kiosk
     {
         private readonly IQueueRepository _queueRepository;
         private readonly ILocationRepository _locationRepository;
+        private readonly IStaffMemberRepository _staffMemberRepository;
+        private readonly IAverageWaitTimeCache _cache;
         private readonly ILogger<KioskDisplayService> _logger;
 
         public KioskDisplayService(
             IQueueRepository queueRepository,
             ILocationRepository locationRepository,
+            IStaffMemberRepository staffMemberRepository,
+            IAverageWaitTimeCache cache,
             ILogger<KioskDisplayService> logger)
         {
             _queueRepository = queueRepository;
             _locationRepository = locationRepository;
+            _staffMemberRepository = staffMemberRepository;
+            _cache = cache;
             _logger = logger;
         }
 
@@ -37,9 +47,9 @@ namespace Grande.Fila.API.Application.Kiosk
 
             try
             {
-                // Check location exists
-                var locationExists = await _locationRepository.ExistsAsync(l => l.Id == locationId, cancellationToken);
-                if (!locationExists)
+                // Get location
+                var location = await _locationRepository.GetByIdAsync(locationId, cancellationToken);
+                if (location == null)
                 {
                     result.Errors.Add("Location not found");
                     return result;
@@ -48,6 +58,17 @@ namespace Grande.Fila.API.Application.Kiosk
                 // Get all queues for this location
                 var queues = await _queueRepository.GetByLocationAsync(locationId, cancellationToken);
                 
+                // Get staff members for wait time calculation
+                var staffMembers = await _staffMemberRepository.GetByLocationAsync(locationId, cancellationToken);
+                var activeStaffCount = staffMembers.Count(s => s.IsActive && !s.IsOnBreak());
+
+                // Get average service time from cache or use location default
+                var averageTimeMinutes = location.AverageServiceTimeInMinutes;
+                if (_cache.TryGetAverage(locationId, out var cachedAverage))
+                {
+                    averageTimeMinutes = cachedAverage;
+                }
+
                 // Aggregate all queue entries
                 var allEntries = queues.SelectMany(q => q.Entries).ToList();
 
@@ -68,7 +89,8 @@ namespace Grande.Fila.API.Application.Kiosk
                     Position = e.Position,
                     Status = e.Status.ToString(),
                     TokenNumber = e.TokenNumber,
-                    EstimatedWaitTime = CalculateEstimatedWaitTime(e)
+                    EstimatedWaitMinutes = CalculateEstimatedWaitMinutes(e, activeEntries, activeStaffCount, averageTimeMinutes),
+                    EstimatedWaitTime = FormatEstimatedWaitTime(CalculateEstimatedWaitMinutes(e, activeEntries, activeStaffCount, averageTimeMinutes))
                 }).ToList();
 
                 // Find currently being served
@@ -91,11 +113,32 @@ namespace Grande.Fila.API.Application.Kiosk
             return result;
         }
 
-        private string CalculateEstimatedWaitTime(QueueEntry entry)
+        private int CalculateEstimatedWaitMinutes(QueueEntry entry, List<QueueEntry> allActiveEntries, int activeStaffCount, double averageTimeMinutes)
         {
-            // Simple calculation - could be enhanced with real-time data
-            var waitMinutes = entry.Position * 15; // Assume 15 minutes per person
+            // If no staff available, return -1 (consistent with CalculateWaitService)
+            if (activeStaffCount == 0)
+                return -1;
+
+            // Count customers ahead in the queue (same logic as CalculateWaitService)
+            var customersAhead = allActiveEntries
+                .Where(e => e.Status == QueueEntryStatus.Waiting || e.Status == QueueEntryStatus.Called)
+                .Where(e => e.Position < entry.Position)
+                .Count();
+
+            // Calculate estimated wait time (same logic as CalculateWaitService)
+            return (int)Math.Ceiling((customersAhead / (double)activeStaffCount) * averageTimeMinutes);
+        }
+
+        private string FormatEstimatedWaitTime(int waitMinutes)
+        {
+            // Handle special cases
+            if (waitMinutes < 0)
+                return "N/A";
             
+            if (waitMinutes == 0)
+                return "0 min";
+            
+            // Format as before for backward compatibility
             if (waitMinutes < 60)
                 return $"{waitMinutes} min";
             

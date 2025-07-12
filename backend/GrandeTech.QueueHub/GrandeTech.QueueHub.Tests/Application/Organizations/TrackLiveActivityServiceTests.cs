@@ -9,6 +9,7 @@ using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Users;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -71,7 +72,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync(new List<StaffMember> { staffMember });
 
             // Act
-            var result = await _service.GetLiveActivityAsync(request, "admin-user", "Admin", CancellationToken.None);
+            var result = await _service.GetLiveActivityAsync(request, "admin-user", UserRoles.Owner, CancellationToken.None);
 
             // Assert
             if (!result.Success)
@@ -97,7 +98,7 @@ namespace Grande.Fila.Tests.Application.Organizations
             };
 
             // Act
-            var result = await _service.GetLiveActivityAsync(request, "admin-user", "Admin", CancellationToken.None);
+            var result = await _service.GetLiveActivityAsync(request, "admin-user", UserRoles.Owner, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -115,7 +116,7 @@ namespace Grande.Fila.Tests.Application.Organizations
             };
 
             // Act
-            var result = await _service.GetLiveActivityAsync(request, "user", "Client", CancellationToken.None);
+            var result = await _service.GetLiveActivityAsync(request, "user", UserRoles.Customer, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -136,7 +137,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync((Organization?)null);
 
             // Act
-            var result = await _service.GetLiveActivityAsync(request, "admin-user", "Admin", CancellationToken.None);
+            var result = await _service.GetLiveActivityAsync(request, "admin-user", UserRoles.Owner, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -177,7 +178,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync(new List<StaffMember> { activeStaff, busyStaff });
 
             // Act
-            var result = await _service.GetLiveActivityAsync(request, "admin-user", "Admin", CancellationToken.None);
+            var result = await _service.GetLiveActivityAsync(request, "admin-user", UserRoles.Owner, CancellationToken.None);
 
             // Assert
             if (!result.Success)

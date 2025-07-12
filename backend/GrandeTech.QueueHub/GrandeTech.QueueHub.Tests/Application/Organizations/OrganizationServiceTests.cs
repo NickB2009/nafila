@@ -7,6 +7,7 @@ using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
 using Grande.Fila.API.Domain.Common;
 using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Domain.Users;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -52,7 +53,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync((Organization org, CancellationToken _) => org);
 
             // Act
-            var result = await _service.UpdateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);            // Assert
+            var result = await _service.UpdateOrganizationAsync(request, "adminUserId", UserRoles.Owner, CancellationToken.None);            // Assert
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Errors.Count == 0);
             Assert.IsTrue(result.FieldErrors.Count == 0);
@@ -80,7 +81,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync((Organization org, CancellationToken _) => org);
 
             // Act
-            var result = await _service.UpdateBrandingAsync(request, "adminUserId", "Admin", CancellationToken.None);            // Assert
+            var result = await _service.UpdateBrandingAsync(request, "adminUserId", UserRoles.Owner, CancellationToken.None);            // Assert
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Errors.Count == 0);
             Assert.IsTrue(result.FieldErrors.Count == 0);
@@ -107,7 +108,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 organizationId.ToString(), 
                 subscriptionPlanId.ToString(), 
                 "adminUserId", 
-                "Admin", 
+                UserRoles.PlatformAdmin, 
                 CancellationToken.None);            // Assert
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Errors.Count == 0);
@@ -131,7 +132,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 organizationId.ToString(), 
                 true, 
                 "adminUserId", 
-                "Admin", 
+                UserRoles.Owner, 
                 CancellationToken.None);            // Assert
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Errors.Count == 0);
@@ -154,7 +155,7 @@ namespace Grande.Fila.Tests.Application.Organizations
             var result = await _service.ActivateOrganizationAsync(
                 organizationId.ToString(), 
                 "adminUserId", 
-                "Admin", 
+                UserRoles.PlatformAdmin, 
                 CancellationToken.None);            // Assert
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Errors.Count == 0);
@@ -177,7 +178,7 @@ namespace Grande.Fila.Tests.Application.Organizations
             var result = await _service.DeactivateOrganizationAsync(
                 organizationId.ToString(), 
                 "adminUserId", 
-                "Admin", 
+                UserRoles.PlatformAdmin, 
                 CancellationToken.None);            // Assert
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Errors.Count == 0);
@@ -199,7 +200,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync((Organization?)null);
 
             // Act
-            var result = await _service.UpdateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.UpdateOrganizationAsync(request, "adminUserId", UserRoles.Owner, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -217,7 +218,7 @@ namespace Grande.Fila.Tests.Application.Organizations
             };
 
             // Act
-            var result = await _service.UpdateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.UpdateOrganizationAsync(request, "adminUserId", UserRoles.Owner, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);

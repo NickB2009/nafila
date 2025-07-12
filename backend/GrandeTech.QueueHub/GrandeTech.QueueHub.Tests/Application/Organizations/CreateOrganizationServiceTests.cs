@@ -5,6 +5,7 @@ using Grande.Fila.API.Application.Organizations;
 using Grande.Fila.API.Domain.Organizations;
 using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -21,7 +22,9 @@ namespace Grande.Fila.Tests.Application.Organizations
         {
             _organizationRepoMock = new Mock<IOrganizationRepository>();
             _subscriptionRepoMock = new Mock<ISubscriptionPlanRepository>();
-            _auditLogRepoMock = new Mock<IAuditLogRepository>();            _service = new CreateOrganizationService(
+            _auditLogRepoMock = new Mock<IAuditLogRepository>();
+            
+            _service = new CreateOrganizationService(
                 _organizationRepoMock.Object, 
                 _auditLogRepoMock.Object,
                 _subscriptionRepoMock.Object);
@@ -53,7 +56,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync((Organization org, CancellationToken _) => org);
 
             // Act
-            var result = await _service.CreateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateOrganizationAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -82,7 +85,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync(subscriptionPlan);
 
             // Act
-            var result = await _service.CreateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateOrganizationAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -109,7 +112,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync((SubscriptionPlan?)null);
 
             // Act
-            var result = await _service.CreateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateOrganizationAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -131,7 +134,7 @@ namespace Grande.Fila.Tests.Application.Organizations
             };
 
             // Act
-            var result = await _service.CreateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateOrganizationAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -160,7 +163,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync(subscriptionPlan);
 
             // Act
-            var result = await _service.CreateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateOrganizationAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -188,7 +191,7 @@ namespace Grande.Fila.Tests.Application.Organizations
                 .ReturnsAsync(subscriptionPlan);
 
             // Act
-            var result = await _service.CreateOrganizationAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateOrganizationAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);

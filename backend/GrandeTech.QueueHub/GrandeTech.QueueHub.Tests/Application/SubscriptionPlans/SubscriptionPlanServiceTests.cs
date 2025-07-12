@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Grande.Fila.API.Application.SubscriptionPlans;
 using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -61,7 +62,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
                 .ReturnsAsync((SubscriptionPlan plan, CancellationToken _) => plan);
 
             // Act
-            var result = await _service.UpdateSubscriptionPlanAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.UpdateSubscriptionPlanAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -83,7 +84,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
                 .ReturnsAsync((SubscriptionPlan plan, CancellationToken _) => plan);
 
             // Act
-            var result = await _service.ActivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.ActivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -104,7 +105,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
                 .ReturnsAsync((SubscriptionPlan plan, CancellationToken _) => plan);
 
             // Act
-            var result = await _service.DeactivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.DeactivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -131,7 +132,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
                 .ReturnsAsync((SubscriptionPlan?)null);
 
             // Act
-            var result = await _service.UpdateSubscriptionPlanAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.UpdateSubscriptionPlanAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -155,17 +156,17 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
             };
 
             // Act & Assert - Update
-            var updateResult = await _service.UpdateSubscriptionPlanAsync(request, "regularUserId", "Barber", CancellationToken.None);
+            var updateResult = await _service.UpdateSubscriptionPlanAsync(request, "regularUserId", UserRoles.Staff, CancellationToken.None);
             Assert.IsFalse(updateResult.Success);
             Assert.IsTrue(updateResult.Errors.Contains("Forbidden: Only platform Admin can manage subscription plans."));
 
             // Act & Assert - Activate
-            var activateResult = await _service.ActivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "regularUserId", "Barber", CancellationToken.None);
+            var activateResult = await _service.ActivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "regularUserId", UserRoles.Staff, CancellationToken.None);
             Assert.IsFalse(activateResult.Success);
             Assert.IsTrue(activateResult.Errors.Contains("Forbidden: Only platform Admin can manage subscription plans."));
 
             // Act & Assert - Deactivate
-            var deactivateResult = await _service.DeactivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "regularUserId", "Barber", CancellationToken.None);
+            var deactivateResult = await _service.DeactivateSubscriptionPlanAsync(subscriptionPlanId.ToString(), "regularUserId", UserRoles.Staff, CancellationToken.None);
             Assert.IsFalse(deactivateResult.Success);
             Assert.IsTrue(deactivateResult.Errors.Contains("Forbidden: Only platform Admin can manage subscription plans."));
         }

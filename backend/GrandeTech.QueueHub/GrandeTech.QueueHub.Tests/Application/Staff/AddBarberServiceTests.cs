@@ -6,6 +6,7 @@ using Grande.Fila.API.Application.Staff;
 using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -46,7 +47,7 @@ namespace Grande.Fila.Tests.Application.Staff
             _staffRepoMock.Setup(r => r.AddAsync(It.IsAny<StaffMember>(), It.IsAny<CancellationToken>())).ReturnsAsync((StaffMember staff, CancellationToken _) => staff);
 
             // Act
-            var result = await _service.AddBarberAsync(request, "adminUserId");
+            var result = await _service.AddBarberAsync(request, "adminUserId", UserRoles.Owner);
 
             // Assert
             Assert.IsTrue(result.Success);

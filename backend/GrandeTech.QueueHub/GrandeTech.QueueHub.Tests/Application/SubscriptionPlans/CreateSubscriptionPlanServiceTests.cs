@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Grande.Fila.API.Application.SubscriptionPlans;
 using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
+using Grande.Fila.API.Domain.Users;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -55,7 +56,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
                 .ReturnsAsync((SubscriptionPlan plan, CancellationToken _) => plan);
 
             // Act
-            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -86,7 +87,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
                 .ReturnsAsync(existingPlan);
 
             // Act
-            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -110,7 +111,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
             };
 
             // Act
-            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -138,7 +139,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
             };
 
             // Act
-            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", "Admin", CancellationToken.None);
+            var result = await _service.CreateSubscriptionPlanAsync(request, "adminUserId", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -164,7 +165,7 @@ namespace Grande.Fila.Tests.Application.SubscriptionPlans
             };
 
             // Act
-            var result = await _service.CreateSubscriptionPlanAsync(request, "regularUserId", "Barber", CancellationToken.None);
+            var result = await _service.CreateSubscriptionPlanAsync(request, "regularUserId", UserRoles.Staff, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);

@@ -10,6 +10,7 @@ using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.AuditLogs;
 using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Users;
 
 namespace Grande.Fila.API.Tests.Application.Analytics
 {
@@ -69,7 +70,7 @@ namespace Grande.Fila.API.Tests.Application.Analytics
                 .ReturnsAsync(staffMembers);
 
             // Act
-            var result = await _service.GetCrossBarbershopAnalyticsAsync(request, "platformAdmin", "Admin", CancellationToken.None);
+            var result = await _service.GetCrossBarbershopAnalyticsAsync(request, "platformAdmin", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -93,7 +94,7 @@ namespace Grande.Fila.API.Tests.Application.Analytics
             };
 
             // Act
-            var result = await _service.GetCrossBarbershopAnalyticsAsync(request, "regularUser", "Barber", CancellationToken.None);
+            var result = await _service.GetCrossBarbershopAnalyticsAsync(request, "regularUser", UserRoles.Staff, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -130,7 +131,7 @@ namespace Grande.Fila.API.Tests.Application.Analytics
                 .ReturnsAsync(staffMembers);
 
             // Act
-            var result = await _service.GetOrganizationAnalyticsAsync(request, "admin", "Owner", CancellationToken.None);
+            var result = await _service.GetOrganizationAnalyticsAsync(request, "admin", UserRoles.Owner, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);
@@ -152,7 +153,7 @@ namespace Grande.Fila.API.Tests.Application.Analytics
             };
 
             // Act
-            var result = await _service.GetCrossBarbershopAnalyticsAsync(request, "platformAdmin", "Admin", CancellationToken.None);
+            var result = await _service.GetCrossBarbershopAnalyticsAsync(request, "platformAdmin", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsFalse(result.Success);
@@ -181,7 +182,7 @@ namespace Grande.Fila.API.Tests.Application.Analytics
                 .ReturnsAsync(queues);
 
             // Act
-            var result = await _service.GetTopPerformingOrganizationsAsync(request, "platformAdmin", "Admin", CancellationToken.None);
+            var result = await _service.GetTopPerformingOrganizationsAsync(request, "platformAdmin", UserRoles.PlatformAdmin, CancellationToken.None);
 
             // Assert
             Assert.IsTrue(result.Success);

@@ -20,6 +20,7 @@ namespace Grande.Fila.API.Application.Kiosk
         public int Position { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? TokenNumber { get; set; }
+        public int EstimatedWaitMinutes { get; set; }
         public string? EstimatedWaitTime { get; set; }
     }
 } 
