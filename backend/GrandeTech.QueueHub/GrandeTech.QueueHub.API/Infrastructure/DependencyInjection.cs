@@ -24,6 +24,8 @@ using Grande.Fila.API.Application.Promotions;
 using Grande.Fila.API.Application.QrCode;
 using Grande.Fila.API.Application.Kiosk;
 using Grande.Fila.API.Application.Analytics;
+using Grande.Fila.API.Application.Notifications.Services;
+using Grande.Fila.API.Application.Queues.Handlers;
 
 namespace Grande.Fila.API.Infrastructure
 {
@@ -37,6 +39,9 @@ namespace Grande.Fila.API.Infrastructure
         /// </summary>
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            // Add memory cache for cache invalidation handler
+            services.AddMemoryCache();
+            
             // Add bogus repositories for in-memory testing
             services.AddScoped(typeof(IRepository<>), typeof(BogusGenericRepository<>));
             services.AddScoped<IUserRepository, BogusUserRepository>();
@@ -48,6 +53,20 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
             services.AddScoped<ISubscriptionPlanRepository, BogusSubscriptionPlanRepository>();
             services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
+            
+            // Add queue services
+            services.AddSingleton<IQueueService, InMemoryQueueService>();
+            services.AddHostedService<InMemoryQueueService>(provider => 
+                (InMemoryQueueService)provider.GetRequiredService<IQueueService>());
+            
+            // Add queue message handlers
+            services.AddScoped<IQueueMessageHandler<SmsNotificationMessage>, SmsNotificationHandler>();
+            services.AddScoped<IQueueMessageHandler<AuditLoggingMessage>, AuditLoggingHandler>();
+            services.AddScoped<IQueueMessageHandler<CacheInvalidationMessage>, CacheInvalidationHandler>();
+            services.AddScoped<IQueueMessageHandler<QueueStateChangeMessage>, QueueStateChangeHandler>();
+            
+            // Add SMS provider
+            services.AddScoped<ISmsProvider, MockSmsProvider>();
             
             // Add application services
             // Auth services

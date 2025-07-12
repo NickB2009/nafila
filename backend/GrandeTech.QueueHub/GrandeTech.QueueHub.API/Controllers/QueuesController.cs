@@ -27,6 +27,7 @@ namespace Grande.Fila.API.Controllers
         private readonly CancelQueueService _cancelQueueService;
         private readonly SaveHaircutDetailsService _saveHaircutDetailsService;
         private readonly ILogger<QueuesController> _logger;
+        private readonly IQueueService _queueService;
 
         public QueuesController(
             AddQueueService addQueueService,
@@ -39,7 +40,8 @@ namespace Grande.Fila.API.Controllers
             CheckInService checkInService,
             CancelQueueService cancelQueueService,
             SaveHaircutDetailsService saveHaircutDetailsService,
-            ILogger<QueuesController> logger)
+            ILogger<QueuesController> logger,
+            IQueueService queueService)
         {
             _addQueueService = addQueueService;
             _queueRepository = queueRepository;
@@ -52,6 +54,7 @@ namespace Grande.Fila.API.Controllers
             _cancelQueueService = cancelQueueService;
             _saveHaircutDetailsService = saveHaircutDetailsService;
             _logger = logger;
+            _queueService = queueService;
         }
 
         public class QueueDto
@@ -227,6 +230,11 @@ namespace Grande.Fila.API.Controllers
                 // Update queue in repository
                 await _queueRepository.UpdateAsync(queue, cancellationToken);
 
+                // Enqueue state change notification
+                await EnqueueStateChangeAsync("callnext", id, queueEntry.Id.ToString(), 
+                    queueEntry.CustomerName, queueEntry.Position, queueEntry.StaffMemberId?.ToString() ?? "", 
+                    "waiting", "called", cancellationToken);
+
                 // Return success result
                 var result = new CallNextResult
                 {
@@ -309,6 +317,11 @@ namespace Grande.Fila.API.Controllers
 
                 // Update queue in repository
                 await _queueRepository.UpdateAsync(queue, cancellationToken);
+
+                // Enqueue state change notification
+                await EnqueueStateChangeAsync("checkin", id, queueEntry.Id.ToString(), 
+                    queueEntry.CustomerName, queueEntry.Position, "", 
+                    "called", "checkedin", cancellationToken);
 
                 // Return success result
                 var result = new CheckInResult
@@ -436,6 +449,11 @@ namespace Grande.Fila.API.Controllers
                 // Update queue in repository
                 await _queueRepository.UpdateAsync(queue, cancellationToken);
 
+                // Enqueue state change notification
+                await EnqueueStateChangeAsync("cancel", id, queueEntry.Id.ToString(), 
+                    queueEntry.CustomerName, queueEntry.Position, "", 
+                    "waiting", "cancelled", cancellationToken);
+
                 // Return success result
                 result.Success = true;
                 result.QueueEntryId = queueEntry.Id.ToString();
@@ -499,6 +517,38 @@ namespace Grande.Fila.API.Controllers
             }
 
             return Ok(result);
+        }
+
+        // Helper method to enqueue state change messages
+        private async Task EnqueueStateChangeAsync(string changeType, string queueId, string queueEntryId, 
+            string customerName, int position = 0, string staffMemberId = "", string previousStatus = "", 
+            string newStatus = "", CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var stateChangeMessage = new QueueStateChangeMessage
+                {
+                    QueueId = queueId,
+                    QueueEntryId = queueEntryId,
+                    ChangeType = changeType,
+                    CustomerName = customerName,
+                    Position = position,
+                    StaffMemberId = staffMemberId,
+                    PreviousStatus = previousStatus,
+                    NewStatus = newStatus,
+                    EventTime = DateTime.UtcNow,
+                    CreatedBy = User.Identity?.Name ?? "system",
+                    Priority = MessagePriority.High
+                };
+
+                await _queueService.EnqueueAsync(stateChangeMessage, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to enqueue state change message for {ChangeType} on queue {QueueId}", 
+                    changeType, queueId);
+                // Don't throw - state change notifications are not critical for the main operation
+            }
         }
     }
 } 
