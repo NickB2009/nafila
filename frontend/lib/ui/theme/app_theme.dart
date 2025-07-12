@@ -24,6 +24,42 @@ class AppTheme {
     'completed': Color(0xFF9E9E9E),
   };
 
+  /// Extended color palette for enhanced UI
+  static const Color accentColor = Color(0xFF6B73FF); // Purple accent
+  static const Color successColor = Color(0xFF4CAF50); // Green for success/urgent
+  static const Color warningColor = Color(0xFFFF9800); // Orange for warnings/popular
+  static const Color infoColor = Color(0xFF1976D2); // Blue 700 for info/highlight
+  static const Color dangerColor = Color(0xFF1976D2); // Blue for offers/urgency/CTA
+  
+  /// Gradient colors for hero sections and special elements
+  static const List<Color> heroGradient = [
+    primaryColor, // Gold
+    infoColor,    // Blue
+    accentColor,  // Purple accent (optional, can be removed if you want only blue/gold)
+  ];
+  static const List<Color> offerGradient = [
+    primaryColor, // Gold
+    infoColor,    // Blue
+  ];
+  static const List<Color> ctaGradient = [
+    primaryColor, // Gold
+    infoColor,    // Blue
+  ];
+  static const List<Color> darkGradient = [
+    Color(0xFF2C3E50), // Dark Blue
+    Color(0xFF34495E), // Darker Blue
+  ];
+
+  /// Semantic colors for different states
+  static const Map<String, Color> semanticColors = {
+    'urgent': Color(0xFF4CAF50),     // Green for urgent/fast
+    'popular': Color(0xFFFF9800),    // Orange for popular
+    'premium': Color(0xFFD4AF37),    // Gold for premium
+    'distance': Color(0xFF009688),   // Teal for distance
+    'time': Color(0xFF2196F3),       // Blue for time
+    'queue': Color(0xFF6B73FF),      // Purple for queue
+  };
+
   /// Get the light theme configuration
   static ThemeData get lightTheme {
     return ThemeData(
@@ -31,6 +67,9 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: Brightness.light,
+        secondary: accentColor,
+        tertiary: successColor,
+        error: errorColor,
       ),
       appBarTheme: const AppBarTheme(
         centerTitle: true,
@@ -69,6 +108,9 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: Brightness.dark,
+        secondary: accentColor,
+        tertiary: successColor,
+        error: errorColor,
       ),
       appBarTheme: const AppBarTheme(
         centerTitle: true,

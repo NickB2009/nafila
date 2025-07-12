@@ -13,6 +13,7 @@ class SalonTvDashboard extends StatefulWidget {
 class _SalonTvDashboardState extends State<SalonTvDashboard> {
   Timer? _timer;
   int _currentAdIndex = 0;
+  bool? isAdLarge; // User toggle for ad size
   
   // Mock data for the salon
   final String salonName = "Great Clips";
@@ -53,6 +54,10 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     },
   ];
 
+  // Add state for custom ad size
+  double? customAdWidth;
+  double? customAdHeight;
+
   @override
   void initState() {
     super.initState();
@@ -78,7 +83,19 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final theme = Theme.of(context);
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
-    
+    final minLeftWidth = 260.0;
+    final minAdWidth = 250.0;
+    final maxAdWidth = screenSize.width - minLeftWidth - 64.0;
+    final isLargeScreen = screenSize.width > 900;
+    final defaultAdWidth = isLargeScreen ? 700.0 : 340.0;
+    final defaultAdHeight = isLargeScreen ? 480.0 : 180.0;
+    final adWidth = (customAdWidth ?? defaultAdWidth).clamp(minAdWidth, maxAdWidth);
+    final adHeight = customAdHeight ?? defaultAdHeight;
+    final leftWidth = (screenSize.width - adWidth - 64.0).clamp(minLeftWidth, screenSize.width * 0.7);
+    final adFlex = (adWidth / screenSize.width * 100).clamp(20, 80).round();
+    final leftFlex = 100 - adFlex;
+    final showCompactLeft = leftWidth <= minLeftWidth + 20;
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
@@ -104,31 +121,69 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
             } else {
               return SizedBox.expand(
                 child: Padding(
-                  padding: EdgeInsets.all(constraints.maxWidth * 0.03),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.all(32.0),
+                  child: Stack(
                     children: [
-                      // Left Side - Queue Information
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSalonHeader(theme, constraints),
-                            SizedBox(height: constraints.maxHeight * 0.02),
-                            _buildWaitTimeCard(theme, constraints),
-                            SizedBox(height: constraints.maxHeight * 0.02),
-                            Expanded(
-                              child: _buildCustomerQueue(theme, constraints),
+                      // Left content fills up to the ad's left edge
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        right: adWidth + 24, // 24px gap between left and ad
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [theme.colorScheme.surface, theme.colorScheme.primary.withOpacity(0.04)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                          ],
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(24.0),
+                          child: showCompactLeft
+                              ? _buildCompactLeft(theme, constraints)
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildSalonHeader(theme, constraints),
+                                    SizedBox(height: 24),
+                                    _buildWaitTimeCard(theme, constraints),
+                                    SizedBox(height: 24),
+                                    Expanded(child: _buildCustomerQueue(theme, constraints)),
+                                  ],
+                                ),
                         ),
                       ),
-                      SizedBox(width: constraints.maxWidth * 0.03),
-                      // Right Side - Advertisement
-                      Expanded(
-                        flex: 1,
-                        child: _buildAdvertisementSection(theme, constraints, forceNoExpanded: false),
+                      // Ad absolutely positioned to the right
+                      Positioned(
+                        top: 0,
+                        bottom: 0,
+                        right: 0,
+                        width: adWidth,
+                        child: _buildAdvertisementSection(
+                          theme,
+                          constraints,
+                          forceNoExpanded: false,
+                          adWidth: adWidth,
+                          adHeight: adHeight,
+                          minAdWidth: minAdWidth,
+                          maxAdWidth: maxAdWidth,
+                          onResize: (w, h) {
+                            setState(() {
+                              customAdWidth = w;
+                              customAdHeight = h;
+                            });
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -467,82 +522,254 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     );
   }
 
-  Widget _buildAdvertisementSection(ThemeData theme, BoxConstraints constraints, {bool forceNoExpanded = false}) {
-    final currentAd = ads[_currentAdIndex];
-    final isSmallScreen = constraints.maxWidth < 600;
-    final iconSize = isSmallScreen ? 80.0 : 120.0;
-    final titleFontSize = isSmallScreen ? 24.0 : 28.0;
-    final subtitleFontSize = isSmallScreen ? 14.0 : 18.0;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      padding: EdgeInsets.all(constraints.maxWidth * 0.03),
-      decoration: BoxDecoration(
-        color: currentAd["backgroundColor"],
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: currentAd["backgroundColor"].withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Ad content
-          forceNoExpanded
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _adContentChildren(theme, iconSize, titleFontSize, subtitleFontSize, constraints),
-              )
-            : Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _adContentChildren(theme, iconSize, titleFontSize, subtitleFontSize, constraints),
-                ),
-              ),
-          // Brand logo/name
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: constraints.maxWidth * 0.03,
-              vertical: constraints.maxHeight * 0.015,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Text(
-              currentAd["brand"],
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                fontSize: isSmallScreen ? 12.0 : 14.0,
-              ),
-            ),
-          ),
-          SizedBox(height: constraints.maxHeight * 0.015),
-          // Ad rotation indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              ads.length,
-              (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: isSmallScreen ? 6 : 8,
-                height: isSmallScreen ? 6 : 8,
+  // Compact left content for very wide ad
+  Widget _buildCompactLeft(ThemeData theme, BoxConstraints constraints) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.content_cut, color: theme.colorScheme.primary, size: 32),
+            SizedBox(width: 12),
+            Text(salonName, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        SizedBox(height: 18),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.timer, color: theme.colorScheme.primary, size: 28),
+            SizedBox(width: 8),
+            Text('$currentWaitTime min', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            SizedBox(width: 16),
+            Icon(Icons.people, color: theme.colorScheme.primary, size: 28),
+            SizedBox(width: 8),
+            Text('$customersWaiting', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Update _buildAdvertisementSection to accept adWidth, adHeight, minAdWidth, maxAdWidth, and onResize
+  Widget _buildAdvertisementSection(
+    ThemeData theme,
+    BoxConstraints constraints, {
+    bool forceNoExpanded = false,
+    double? adWidth,
+    double? adHeight,
+    double? minAdWidth,
+    double? maxAdWidth,
+    void Function(double, double)? onResize,
+  }) {
+    final isLargeScreen = constraints.maxWidth > 900;
+    final defaultAdWidth = isLargeScreen ? 700.0 : 340.0;
+    final defaultAdHeight = isLargeScreen ? 480.0 : 180.0;
+    final _adWidth = adWidth ?? customAdWidth ?? defaultAdWidth;
+    final _adHeight = adHeight ?? customAdHeight ?? defaultAdHeight;
+    final _minAdWidth = minAdWidth ?? 250.0;
+    final _maxAdWidth = maxAdWidth ?? constraints.maxWidth - 40;
+    final minAdHeight = 120.0;
+    final verticalPadding = 80.0;
+    final maxAdHeight = constraints.maxHeight - verticalPadding;
+    final ad = ads[_currentAdIndex];
+    final adFontSize = _adHeight > 300 ? 40.0 : 18.0;
+    final adSubtitleFontSize = _adHeight > 300 ? 24.0 : 12.0;
+    final adBrandFontSize = _adHeight > 300 ? 20.0 : 10.0;
+    final adImageHeight = _adHeight > 300 ? 220.0 : 70.0;
+    // Remove expand/reset button UI
+    // final toggleLabel = (customAdWidth != null || customAdHeight != null) ? 'Redefinir tamanho' : 'Expandir anúncio';
+    // final toggleIcon = (customAdWidth != null || customAdHeight != null) ? Icons.refresh : Icons.open_in_full;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Remove the expand/reset button row
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.end,
+        //   children: [ ... ],
+        // ),
+        Center(
+          child: Stack(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                width: _adWidth,
+                height: _adHeight,
                 decoration: BoxDecoration(
-                  color: index == _currentAdIndex 
-                      ? Colors.white 
-                      : Colors.white.withOpacity(0.4),
-                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      (ad["backgroundColor"] as Color).withOpacity(0.95),
+                      (ad["backgroundColor"] as Color).withOpacity(0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.13),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              ad["title"] as String,
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: adFontSize,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.18),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: _adHeight > 300 ? 28 : 8),
+                            Text(
+                              ad["subtitle"] as String,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: adSubtitleFontSize,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: _adHeight > 300 ? 24 : 6),
+                            Text(
+                              ad["brand"] as String,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: adBrandFontSize,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: double.infinity,
+                              maxHeight: _adHeight - 32, // Prevent overflow
+                            ),
+                            child: Image.asset(
+                              ad["image"] as String,
+                              height: adImageHeight,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Center(
+                                child: Text(
+                                  'Imagem não encontrada',
+                                  style: TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+              // Draggable handle (left edge, vertically centered)
+              Positioned(
+                left: 0,
+                top: (_adHeight / 2) - 24,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    if (onResize != null) {
+                      final newWidth = (_adWidth - details.delta.dx).clamp(_minAdWidth, _maxAdWidth);
+                      onResize(newWidth, _adHeight);
+                    }
+                  },
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeLeftRight,
+                    child: Container(
+                      width: 16,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                        border: Border.all(color: Colors.black12, width: 1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 2,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Draggable handle (bottom-right corner for height)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    if (onResize != null) {
+                      final newHeight = (_adHeight + details.delta.dy).clamp(minAdHeight, maxAdHeight);
+                      onResize(_adWidth, newHeight);
+                    }
+                  },
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                    child: Container(
+                      width: 28,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: const BorderRadius.only(
+                          bottomRight: Radius.circular(20),
+                          topLeft: Radius.circular(8),
+                        ),
+                        border: Border.all(color: Colors.black26, width: 1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 2,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
