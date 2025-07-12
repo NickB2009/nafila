@@ -1,3 +1,28 @@
+import 'package:flutter/material.dart';
+
+class SalonColors {
+  final Color primary;
+  final Color secondary;
+  final Color background;
+  const SalonColors({
+    required this.primary,
+    required this.secondary,
+    required this.background,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SalonColors &&
+          runtimeType == other.runtimeType &&
+          primary == other.primary &&
+          secondary == other.secondary &&
+          background == other.background;
+
+  @override
+  int get hashCode => Object.hash(primary, secondary, background);
+}
+
 /// Model representing a salon/barbershop
 class Salon {
   final String name;
@@ -8,6 +33,7 @@ class Salon {
   final String closingTime;
   final bool isFavorite;
   final int queueLength; // number of people in queue
+  final SalonColors colors;
 
   const Salon({
     required this.name,
@@ -18,9 +44,9 @@ class Salon {
     required this.closingTime,
     required this.isFavorite,
     required this.queueLength,
+    required this.colors,
   });
 
-  /// Create a copy of this salon with updated properties
   Salon copyWith({
     String? name,
     String? address,
@@ -30,6 +56,7 @@ class Salon {
     String? closingTime,
     bool? isFavorite,
     int? queueLength,
+    SalonColors? colors,
   }) {
     return Salon(
       name: name ?? this.name,
@@ -40,12 +67,13 @@ class Salon {
       closingTime: closingTime ?? this.closingTime,
       isFavorite: isFavorite ?? this.isFavorite,
       queueLength: queueLength ?? this.queueLength,
+      colors: colors ?? this.colors,
     );
   }
 
   @override
   String toString() {
-    return 'Salon(name: $name, address: $address, waitTime: $waitTime, distance: $distance, queueLength: $queueLength)';
+    return 'Salon(name: $name, address: $address, waitTime: $waitTime, distance: $distance, queueLength: $queueLength, colors: $colors)';
   }
 
   @override
@@ -59,7 +87,8 @@ class Salon {
         other.isOpen == isOpen &&
         other.closingTime == closingTime &&
         other.isFavorite == isFavorite &&
-        other.queueLength == queueLength;
+        other.queueLength == queueLength &&
+        other.colors == colors;
   }
 
   @override
@@ -73,6 +102,7 @@ class Salon {
       closingTime,
       isFavorite,
       queueLength,
+      colors,
     );
   }
 }

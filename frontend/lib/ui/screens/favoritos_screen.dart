@@ -8,6 +8,18 @@ import '../../models/salon_review.dart';
 import 'salon_details_screen.dart';
 import 'check_in_screen.dart';
 
+SalonColors _randomSalonColors(int seed) {
+  final palettes = [
+    SalonColors(primary: Colors.redAccent, secondary: Colors.orange, background: Colors.red.shade50),
+    SalonColors(primary: Colors.blueAccent, secondary: Colors.cyan, background: Colors.blue.shade50),
+    SalonColors(primary: Colors.green, secondary: Colors.teal, background: Colors.green.shade50),
+    SalonColors(primary: Colors.purple, secondary: Colors.pinkAccent, background: Colors.purple.shade50),
+    SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50),
+    SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50),
+  ];
+  return palettes[seed % palettes.length];
+}
+
 class FavoritosScreen extends StatefulWidget {
   const FavoritosScreen({super.key});
 
@@ -21,7 +33,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
   late Animation<Offset> _slideAnimation;
 
   final List<Salon> favoritos = [
-    const Salon(
+    Salon(
       name: 'Market at Mirada',
       address: '30921 Mirada Blvd, San Antonio, FL',
       waitTime: 24,
@@ -30,8 +42,9 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
       closingTime: '18:00',
       isFavorite: true,
       queueLength: 5,
+      colors: _randomSalonColors(0),
     ),
-    const Salon(
+    Salon(
       name: 'Cortez Commons',
       address: '123 Cortez Ave, San Antonio, FL',
       waitTime: 8,
@@ -40,6 +53,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
       closingTime: '20:00',
       isFavorite: true,
       queueLength: 2,
+      colors: _randomSalonColors(1),
     ),
   ];
 
@@ -280,12 +294,12 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: salon.colors.primary,
                         borderRadius: BorderRadius.circular(25),
                       ),
                       child: Icon(
                         Icons.store,
-                        color: theme.colorScheme.primary,
+                        color: salon.colors.primary,
                         size: 24,
                       ),
                     ),

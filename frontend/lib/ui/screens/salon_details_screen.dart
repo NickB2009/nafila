@@ -68,6 +68,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final salonColors = widget.salon.colors;
     
     return Scaffold(
       body: CustomScrollView(
@@ -76,7 +77,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
             expandedHeight: 250,
             pinned: true,
             stretch: true,
-            backgroundColor: theme.colorScheme.surface,
+            backgroundColor: salonColors.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -84,13 +85,13 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   // Salon Image
                   Container(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: salonColors.primary.withOpacity(0.1),
                     ),
                     child: Center(
                       child: Icon(
                         Icons.store,
                         size: 64,
-                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        color: salonColors.primary.withOpacity(0.3),
                       ),
                     ),
                   ),
@@ -102,8 +103,8 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          theme.colorScheme.surface.withOpacity(0.8),
-                          theme.colorScheme.surface,
+                          salonColors.primary.withOpacity(0.8),
+                          salonColors.background,
                         ],
                         stops: const [0.4, 0.8, 1.0],
                       ),
@@ -116,7 +117,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                     child: CustomPaint(
                       size: const Size(200, 200),
                       painter: SalonDecorationPainter(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: salonColors.primary.withOpacity(0.1),
                       ),
                     ),
                   ),
@@ -127,12 +128,12 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(0.9),
+                  color: salonColors.primary.withOpacity(0.9),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.arrow_back,
-                  color: theme.colorScheme.primary,
+                  color: Colors.white,
                 ),
               ),
               onPressed: () => Navigator.of(context).pop(),
@@ -142,12 +143,12 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withOpacity(0.9),
+                    color: salonColors.primary.withOpacity(0.9),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: _isFavorite ? theme.colorScheme.primary : theme.colorScheme.primary,
+                    color: _isFavorite ? Colors.white : Colors.white,
                   ),
                 ),
                 onPressed: () {
@@ -160,12 +161,12 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withOpacity(0.9),
+                    color: salonColors.primary.withOpacity(0.9),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.share,
-                    color: theme.colorScheme.primary,
+                    color: Colors.white,
                   ),
                 ),
                 onPressed: () async {
@@ -177,27 +178,30 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
             ],
           ),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 24),
-                  _buildInfoSection(context),
-                  const SizedBox(height: 24),
-                  _buildServicesSection(context),
-                  const SizedBox(height: 24),
-                  _buildBusinessHoursSection(context),
-                  const SizedBox(height: 24),
-                  _buildContactSection(context),
-                  const SizedBox(height: 24),
-                  _buildReviewsSection(context),
-                  if (widget.additionalInfo.isNotEmpty) ...[
+            child: Container(
+              color: salonColors.background,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(context, salonColors),
                     const SizedBox(height: 24),
-                    _buildAdditionalInfoSection(context),
+                    _buildInfoSection(context, salonColors),
+                    const SizedBox(height: 24),
+                    _buildServicesSection(context, salonColors),
+                    const SizedBox(height: 24),
+                    _buildBusinessHoursSection(context, salonColors),
+                    const SizedBox(height: 24),
+                    _buildContactSection(context, salonColors),
+                    const SizedBox(height: 24),
+                    _buildReviewsSection(context, salonColors),
+                    if (widget.additionalInfo.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      _buildAdditionalInfoSection(context, salonColors),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -206,7 +210,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: salonColors.background,
           boxShadow: [
             BoxShadow(
               color: theme.shadowColor.withOpacity(0.1),
@@ -229,8 +233,8 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 icon: const Icon(Icons.check_circle),
                 label: const Text('Check In'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
+                  backgroundColor: salonColors.primary,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -260,12 +264,12 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 icon: const Icon(Icons.directions),
                 label: const Text('Como Chegar'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.primary,
+                  foregroundColor: salonColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  side: BorderSide(color: theme.colorScheme.primary),
+                  side: BorderSide(color: salonColors.primary),
                 ),
               ),
             ),
@@ -275,7 +279,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
     
     return FadeTransition(
@@ -291,7 +295,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 fontWeight: FontWeight.bold,
                 shadows: [
                   Shadow(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    color: colors.primary.withOpacity(0.2),
                     offset: const Offset(0, 2),
                     blurRadius: 4,
                   ),
@@ -323,7 +327,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildInfoSection(BuildContext context) {
+  Widget _buildInfoSection(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
     
     return FadeTransition(
@@ -333,7 +337,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -346,8 +350,8 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                theme.colorScheme.surface,
-                theme.colorScheme.surface.withOpacity(0.95),
+                colors.background,
+                colors.background.withOpacity(0.95),
               ],
             ),
           ),
@@ -367,21 +371,21 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                     context,
                     Icons.access_time,
                     '${widget.salon.waitTime} min',
-                    const Color(0xFF2C3E50),
+                    colors.primary,
                   ),
                   const SizedBox(width: 8),
                   _buildInfoChip(
                     context,
                     Icons.people_outline,
                     '${widget.salon.queueLength} na fila',
-                    const Color(0xFF34495E),
+                    colors.primary,
                   ),
                   const SizedBox(width: 8),
                   _buildInfoChip(
                     context,
                     Icons.location_on_outlined,
                     '${widget.salon.distance} km',
-                    const Color(0xFF2C3E50),
+                    colors.primary,
                   ),
                 ],
               ),
@@ -392,7 +396,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildServicesSection(BuildContext context) {
+  Widget _buildServicesSection(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
     
     return FadeTransition(
@@ -448,13 +452,13 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                             Icon(
                               Icons.timer_outlined,
                               size: 16,
-                              color: theme.colorScheme.primary,
+                              color: colors.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${service.durationMinutes} min',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
+                                color: colors.primary,
                               ),
                             ),
                           ],
@@ -467,13 +471,13 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: colors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'R\$ ${service.price.toStringAsFixed(2)}',
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.primary,
+                          color: colors.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -488,7 +492,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildBusinessHoursSection(BuildContext context) {
+  Widget _buildBusinessHoursSection(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
     
     return FadeTransition(
@@ -498,7 +502,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -534,7 +538,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                       ),
                       decoration: BoxDecoration(
                         color: hours.isOpen
-                            ? theme.colorScheme.primary.withOpacity(0.1)
+                            ? colors.primary.withOpacity(0.1)
                             : theme.colorScheme.error.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -545,7 +549,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                             hours.isOpen ? Icons.circle : Icons.circle_outlined,
                             size: 12,
                             color: hours.isOpen
-                                ? theme.colorScheme.primary
+                                ? colors.primary
                                 : theme.colorScheme.error,
                           ),
                           const SizedBox(width: 4),
@@ -553,7 +557,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                             hours.isOpen ? '${hours.openTime} - ${hours.closeTime}' : 'Fechado',
                             style: theme.textTheme.labelMedium?.copyWith(
                               color: hours.isOpen
-                                  ? theme.colorScheme.primary
+                                  ? colors.primary
                                   : theme.colorScheme.error,
                             ),
                           ),
@@ -570,7 +574,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildContactSection(BuildContext context) {
+  Widget _buildContactSection(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
     
     return FadeTransition(
@@ -580,7 +584,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -608,6 +612,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   // TODO: Implement phone call
                 },
                 copiable: true,
+                colors: colors,
               ),
               const SizedBox(height: 12),
               _buildContactItem(
@@ -618,6 +623,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   // TODO: Implement email
                 },
                 copiable: true,
+                colors: colors,
               ),
               if (widget.contact.website != null) ...[
                 const SizedBox(height: 12),
@@ -628,6 +634,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   () {
                     // TODO: Implement website
                   },
+                  colors: colors,
                 ),
               ],
               if (widget.contact.instagram != null || widget.contact.facebook != null) ...[
@@ -652,7 +659,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                         },
                         icon: const Icon(Icons.camera_alt),
                         style: IconButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                          backgroundColor: colors.primary.withOpacity(0.1),
                           padding: const EdgeInsets.all(12),
                         ),
                       ),
@@ -674,7 +681,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                         },
                         icon: const Icon(Icons.facebook),
                         style: IconButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                          backgroundColor: colors.primary.withOpacity(0.1),
                           padding: const EdgeInsets.all(12),
                         ),
                       ),
@@ -689,7 +696,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildReviewsSection(BuildContext context) {
+  Widget _buildReviewsSection(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
     
     return FadeTransition(
@@ -752,11 +759,11 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                           children: [
                             CircleAvatar(
                               radius: 20,
-                              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                              backgroundColor: colors.primary.withOpacity(0.1),
                               child: Text(
                                 review.userName[0].toUpperCase(),
                                 style: TextStyle(
-                                  color: theme.colorScheme.primary,
+                                  color: colors.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -787,7 +794,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withOpacity(0.1),
+                                color: colors.primary.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -796,13 +803,13 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                                   Icon(
                                     Icons.star,
                                     size: 16,
-                                    color: theme.colorScheme.primary,
+                                    color: colors.primary,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     review.rating.toString(),
                                     style: theme.textTheme.labelMedium?.copyWith(
-                                      color: theme.colorScheme.primary,
+                                      color: colors.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -830,7 +837,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildAdditionalInfoSection(BuildContext context) {
+  Widget _buildAdditionalInfoSection(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
     
     return FadeTransition(
@@ -840,7 +847,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -871,13 +878,13 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        color: colors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         entry.key,
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.primary,
+                          color: colors.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -922,7 +929,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildContactItem(BuildContext context, IconData icon, String text, VoidCallback onTap, {bool copiable = false}) {
+  Widget _buildContactItem(BuildContext context, IconData icon, String text, VoidCallback onTap, {bool copiable = false, required SalonColors colors}) {
     final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
@@ -961,13 +968,13 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: colors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   icon,
                   size: 20,
-                  color: theme.colorScheme.primary,
+                  color: colors.primary,
                 ),
               ),
               const SizedBox(width: 12),

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,6 +9,32 @@ import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
+
+SalonColors _randomSalonColors(int seed) {
+  final palettes = [
+    SalonColors(primary: Colors.redAccent, secondary: Colors.orange, background: Colors.red.shade50),
+    SalonColors(primary: Colors.blueAccent, secondary: Colors.cyan, background: Colors.blue.shade50),
+    SalonColors(primary: Colors.green, secondary: Colors.teal, background: Colors.green.shade50),
+    SalonColors(primary: Colors.purple, secondary: Colors.pinkAccent, background: Colors.purple.shade50),
+    SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50),
+    SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50),
+  ];
+  return palettes[seed % palettes.length];
+}
+
+Color waitTimeToColor(int waitTime) {
+  // Clamp waitTime between 0 and 180
+  final clamped = waitTime.clamp(0, 180);
+  if (clamped <= 90) {
+    // 0-90 min: green to yellow
+    final t = clamped / 90.0;
+    return Color.lerp(Colors.greenAccent.shade400, Colors.yellow.shade700, t)!;
+  } else {
+    // 90-180 min: yellow to red
+    final t = (clamped - 90) / 90.0;
+    return Color.lerp(Colors.yellow.shade700, Colors.red.shade900, t)!;
+  }
+}
 
 class SalonMapScreen extends StatefulWidget {
   const SalonMapScreen({super.key});
@@ -23,7 +50,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   // Mock salon locations
   final List<SalonLocation> _salonLocations = [
     SalonLocation(
-      salon: const Salon(
+      salon: Salon(
         name: 'Market at Mirada',
         address: '30921 Mirada Blvd, San Antonio, FL',
         waitTime: 24,
@@ -32,11 +59,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         closingTime: '6 PM',
         isFavorite: true,
         queueLength: 5,
+        colors: _randomSalonColors(0),
       ),
       position: const LatLng(28.3372, -82.2637),
     ),
     SalonLocation(
-      salon: const Salon(
+      salon: Salon(
         name: 'Cortez Commons',
         address: '123 Cortez Ave, San Antonio, FL',
         waitTime: 8,
@@ -45,11 +73,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         closingTime: '8 PM',
         isFavorite: true,
         queueLength: 2,
+        colors: _randomSalonColors(1),
       ),
       position: const LatLng(28.3422, -82.2587),
     ),
     SalonLocation(
-      salon: const Salon(
+      salon: Salon(
         name: 'Westshore Plaza',
         address: '456 Westshore Blvd, San Antonio, FL',
         waitTime: 15,
@@ -58,11 +87,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         closingTime: '9 PM',
         isFavorite: false,
         queueLength: 3,
+        colors: _randomSalonColors(2),
       ),
       position: const LatLng(28.3322, -82.2687),
     ),
     SalonLocation(
-      salon: const Salon(
+      salon: Salon(
         name: 'Tampa Bay Center',
         address: '789 Bay Center Dr, San Antonio, FL',
         waitTime: 32,
@@ -71,6 +101,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         closingTime: '7 PM',
         isFavorite: false,
         queueLength: 8,
+        colors: _randomSalonColors(3),
       ),
       position: const LatLng(28.3272, -82.2737),
     ),
@@ -299,20 +330,20 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                           color: theme.colorScheme.surface,
                           child: Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
+                            children: [
+                              Text(
                                   _selectedSalon!.name,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
+                              ),
                                 const SizedBox(height: 8),
                                 Text(
                                   _selectedSalon!.address,
@@ -323,83 +354,83 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                   children: [
                                     ElevatedButton(
                                       onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => SalonDetailsScreen(
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => SalonDetailsScreen(
                                               salon: _selectedSalon!,
-                                              services: [
-                                                SalonService(
-                                                  id: '1',
-                                                  name: 'Corte Feminino',
-                                                  description: 'Corte e finalização',
-                                                  price: 80.0,
-                                                  durationMinutes: 60,
-                                                  categories: ['Corte'],
-                                                ),
-                                                SalonService(
-                                                  id: '2',
-                                                  name: 'Coloração',
-                                                  description: 'Coloração completa',
-                                                  price: 150.0,
-                                                  durationMinutes: 120,
-                                                  categories: ['Coloração'],
-                                                ),
-                                              ],
-                                              contact: SalonContact(
-                                                phone: '(555) 123-4567',
-                                                email: 'contato@salon.com',
-                                                website: 'www.salon.com',
-                                                instagram: '@salon',
-                                                facebook: 'Salon',
-                                              ),
-                                              businessHours: [
-                                                SalonHours(
-                                                  day: 'Segunda - Sexta',
-                                                  isOpen: true,
-                                                  openTime: '9:00',
-                                                  closeTime: '18:00',
-                                                ),
-                                                SalonHours(
-                                                  day: 'Sábado',
-                                                  isOpen: true,
-                                                  openTime: '9:00',
-                                                  closeTime: '14:00',
-                                                ),
-                                                SalonHours(
-                                                  day: 'Domingo',
-                                                  isOpen: false,
-                                                ),
-                                              ],
-                                              reviews: [
-                                                SalonReview(
-                                                  id: '1',
-                                                  userName: 'Maria Silva',
-                                                  rating: 5,
-                                                  comment: 'Excelente atendimento!',
-                                                  date: '2024-03-15',
-                                                ),
-                                                SalonReview(
-                                                  id: '2',
-                                                  userName: 'João Santos',
-                                                  rating: 4,
-                                                  comment: 'Muito bom serviço',
-                                                  date: '2024-03-14',
-                                                ),
-                                              ],
-                                              additionalInfo: {
-                                                'Estacionamento': 'Gratuito',
-                                                'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
-                                                'Acessibilidade': 'Rampa de acesso',
-                                              },
-                                            ),
+                                        services: [
+                                          SalonService(
+                                            id: '1',
+                                            name: 'Corte Feminino',
+                                            description: 'Corte e finalização',
+                                            price: 80.0,
+                                            durationMinutes: 60,
+                                            categories: ['Corte'],
                                           ),
-                                        );
-                                      },
+                                          SalonService(
+                                            id: '2',
+                                            name: 'Coloração',
+                                            description: 'Coloração completa',
+                                            price: 150.0,
+                                            durationMinutes: 120,
+                                            categories: ['Coloração'],
+                                          ),
+                                        ],
+                                        contact: SalonContact(
+                                          phone: '(555) 123-4567',
+                                          email: 'contato@salon.com',
+                                          website: 'www.salon.com',
+                                          instagram: '@salon',
+                                          facebook: 'Salon',
+                                        ),
+                                        businessHours: [
+                                          SalonHours(
+                                            day: 'Segunda - Sexta',
+                                            isOpen: true,
+                                            openTime: '9:00',
+                                            closeTime: '18:00',
+                                          ),
+                                          SalonHours(
+                                            day: 'Sábado',
+                                            isOpen: true,
+                                            openTime: '9:00',
+                                            closeTime: '14:00',
+                                          ),
+                                          SalonHours(
+                                            day: 'Domingo',
+                                            isOpen: false,
+                                          ),
+                                        ],
+                                        reviews: [
+                                          SalonReview(
+                                            id: '1',
+                                            userName: 'Maria Silva',
+                                            rating: 5,
+                                            comment: 'Excelente atendimento!',
+                                            date: '2024-03-15',
+                                          ),
+                                          SalonReview(
+                                            id: '2',
+                                            userName: 'João Santos',
+                                            rating: 4,
+                                            comment: 'Muito bom serviço',
+                                            date: '2024-03-14',
+                                          ),
+                                        ],
+                                        additionalInfo: {
+                                          'Estacionamento': 'Gratuito',
+                                          'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                                          'Acessibilidade': 'Rampa de acesso',
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: theme.colorScheme.primary,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(12),
                                         ),
                                       ),
                                       child: const Text('Ver detalhes'),
@@ -408,15 +439,15 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                     IconButton(
                                       icon: const Icon(Icons.close),
                                       onPressed: () {
-                                        setState(() {
+                                                    setState(() {
                                           _selectedSalon = null;
-                                        });
-                                      },
+                                                    });
+                                                  },
                                     ),
                                   ],
-                                ),
-                              ],
-                            ),
+                                                ),
+                                              ],
+                                            ),
                           ),
                         ),
                       ),
@@ -438,8 +469,8 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   onPressed: _showFilterModal,
                   icon: const Icon(Icons.filter_list),
                   label: const Text('Filtros'),
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: Colors.white,
+                                                backgroundColor: theme.colorScheme.primary,
+                                                foregroundColor: Colors.white,
                   elevation: 4,
                 ),
                 const SizedBox(height: 16),
@@ -452,7 +483,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     final selected = await showModalBottomSheet<int>(
                       context: context,
                       isScrollControlled: true,
-                      shape: RoundedRectangleBorder(
+                                                shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                       ),
                       builder: (context) {
@@ -481,10 +512,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: Colors.white,
                   child: const Icon(Icons.my_location),
-                ),
-              ],
             ),
-          ),
+          ],
+        ),
+      ),
           ],
       ),
     );
@@ -495,7 +526,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color: salon.isOpen ? theme.colorScheme.primary : Colors.grey,
+        color: waitTimeToColor(salon.waitTime),
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
         boxShadow: [
@@ -628,12 +659,12 @@ class _SalonListModalState extends State<_SalonListModal> {
                                       width: 48,
                                       height: 48,
                   decoration: BoxDecoration(
-                                        color: salon.isOpen ? widget.theme.colorScheme.primary.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                                        color: salon.isOpen ? salon.colors.primary.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
                                         shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.store,
-                                        color: salon.isOpen ? widget.theme.colorScheme.primary : Colors.grey,
+                                        color: salon.isOpen ? salon.colors.primary : Colors.grey,
                                         size: 28,
                   ),
                 ),

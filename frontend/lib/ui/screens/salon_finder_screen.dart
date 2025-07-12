@@ -143,6 +143,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
         closingTime: index < 2 ? '9 PM' : '7 PM',
         isFavorite: index == 0,
         queueLength: math.max(1, (baseWaitTime / 5).round() + random.nextInt(3)),
+        colors: _randomSalonColors(index),
       );
     });
   }
@@ -161,6 +162,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
         closingTime: _dynamicSalons[i].closingTime,
         isFavorite: _dynamicSalons[i].isFavorite,
         queueLength: math.max(1, _dynamicSalons[i].queueLength + (change > 0 ? 1 : -1)),
+        colors: _dynamicSalons[i].colors,
       );
     }
   }
@@ -1038,6 +1040,18 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
       ],
     );
   }
+}
+
+SalonColors _randomSalonColors(int seed) {
+  final palettes = [
+    SalonColors(primary: Colors.redAccent, secondary: Colors.orange, background: Colors.red.shade50),
+    SalonColors(primary: Colors.blueAccent, secondary: Colors.cyan, background: Colors.blue.shade50),
+    SalonColors(primary: Colors.green, secondary: Colors.teal, background: Colors.green.shade50),
+    SalonColors(primary: Colors.purple, secondary: Colors.pinkAccent, background: Colors.purple.shade50),
+    SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50),
+    SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50),
+  ];
+  return palettes[seed % palettes.length];
 }
 
 /// Custom painter for the salon decoration
