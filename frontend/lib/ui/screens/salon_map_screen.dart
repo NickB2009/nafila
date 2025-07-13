@@ -10,16 +10,15 @@ import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
 import '../widgets/bottom_nav_bar.dart';
-import '../../state/check_in_state.dart';
 
 SalonColors _randomSalonColors(int seed) {
   final palettes = [
-    SalonColors(primary: Colors.redAccent, secondary: Colors.orange, background: Colors.red.shade50),
-    SalonColors(primary: Colors.blueAccent, secondary: Colors.cyan, background: Colors.blue.shade50),
-    SalonColors(primary: Colors.green, secondary: Colors.teal, background: Colors.green.shade50),
-    SalonColors(primary: Colors.purple, secondary: Colors.pinkAccent, background: Colors.purple.shade50),
-    SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50),
-    SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50),
+    SalonColors(primary: Colors.redAccent, secondary: Colors.orange, background: Colors.red.shade50, onSurface: Colors.red.shade900),
+    SalonColors(primary: Colors.blueAccent, secondary: Colors.cyan, background: Colors.blue.shade50, onSurface: Colors.blue.shade900),
+    SalonColors(primary: Colors.green, secondary: Colors.teal, background: Colors.green.shade50, onSurface: Colors.green.shade900),
+    SalonColors(primary: Colors.purple, secondary: Colors.pinkAccent, background: Colors.purple.shade50, onSurface: Colors.purple.shade900),
+    SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50, onSurface: Colors.amber.shade900),
+    SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50, onSurface: Colors.indigo.shade900),
   ];
   return palettes[seed % palettes.length];
 }
@@ -519,7 +518,6 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
               ],
             ),
           ),
-      ),
           ],
       ),
     );

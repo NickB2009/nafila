@@ -473,6 +473,7 @@ class QueueStatusScreen extends StatelessWidget {
   }
 
   Widget _buildSalonAction(ThemeData theme, IconData icon, String label, {Widget? trailing, Color? color, VoidCallback? onTap}) {
+    final colors = salon.colors;
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: color ?? colors.primary),

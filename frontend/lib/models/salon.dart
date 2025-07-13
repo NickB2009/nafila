@@ -4,10 +4,12 @@ class SalonColors {
   final Color primary;
   final Color secondary;
   final Color background;
+  final Color onSurface;
   const SalonColors({
     required this.primary,
     required this.secondary,
     required this.background,
+    required this.onSurface,
   });
 
   @override
@@ -17,10 +19,11 @@ class SalonColors {
           runtimeType == other.runtimeType &&
           primary == other.primary &&
           secondary == other.secondary &&
-          background == other.background;
+          background == other.background &&
+          onSurface == other.onSurface;
 
   @override
-  int get hashCode => Object.hash(primary, secondary, background);
+  int get hashCode => Object.hash(primary, secondary, background, onSurface);
 }
 
 /// Model representing a salon/barbershop
