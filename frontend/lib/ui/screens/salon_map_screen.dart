@@ -9,6 +9,8 @@ import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
+import '../widgets/bottom_nav_bar.dart';
+import '../../state/check_in_state.dart';
 
 SalonColors _randomSalonColors(int seed) {
   final palettes = [
@@ -227,8 +229,9 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final salonPalette = CheckInState.checkedInSalon?.colors;
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
       body: Stack(
           children: [
           FlutterMap(
@@ -281,7 +284,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(0.85),
+                  color: (salonPalette?.background ?? theme.colorScheme.surface).withOpacity(0.85),
                   borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -294,7 +297,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 child: Row(
                       children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back, color: theme.colorScheme.primary),
+                      icon: Icon(Icons.arrow_back, color: salonPalette?.primary ?? theme.colorScheme.primary),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     const SizedBox(width: 8),
@@ -302,7 +305,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                       'Salões',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
+                        color: salonPalette?.primary ?? theme.colorScheme.primary,
                       ),
                     ),
                   ],
@@ -469,16 +472,16 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   onPressed: _showFilterModal,
                   icon: const Icon(Icons.filter_list),
                   label: const Text('Filtros'),
-                                                backgroundColor: theme.colorScheme.primary,
-                                                foregroundColor: Colors.white,
+                  backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
                   elevation: 4,
                 ),
                 const SizedBox(height: 16),
                 FloatingActionButton(
                   heroTag: 'list_fab',
                   mini: true,
-                  backgroundColor: theme.colorScheme.surface,
-                  foregroundColor: theme.colorScheme.primary,
+                  backgroundColor: salonPalette?.background ?? theme.colorScheme.surface,
+                  foregroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
                   onPressed: () async {
                     final selected = await showModalBottomSheet<int>(
                       context: context,
@@ -509,12 +512,13 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   onPressed: () {
                     _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
                   },
-                  backgroundColor: theme.colorScheme.primary,
+                  backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
                   foregroundColor: Colors.white,
                   child: const Icon(Icons.my_location),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
       ),
           ],
       ),

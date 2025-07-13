@@ -29,8 +29,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final salon = widget.salon;
+    final colors = salon.colors;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -54,7 +55,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: () => Navigator.of(context).pop(),
-                          color: theme.colorScheme.onSurface,
+                          color: colors.primary,
                           iconSize: isSmallScreen ? 24 : 32,
                         ),
                       ],
@@ -64,6 +65,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: titleFontSize,
+                        color: colors.primary,
                       ),
                     ),
                     SizedBox(height: sectionSpacing * 0.5),
@@ -73,13 +75,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
-                      color: theme.colorScheme.surface,
+                      color: colors.background,
                       child: Padding(
                         padding: EdgeInsets.all(isSmallScreen ? 12.0 : 20.0),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.check_circle, color: theme.colorScheme.primary, size: isSmallScreen ? 28 : 36),
+                            Icon(Icons.check_circle, color: colors.primary, size: isSmallScreen ? 28 : 36),
                             SizedBox(width: isSmallScreen ? 8 : 16),
                             Expanded(
                               child: Column(
@@ -90,13 +92,14 @@ class _CheckInScreenState extends State<CheckInScreen> {
                                     style: theme.textTheme.headlineSmall?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       fontSize: isSmallScreen ? 18 : 22,
+                                      color: colors.primary,
                                     ),
                                   ),
                                   SizedBox(height: 4),
                                   Text(
                                     salon.address,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
+                                      color: colors.secondary,
                                       fontSize: isSmallScreen ? 13 : 15,
                                     ),
                                   ),
@@ -114,7 +117,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Nome completo", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize)),
+                        Text("Nome completo", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize, color: colors.primary)),
                         SizedBox(height: 2),
                         TextField(
                           controller: nameController,
@@ -122,14 +125,14 @@ class _CheckInScreenState extends State<CheckInScreen> {
                             hintText: "Digite seu nome",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: theme.colorScheme.primary),
+                              borderSide: BorderSide(color: colors.primary),
                             ),
                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmallScreen ? 10 : 14),
                           ),
-                          style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize),
+                          style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize, color: colors.primary),
                         ),
                         SizedBox(height: fieldSpacing),
-                        Text("Número de pessoas cortando o cabelo", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize)),
+                        Text("Número de pessoas cortando o cabelo", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize, color: colors.primary)),
                         DropdownButton<String>(
                           value: selectedPeople,
                           isExpanded: true,
@@ -137,7 +140,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                           items: peopleOptions.map((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
-                              child: Text(value, style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize)),
+                              child: Text(value, style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize, color: colors.primary)),
                             );
                           }).toList(),
                           onChanged: (String? newValue) {
@@ -147,7 +150,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                           },
                         ),
                         SizedBox(height: fieldSpacing),
-                        Text("Telefone", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize)),
+                        Text("Telefone", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize, color: colors.primary)),
                         SizedBox(height: 2),
                         TextField(
                           controller: phoneController,
@@ -156,11 +159,11 @@ class _CheckInScreenState extends State<CheckInScreen> {
                             hintText: "Digite seu telefone",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: theme.colorScheme.primary),
+                              borderSide: BorderSide(color: colors.primary),
                             ),
                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmallScreen ? 10 : 14),
                           ),
-                          style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize),
+                          style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize, color: colors.primary),
                         ),
                       ],
                     ),
@@ -176,7 +179,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
                               smsOptIn = value ?? false;
                             });
                           },
-                          activeColor: theme.colorScheme.primary,
+                          activeColor: colors.primary,
+                          checkColor: colors.background,
+                          fillColor: MaterialStateProperty.all(colors.primary),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                         ),
                         SizedBox(width: isSmallScreen ? 6 : 12),
@@ -186,13 +191,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
                             children: [
                               Text(
                                 "Receba uma mensagem avisando quando for a hora de ir ao salão",
-                                style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize),
+                                style: theme.textTheme.bodyLarge?.copyWith(fontSize: inputFontSize, color: colors.primary),
                               ),
                               SizedBox(height: 4),
                               RichText(
                                 text: TextSpan(
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                    color: colors.secondary,
                                     fontSize: isSmallScreen ? 11 : 13,
                                   ),
                                   children: [
@@ -202,7 +207,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                                     TextSpan(
                                       text: "Política de Privacidade.",
                                       style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.primary,
+                                        color: colors.primary,
                                         decoration: TextDecoration.underline,
                                         fontSize: isSmallScreen ? 11 : 13,
                                       ),
@@ -224,6 +229,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: colors.primary,
+                          foregroundColor: colors.background,
                           padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 14 : 18),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           textStyle: TextStyle(fontSize: isSmallScreen ? 16 : 20, fontWeight: FontWeight.bold),
@@ -231,7 +238,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const CheckInSuccessScreen(),
+                              builder: (context) => CheckInSuccessScreen(salon: salon),
                             ),
                           );
                         },

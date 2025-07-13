@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import '../screens/salon_finder_screen.dart';
 import '../screens/salon_map_screen.dart';
 import '../screens/account_screen.dart';
+import '../screens/queue_status_screen.dart';
+import '../../models/salon.dart';
+
+/// TEMP: Global check-in state for demo (replace with Provider or real state management)
+class CheckInState {
+  static bool isCheckedIn = false;
+  static Salon? checkedInSalon;
+}
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -48,9 +56,17 @@ class BottomNavBar extends StatelessWidget {
               Icons.home,
               currentIndex == 0,
               'Início',
-              () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const SalonFinderScreen()),
-              ),
+              () {
+                if (CheckInState.isCheckedIn && CheckInState.checkedInSalon != null) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => QueueStatusScreen(salon: CheckInState.checkedInSalon!)),
+                  );
+                } else {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const SalonFinderScreen()),
+                  );
+                }
+              },
             ),
             _buildNavItem(
               context,

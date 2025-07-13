@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../utils/brazilian_names_generator.dart';
+import 'package:flutter/services.dart';
+import '../widgets/bottom_nav_bar.dart';
+import '../../models/salon.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -58,6 +61,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final salon = CheckInState.checkedInSalon;
+    final colors = salon?.colors;
     // Mock user data
     final String name = BrazilianNamesGenerator.generateNameWithInitial();
     const String phone = '(11) 91234-5678';
@@ -65,7 +70,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     final String email = BrazilianNamesGenerator.generateEmail();
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -77,8 +82,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withOpacity(0.8),
+                    colors?.primary ?? theme.colorScheme.primary,
+                    (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.8),
                   ],
                 ),
               ),
@@ -153,7 +158,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
             Container(
               margin: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
+                color: colors?.background ?? theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -166,11 +171,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  color: theme.colorScheme.primary,
+                  color: colors?.primary ?? theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 labelColor: Colors.white,
-                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                unselectedLabelColor: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
                 labelStyle: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -215,13 +220,96 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Edição em breve!'),
-                                      duration: Duration(seconds: 1),
+                                onPressed: () async {
+                                  final result = await showModalBottomSheet<Map<String, String>>(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                                     ),
+                                    builder: (context) {
+                                      final nameController = TextEditingController(text: name);
+                                      final phoneController = TextEditingController(text: phone);
+                                      final cityController = TextEditingController(text: city);
+                                      final emailController = TextEditingController(text: email);
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          left: 24, right: 24,
+                                          top: 24,
+                                          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text('Editar Informações', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                                IconButton(
+                                                  icon: const Icon(Icons.close),
+                                                  onPressed: () => Navigator.of(context).pop(),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 16),
+                                            TextField(
+                                              controller: nameController,
+                                              decoration: const InputDecoration(labelText: 'Nome completo'),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            TextField(
+                                              controller: phoneController,
+                                              decoration: const InputDecoration(labelText: 'Telefone'),
+                                              keyboardType: TextInputType.phone,
+                                            ),
+                                            const SizedBox(height: 12),
+                                            TextField(
+                                              controller: cityController,
+                                              decoration: const InputDecoration(labelText: 'Cidade'),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            TextField(
+                                              controller: emailController,
+                                              decoration: const InputDecoration(labelText: 'Email'),
+                                              keyboardType: TextInputType.emailAddress,
+                                            ),
+                                            const SizedBox(height: 24),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: theme.colorScheme.primary,
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop({
+                                                    'name': nameController.text,
+                                                    'phone': phoneController.text,
+                                                    'city': cityController.text,
+                                                    'email': emailController.text,
+                                                  });
+                                                },
+                                                child: const Text('Salvar'),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   );
+                                  if (result != null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Informações atualizadas!'),
+                                        duration: Duration(seconds: 2),
+                                      ),
+                                    );
+                                    // In a real app, update state/provider here
+                                  }
                                 },
                                 icon: const Icon(Icons.edit_outlined, size: 18),
                                 label: const Text('Editar Perfil'),
@@ -383,10 +471,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   }
 
   Widget _buildInfoCard(ThemeData theme, String title, List<Widget> children) {
+    final colors = CheckInState.checkedInSalon?.colors;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colors?.background ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -405,7 +494,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
               title,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+                color: (colors?.primary ?? theme.colorScheme.onSurface),
               ),
             ),
             const SizedBox(height: 16),
@@ -417,6 +506,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   }
 
   Widget _buildInfoRow(ThemeData theme, IconData icon, String label, String value) {
+    final colors = CheckInState.checkedInSalon?.colors;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -424,12 +514,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icon,
-              color: theme.colorScheme.primary,
+              color: (colors?.primary ?? theme.colorScheme.primary),
               size: 18,
             ),
           ),
@@ -441,14 +531,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   value,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface,
+                    color: (colors?.primary ?? theme.colorScheme.onSurface),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -461,6 +551,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   }
 
   Widget _buildPreferencesSection(ThemeData theme) {
+    final colors = CheckInState.checkedInSalon?.colors;
     return Column(
       children: [
         _buildPreferenceRow(theme, 'Laterais', sides, sidesOptions, (v) => _onChipChanged('sides', v)),
@@ -475,13 +566,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   }
 
   Widget _buildPreferenceRow(ThemeData theme, String label, String selected, List<String> options, ValueChanged<String> onChanged) {
+    final colors = CheckInState.checkedInSalon?.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: theme.textTheme.titleSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -496,17 +588,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface,
+                  color: isSelected ? (colors?.primary ?? theme.colorScheme.primary) : (colors?.background ?? theme.colorScheme.surface),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.2),
+                    color: isSelected ? (colors?.primary ?? theme.colorScheme.primary) : (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.2),
                     width: 1,
                   ),
                 ),
                 child: Text(
                   option,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                    color: isSelected ? Colors.white : (colors?.onSurface ?? theme.colorScheme.onSurface),
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
@@ -519,14 +611,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   }
 
   Widget _buildSummaryCard(ThemeData theme) {
+    final colors = CheckInState.checkedInSalon?.colors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.05),
+        color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.1),
+          color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
           width: 1,
         ),
       ),
@@ -534,7 +627,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
         children: [
           Icon(
             Icons.content_cut,
-            color: theme.colorScheme.primary,
+            color: (colors?.primary ?? theme.colorScheme.primary),
             size: 24,
           ),
           const SizedBox(width: 12),
@@ -543,13 +636,13 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
               'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja',
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+                color: (colors?.primary ?? theme.colorScheme.onSurface),
               ),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.copy_outlined, size: 20),
-            color: theme.colorScheme.primary,
+            color: (colors?.primary ?? theme.colorScheme.primary),
             onPressed: () {
               final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja';
               ScaffoldMessenger.of(context).showSnackBar(
@@ -616,6 +709,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   ];
 
   List<Widget> _buildCutTemplates(ThemeData theme) {
+    final colors = CheckInState.checkedInSalon?.colors;
     return List.generate(cutTemplates.length, (i) {
       final t = cutTemplates[i];
       final isSelected = selectedTemplate == i;
@@ -637,16 +731,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
           width: 100,
           margin: const EdgeInsets.only(right: 12),
           decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : theme.colorScheme.surface,
+            color: isSelected ? (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1) : (colors?.background ?? theme.colorScheme.surface),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.1),
+              color: isSelected
+                  ? (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.2)
+                  : theme.colorScheme.outline.withOpacity(0.2),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: [
               if (isSelected)
                 BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -656,18 +752,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (t['isCustom'] == true)
-                Icon(Icons.edit_outlined, size: 32, color: theme.colorScheme.primary)
+                Icon(Icons.edit_outlined, size: 32, color: (colors?.primary ?? theme.colorScheme.primary))
               else
                 Container(
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.content_cut,
-                    color: theme.colorScheme.primary,
+                    color: (colors?.primary ?? theme.colorScheme.primary),
                     size: 24,
                   ),
                 ),
@@ -676,7 +772,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                 t['name'],
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                  color: isSelected ? (colors?.primary ?? theme.colorScheme.primary) : theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),

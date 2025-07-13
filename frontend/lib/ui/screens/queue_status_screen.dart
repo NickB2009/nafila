@@ -6,27 +6,30 @@ import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../widgets/bottom_nav_bar.dart';
+import 'package:flutter/services.dart';
+import '../../models/salon.dart';
 
 class QueueStatusScreen extends StatelessWidget {
-  const QueueStatusScreen({super.key});
+  final Salon salon;
+  const QueueStatusScreen({super.key, required this.salon});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Mock data
-    const String salonName = "Market at Mirada";
-    const String salonAddress = "30921 Mirada Blvd, San Antonio, FL";
-    const int waitTime = 34;
-    const int position = 6;
-    const String closingTime = "18:00";
-    const String phone = "(352) 668-4089";
-    const double distance = 10.9;
-    const bool isOpen = true;
+    final String salonName = salon.name;
+    final String salonAddress = salon.address;
+    final int waitTime = salon.waitTime;
+    final int position = salon.queueLength > 0 ? salon.queueLength : 1;
+    final String closingTime = salon.closingTime;
+    final String phone = "(352) 668-4089";
+    final double distance = salon.distance;
+    final bool isOpen = salon.isOpen;
+    final colors = salon.colors;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: colors.primary,
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
+        backgroundColor: colors.primary,
         elevation: 0,
         leading: null,
         automaticallyImplyLeading: false,
@@ -36,21 +39,47 @@ class QueueStatusScreen extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondary,
+                color: colors.secondary,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 Icons.person,
-                color: theme.colorScheme.onSecondary,
+                color: Colors.white,
                 size: 20,
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              '1',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
+            GestureDetector(
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: position.toString()));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Número copiado!'),
+                    backgroundColor: colors.primary,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colors.secondary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.copy, size: 16, color: colors.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      position.toString(),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -90,13 +119,13 @@ class QueueStatusScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Stepper
-                _buildStepper(theme),
+                _buildStepper(theme, colors),
                 const SizedBox(height: 20),
                 // Estimated Wait Card
-                _buildWaitCard(theme, waitTime, position, context),
+                _buildWaitCard(theme, colors, waitTime, position, context),
                 const SizedBox(height: 20),
                 // Checked-in Salon Card
-                _buildSalonCard(theme, salonName, salonAddress, isOpen, closingTime, distance, phone, context),
+                _buildSalonCard(theme, colors, salonName, salonAddress, isOpen, closingTime, distance, phone, context),
               ],
             ),
           ),
@@ -106,27 +135,27 @@ class QueueStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStepper(ThemeData theme) {
+  Widget _buildStepper(ThemeData theme, SalonColors colors) {
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildStepCircle(theme, true),
+            _buildStepCircle(theme, true, colors),
             Expanded(
               child: Divider(
                 color: theme.colorScheme.onPrimary.withOpacity(0.5),
                 thickness: 2,
               ),
             ),
-            _buildStepCircle(theme, false),
+            _buildStepCircle(theme, false, colors),
             Expanded(
               child: Divider(
                 color: theme.colorScheme.onPrimary.withOpacity(0.5),
                 thickness: 2,
               ),
             ),
-            _buildStepCircle(theme, false),
+            _buildStepCircle(theme, false, colors),
           ],
         ),
         const SizedBox(height: 8),
@@ -160,30 +189,30 @@ class QueueStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStepCircle(ThemeData theme, bool active) {
+  Widget _buildStepCircle(ThemeData theme, bool active, SalonColors colors) {
     return Container(
       width: 20,
       height: 20,
       decoration: BoxDecoration(
-        color: active ? theme.colorScheme.onPrimary : Colors.transparent,
+        color: active ? colors.background : Colors.transparent,
         border: Border.all(
-          color: theme.colorScheme.onPrimary,
+          color: colors.background,
           width: 2,
         ),
         shape: BoxShape.circle,
       ),
       child: active
-          ? Icon(Icons.check, size: 14, color: theme.colorScheme.primary)
+          ? Icon(Icons.check, size: 14, color: colors.primary)
           : null,
     );
   }
 
-  Widget _buildWaitCard(ThemeData theme, int waitTime, int position, BuildContext context) {
+  Widget _buildWaitCard(ThemeData theme, SalonColors colors, int waitTime, int position, BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colors.background,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -205,7 +234,7 @@ class QueueStatusScreen extends StatelessWidget {
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+                  valueColor: AlwaysStoppedAnimation(colors.primary),
                 ),
               ),
             ],
@@ -214,7 +243,7 @@ class QueueStatusScreen extends StatelessWidget {
           Text(
             '$waitTime min',
             style: theme.textTheme.displayMedium?.copyWith(
-              color: theme.colorScheme.primary,
+              color: colors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -244,8 +273,8 @@ class QueueStatusScreen extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.primary,
-                side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                foregroundColor: colors.primary,
+                side: BorderSide(color: colors.primary, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -271,7 +300,7 @@ class QueueStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSalonCard(ThemeData theme, String name, String address, bool isOpen, String closingTime, double distance, String phone, BuildContext context) {
+  Widget _buildSalonCard(ThemeData theme, SalonColors colors, String name, String address, bool isOpen, String closingTime, double distance, String phone, BuildContext context) {
     // Mock coordinates for the salon
     const double lat = -22.9068;
     const double lng = -43.1729;
@@ -279,7 +308,7 @@ class QueueStatusScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colors.background,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -288,13 +317,13 @@ class QueueStatusScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: colors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               'CHECK-IN REALIZADO',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.primary,
+                color: colors.primary,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.1,
               ),
@@ -396,7 +425,7 @@ class QueueStatusScreen extends StatelessWidget {
             theme,
             Icons.card_giftcard,
             'Lembrar próximo corte',
-            trailing: _buildBetaChip(theme),
+            trailing: _buildBetaChip(theme, colors),
             onTap: () {
               showModalBottomSheet(
                 context: context,
@@ -432,6 +461,8 @@ class QueueStatusScreen extends StatelessWidget {
               ),
             );
             if (confirmed == true) {
+              CheckInState.isCheckedIn = false;
+              CheckInState.checkedInSalon = null;
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             }
@@ -444,11 +475,11 @@ class QueueStatusScreen extends StatelessWidget {
   Widget _buildSalonAction(ThemeData theme, IconData icon, String label, {Widget? trailing, Color? color, VoidCallback? onTap}) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: color ?? theme.colorScheme.primary),
+      leading: Icon(icon, color: color ?? colors.primary),
       title: Text(
         label,
         style: theme.textTheme.bodyLarge?.copyWith(
-          color: color ?? theme.colorScheme.onSurface,
+          color: color ?? colors.primary,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -457,17 +488,17 @@ class QueueStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBetaChip(ThemeData theme) {
+  Widget _buildBetaChip(ThemeData theme, SalonColors colors) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: colors.secondary.withOpacity(0.2),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         'BETA',
         style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
+          color: colors.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
