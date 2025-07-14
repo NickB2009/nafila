@@ -346,13 +346,13 @@ class _AccountScreenState extends State<AccountScreen> {
             ],
           ),
           SizedBox(height: isSmallScreen ? 8 : 12),
-          ...haircutHistory.map((haircut) => _buildHaircutHistoryItem(theme, isSmallScreen, haircut)),
+          ...haircutHistory.map((haircut) => _buildHaircutHistoryItem(context, theme, isSmallScreen, haircut)),
         ],
       ),
     );
   }
 
-  Widget _buildHaircutHistoryItem(ThemeData theme, bool isSmallScreen, Map<String, dynamic> haircut) {
+  Widget _buildHaircutHistoryItem(BuildContext context, ThemeData theme, bool isSmallScreen, Map<String, dynamic> haircut) {
     return InkWell(
       onTap: () {
         // Show haircut details
@@ -420,6 +420,19 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ],
                   ],
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.sync_alt),
+                    label: const Text('Transferir para Preferências'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _transferCutToPreferences(context, haircut['description']);
+                    },
+                  ),
                 ],
               ),
             ),
@@ -498,6 +511,14 @@ class _AccountScreenState extends State<AccountScreen> {
               Icons.chevron_right,
               color: theme.colorScheme.onSurfaceVariant,
               size: isSmallScreen ? 20 : 24,
+            ),
+            IconButton(
+              icon: const Icon(Icons.sync_alt),
+              tooltip: 'Transferir para Preferências',
+              color: theme.colorScheme.primary,
+              onPressed: () {
+                _transferCutToPreferences(context, haircut['description']);
+              },
             ),
           ],
         ),
@@ -868,4 +889,23 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
       ),
     );
   }
+} 
+
+// Add the transfer logic
+void _transferCutToPreferences(BuildContext context, Map<String, dynamic> desc) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => PersonalInfoScreen(
+        initialPreferences: {
+          'sides': desc['sides'] ?? '',
+          'fade': desc['fade'] ?? '',
+          'top': desc['top'] ?? '',
+          'franja': desc['fringe'] ?? '',
+          'neckline': desc['neckline'] ?? '',
+          'beard': desc['beard'] ?? '',
+          'notes': desc['notes'] ?? '',
+        },
+      ),
+    ),
+  );
 } 

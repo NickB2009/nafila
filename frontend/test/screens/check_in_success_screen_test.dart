@@ -1,6 +1,7 @@
 import 'package:eutonafila_frontend/ui/screens/check_in_success_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:eutonafila_frontend/models/salon.dart';
 
 class DummyQueueStatusScreen extends StatelessWidget {
   const DummyQueueStatusScreen({super.key});
@@ -11,12 +12,29 @@ class DummyQueueStatusScreen extends StatelessWidget {
 }
 
 void main() {
+  final dummySalon = Salon(
+    name: 'Barbearia Teste',
+    address: 'Rua Exemplo, 123',
+    waitTime: 10,
+    distance: 1.2,
+    isOpen: true,
+    closingTime: '18:00',
+    isFavorite: false,
+    queueLength: 3,
+    colors: SalonColors(
+      primary: Colors.blue,
+      secondary: Colors.blueAccent,
+      background: Colors.white,
+      onSurface: Colors.black,
+    ),
+  );
+
   Widget buildTestable({bool delayNavigation = false}) {
     return MaterialApp(
-      home: CheckInSuccessScreen(delayNavigation: delayNavigation),
+      home: CheckInSuccessScreen(delayNavigation: delayNavigation, salon: dummySalon),
       onGenerateRoute: (settings) {
         if (settings.name == '/') {
-          return MaterialPageRoute(builder: (_) => CheckInSuccessScreen(delayNavigation: delayNavigation));
+          return MaterialPageRoute(builder: (_) => CheckInSuccessScreen(delayNavigation: delayNavigation, salon: dummySalon));
         }
         return MaterialPageRoute(builder: (_) => const DummyQueueStatusScreen());
       },

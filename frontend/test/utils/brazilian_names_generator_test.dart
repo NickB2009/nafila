@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/utils/brazilian_names_generator.dart';
+import 'package:eutonafila_frontend/utils/brazilian_names_generator.dart';
 
 void main() {
   group('BrazilianNamesGenerator', () {

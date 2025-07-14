@@ -5,7 +5,8 @@ import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
-  const PersonalInfoScreen({super.key});
+  final Map<String, String>? initialPreferences;
+  const PersonalInfoScreen({super.key, this.initialPreferences});
 
   @override
   State<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
@@ -26,6 +27,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   String neckline = 'Arredondada';
   String beard = 'Aparada';
   String notes = '';
+  late TextEditingController notesController;
+  int selectedTemplate = 0;
+
   final List<String> sidesOptions = ['Máquina 1', 'Máquina 2', 'Máquina 3', 'Tesoura', 'Outro'];
   final List<String> fadeOptions = ['Baixo', 'Médio', 'Alto', 'Sem fade'];
   final List<String> topOptions = ['Curto', 'Médio', 'Longo', 'Tesoura', 'Máquina'];
@@ -54,12 +58,38 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     );
 
     _animationController.forward();
+
+    notesController = TextEditingController(text: notes);
+
+    // If initialPreferences are provided, set them and select custom template
+    if (widget.initialPreferences != null) {
+      final prefs = widget.initialPreferences!;
+      // Helper to set and ensure value is in options
+      String ensureInOptions(String value, List<String> options, void Function(String) setter) {
+        if (value.isNotEmpty && !options.contains(value)) {
+          options.add(value);
+        }
+        setter(value);
+        return value;
+      }
+      sides = ensureInOptions(prefs['sides'] ?? sides, sidesOptions, (v) => sides = v);
+      fade = ensureInOptions(prefs['fade'] ?? fade, fadeOptions, (v) => fade = v);
+      top = ensureInOptions(prefs['top'] ?? top, topOptions, (v) => top = v);
+      franja = ensureInOptions(prefs['franja'] ?? franja, franjaOptions, (v) => franja = v);
+      neckline = ensureInOptions(prefs['neckline'] ?? neckline, necklineOptions, (v) => neckline = v);
+      beard = ensureInOptions(prefs['beard'] ?? beard, beardOptions, (v) => beard = v);
+      notes = prefs['notes'] ?? notes;
+      notesController.text = notes;
+      selectedTemplate = 0; // Custom
+      _tabController.index = 1; // Go to Preferências tab
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _animationController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -335,129 +365,154 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                       ),
                     ),
                   ),
-                  // Tab 2: Cut Notes
+                  // Tab 2: Preferências (redesigned)
                   FadeTransition(
                     opacity: _fadeAnimation,
                     child: SlideTransition(
                       position: _slideAnimation,
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Cut Templates
-                            Text(
-                              'Modelos de Corte',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              height: 120,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: _buildCutTemplates(theme),
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            // Reference Photo
-                            Text(
-                              'Foto de Referência',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Center(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    modelPhotoUrl = modelPhotoUrl == null
-                                      ? 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=facearea&w=400&h=400'
-                                      : null;
-                                  });
-                                },
-                                child: Container(
-                                  width: 140,
-                                  height: 140,
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: theme.colorScheme.outline.withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: modelPhotoUrl == null
-                                    ? Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.add_a_photo_outlined,
-                                            color: theme.colorScheme.primary,
-                                            size: 32,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Adicionar foto',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: theme.colorScheme.primary,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    : ClipRRect(
-                                        borderRadius: BorderRadius.circular(19),
-                                        child: Image.network(
-                                          modelPhotoUrl!,
-                                          width: 140,
-                                          height: 140,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
+                            // Modelos de Corte Card
+                            _buildSectionCard(
+                              context,
+                              title: 'Modelos de Corte',
+                              child: SizedBox(
+                                height: 120,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  children: _buildCutTemplates(theme),
                                 ),
                               ),
-                            ),
-                            if (modelPhotoUrl != null) ...[
-                              const SizedBox(height: 12),
-                              Center(
-                                child: TextButton.icon(
-                                  onPressed: () {
-                                    setState(() {
-                                      modelPhotoUrl = null;
-                                    });
-                                  },
-                                  icon: const Icon(Icons.delete_outline, size: 16),
-                                  label: const Text('Remover'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: theme.colorScheme.error,
-                                  ),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 32),
-                            // Preferences
-                            Text(
-                              'Preferências de Corte',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface,
-                              ),
+                              icon: Icons.style,
                             ),
                             const SizedBox(height: 20),
-                            _buildPreferencesSection(theme),
-                            const SizedBox(height: 32),
+                            // Preferências de Corte Card (Chips)
+                            _buildSectionCard(
+                              context,
+                              title: 'Preferências de Corte',
+                              child: Column(
+                                children: [
+                                  _buildPreferenceRow(theme, 'Laterais', sides, sidesOptions, (v) => _onChipChanged('sides', v), icon: Icons.cut),
+                                  const SizedBox(height: 16),
+                                  _buildPreferenceRow(theme, 'Fade', fade, fadeOptions, (v) => _onChipChanged('fade', v), icon: Icons.blur_on),
+                                  const SizedBox(height: 16),
+                                  _buildPreferenceRow(theme, 'Topo', top, topOptions, (v) => _onChipChanged('top', v), icon: Icons.vertical_align_top),
+                                  const SizedBox(height: 16),
+                                  _buildPreferenceRow(theme, 'Franja', franja, franjaOptions, (v) => _onChipChanged('franja', v), icon: Icons.horizontal_rule),
+                                  const SizedBox(height: 16),
+                                  _buildPreferenceRow(theme, 'Nuca', neckline, necklineOptions, (v) => _onChipChanged('neckline', v), icon: Icons.crop_7_5),
+                                  const SizedBox(height: 16),
+                                  _buildPreferenceRow(theme, 'Barba', beard, beardOptions, (v) => _onChipChanged('beard', v), icon: Icons.face_retouching_natural),
+                                ],
+                              ),
+                              icon: Icons.tune,
+                            ),
+                            const SizedBox(height: 20),
+                            // Foto de Referência Card
+                            _buildSectionCard(
+                              context,
+                              title: 'Foto de Referência',
+                              child: Column(
+                                children: [
+                                  Center(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          modelPhotoUrl = modelPhotoUrl == null
+                                            ? 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=facearea&w=400&h=400'
+                                            : null;
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 140,
+                                        height: 140,
+                                        decoration: BoxDecoration(
+                                          color: colors?.background ?? theme.colorScheme.surface,
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.05),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: modelPhotoUrl == null
+                                          ? Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.add_a_photo_outlined,
+                                                  color: colors?.primary ?? theme.colorScheme.primary,
+                                                  size: 32,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  'Adicionar foto',
+                                                  style: theme.textTheme.bodySmall?.copyWith(
+                                                    color: colors?.primary ?? theme.colorScheme.primary,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : ClipRRect(
+                                              borderRadius: BorderRadius.circular(19),
+                                              child: Image.network(
+                                                modelPhotoUrl!,
+                                                width: 140,
+                                                height: 140,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (modelPhotoUrl != null) ...[
+                                    const SizedBox(height: 12),
+                                    Center(
+                                      child: TextButton.icon(
+                                        onPressed: () {
+                                          setState(() {
+                                            modelPhotoUrl = null;
+                                          });
+                                        },
+                                        icon: const Icon(Icons.delete_outline, size: 16),
+                                        label: const Text('Remover'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: theme.colorScheme.error,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              icon: Icons.photo_camera_back,
+                            ),
+                            const SizedBox(height: 20),
+                            // Observações Card
+                            _buildSectionCard(
+                              context,
+                              title: 'Observações',
+                              child: TextField(
+                                minLines: 1,
+                                maxLines: 3,
+                                decoration: InputDecoration(
+                                  hintText: 'Ex: Deixar mais comprido na frente, usar gel...'
+                                ),
+                                onChanged: (v) => setState(() => notes = v),
+                                controller: notesController,
+                              ),
+                              icon: Icons.notes,
+                            ),
+                            const SizedBox(height: 20),
                             // Summary Card
                             _buildSummaryCard(theme),
                             const SizedBox(height: 20),
@@ -557,55 +612,83 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
 
   Widget _buildPreferencesSection(ThemeData theme) {
     final colors = CheckInState.checkedInSalon?.colors;
-    return Column(
-      children: [
-        _buildPreferenceRow(theme, 'Laterais', sides, sidesOptions, (v) => _onChipChanged('sides', v)),
-        const SizedBox(height: 20),
-        _buildPreferenceRow(theme, 'Fade', fade, fadeOptions, (v) => _onChipChanged('fade', v)),
-        const SizedBox(height: 20),
-        _buildPreferenceRow(theme, 'Topo', top, topOptions, (v) => _onChipChanged('top', v)),
-        const SizedBox(height: 20),
-        _buildPreferenceRow(theme, 'Franja', franja, franjaOptions, (v) => _onChipChanged('franja', v)),
-        const SizedBox(height: 20),
-        _buildPreferenceRow(theme, 'Nuca', neckline, necklineOptions, (v) => _onChipChanged('neckline', v)),
-        const SizedBox(height: 20),
-        _buildPreferenceRow(theme, 'Barba', beard, beardOptions, (v) => _onChipChanged('beard', v)),
-        const SizedBox(height: 20),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Observações',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
-              fontWeight: FontWeight.w600,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colors?.background ?? theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildPreferenceRow(theme, 'Laterais', sides, sidesOptions, (v) => _onChipChanged('sides', v)),
+          const SizedBox(height: 20),
+          _buildPreferenceRow(theme, 'Fade', fade, fadeOptions, (v) => _onChipChanged('fade', v)),
+          const SizedBox(height: 20),
+          _buildPreferenceRow(theme, 'Topo', top, topOptions, (v) => _onChipChanged('top', v)),
+          const SizedBox(height: 20),
+          _buildPreferenceRow(theme, 'Franja', franja, franjaOptions, (v) => _onChipChanged('franja', v)),
+          const SizedBox(height: 20),
+          _buildPreferenceRow(theme, 'Nuca', neckline, necklineOptions, (v) => _onChipChanged('neckline', v)),
+          const SizedBox(height: 20),
+          _buildPreferenceRow(theme, 'Barba', beard, beardOptions, (v) => _onChipChanged('beard', v)),
+          const SizedBox(height: 20),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Observações',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          minLines: 1,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Ex: Deixar mais comprido na frente, usar gel...'
+          const SizedBox(height: 12),
+          TextField(
+            minLines: 1,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Ex: Deixar mais comprido na frente, usar gel...'
+            ),
+            onChanged: (v) => setState(() => notes = v),
+            controller: TextEditingController(text: notes),
           ),
-          onChanged: (v) => setState(() => notes = v),
-          controller: TextEditingController(text: notes),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildPreferenceRow(ThemeData theme, String label, String selected, List<String> options, ValueChanged<String> onChanged) {
+  Widget _buildPreferenceRow(ThemeData theme, String label, String selected, List<String> options, ValueChanged<String> onChanged, {IconData? icon}) {
     final colors = CheckInState.checkedInSalon?.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
-            fontWeight: FontWeight.w600,
-          ),
+        Row(
+          children: [
+            if (icon != null)
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(6),
+                child: Icon(icon, color: colors?.primary ?? theme.colorScheme.primary, size: 16),
+              ),
+            Text(
+              label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -625,12 +708,20 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                     width: 1,
                   ),
                 ),
-                child: Text(
-                  option,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isSelected ? Colors.white : (colors?.onSurface ?? theme.colorScheme.onSurface),
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null)
+                      Icon(icon, size: 14, color: isSelected ? Colors.white : (colors?.primary ?? theme.colorScheme.primary)),
+                    if (icon != null) const SizedBox(width: 4),
+                    Text(
+                      option,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isSelected ? Colors.white : (colors?.onSurface ?? theme.colorScheme.onSurface),
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -705,7 +796,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   }
 
   // --- Cut Templates ---
-  int selectedTemplate = 0;
   final List<Map<String, dynamic>> cutTemplates = [
     {
       'name': 'Personalizado',
@@ -840,5 +930,46 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
       // If any chip is changed manually, select 'Custom'
       selectedTemplate = 0;
     });
+  }
+
+  Widget _buildSectionCard(BuildContext context, {required String title, required Widget child, IconData? icon}) {
+    final theme = Theme.of(context);
+    final colors = CheckInState.checkedInSalon?.colors;
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: colors?.background ?? theme.colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (icon != null)
+                  Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(icon, color: colors?.primary ?? theme.colorScheme.primary, size: 20),
+                  ),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colors?.primary ?? theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      ),
+    );
   }
 } 

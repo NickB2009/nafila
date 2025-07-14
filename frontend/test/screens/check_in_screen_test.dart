@@ -15,6 +15,12 @@ void main() {
     closingTime: '18:00',
     isFavorite: false,
     queueLength: 3,
+    colors: SalonColors(
+      primary: Colors.blue,
+      secondary: Colors.blueAccent,
+      background: Colors.white,
+      onSurface: Colors.black,
+    ),
   );
 
   Widget buildTestable({Widget? child}) {
