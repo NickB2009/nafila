@@ -23,10 +23,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   String fade = 'Médio';
   String top = 'Médio';
   String franja = 'Não';
+  String neckline = 'Arredondada';
+  String beard = 'Aparada';
+  String notes = '';
   final List<String> sidesOptions = ['Máquina 1', 'Máquina 2', 'Máquina 3', 'Tesoura', 'Outro'];
   final List<String> fadeOptions = ['Baixo', 'Médio', 'Alto', 'Sem fade'];
   final List<String> topOptions = ['Curto', 'Médio', 'Longo', 'Tesoura', 'Máquina'];
   final List<String> franjaOptions = ['Sim', 'Não', 'Deixar crescer'];
+  final List<String> necklineOptions = ['Arredondada', 'Quadrada', 'Natural', 'Degradê'];
+  final List<String> beardOptions = ['Aparada', 'Feita', 'Não'];
 
   @override
   void initState() {
@@ -561,6 +566,31 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
         _buildPreferenceRow(theme, 'Topo', top, topOptions, (v) => _onChipChanged('top', v)),
         const SizedBox(height: 20),
         _buildPreferenceRow(theme, 'Franja', franja, franjaOptions, (v) => _onChipChanged('franja', v)),
+        const SizedBox(height: 20),
+        _buildPreferenceRow(theme, 'Nuca', neckline, necklineOptions, (v) => _onChipChanged('neckline', v)),
+        const SizedBox(height: 20),
+        _buildPreferenceRow(theme, 'Barba', beard, beardOptions, (v) => _onChipChanged('beard', v)),
+        const SizedBox(height: 20),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Observações',
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          minLines: 1,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Ex: Deixar mais comprido na frente, usar gel...'
+          ),
+          onChanged: (v) => setState(() => notes = v),
+          controller: TextEditingController(text: notes),
+        ),
       ],
     );
   }
@@ -632,19 +662,35 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: (colors?.primary ?? theme.colorScheme.onSurface),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja  •  Nuca: $neckline  •  Barba: $beard',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: (colors?.primary ?? theme.colorScheme.onSurface),
+                  ),
+                ),
+                if (notes.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      'Obs: $notes',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.copy_outlined, size: 20),
             color: (colors?.primary ?? theme.colorScheme.primary),
             onPressed: () {
-              final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja';
+              final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja  •  Nuca: $neckline  •  Barba: $beard' + (notes.isNotEmpty ? '  •  Obs: $notes' : '');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Copiado!'),
@@ -789,6 +835,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
       if (field == 'fade') fade = value;
       if (field == 'top') top = value;
       if (field == 'franja') franja = value;
+      if (field == 'neckline') neckline = value;
+      if (field == 'beard') beard = value;
       // If any chip is changed manually, select 'Custom'
       selectedTemplate = 0;
     });

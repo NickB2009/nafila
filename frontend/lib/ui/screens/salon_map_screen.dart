@@ -452,12 +452,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
           // Floating action buttons (filter, list, location)
           Positioned(
             bottom: 32,
@@ -498,7 +498,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     if (selected != null) {
                       final loc = _salonLocations[selected];
                       _mapController.move(loc.position, 15.0);
-                      setState(() {
+        setState(() {
                         _selectedSalon = loc.salon;
                       });
                     }
@@ -506,19 +506,19 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   child: const Icon(Icons.list),
                 ),
                 const SizedBox(height: 16),
-                FloatingActionButton(
+          FloatingActionButton(
                   heroTag: 'location_fab',
-                  onPressed: () {
-                    _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
-                  },
+            onPressed: () {
+              _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
+            },
                   backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
                   foregroundColor: Colors.white,
-                  child: const Icon(Icons.my_location),
+            child: const Icon(Icons.my_location),
                 ),
               ],
             ),
           ),
-          ],
+        ],
       ),
     );
   }
@@ -527,21 +527,21 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     return Container(
       width: 50,
       height: 50,
-      decoration: BoxDecoration(
+          decoration: BoxDecoration(
         color: waitTimeToColor(salon.waitTime),
-        shape: BoxShape.circle,
+            shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-            child: Icon(
-        Icons.content_cut,
-        color: Colors.white,
+          child: Icon(
+            Icons.content_cut,
+            color: Colors.white,
         size: 24,
       ),
     );
