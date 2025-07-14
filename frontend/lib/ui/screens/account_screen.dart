@@ -794,6 +794,19 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                             ),
                           ],
                         ],
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.sync_alt),
+                          label: const Text('Transferir para Preferências'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _transferCutToPreferences(context, haircut['description']);
+                          },
+                        ),
                       ],
                     ),
                   ),
