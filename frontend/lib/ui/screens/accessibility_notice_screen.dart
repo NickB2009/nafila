@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'atendimento_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class AccessibilityNoticeScreen extends StatefulWidget {
   const AccessibilityNoticeScreen({super.key});
@@ -64,17 +65,19 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: colors?.primary ?? theme.colorScheme.primary,
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
+        backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         elevation: 0,
-        iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        iconTheme: IconThemeData(color: colors?.onSurface ?? theme.colorScheme.onPrimary),
         title: Text(
           'Aviso de Acessibilidade',
           style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.onPrimary,
+            color: colors?.onSurface ?? theme.colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -82,7 +85,7 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors?.background ?? theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SingleChildScrollView(
@@ -150,7 +153,7 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
           children: [
             Icon(
               Icons.accessibility_new,
-              color: theme.colorScheme.primary,
+              color: CheckInState.checkedInSalon?.colors?.primary ?? theme.colorScheme.primary,
               size: 32,
             ),
             const SizedBox(width: 16),
@@ -159,7 +162,7 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
                 'Acessibilidade para Todos',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
+                  color: CheckInState.checkedInSalon?.colors?.onSurface ?? theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -169,7 +172,7 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
         Text(
           'O Nafila está comprometido em fornecer uma experiência digital inclusiva e acessível para todos os usuários.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color: CheckInState.checkedInSalon?.colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
             height: 1.5,
           ),
         ),
@@ -200,31 +203,23 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
         return Card(
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          color: CheckInState.checkedInSalon?.colors?.background ?? theme.colorScheme.surface,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  feature['icon'] as IconData,
-                  color: theme.colorScheme.primary,
-                  size: 32,
-                ),
-                const SizedBox(height: 12),
+                Icon(feature['icon'] as IconData, color: CheckInState.checkedInSalon?.colors?.primary ?? theme.colorScheme.primary, size: 28),
+                const SizedBox(height: 10),
                 Text(
                   feature['title'] as String,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: CheckInState.checkedInSalon?.colors?.onSurface ?? theme.colorScheme.onSurface),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   feature['description'] as String,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: CheckInState.checkedInSalon?.colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -235,44 +230,22 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
   }
 
   Widget _buildInstructionsCard(ThemeData theme) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: colors?.background ?? theme.colorScheme.surface,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.help_outline, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Como Usar',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildInstructionStep(
-              theme,
-              icon: Icons.text_fields,
-              title: 'Ajuste de Fonte',
-              description: 'Acesse "Display" nas configurações',
-            ),
-            _buildInstructionStep(
-              theme,
-              icon: Icons.contrast,
-              title: 'Alto Contraste',
-              description: 'Ative em "Display" nas configurações',
-            ),
-            _buildInstructionStep(
-              theme,
-              icon: Icons.record_voice_over,
-              title: 'Leitor de Tela',
-              description: 'Ative o VoiceOver (iOS) ou TalkBack (Android)',
+            Text('Como usar', style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.onSurface ?? theme.colorScheme.onSurface)),
+            const SizedBox(height: 10),
+            Text(
+              'Acesse as configurações de acessibilidade do seu dispositivo para ajustar as preferências.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -324,126 +297,60 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
   }
 
   Widget _buildComplianceSection(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.verified,
-            color: theme.colorScheme.primary,
-            size: 32,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Conformidade WCAG 2.1',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Seguimos as diretrizes de acessibilidade nível AA',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: colors?.background ?? theme.colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Conformidade', style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.onSurface ?? theme.colorScheme.onSurface)),
+            const SizedBox(height: 10),
+            Text(
+              'O Nafila segue as diretrizes internacionais de acessibilidade digital (WCAG 2.1).',
+              style: theme.textTheme.bodyMedium?.copyWith(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHelpCard(BuildContext context, ThemeData theme) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: colors?.background ?? theme.colorScheme.surface,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text('Precisa de Ajuda?', style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.onSurface ?? theme.colorScheme.onSurface)),
+            const SizedBox(height: 10),
             Text(
-              'Precisa de Ajuda?',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              'Entre em contato com nosso suporte para dúvidas sobre acessibilidade.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Entre em contato com nossa equipe de suporte para assistência adicional.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.help_outline),
+              label: const Text('Falar com Suporte'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+                foregroundColor: colors?.onSurface ?? theme.colorScheme.onPrimary,
+                textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  print('Button pressed! Testing navigation...');
-                  // First, let's test if the button works by showing a dialog
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Teste de Botão'),
-                      content: const Text('O botão está funcionando! Tentando navegar...'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cancelar'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close dialog
-                            // Now try to navigate
-                            try {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const AtendimentoScreen(),
-                                ),
-                              );
-                            } catch (e) {
-                              print('Navigation error: $e');
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Erro de Navegação'),
-                                  content: Text('Erro ao abrir tela de atendimento: $e'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                          },
-                          child: const Text('Tentar Navegar'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.support_agent),
-                label: const Text('Falar com Suporte'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => AtendimentoScreen()));
+              },
             ),
           ],
         ),

@@ -13,6 +13,7 @@ import 'salon_details_screen.dart';
 import '../theme/app_theme.dart';
 import 'dart:async';
 import 'dart:math' as math;
+import '../../utils/palette_utils.dart';
 
 /// Salon finder screen for mobile web interface
 class SalonFinderScreen extends StatefulWidget {

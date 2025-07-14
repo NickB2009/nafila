@@ -7,6 +7,7 @@ import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
 import 'salon_details_screen.dart';
 import 'check_in_screen.dart';
+import '../../utils/palette_utils.dart';
 
 SalonColors _randomSalonColors(int seed) {
   final palettes = [
@@ -17,7 +18,14 @@ SalonColors _randomSalonColors(int seed) {
     SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50, onSurface: Colors.amber.shade900),
     SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50, onSurface: Colors.indigo.shade900),
   ];
-  return palettes[seed % palettes.length];
+  final light = palettes[seed % palettes.length];
+  return SalonColors(
+    primary: light.primary,
+    secondary: light.secondary,
+    background: light.background,
+    onSurface: light.onSurface,
+    dark: generateDarkPalette(light),
+  );
 }
 
 class FavoritosScreen extends StatefulWidget {

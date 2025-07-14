@@ -4,6 +4,7 @@ import '../view_models/mock_queue_notifier.dart';
 import '../widgets/queue_card.dart';
 import '../../models/queue_entry.dart';
 import '../theme/app_theme.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 /// Main screen displaying the queue management interface
 class QueueScreen extends StatelessWidget {
@@ -12,18 +13,22 @@ class QueueScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
     
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         title: Text(
           'Gerenciamento de Fila',
           style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.onPrimary,
+            color: colors?.onSurface ?? theme.colorScheme.onPrimary,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
+            color: colors?.onSurface ?? theme.colorScheme.onPrimary,
             onPressed: () {
               context.read<MockQueueNotifier>().refresh();
             },
@@ -31,6 +36,7 @@ class QueueScreen extends StatelessWidget {
           ),
         ],
       ),
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -78,15 +84,17 @@ class QueueScreen extends StatelessWidget {
       BuildContext context, MockQueueNotifier notifier, double width) {
     final theme = Theme.of(context);
     final isCompact = width < 400;
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
 
     return Container(
       margin: EdgeInsets.all(isCompact ? 12 : 16),
       padding: EdgeInsets.all(isCompact ? 12 : 16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+        color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.2),
+          color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.2),
         ),
       ),
       child: Row(
@@ -97,7 +105,8 @@ class QueueScreen extends StatelessWidget {
               'Aguardando',
               notifier.waitingCount.toString(),
               Icons.schedule,
-              theme.colorScheme.tertiary,
+              // fallback: use secondary or primary from palette
+              colors?.secondary ?? theme.colorScheme.tertiary,
               isCompact,
             ),
           ),
@@ -108,7 +117,7 @@ class QueueScreen extends StatelessWidget {
               'Em Atendimento',
               notifier.inServiceCount.toString(),
               Icons.person_outline,
-              theme.colorScheme.secondary,
+              colors?.secondary ?? theme.colorScheme.secondary,
               isCompact,
             ),
           ),
@@ -119,7 +128,7 @@ class QueueScreen extends StatelessWidget {
               'Total',
               notifier.entries.length.toString(),
               Icons.people,
-              theme.colorScheme.primary,
+              colors?.primary ?? theme.colorScheme.primary,
               isCompact,
             ),
           ),
@@ -131,6 +140,8 @@ class QueueScreen extends StatelessWidget {
   Widget _buildStatItem(BuildContext context, String label, String value,
       IconData icon, Color color, bool isCompact) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
 
     return Column(
       children: [
@@ -151,7 +162,7 @@ class QueueScreen extends StatelessWidget {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
             fontSize: isCompact ? 11 : 12,
           ),
         ),
@@ -202,6 +213,8 @@ class QueueScreen extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
 
     return Center(
       child: Column(
@@ -210,20 +223,20 @@ class QueueScreen extends StatelessWidget {
           Icon(
             Icons.people_outline,
             size: 64,
-            color: theme.colorScheme.onSurfaceVariant,
+            color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
           Text(
             'Ninguém na fila',
             style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Toque no botão + para adicionar alguém',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -234,6 +247,8 @@ class QueueScreen extends StatelessWidget {
   void _showAddPersonDialog(BuildContext context) {
     final nameController = TextEditingController();
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
 
     showDialog(
       context: context,
@@ -259,7 +274,7 @@ class QueueScreen extends StatelessWidget {
             child: Text(
               'Cancelar',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.primary,
+                color: colors?.primary ?? theme.colorScheme.primary,
               ),
             ),
           ),
@@ -284,6 +299,8 @@ class QueueScreen extends StatelessWidget {
 
   void _showEntryActions(BuildContext context, QueueEntry entry) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
     
     showModalBottomSheet(
       context: context,

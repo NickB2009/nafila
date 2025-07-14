@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class AtendimentoScreen extends StatelessWidget {
   const AtendimentoScreen({super.key});
@@ -7,24 +8,25 @@ class AtendimentoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = CheckInState.checkedInSalon?.colors;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
+        backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         elevation: 0,
-        iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        iconTheme: IconThemeData(color: colors?.onSurface ?? theme.colorScheme.onPrimary),
         title: Text(
           'Atendimento ao Cliente',
           style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.onPrimary,
+            color: colors?.onSurface ?? theme.colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: colors?.primary ?? theme.colorScheme.primary,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors?.background ?? theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: ListView(

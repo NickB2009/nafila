@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class DisplayScreen extends StatefulWidget {
   const DisplayScreen({super.key});
@@ -13,26 +14,28 @@ class _DisplayScreenState extends State<DisplayScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
+        backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         elevation: 0,
-        iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        iconTheme: IconThemeData(color: colors?.onSurface ?? theme.colorScheme.onPrimary),
         title: Text(
           'Display',
           style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.onPrimary,
+            color: colors?.onSurface ?? theme.colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: colors?.primary ?? theme.colorScheme.primary,
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: colors?.background ?? theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: ListView(
@@ -46,7 +49,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: colors?.background ?? theme.colorScheme.surface,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                   child: Column(
@@ -56,11 +59,11 @@ class _DisplayScreenState extends State<DisplayScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          _buildThemeChip(theme, ThemeMode.light, 'Claro', Icons.light_mode, themeProvider),
+                          _buildThemeChip(theme, ThemeMode.light, 'Claro', Icons.light_mode, themeProvider, colors),
                           const SizedBox(width: 8),
-                          _buildThemeChip(theme, ThemeMode.dark, 'Escuro', Icons.dark_mode, themeProvider),
+                          _buildThemeChip(theme, ThemeMode.dark, 'Escuro', Icons.dark_mode, themeProvider, colors),
                           const SizedBox(width: 8),
-                          _buildThemeChip(theme, ThemeMode.system, 'Sistema', Icons.phone_android, themeProvider),
+                          _buildThemeChip(theme, ThemeMode.system, 'Sistema', Icons.phone_android, themeProvider, colors),
                         ],
                       ),
                       const SizedBox(height: 22),
@@ -68,11 +71,11 @@ class _DisplayScreenState extends State<DisplayScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          _buildFontChip(theme, 0.9, 'Pequeno', themeProvider),
+                          _buildFontChip(theme, 0.9, 'Pequeno', themeProvider, colors),
                           const SizedBox(width: 8),
-                          _buildFontChip(theme, 1.0, 'Médio', themeProvider),
+                          _buildFontChip(theme, 1.0, 'Médio', themeProvider, colors),
                           const SizedBox(width: 8),
-                          _buildFontChip(theme, 1.2, 'Grande', themeProvider),
+                          _buildFontChip(theme, 1.2, 'Grande', themeProvider, colors),
                         ],
                       ),
                       const SizedBox(height: 22),
@@ -80,7 +83,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                         value: themeProvider.highContrast,
                         onChanged: (v) => themeProvider.setHighContrast(v),
                         title: Text('Modo alto contraste', style: theme.textTheme.bodyLarge),
-                        secondary: Icon(Icons.contrast, color: theme.colorScheme.primary),
+                        secondary: Icon(Icons.contrast, color: colors?.primary ?? theme.colorScheme.primary),
                         contentPadding: EdgeInsets.zero,
                       ),
                       const Divider(height: 1),
@@ -88,7 +91,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                         value: themeProvider.animations,
                         onChanged: (v) => themeProvider.setAnimations(v),
                         title: Text('Animações', style: theme.textTheme.bodyLarge),
-                        secondary: Icon(Icons.animation, color: theme.colorScheme.primary),
+                        secondary: Icon(Icons.animation, color: colors?.primary ?? theme.colorScheme.primary),
                         contentPadding: EdgeInsets.zero,
                       ),
                     ],
@@ -101,7 +104,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                 style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              _buildPreviewCard(theme, themeProvider),
+              _buildPreviewCard(theme, themeProvider, colors),
             ],
           ),
         ),
@@ -109,7 +112,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
     );
   }
 
-  Widget _buildThemeChip(ThemeData theme, ThemeMode mode, String label, IconData icon, ThemeProvider provider) {
+  Widget _buildThemeChip(ThemeData theme, ThemeMode mode, String label, IconData icon, ThemeProvider provider, dynamic colors) {
     final isSelected = provider.themeMode == mode;
     return ChoiceChip(
       label: Row(
@@ -118,37 +121,37 @@ class _DisplayScreenState extends State<DisplayScreen> {
       ),
       selected: isSelected,
       onSelected: (_) => provider.setThemeMode(mode),
-      selectedColor: theme.colorScheme.primary,
+      selectedColor: colors?.primary ?? theme.colorScheme.primary,
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
-        color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+        color: isSelected ? (colors?.onSurface ?? theme.colorScheme.onPrimary) : (colors?.onSurface ?? theme.colorScheme.onSurface),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: isSelected ? 2 : 0,
     );
   }
 
-  Widget _buildFontChip(ThemeData theme, double size, String label, ThemeProvider provider) {
+  Widget _buildFontChip(ThemeData theme, double size, String label, ThemeProvider provider, dynamic colors) {
     final isSelected = provider.fontSize == size;
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => provider.setFontSize(size),
-      selectedColor: theme.colorScheme.primary,
+      selectedColor: colors?.primary ?? theme.colorScheme.primary,
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
-        color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+        color: isSelected ? (colors?.onSurface ?? theme.colorScheme.onPrimary) : (colors?.onSurface ?? theme.colorScheme.onSurface),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: isSelected ? 2 : 0,
     );
   }
 
-  Widget _buildPreviewCard(ThemeData theme, ThemeProvider provider) {
-    Color previewBg = provider.highContrast ? Colors.black : theme.colorScheme.surfaceContainerHighest;
-    Color previewText = provider.highContrast ? Colors.yellow : theme.colorScheme.onSurface;
+  Widget _buildPreviewCard(ThemeData theme, ThemeProvider provider, dynamic colors) {
+    Color previewBg = provider.highContrast ? Colors.black : (colors?.background ?? theme.colorScheme.surface);
+    Color previewText = provider.highContrast ? Colors.yellow : (colors?.onSurface ?? theme.colorScheme.onSurface);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

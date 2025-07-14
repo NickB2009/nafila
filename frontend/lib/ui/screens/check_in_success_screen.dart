@@ -32,8 +32,9 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = CheckInState.checkedInSalon?.colors;
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: colors?.primary ?? theme.colorScheme.primary,
       body: SafeArea(
         child: Center(
           child: Column(
@@ -45,7 +46,7 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: theme.colorScheme.onPrimary,
+                    color: colors?.onSurface ?? theme.colorScheme.onPrimary,
                     width: 4,
                   ),
                 ),
@@ -53,7 +54,7 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen> {
                   child: Icon(
                     Icons.check,
                     size: 40,
-                    color: theme.colorScheme.onPrimary,
+                    color: colors?.onSurface ?? theme.colorScheme.onPrimary,
                   ),
                 ),
               ),
@@ -61,7 +62,7 @@ class _CheckInSuccessScreenState extends State<CheckInSuccessScreen> {
               Text(
                 'Check-in realizado com sucesso.',
                 style: theme.textTheme.titleLarge?.copyWith(
-                  color: theme.colorScheme.onPrimary,
+                  color: colors?.onSurface ?? theme.colorScheme.onPrimary,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,

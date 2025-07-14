@@ -203,6 +203,8 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildHeader(ThemeData theme, double avatarSize, double iconSize, double titleFontSize, double subtitleFontSize) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -214,14 +216,14 @@ class _AccountScreenState extends State<AccountScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: theme.colorScheme.onPrimary.withOpacity(0.3),
+                color: (colors?.primary ?? theme.colorScheme.onPrimary).withOpacity(0.3),
                 width: 2,
               ),
             ),
             child: Icon(
               Icons.person_outline,
               size: iconSize,
-              color: theme.colorScheme.onPrimary.withOpacity(0.8),
+              color: (colors?.primary ?? theme.colorScheme.onPrimary).withOpacity(0.8),
             ),
           ),
           SizedBox(width: avatarSize * 0.2),
@@ -233,7 +235,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 Text(
                   'Conta',
                   style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary,
+                    color: colors?.primary ?? theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: titleFontSize,
                   ),
@@ -242,7 +244,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 Text(
                   BrazilianNamesGenerator.generateNameWithInitial(),
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.onPrimary.withOpacity(0.9),
+                    color: colors?.primary ?? theme.colorScheme.onPrimary.withOpacity(0.9),
                     fontSize: subtitleFontSize,
                   ),
                 ),
@@ -255,6 +257,8 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildAccountInfoCard(BuildContext context, ThemeData theme, double cardPadding, bool isSmallScreen) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Container(
       padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
@@ -301,6 +305,8 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildHaircutHistoryCard(ThemeData theme, double cardPadding, bool isSmallScreen, double titleFontSize) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Container(
       padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
@@ -353,68 +359,52 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildHaircutHistoryItem(BuildContext context, ThemeData theme, bool isSmallScreen, Map<String, dynamic> haircut) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return InkWell(
       onTap: () {
         // Show haircut details
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Detalhes do Corte'),
+            backgroundColor: colors?.background ?? theme.colorScheme.surface,
+            title: Text('Detalhes do Corte', style: theme.textTheme.titleLarge?.copyWith(color: colors?.primary ?? theme.colorScheme.primary)),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Basic info
-                  buildDetailRow('Data', _formatDate(haircut['date']), theme),
-                  buildDetailRow('Salão', haircut['salon'], theme),
-                  buildDetailRow('Estilo', haircut['style'], theme),
-                  buildDetailRow('Técnica', haircut['technique'], theme),
-                  buildDetailRow('Barbeiro', haircut['barber'], theme),
-                  buildDetailRow('Preço', haircut['price'], theme),
-                  
+                  buildDetailRow(context, 'Data', _formatDate(haircut['date']), theme),
+                  buildDetailRow(context, 'Salão', haircut['salon'], theme),
+                  buildDetailRow(context, 'Estilo', haircut['style'], theme),
+                  buildDetailRow(context, 'Técnica', haircut['technique'], theme),
+                  buildDetailRow(context, 'Barbeiro', haircut['barber'], theme),
+                  buildDetailRow(context, 'Preço', haircut['price'], theme),
                   if (haircut['description'] != null) ...[
                     const SizedBox(height: 16),
-                    Text(
-                      'Descrição Detalhada',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
+                    Text('Descrição Detalhada', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colors?.primary ?? theme.colorScheme.primary)),
                     const SizedBox(height: 8),
-                    buildDetailRow('Laterais', haircut['description']['sides'], theme),
-                    buildDetailRow('Fade', haircut['description']['fade'], theme),
-                    buildDetailRow('Topo', haircut['description']['top'], theme),
-                    buildDetailRow('Franja', haircut['description']['fringe'], theme),
-                    buildDetailRow('Nuca', haircut['description']['neckline'], theme),
-                    buildDetailRow('Barba', haircut['description']['beard'], theme),
-                    
+                    buildDetailRow(context, 'Laterais', haircut['description']['sides'], theme),
+                    buildDetailRow(context, 'Fade', haircut['description']['fade'], theme),
+                    buildDetailRow(context, 'Topo', haircut['description']['top'], theme),
+                    buildDetailRow(context, 'Franja', haircut['description']['fringe'], theme),
+                    buildDetailRow(context, 'Nuca', haircut['description']['neckline'], theme),
+                    buildDetailRow(context, 'Barba', haircut['description']['beard'], theme),
                     if (haircut['description']['notes'] != null && haircut['description']['notes']!.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Observações do Barbeiro',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
+                            Text('Observações do Barbeiro', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colors?.primary ?? theme.colorScheme.primary)),
                             const SizedBox(height: 4),
-                            Text(
-                              haircut['description']['notes'],
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
+                            Text(haircut['description']['notes'], style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
                           ],
                         ),
                       ),
@@ -425,8 +415,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     icon: const Icon(Icons.sync_alt),
                     label: const Text('Transferir para Preferências'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+                      foregroundColor: colors?.background ?? Colors.white,
                     ),
                     onPressed: () {
                       Navigator.of(context).pop();
@@ -440,6 +430,7 @@ class _AccountScreenState extends State<AccountScreen> {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Fechar'),
+                style: TextButton.styleFrom(foregroundColor: colors?.primary ?? theme.colorScheme.primary),
               ),
               TextButton(
                 onPressed: () {
@@ -448,10 +439,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     const SnackBar(content: Text('Corte favoritado!')),
                   );
                 },
-                child: Text(
-                  'Favoritar',
-                  style: TextStyle(color: theme.colorScheme.primary),
-                ),
+                child: Text('Favoritar', style: TextStyle(color: colors?.primary ?? theme.colorScheme.primary)),
               ),
             ],
           ),
@@ -466,12 +454,12 @@ class _AccountScreenState extends State<AccountScreen> {
               width: isSmallScreen ? 40 : 48,
               height: isSmallScreen ? 40 : 48,
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.content_cut,
-                color: theme.colorScheme.primary,
+                color: colors?.primary ?? theme.colorScheme.primary,
                 size: isSmallScreen ? 20 : 24,
               ),
             ),
@@ -485,13 +473,14 @@ class _AccountScreenState extends State<AccountScreen> {
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontSize: isSmallScreen ? 14 : 16,
+                      color: colors?.primary ?? theme.colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${haircut['salon']} • ${haircut['style']}',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
                       fontSize: isSmallScreen ? 12 : 14,
                     ),
                   ),
@@ -502,20 +491,20 @@ class _AccountScreenState extends State<AccountScreen> {
               haircut['price'],
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: theme.colorScheme.primary,
+                color: colors?.primary ?? theme.colorScheme.primary,
                 fontSize: isSmallScreen ? 12 : 14,
               ),
             ),
             SizedBox(width: isSmallScreen ? 8 : 12),
             Icon(
               Icons.chevron_right,
-              color: theme.colorScheme.onSurfaceVariant,
+              color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
               size: isSmallScreen ? 20 : 24,
             ),
             IconButton(
               icon: const Icon(Icons.sync_alt),
               tooltip: 'Transferir para Preferências',
-              color: theme.colorScheme.primary,
+              color: colors?.primary ?? theme.colorScheme.primary,
               onPressed: () {
                 _transferCutToPreferences(context, haircut['description']);
               },
@@ -527,6 +516,8 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildHaircutReminderCard(ThemeData theme, double cardPadding, bool isSmallScreen, double titleFontSize) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Container(
       padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
@@ -621,10 +612,12 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildSectionHeader(ThemeData theme, String title, double titleFontSize) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Text(
       title,
       style: theme.textTheme.labelLarge?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
+        color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.5,
         fontSize: titleFontSize * 0.7,
@@ -641,13 +634,15 @@ class _AccountScreenState extends State<AccountScreen> {
     VoidCallback? onTap,
     bool isSmallScreen = false,
   }) {
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Column(
       children: [
         ListTile(
           contentPadding: EdgeInsets.symmetric(vertical: isSmallScreen ? 2 : 6, horizontal: 0),
           leading: Icon(
             icon,
-            color: theme.colorScheme.primary,
+            color: colors?.primary ?? theme.colorScheme.primary,
             size: isSmallScreen ? 20 : 24,
           ),
           title: Text(
@@ -655,23 +650,26 @@ class _AccountScreenState extends State<AccountScreen> {
             style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w500,
               fontSize: isSmallScreen ? 14 : 16,
+              color: colors?.onSurface ?? theme.colorScheme.onSurface,
             ),
           ),
           trailing: Icon(
             hasExternalIcon ? Icons.open_in_new : Icons.chevron_right,
-            color: theme.colorScheme.onSurfaceVariant,
+            color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
             size: hasExternalIcon ? (isSmallScreen ? 16 : 20) : (isSmallScreen ? 20 : 24),
           ),
           onTap: onTap,
         ),
-        if (showDivider) Divider(color: theme.dividerColor),
+        if (showDivider) Divider(color: (colors?.primary ?? theme.dividerColor).withOpacity(0.15)),
       ],
     );
   }
 } 
 
 // Global function so it can be used by any widget in this file
-Widget buildDetailRow(String label, String value, ThemeData theme) {
+Widget buildDetailRow(BuildContext context, String label, String value, ThemeData theme) {
+  final brightness = Theme.of(context).brightness;
+  final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -679,7 +677,7 @@ Widget buildDetailRow(String label, String value, ThemeData theme) {
         '$label: ',
         style: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
-          color: theme.colorScheme.onSurfaceVariant,
+          color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
         ),
       ),
       Expanded(
@@ -717,14 +715,15 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final salonPalette = CheckInState.checkedInSalon?.colors;
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Histórico Completo de Cortes'),
-        backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
-        foregroundColor: salonPalette != null ? salonPalette.background : theme.colorScheme.onPrimary,
+        backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+        foregroundColor: colors != null ? colors.background : theme.colorScheme.onPrimary,
       ),
-      backgroundColor: salonPalette?.background ?? theme.colorScheme.surface,
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       body: ListView.separated(
         padding: const EdgeInsets.all(20),
         itemCount: widget.haircutHistory.length,
@@ -742,34 +741,34 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        buildDetailRow('Data', _formatDate(haircut['date']), theme),
-                        buildDetailRow('Salão', haircut['salon'], theme),
-                        buildDetailRow('Estilo', haircut['style'], theme),
-                        buildDetailRow('Técnica', haircut['technique'], theme),
-                        buildDetailRow('Barbeiro', haircut['barber'], theme),
-                        buildDetailRow('Preço', haircut['price'], theme),
+                        buildDetailRow(context, 'Data', _formatDate(haircut['date']), theme),
+                        buildDetailRow(context, 'Salão', haircut['salon'], theme),
+                        buildDetailRow(context, 'Estilo', haircut['style'], theme),
+                        buildDetailRow(context, 'Técnica', haircut['technique'], theme),
+                        buildDetailRow(context, 'Barbeiro', haircut['barber'], theme),
+                        buildDetailRow(context, 'Preço', haircut['price'], theme),
                         if (haircut['description'] != null) ...[
                           const SizedBox(height: 16),
                           Text(
                             'Descrição Detalhada',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: salonPalette?.primary ?? theme.colorScheme.primary,
+                              color: colors?.primary ?? theme.colorScheme.primary,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          buildDetailRow('Laterais', haircut['description']['sides'], theme),
-                          buildDetailRow('Fade', haircut['description']['fade'], theme),
-                          buildDetailRow('Topo', haircut['description']['top'], theme),
-                          buildDetailRow('Franja', haircut['description']['fringe'], theme),
-                          buildDetailRow('Nuca', haircut['description']['neckline'], theme),
-                          buildDetailRow('Barba', haircut['description']['beard'], theme),
+                          buildDetailRow(context, 'Laterais', haircut['description']['sides'], theme),
+                          buildDetailRow(context, 'Fade', haircut['description']['fade'], theme),
+                          buildDetailRow(context, 'Topo', haircut['description']['top'], theme),
+                          buildDetailRow(context, 'Franja', haircut['description']['fringe'], theme),
+                          buildDetailRow(context, 'Nuca', haircut['description']['neckline'], theme),
+                          buildDetailRow(context, 'Barba', haircut['description']['beard'], theme),
                           if (haircut['description']['notes'] != null && haircut['description']['notes']!.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: (salonPalette?.primary ?? theme.colorScheme.primary).withOpacity(0.08),
+                                color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Column(
@@ -779,7 +778,7 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                                     'Observações do Barbeiro',
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color: salonPalette?.primary ?? theme.colorScheme.primary,
+                                      color: colors?.primary ?? theme.colorScheme.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -799,7 +798,7 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                           icon: const Icon(Icons.sync_alt),
                           label: const Text('Transferir para Preferências'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
+                            backgroundColor: colors?.primary ?? theme.colorScheme.primary,
                             foregroundColor: Colors.white,
                           ),
                           onPressed: () {
@@ -824,7 +823,7 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                       },
                       child: Text(
                         'Favoritar',
-                        style: TextStyle(color: salonPalette?.primary ?? theme.colorScheme.primary),
+                        style: TextStyle(color: colors?.primary ?? theme.colorScheme.primary),
                       ),
                     ),
                   ],
@@ -835,7 +834,7 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: salonPalette?.background ?? theme.colorScheme.surface,
+                color: colors?.background ?? theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -851,12 +850,12 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: (salonPalette?.primary ?? theme.colorScheme.primary).withOpacity(0.12),
+                      color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       Icons.content_cut,
-                      color: salonPalette?.primary ?? theme.colorScheme.primary,
+                      color: colors?.primary ?? theme.colorScheme.primary,
                       size: 22,
                     ),
                   ),
@@ -869,7 +868,7 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                           _formatDate(haircut['date']),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: salonPalette?.primary ?? theme.colorScheme.primary,
+                            color: colors?.primary ?? theme.colorScheme.primary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -886,7 +885,7 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                     haircut['price'],
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: salonPalette?.primary ?? theme.colorScheme.primary,
+                      color: colors?.primary ?? theme.colorScheme.primary,
                     ),
                   ),
                   const SizedBox(width: 12),
