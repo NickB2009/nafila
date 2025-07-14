@@ -5,12 +5,23 @@ class SalonColors {
   final Color secondary;
   final Color background;
   final Color onSurface;
+  final SalonColors? dark;
+
   const SalonColors({
     required this.primary,
     required this.secondary,
     required this.background,
     required this.onSurface,
+    this.dark,
   });
+
+  /// Returns the correct palette for the current brightness (light/dark)
+  SalonColors forBrightness(Brightness brightness) {
+    if (brightness == Brightness.dark && dark != null) {
+      return dark!;
+    }
+    return this;
+  }
 
   @override
   bool operator ==(Object other) =>

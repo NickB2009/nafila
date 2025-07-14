@@ -25,6 +25,12 @@ void main() {
         closingTime: '8:00 PM',
         isFavorite: false,
         queueLength: 5,
+        colors: SalonColors(
+          primary: Colors.blue,
+          secondary: Colors.blueAccent,
+          background: Colors.white,
+          onSurface: Colors.black,
+        ),
       );
 
       mockServices = [

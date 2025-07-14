@@ -10,6 +10,7 @@ import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../../utils/palette_utils.dart';
 
 SalonColors _randomSalonColors(int seed) {
   final palettes = [
@@ -20,7 +21,14 @@ SalonColors _randomSalonColors(int seed) {
     SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50, onSurface: Colors.amber.shade900),
     SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50, onSurface: Colors.indigo.shade900),
   ];
-  return palettes[seed % palettes.length];
+  final light = palettes[seed % palettes.length];
+  return SalonColors(
+    primary: light.primary,
+    secondary: light.secondary,
+    background: light.background,
+    onSurface: light.onSurface,
+    dark: generateDarkPalette(light),
+  );
 }
 
 Color waitTimeToColor(int waitTime) {
@@ -452,12 +460,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
           // Floating action buttons (filter, list, location)
           Positioned(
             bottom: 32,
@@ -498,7 +506,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     if (selected != null) {
                       final loc = _salonLocations[selected];
                       _mapController.move(loc.position, 15.0);
-                      setState(() {
+        setState(() {
                         _selectedSalon = loc.salon;
                       });
                     }
@@ -506,19 +514,19 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   child: const Icon(Icons.list),
                 ),
                 const SizedBox(height: 16),
-                FloatingActionButton(
+          FloatingActionButton(
                   heroTag: 'location_fab',
-                  onPressed: () {
-                    _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
-                  },
+            onPressed: () {
+              _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
+            },
                   backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
                   foregroundColor: Colors.white,
-                  child: const Icon(Icons.my_location),
+            child: const Icon(Icons.my_location),
                 ),
               ],
             ),
           ),
-          ],
+        ],
       ),
     );
   }
@@ -527,21 +535,21 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     return Container(
       width: 50,
       height: 50,
-      decoration: BoxDecoration(
+          decoration: BoxDecoration(
         color: waitTimeToColor(salon.waitTime),
-        shape: BoxShape.circle,
+            shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-            child: Icon(
-        Icons.content_cut,
-        color: Colors.white,
+          child: Icon(
+            Icons.content_cut,
+            color: Colors.white,
         size: 24,
       ),
     );

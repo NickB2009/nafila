@@ -3,13 +3,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eutonafila_frontend/ui/screens/queue_status_screen.dart';
 import 'package:eutonafila_frontend/ui/widgets/bottom_nav_bar.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+import 'package:eutonafila_frontend/models/salon.dart';
 
 void main() {
+  final dummySalon = Salon(
+    name: 'Barbearia Teste',
+    address: 'Rua Exemplo, 123',
+    waitTime: 10,
+    distance: 1.2,
+    isOpen: true,
+    closingTime: '18:00',
+    isFavorite: false,
+    queueLength: 3,
+    colors: SalonColors(
+      primary: Colors.blue,
+      secondary: Colors.blueAccent,
+      background: Colors.white,
+      onSurface: Colors.black,
+    ),
+  );
+
   group('QueueStatusScreen', () {
     Widget buildTestable({NavigatorObserver? observer}) {
       return MaterialApp(
         home: ScaffoldMessenger(
-          child: const QueueStatusScreen(),
+          child: QueueStatusScreen(salon: dummySalon),
         ),
         navigatorObservers: observer != null ? [observer] : [],
       );
