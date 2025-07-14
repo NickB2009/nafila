@@ -47,7 +47,7 @@ namespace Grande.Fila.API.Application.Services
                 .Count();
 
             // Calculate estimated wait time
-            var estimatedWaitTime = (customersAhead / activeStaffCount) * averageServiceTimeMinutes;
+            var estimatedWaitTime = (int)Math.Ceiling((customersAhead / (double)activeStaffCount) * averageServiceTimeMinutes);
 
             return Math.Max(0, estimatedWaitTime);
         }
