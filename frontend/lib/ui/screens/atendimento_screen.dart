@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../../models/salon.dart';
 
 class AtendimentoScreen extends StatelessWidget {
   const AtendimentoScreen({super.key});
@@ -8,7 +9,8 @@ class AtendimentoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = CheckInState.checkedInSalon?.colors;
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: colors?.primary ?? theme.colorScheme.primary,
@@ -34,45 +36,46 @@ class AtendimentoScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.question_answer, color: theme.colorScheme.primary, size: 28),
+                  Icon(Icons.question_answer, color: colors?.primary ?? theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 10),
                   Text(
                     'Perguntas Frequentes',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.onSurface ?? theme.colorScheme.onSurface),
                   ),
                 ],
               ),
               const SizedBox(height: 18),
-              ..._buildFaq(theme),
+              ..._buildFaq(theme, colors),
               const SizedBox(height: 36),
               const Divider(height: 32),
               const SizedBox(height: 18),
               Row(
                 children: [
-                  Icon(Icons.support_agent, color: theme.colorScheme.primary, size: 28),
+                  Icon(Icons.support_agent, color: colors?.primary ?? theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 10),
                   Text(
                     'Precisa de mais ajuda?',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.onSurface ?? theme.colorScheme.onSurface),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Text(
                 'Escolha uma opção para falar conosco:',
-                style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyLarge?.copyWith(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 18),
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: colors?.background ?? theme.colorScheme.surfaceContainerHighest,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                   child: Column(
                     children: [
                       _buildContactButton(
                         theme,
+                        colors,
                         icon: Icons.email_outlined,
                         label: 'Enviar e-mail',
                         onTap: () async {
@@ -85,6 +88,7 @@ class AtendimentoScreen extends StatelessWidget {
                       const SizedBox(height: 14),
                       _buildContactButton(
                         theme,
+                        colors,
                         icon: Icons.chat,
                         label: 'WhatsApp',
                         onTap: () async {
@@ -97,6 +101,7 @@ class AtendimentoScreen extends StatelessWidget {
                       const SizedBox(height: 14),
                       _buildContactButton(
                         theme,
+                        colors,
                         icon: Icons.phone,
                         label: 'Ligar para suporte',
                         onTap: () async {
@@ -117,7 +122,7 @@ class AtendimentoScreen extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildFaq(ThemeData theme) {
+  List<Widget> _buildFaq(ThemeData theme, SalonColors? colors) {
     final faqs = [
       {
         'q': 'Como faço para entrar na fila de um salão?',
@@ -143,23 +148,23 @@ class AtendimentoScreen extends StatelessWidget {
     return faqs.map((faq) => Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: theme.colorScheme.surfaceContainerHighest,
+      color: colors?.background ?? theme.colorScheme.surfaceContainerHighest,
       margin: const EdgeInsets.only(bottom: 14),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: theme.colorScheme.surfaceContainerHighest,
-        collapsedBackgroundColor: theme.colorScheme.surfaceContainerHighest,
-        leading: Icon(Icons.help_outline, color: theme.colorScheme.primary),
-        title: Text(faq['q']!, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+        backgroundColor: colors?.background ?? theme.colorScheme.surfaceContainerHighest,
+        collapsedBackgroundColor: colors?.background ?? theme.colorScheme.surfaceContainerHighest,
+        leading: Icon(Icons.help_outline, color: colors?.primary ?? theme.colorScheme.primary),
+        title: Text(faq['q']!, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.onSurface ?? theme.colorScheme.onSurface)),
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 8, right: 8, bottom: 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.question_answer, color: theme.colorScheme.onSurfaceVariant, size: 20),
+                Icon(Icons.question_answer, color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant, size: 20),
                 const SizedBox(width: 8),
                 Expanded(child: Text(faq['a']!, style: theme.textTheme.bodyMedium)),
               ],
@@ -170,15 +175,15 @@ class AtendimentoScreen extends StatelessWidget {
     )).toList();
   }
 
-  Widget _buildContactButton(ThemeData theme, {required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildContactButton(ThemeData theme, SalonColors? colors, {required IconData icon, required String label, required VoidCallback onTap}) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        icon: Icon(icon, color: theme.colorScheme.onPrimary),
-        label: Text(label, style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+        icon: Icon(icon, color: colors?.background ?? theme.colorScheme.onPrimary),
+        label: Text(label, style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.background ?? theme.colorScheme.onPrimary)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
+          backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+          foregroundColor: colors?.background ?? theme.colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),

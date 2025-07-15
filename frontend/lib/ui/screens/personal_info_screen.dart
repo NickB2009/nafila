@@ -96,8 +96,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
     final salon = CheckInState.checkedInSalon;
-    final colors = salon?.colors;
+    final colors = salon?.colors.forBrightness(brightness);
     // Mock user data
     final String name = BrazilianNamesGenerator.generateNameWithInitial();
     const String phone = '(11) 91234-5678';
@@ -256,6 +257,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                               width: double.infinity,
                               child: ElevatedButton.icon(
                                 onPressed: () async {
+                                  final brightness = Theme.of(context).brightness;
+                                  final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
                                   final result = await showModalBottomSheet<Map<String, String>>(
                                     context: context,
                                     isScrollControlled: true,
@@ -263,75 +266,83 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                                     ),
                                     builder: (context) {
+                                      final brightness = Theme.of(context).brightness;
+                                      final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
                                       final nameController = TextEditingController(text: name);
                                       final phoneController = TextEditingController(text: phone);
                                       final cityController = TextEditingController(text: city);
                                       final emailController = TextEditingController(text: email);
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 24, right: 24,
-                                          top: 24,
-                                          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          color: colors?.background ?? theme.colorScheme.surface,
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                                         ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text('Editar Informações', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                                                IconButton(
-                                                  icon: const Icon(Icons.close),
-                                                  onPressed: () => Navigator.of(context).pop(),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 16),
-                                            TextField(
-                                              controller: nameController,
-                                              decoration: const InputDecoration(labelText: 'Nome completo'),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            TextField(
-                                              controller: phoneController,
-                                              decoration: const InputDecoration(labelText: 'Telefone'),
-                                              keyboardType: TextInputType.phone,
-                                            ),
-                                            const SizedBox(height: 12),
-                                            TextField(
-                                              controller: cityController,
-                                              decoration: const InputDecoration(labelText: 'Cidade'),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            TextField(
-                                              controller: emailController,
-                                              decoration: const InputDecoration(labelText: 'Email'),
-                                              keyboardType: TextInputType.emailAddress,
-                                            ),
-                                            const SizedBox(height: 24),
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: theme.colorScheme.primary,
-                                                  foregroundColor: Colors.white,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12),
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            left: 24, right: 24,
+                                            top: 24,
+                                            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text('Editar Informações', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: colors?.primary ?? theme.colorScheme.primary)),
+                                                  IconButton(
+                                                    icon: Icon(Icons.close, color: colors?.primary ?? theme.colorScheme.primary),
+                                                    onPressed: () => Navigator.of(context).pop(),
                                                   ),
-                                                ),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop({
-                                                    'name': nameController.text,
-                                                    'phone': phoneController.text,
-                                                    'city': cityController.text,
-                                                    'email': emailController.text,
-                                                  });
-                                                },
-                                                child: const Text('Salvar'),
+                                                ],
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(height: 16),
+                                              TextField(
+                                                controller: nameController,
+                                                decoration: InputDecoration(labelText: 'Nome completo', labelStyle: TextStyle(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant)),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              TextField(
+                                                controller: phoneController,
+                                                decoration: InputDecoration(labelText: 'Telefone', labelStyle: TextStyle(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant)),
+                                                keyboardType: TextInputType.phone,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              TextField(
+                                                controller: cityController,
+                                                decoration: InputDecoration(labelText: 'Cidade', labelStyle: TextStyle(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant)),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              TextField(
+                                                controller: emailController,
+                                                decoration: InputDecoration(labelText: 'Email', labelStyle: TextStyle(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant)),
+                                                keyboardType: TextInputType.emailAddress,
+                                              ),
+                                              const SizedBox(height: 24),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                child: ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+                                                    foregroundColor: colors?.background ?? Colors.white,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop({
+                                                      'name': nameController.text,
+                                                      'phone': phoneController.text,
+                                                      'city': cityController.text,
+                                                      'email': emailController.text,
+                                                    });
+                                                  },
+                                                  child: const Text('Salvar'),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       );
                                     },
@@ -349,8 +360,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                 icon: const Icon(Icons.edit_outlined, size: 18),
                                 label: const Text('Editar Perfil'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.primary,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+                                  foregroundColor: colors?.background ?? Colors.white,
                                   elevation: 0,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
