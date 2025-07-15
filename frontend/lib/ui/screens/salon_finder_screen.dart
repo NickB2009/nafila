@@ -375,22 +375,30 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Up from 10/4
+                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.20),
-                                      borderRadius: BorderRadius.circular(16),
+                                      color: Colors.black.withOpacity(0.32),
+                                      borderRadius: BorderRadius.circular(18),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.waving_hand, color: Colors.white, size: 16), // Up from 14
-                                        const SizedBox(width: 6),
+                                        Icon(Icons.waving_hand, color: Colors.white, size: 22),
+                                        const SizedBox(width: 14),
                                         Text(
                                           greetingName,
-                                          style: TextStyle(
-                                            color: onBackground,
-                                            fontSize: 14, // Up from 12
-                                            fontWeight: FontWeight.w600,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                            letterSpacing: 0.2,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black26,
+                                                offset: Offset(0, 2),
+                                                blurRadius: 6,
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
@@ -401,32 +409,32 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               const SizedBox(height: 10), // Up from 8/6
                               Text(
                                 "Transforme seu\nvisual hoje mesmo",
-                                style: TextStyle(
-                                  color: onBackground,
-                                  fontSize: 24, // Up from 20
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                   height: 1.2,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withOpacity(0.22),
-                                      offset: const Offset(0, 2),
-                                      blurRadius: 4,
+                                      color: Colors.black54,
+                                      offset: Offset(0, 2),
+                                      blurRadius: 6,
                                     ),
                                   ],
                                 ),
                               ),
                               const SizedBox(height: 8), // Up from 6
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Up from 10/4
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.13),
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Text(
+                                child: const Text(
                                   "Profissionais qualificados • Produtos premium • Resultados garantidos",
                                   style: TextStyle(
-                                    color: onBackground.withOpacity(0.90),
-                                    fontSize: 12, // Up from 10
+                                    color: Colors.black87,
+                                    fontSize: 12,
                                     height: 1.3,
                                   ),
                                 ),
