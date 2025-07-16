@@ -109,7 +109,7 @@ class BottomNavBar extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final selectedColor = salonColors?.primary ?? theme.colorScheme.primary;
-    final unselectedColor = salonColors?.onSurface?.withOpacity(0.7) ?? theme.colorScheme.onSurface.withOpacity(0.6);
+    final unselectedColor = salonColors?.onSurface.withOpacity(0.7) ?? theme.colorScheme.onSurface.withOpacity(0.6);
     return Expanded(
       child: InkWell(
         borderRadius: const BorderRadius.only(

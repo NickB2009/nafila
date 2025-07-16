@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../models/salon.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class LegalPrivacyScreen extends StatelessWidget {

@@ -185,9 +185,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     final size = MediaQuery.of(context).size;
     final brightness = theme.brightness;
     final isDark = brightness == Brightness.dark;
-    final background = theme.colorScheme.background;
+    final background = theme.colorScheme.surface;
     final surface = theme.colorScheme.surface;
-    final onBackground = theme.colorScheme.onBackground;
+    final onBackground = theme.colorScheme.onSurface;
     final onSurface = theme.colorScheme.onSurface;
     final cardShadow = theme.shadowColor.withOpacity(isDark ? 0.18 : 0.06);
     final cardBorder = isDark ? Colors.white12 : Colors.grey.shade100;
@@ -302,7 +302,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   }
 
   Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size, bool isDark) {
-    final onBackground = theme.colorScheme.onBackground;
+    final onBackground = theme.colorScheme.onSurface;
     return AnimatedBuilder(
       animation: _floatingController,
       builder: (context, child) {
@@ -316,7 +316,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: isDark
-                ? [theme.colorScheme.primary, theme.colorScheme.secondary, theme.colorScheme.background]
+                ? [theme.colorScheme.primary, theme.colorScheme.secondary, theme.colorScheme.surface]
                 : [_gradientAnimation.value ?? AppTheme.heroGradient[0], AppTheme.heroGradient[1], AppTheme.heroGradient[2]],
             ),
           ),

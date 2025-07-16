@@ -792,7 +792,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
             icon: const Icon(Icons.copy_outlined, size: 20),
             color: (colors?.primary ?? theme.colorScheme.primary),
             onPressed: () {
-              final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja  •  Nuca: $neckline  •  Barba: $beard' + (notes.isNotEmpty ? '  •  Obs: $notes' : '');
+              final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja  •  Nuca: $neckline  •  Barba: $beard${notes.isNotEmpty ? '  •  Obs: $notes' : ''}';
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Copiado!'),

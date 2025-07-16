@@ -14,7 +14,7 @@ class QueueScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     
     return Scaffold(
       appBar: AppBar(
@@ -85,7 +85,7 @@ class QueueScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final isCompact = width < 400;
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
 
     return Container(
       margin: EdgeInsets.all(isCompact ? 12 : 16),
@@ -141,7 +141,7 @@ class QueueScreen extends StatelessWidget {
       IconData icon, Color color, bool isCompact) {
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
 
     return Column(
       children: [
@@ -214,7 +214,7 @@ class QueueScreen extends StatelessWidget {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
 
     return Center(
       child: Column(
@@ -248,7 +248,7 @@ class QueueScreen extends StatelessWidget {
     final nameController = TextEditingController();
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
 
     showDialog(
       context: context,
@@ -300,7 +300,7 @@ class QueueScreen extends StatelessWidget {
   void _showEntryActions(BuildContext context, QueueEntry entry) {
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     
     showModalBottomSheet(
       context: context,

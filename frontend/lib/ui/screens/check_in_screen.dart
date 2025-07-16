@@ -181,7 +181,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                           },
                           activeColor: colors.primary,
                           checkColor: colors.background,
-                          fillColor: MaterialStateProperty.all(colors.primary),
+                          fillColor: WidgetStateProperty.all(colors.primary),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                         ),
                         SizedBox(width: isSmallScreen ? 6 : 12),

@@ -432,8 +432,8 @@ class _AccountScreenState extends State<AccountScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fechar'),
                 style: TextButton.styleFrom(foregroundColor: colors?.primary ?? theme.colorScheme.primary),
+                child: const Text('Fechar'),
               ),
               TextButton(
                 onPressed: () {
@@ -472,7 +472,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${_formatDate(haircut['date'])}',
+                    _formatDate(haircut['date']),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontSize: isSmallScreen ? 14 : 16,
@@ -581,8 +581,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                     onPrimary: colors?.background ?? theme.colorScheme.onPrimary,
                                     surface: colors?.background ?? theme.colorScheme.surface,
                                     onSurface: colors?.onSurface ?? theme.colorScheme.onSurface,
-                                  ),
-                                  dialogBackgroundColor: colors?.background ?? theme.dialogBackgroundColor,
+                                  ), dialogTheme: DialogThemeData(backgroundColor: colors?.background ?? theme.dialogBackgroundColor),
                                 ),
                                 child: child!,
                               );

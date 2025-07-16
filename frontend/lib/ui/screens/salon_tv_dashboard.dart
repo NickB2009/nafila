@@ -445,7 +445,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               final index = entry.key;
               final customer = entry.value;
               return _buildCustomerRow(theme, customer, index, constraints);
-            }).toList()
+            })
           else
             Expanded(
               child: ListView.builder(
@@ -566,18 +566,18 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final isLargeScreen = constraints.maxWidth > 900;
     final defaultAdWidth = isLargeScreen ? 700.0 : 340.0;
     final defaultAdHeight = isLargeScreen ? 480.0 : 180.0;
-    final _adWidth = adWidth ?? customAdWidth ?? defaultAdWidth;
-    final _adHeight = adHeight ?? customAdHeight ?? defaultAdHeight;
-    final _minAdWidth = minAdWidth ?? 250.0;
-    final _maxAdWidth = maxAdWidth ?? constraints.maxWidth - 40;
+    final adWidth0 = adWidth ?? customAdWidth ?? defaultAdWidth;
+    final adHeight0 = adHeight ?? customAdHeight ?? defaultAdHeight;
+    final minAdWidth0 = minAdWidth ?? 250.0;
+    final maxAdWidth0 = maxAdWidth ?? constraints.maxWidth - 40;
     final minAdHeight = 120.0;
     final verticalPadding = 80.0;
     final maxAdHeight = constraints.maxHeight - verticalPadding;
     final ad = ads[_currentAdIndex];
-    final adFontSize = _adHeight > 300 ? 40.0 : 18.0;
-    final adSubtitleFontSize = _adHeight > 300 ? 24.0 : 12.0;
-    final adBrandFontSize = _adHeight > 300 ? 20.0 : 10.0;
-    final adImageHeight = _adHeight > 300 ? 220.0 : 70.0;
+    final adFontSize = adHeight0 > 300 ? 40.0 : 18.0;
+    final adSubtitleFontSize = adHeight0 > 300 ? 24.0 : 12.0;
+    final adBrandFontSize = adHeight0 > 300 ? 20.0 : 10.0;
+    final adImageHeight = adHeight0 > 300 ? 220.0 : 70.0;
     // Remove expand/reset button UI
     // final toggleLabel = (customAdWidth != null || customAdHeight != null) ? 'Redefinir tamanho' : 'Expandir anúncio';
     // final toggleIcon = (customAdWidth != null || customAdHeight != null) ? Icons.refresh : Icons.open_in_full;
@@ -596,8 +596,8 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
-                width: _adWidth,
-                height: _adHeight,
+                width: adWidth0,
+                height: adHeight0,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -642,7 +642,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            SizedBox(height: _adHeight > 300 ? 28 : 8),
+                            SizedBox(height: adHeight0 > 300 ? 28 : 8),
                             Text(
                               ad["subtitle"] as String,
                               style: theme.textTheme.titleMedium?.copyWith(
@@ -652,7 +652,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            SizedBox(height: _adHeight > 300 ? 24 : 6),
+                            SizedBox(height: adHeight0 > 300 ? 24 : 6),
                             Text(
                               ad["brand"] as String,
                               style: theme.textTheme.labelLarge?.copyWith(
@@ -676,7 +676,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
                               maxWidth: double.infinity,
-                              maxHeight: _adHeight - 32, // Prevent overflow
+                              maxHeight: adHeight0 - 32, // Prevent overflow
                             ),
                             child: Image.asset(
                               ad["image"] as String,
@@ -699,12 +699,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               // Draggable handle (left edge, vertically centered)
               Positioned(
                 left: 0,
-                top: (_adHeight / 2) - 24,
+                top: (adHeight0 / 2) - 24,
                 child: GestureDetector(
                   onPanUpdate: (details) {
                     if (onResize != null) {
-                      final newWidth = (_adWidth - details.delta.dx).clamp(_minAdWidth, _maxAdWidth);
-                      onResize(newWidth, _adHeight);
+                      final newWidth = (adWidth0 - details.delta.dx).clamp(minAdWidth0, maxAdWidth0);
+                      onResize(newWidth, adHeight0);
                     }
                   },
                   child: MouseRegion(
@@ -738,8 +738,8 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                 child: GestureDetector(
                   onPanUpdate: (details) {
                     if (onResize != null) {
-                      final newHeight = (_adHeight + details.delta.dy).clamp(minAdHeight, maxAdHeight);
-                      onResize(_adWidth, newHeight);
+                      final newHeight = (adHeight0 + details.delta.dy).clamp(minAdHeight, maxAdHeight);
+                      onResize(adWidth0, newHeight);
                     }
                   },
                   child: MouseRegion(

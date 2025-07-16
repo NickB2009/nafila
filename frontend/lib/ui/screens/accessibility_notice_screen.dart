@@ -153,7 +153,7 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
           children: [
             Icon(
               Icons.accessibility_new,
-              color: CheckInState.checkedInSalon?.colors?.primary ?? theme.colorScheme.primary,
+              color: CheckInState.checkedInSalon?.colors.primary ?? theme.colorScheme.primary,
               size: 32,
             ),
             const SizedBox(width: 16),
@@ -162,7 +162,7 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
                 'Acessibilidade para Todos',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: CheckInState.checkedInSalon?.colors?.onSurface ?? theme.colorScheme.onSurface,
+                  color: CheckInState.checkedInSalon?.colors.onSurface ?? theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -172,7 +172,7 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
         Text(
           'O Nafila está comprometido em fornecer uma experiência digital inclusiva e acessível para todos os usuários.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: CheckInState.checkedInSalon?.colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
+            color: CheckInState.checkedInSalon?.colors.secondary ?? theme.colorScheme.onSurfaceVariant,
             height: 1.5,
           ),
         ),
@@ -203,23 +203,23 @@ class _AccessibilityNoticeScreenState extends State<AccessibilityNoticeScreen>
         return Card(
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          color: CheckInState.checkedInSalon?.colors?.background ?? theme.colorScheme.surface,
+          color: CheckInState.checkedInSalon?.colors.background ?? theme.colorScheme.surface,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(feature['icon'] as IconData, color: CheckInState.checkedInSalon?.colors?.primary ?? theme.colorScheme.primary, size: 28),
+                Icon(feature['icon'] as IconData, color: CheckInState.checkedInSalon?.colors.primary ?? theme.colorScheme.primary, size: 28),
                 const SizedBox(height: 10),
                 Text(
                   feature['title'] as String,
-                  style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: CheckInState.checkedInSalon?.colors?.onSurface ?? theme.colorScheme.onSurface),
+                  style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: CheckInState.checkedInSalon?.colors.onSurface ?? theme.colorScheme.onSurface),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   feature['description'] as String,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: CheckInState.checkedInSalon?.colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: CheckInState.checkedInSalon?.colors.secondary ?? theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),

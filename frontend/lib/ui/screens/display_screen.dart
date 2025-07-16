@@ -15,7 +15,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return Scaffold(
