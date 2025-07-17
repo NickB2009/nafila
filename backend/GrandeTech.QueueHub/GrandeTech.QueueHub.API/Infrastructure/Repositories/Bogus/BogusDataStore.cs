@@ -15,15 +15,33 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<Guid, BaseEntity>> _dataStore = new();
         private static readonly object _lock = new();
         private static bool _isInitialized = false;
-        private static readonly string TestAdminUsername = "admin_test";
-        private static readonly string TestAdminEmail = "admin@test.com";
-        private static readonly string TestAdminPassword = "AdminPass123!";
-        private static readonly string TestAdminRole = UserRoles.Owner;
+        
+        // Test user constants for each role
+        private static readonly string TestPlatformAdminUsername = "platformadmin_test";
+        private static readonly string TestPlatformAdminEmail = "platformadmin@test.com";
+        private static readonly string TestPlatformAdminPassword = "PlatformAdminPass123!";
+        private static readonly string TestPlatformAdminRole = UserRoles.PlatformAdmin;
+        
+        private static readonly string TestOwnerUsername = "owner_test";
+        private static readonly string TestOwnerEmail = "owner@test.com";
+        private static readonly string TestOwnerPassword = "OwnerPass123!";
+        private static readonly string TestOwnerRole = UserRoles.Owner;
+        
+        private static readonly string TestStaffUsername = "staff_test";
+        private static readonly string TestStaffEmail = "staff@test.com";
+        private static readonly string TestStaffPassword = "StaffPass123!";
+        private static readonly string TestStaffRole = UserRoles.Staff;
+        
+        private static readonly string TestCustomerUsername = "customer_test";
+        private static readonly string TestCustomerEmail = "customer@test.com";
+        private static readonly string TestCustomerPassword = "CustomerPass123!";
+        private static readonly string TestCustomerRole = UserRoles.Customer;
         
         private static readonly string TestServiceAccountUsername = "service_test";
         private static readonly string TestServiceAccountEmail = "service@test.com";
         private static readonly string TestServiceAccountPassword = "ServicePass123!";
         private static readonly string TestServiceAccountRole = UserRoles.ServiceAccount;
+
 
         public static void Initialize()
         {
@@ -47,10 +65,11 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 // Mark as initialized before creating admin user to avoid recursion
                 _isInitialized = true;
 
-                // Ensure test admin user exists
-                CreateOrUpdateTestAdminUser();
-                
-                // Ensure test service account user exists
+                // Ensure all test users exist
+                CreateOrUpdateTestPlatformAdminUser();
+                CreateOrUpdateTestOwnerUser();
+                CreateOrUpdateTestStaffUser();
+                CreateOrUpdateTestCustomerUser();
                 CreateOrUpdateTestServiceAccountUser();
             }
         }
@@ -181,30 +200,115 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             }
         }
 
-        public static void CreateOrUpdateTestAdminUser()
+        public static void CreateOrUpdateTestPlatformAdminUser()
         {
             Initialize();
             var users = _dataStore[typeof(User)];
-            var adminUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestAdminUsername);
-            if (adminUser == null)
+            var platformAdminUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestPlatformAdminUsername);
+            if (platformAdminUser == null)
             {
-                adminUser = new User(
-                    TestAdminUsername,
-                    TestAdminEmail,
-                    BCrypt.Net.BCrypt.HashPassword(TestAdminPassword),
-                    TestAdminRole
+                platformAdminUser = new User(
+                    TestPlatformAdminUsername,
+                    TestPlatformAdminEmail,
+                    BCrypt.Net.BCrypt.HashPassword(TestPlatformAdminPassword),
+                    TestPlatformAdminRole
                 );
-                adminUser.Activate();
-                adminUser.DisableTwoFactor();
-                users.TryAdd(adminUser.Id, adminUser);
+                platformAdminUser.Activate();
+                platformAdminUser.DisableTwoFactor();
+                users.TryAdd(platformAdminUser.Id, platformAdminUser);
             }
             else
             {
-                adminUser.Role = TestAdminRole;
-                adminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestAdminPassword);
-                adminUser.Activate();
-                adminUser.DisableTwoFactor();
-                users[adminUser.Id] = adminUser;
+                platformAdminUser.Role = TestPlatformAdminRole;
+                platformAdminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestPlatformAdminPassword);
+                platformAdminUser.Activate();
+                platformAdminUser.DisableTwoFactor();
+                users[platformAdminUser.Id] = platformAdminUser;
+            }
+        }
+
+        public static void CreateOrUpdateTestOwnerUser()
+        {
+            Initialize();
+            var users = _dataStore[typeof(User)];
+            var ownerUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestOwnerUsername);
+            if (ownerUser == null)
+            {
+                ownerUser = new User(
+                    TestOwnerUsername,
+                    TestOwnerEmail,
+                    BCrypt.Net.BCrypt.HashPassword(TestOwnerPassword),
+                    TestOwnerRole
+                );
+                ownerUser.Activate();
+                ownerUser.DisableTwoFactor();
+                ownerUser.AddPermission(Permission.CreateStaff);
+                ownerUser.AddPermission(Permission.UpdateStaff);
+                users.TryAdd(ownerUser.Id, ownerUser);
+            }
+            else
+            {
+                ownerUser.Role = TestOwnerRole;
+                ownerUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestOwnerPassword);
+                ownerUser.Activate();
+                ownerUser.DisableTwoFactor();
+                ownerUser.AddPermission(Permission.CreateStaff);
+                ownerUser.AddPermission(Permission.UpdateStaff);
+                users[ownerUser.Id] = ownerUser;
+            }
+        }
+
+        public static void CreateOrUpdateTestStaffUser()
+        {
+            Initialize();
+            var users = _dataStore[typeof(User)];
+            var staffUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestStaffUsername);
+            if (staffUser == null)
+            {
+                staffUser = new User(
+                    TestStaffUsername,
+                    TestStaffEmail,
+                    BCrypt.Net.BCrypt.HashPassword(TestStaffPassword),
+                    TestStaffRole
+                );
+                staffUser.Activate();
+                staffUser.DisableTwoFactor();
+                users.TryAdd(staffUser.Id, staffUser);
+            }
+            else
+            {
+                staffUser.Role = TestStaffRole;
+                staffUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestStaffPassword);
+                staffUser.Activate();
+                staffUser.DisableTwoFactor();
+                users[staffUser.Id] = staffUser;
+            }
+        }
+
+        public static void CreateOrUpdateTestCustomerUser()
+        {
+            Initialize();
+            var users = _dataStore[typeof(User)];
+            var customerUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestCustomerUsername);
+            if (customerUser == null)
+            {
+                customerUser = new User(
+                    TestCustomerUsername,
+                    TestCustomerEmail,
+                    BCrypt.Net.BCrypt.HashPassword(TestCustomerPassword),
+                    TestCustomerRole
+                );
+                customerUser.Activate();
+                customerUser.DisableTwoFactor();
+                users.TryAdd(customerUser.Id, customerUser);
+            }
+            else
+            {
+                customerUser.Role = TestCustomerRole;
+                customerUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestCustomerPassword);
+                customerUser.Activate();
+                customerUser.DisableTwoFactor();
+                users[customerUser.Id] = customerUser;
             }
         }
 
@@ -234,5 +338,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 users[serviceUser.Id] = serviceUser;
             }
         }
+
+
     }
 } 
