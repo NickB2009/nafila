@@ -103,10 +103,13 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: colors?.primary ?? theme.colorScheme.primary,
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
+        backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+        foregroundColor: colors?.background ?? theme.colorScheme.onPrimary,
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -130,7 +133,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     // Content Section
                     Container(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
+                        color: colors?.background ?? theme.colorScheme.surface,
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                       ),
                       child: Padding(
@@ -344,7 +347,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 child: Text(
                   'Ver todos',
                   style: TextStyle(
-                    color: theme.colorScheme.primary,
+                    color: colors?.primary ?? theme.colorScheme.primary,
                     fontSize: isSmallScreen ? 12 : 14,
                   ),
                 ),
@@ -429,8 +432,8 @@ class _AccountScreenState extends State<AccountScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Fechar'),
                 style: TextButton.styleFrom(foregroundColor: colors?.primary ?? theme.colorScheme.primary),
+                child: const Text('Fechar'),
               ),
               TextButton(
                 onPressed: () {
@@ -469,7 +472,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${_formatDate(haircut['date'])}',
+                    _formatDate(haircut['date']),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontSize: isSmallScreen ? 14 : 16,
@@ -567,6 +570,22 @@ class _AccountScreenState extends State<AccountScreen> {
                             firstDate: DateTime.now(),
                             lastDate: DateTime.now().add(const Duration(days: 365)),
                             locale: const Locale('pt', 'BR'),
+                            builder: (context, child) {
+                              final theme = Theme.of(context);
+                              final brightness = theme.brightness;
+                              final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+                              return Theme(
+                                data: theme.copyWith(
+                                  colorScheme: theme.colorScheme.copyWith(
+                                    primary: colors?.primary ?? theme.colorScheme.primary,
+                                    onPrimary: colors?.background ?? theme.colorScheme.onPrimary,
+                                    surface: colors?.background ?? theme.colorScheme.surface,
+                                    onSurface: colors?.onSurface ?? theme.colorScheme.onSurface,
+                                  ), dialogTheme: DialogThemeData(backgroundColor: colors?.background ?? theme.dialogBackgroundColor),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (picked != null && picked != _reminderDate) {
                             setState(() {
@@ -583,7 +602,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         icon: Icon(Icons.edit_calendar, size: isSmallScreen ? 16 : 18),
                         label: const Text('Alterar'),
                         style: TextButton.styleFrom(
-                          foregroundColor: theme.colorScheme.primary,
+                          foregroundColor: colors?.primary ?? theme.colorScheme.primary,
                           textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: isSmallScreen ? 12 : 14),
                         ),
                       ),
@@ -602,7 +621,7 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             child: Icon(
               Icons.content_cut,
-              color: theme.colorScheme.primary,
+              color: colors?.primary ?? theme.colorScheme.primary,
               size: isSmallScreen ? 20 : 28,
             ),
           ),

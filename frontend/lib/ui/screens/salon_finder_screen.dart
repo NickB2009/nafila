@@ -183,6 +183,17 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final brightness = theme.brightness;
+    final isDark = brightness == Brightness.dark;
+    final background = theme.colorScheme.surface;
+    final surface = theme.colorScheme.surface;
+    final onBackground = theme.colorScheme.onSurface;
+    final onSurface = theme.colorScheme.onSurface;
+    final cardShadow = theme.shadowColor.withOpacity(isDark ? 0.18 : 0.06);
+    final cardBorder = isDark ? Colors.white12 : Colors.grey.shade100;
+    final lightGradient = [Colors.white, Colors.grey.shade50];
+    final darkGradient = [surface, background];
+    final mainGradient = isDark ? darkGradient : lightGradient;
     
     return Scaffold(
       body: CustomScrollView(
@@ -195,7 +206,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             backgroundColor: Colors.transparent,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeroSection(context, theme, size),
+              background: _buildHeroSection(context, theme, size, isDark),
             ),
             leading: null,
             automaticallyImplyLeading: false,
@@ -235,10 +246,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white,
-                    Colors.grey.shade50,
-                  ],
+                  colors: mainGradient,
                 ),
               ),
               child: Column(
@@ -293,10 +301,13 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     );
   }
 
-  Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size) {
+  Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size, bool isDark) {
+    final onBackground = theme.colorScheme.onSurface;
     return AnimatedBuilder(
       animation: _floatingController,
       builder: (context, child) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
         return Container(
           width: double.infinity,
           height: double.infinity,
@@ -304,11 +315,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                _gradientAnimation.value ?? AppTheme.heroGradient[0],
-                AppTheme.heroGradient[1],
-                AppTheme.heroGradient[2],
-              ],
+              colors: isDark
+                ? [theme.colorScheme.primary, theme.colorScheme.secondary, theme.colorScheme.surface]
+                : [_gradientAnimation.value ?? AppTheme.heroGradient[0], AppTheme.heroGradient[1], AppTheme.heroGradient[2]],
             ),
           ),
           child: Stack(
@@ -366,22 +375,30 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Up from 10/4
+                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.20),
-                                      borderRadius: BorderRadius.circular(16),
+                                      color: Colors.black.withOpacity(0.32),
+                                      borderRadius: BorderRadius.circular(18),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.waving_hand, color: Colors.white, size: 16), // Up from 14
-                                        const SizedBox(width: 6),
+                                        Icon(Icons.waving_hand, color: Colors.white, size: 22),
+                                        const SizedBox(width: 14),
                                         Text(
                                           greetingName,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 14, // Up from 12
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                            letterSpacing: 0.2,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black26,
+                                                offset: Offset(0, 2),
+                                                blurRadius: 6,
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
@@ -392,32 +409,32 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               const SizedBox(height: 10), // Up from 8/6
                               Text(
                                 "Transforme seu\nvisual hoje mesmo",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 24, // Up from 20
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                   height: 1.2,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withOpacity(0.22),
-                                      offset: const Offset(0, 2),
-                                      blurRadius: 4,
+                                      color: Colors.black54,
+                                      offset: Offset(0, 2),
+                                      blurRadius: 6,
                                     ),
                                   ],
                                 ),
                               ),
                               const SizedBox(height: 8), // Up from 6
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Up from 10/4
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.13),
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Text(
+                                child: const Text(
                                   "Profissionais qualificados • Produtos premium • Resultados garantidos",
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.90),
-                                    fontSize: 12, // Up from 10
+                                    color: Colors.black87,
+                                    fontSize: 12,
                                     height: 1.3,
                                   ),
                                 ),
@@ -438,6 +455,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   }
 
   Widget _buildSpecialOfferSection(BuildContext context, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     final minutes = _secondsRemaining ~/ 60;
     final seconds = _secondsRemaining % 60;
     
@@ -445,7 +463,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: AppTheme.offerGradient,
+          colors: isDark ? [theme.colorScheme.primary, theme.colorScheme.secondary] : AppTheme.offerGradient,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -501,7 +519,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                 child: Text(
                   '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
                   style: TextStyle(
-                    color: AppTheme.offerGradient[0],
+                    color: isDark ? theme.colorScheme.primary : AppTheme.offerGradient[0],
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -528,7 +546,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                   child: Text(
                     'ENTRAR NA FILA',
                     style: TextStyle(
-                      color: AppTheme.offerGradient[0],
+                      color: isDark ? theme.colorScheme.primary : AppTheme.offerGradient[0],
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
@@ -606,6 +624,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
           tween: Tween(begin: 0.0, end: 1.0),
           duration: Duration(milliseconds: 600 + (index * 200)),
           builder: (context, value, child) {
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
             return Transform.translate(
               offset: Offset(0, 20 * (1 - value)),
               child: Opacity(
@@ -621,25 +641,34 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   }
 
   Widget _buildBalancedSalonCard(BuildContext context, ThemeData theme, Salon salon, int index) {
+    final isDark = theme.brightness == Brightness.dark;
     final isUrgent = salon.waitTime <= 10;
     final isPopular = salon.queueLength >= 4;
-    
+    final cardBackground = isDark ? theme.colorScheme.surface : Colors.white;
+    final cardBorder = isDark ? Colors.white12 : Colors.grey.shade100;
+    final cardShadow = theme.shadowColor.withOpacity(isDark ? 0.18 : 0.06);
+    final textColor = theme.colorScheme.onSurface;
+    final subTextColor = theme.colorScheme.onSurface.withOpacity(0.7);
+    final urgentColor = isDark ? theme.colorScheme.secondary : AppTheme.semanticColors['urgent']!;
+    final popularColor = isDark ? theme.colorScheme.primary : AppTheme.semanticColors['popular']!;
+    final chipTimeColor = isUrgent ? urgentColor : (isDark ? theme.colorScheme.primary : AppTheme.semanticColors['time']!);
+    final chipQueueColor = isPopular ? popularColor : (isDark ? theme.colorScheme.secondary : AppTheme.semanticColors['queue']!);
+    final chipDistanceColor = isDark ? theme.colorScheme.secondary : AppTheme.semanticColors['distance']!;
+    final ctaBg = theme.colorScheme.primary.withOpacity(0.13);
+    final ctaText = theme.colorScheme.primary;
+    final ctaSubText = theme.colorScheme.onSurface.withOpacity(0.8);
+    final buttonBg = isDark ? theme.colorScheme.surface : Colors.white;
+    final buttonText = theme.colorScheme.primary;
+    final buttonShadow = theme.colorScheme.primary.withOpacity(0.10);
+    final favColor = _favoriteSalons.contains(salon.name) ? AppTheme.dangerColor : (isDark ? theme.colorScheme.onSurface.withOpacity(0.4) : Colors.grey.shade300);
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white,
-            Colors.grey.shade50,
-            AppTheme.primaryColor.withOpacity(0.03),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18), // Up from 16
-        border: Border.all(color: Colors.grey.shade100),
+        color: cardBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: cardShadow,
             blurRadius: 14,
             offset: const Offset(0, 3),
           ),
@@ -655,10 +684,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                 builder: (_) => SalonDetailsScreen(
                   salon: salon,
                   services: [],
-                  contact: SalonContact(
-                    phone: '',
-                    email: '',
-                  ),
+                  contact: SalonContact(phone: '', email: ''),
                   businessHours: [],
                   reviews: [],
                   additionalInfo: const {},
@@ -667,11 +693,10 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(20), // Up from 16
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with badges - BALANCED
                 Row(
                   children: [
                     Expanded(
@@ -683,24 +708,24 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               Expanded(
                                 child: Text(
                                   salon.name,
-                                  style: theme.textTheme.titleLarge?.copyWith( // Up from titleMedium
+                                  style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade800,
+                                    color: textColor,
                                   ),
                                 ),
                               ),
                               if (isUrgent) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3), // Up from 6/2
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.semanticColors['urgent']!.withOpacity(0.18), // Slightly more color
+                                    color: urgentColor.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'RÁPIDO',
                                     style: TextStyle(
-                                      color: AppTheme.semanticColors['urgent'],
-                                      fontSize: 10, // Up from 9
+                                      color: urgentColor,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -711,13 +736,13 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.semanticColors['popular']!.withOpacity(0.18),
+                                    color: popularColor.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'POPULAR',
                                     style: TextStyle(
-                                      color: AppTheme.semanticColors['popular'],
+                                      color: popularColor,
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -728,8 +753,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               IconButton(
                                 icon: Icon(
                                   _favoriteSalons.contains(salon.name) ? Icons.favorite : Icons.favorite_border,
-                                  color: _favoriteSalons.contains(salon.name) ? AppTheme.dangerColor : Colors.grey.shade300,
-                                  size: 22, // Up from 20
+                                  color: favColor,
+                                  size: 22,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -741,15 +766,15 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                                   });
                                 },
                                 padding: EdgeInsets.zero,
-                                constraints: BoxConstraints(minWidth: 36, minHeight: 36), // Up from 32
+                                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4), // Up from 2
+                          const SizedBox(height: 4),
                           Text(
                             salon.address,
-                            style: theme.textTheme.bodyMedium?.copyWith( // Up from bodySmall
-                              color: Colors.grey.shade600,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: subTextColor,
                             ),
                           ),
                         ],
@@ -757,10 +782,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                     ),
                   ],
                 ),
-                
-                const SizedBox(height: 16), // Up from 12
-                
-                // Info chips - BALANCED
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -768,16 +790,16 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                         context,
                         Icons.access_time,
                         '${salon.waitTime} min',
-                        isUrgent ? AppTheme.semanticColors['urgent']! : AppTheme.semanticColors['time']!,
+                        chipTimeColor,
                       ),
                     ),
-                    const SizedBox(width: 10), // Up from 8
+                    const SizedBox(width: 10),
                     Expanded(
                       child: _buildBalancedInfoChip(
                         context,
                         Icons.people_outline,
                         '${salon.queueLength} fila',
-                        isPopular ? AppTheme.semanticColors['popular']! : AppTheme.semanticColors['queue']!,
+                        chipQueueColor,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -786,20 +808,17 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                         context,
                         Icons.location_on_outlined,
                         '${salon.distance.toStringAsFixed(1)} km',
-                        AppTheme.semanticColors['distance']!,
+                        chipDistanceColor,
                       ),
                     ),
                   ],
                 ),
-                
-                const SizedBox(height: 16), // Up from 12
-                
-                // CTA Section - BALANCED
+                const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(14), // Up from 10
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.13), // Slightly more color
-                    borderRadius: BorderRadius.circular(16), // Up from 12
+                    color: ctaBg,
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
@@ -810,23 +829,23 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                             Text(
                               isUrgent ? 'Check-in rápido!' : 'Fazer check-in',
                               style: TextStyle(
-                                color: AppTheme.primaryColor,
-                                fontSize: 16, // Up from 14
+                                color: ctaText,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               isUrgent ? 'Sem espera' : 'Entre na fila',
                               style: TextStyle(
-                                color: Colors.grey.shade700,
-                                fontSize: 13, // Up from 12
+                                color: ctaSubText,
+                                fontSize: 13,
                               ),
                             ),
                           ],
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {
+                        onTap: CheckInState.isCheckedIn ? null : () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => CheckInScreen(salon: salon),
@@ -834,13 +853,13 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10), // Up from 14/8
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(22), // Up from 20
+                            color: buttonBg,
+                            borderRadius: BorderRadius.circular(22),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryColor.withOpacity(0.10),
+                                color: buttonShadow,
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -849,14 +868,14 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.login, color: AppTheme.primaryColor, size: 18), // Up from 16
-                              const SizedBox(width: 6), // Up from 4
+                              Icon(Icons.login, color: buttonText, size: 18),
+                              const SizedBox(width: 6),
                               Text(
                                 'Check-in',
                                 style: TextStyle(
-                                  color: AppTheme.primaryColor,
+                                  color: buttonText,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15, // Up from 14
+                                  fontSize: 15,
                                 ),
                               ),
                             ],
@@ -875,25 +894,31 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   }
 
   Widget _buildBalancedInfoChip(BuildContext context, IconData icon, String label, Color color) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final chipBg = isDark ? color.withOpacity(0.13) : color.withOpacity(0.09);
+    final chipBorder = isDark ? color.withOpacity(0.22) : color.withOpacity(0.18);
+    final chipText = isDark ? theme.colorScheme.onSurface : color;
+    final chipIcon = isDark ? theme.colorScheme.onSurface.withOpacity(0.85) : color.withOpacity(0.85);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), // Up from 8/6
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.09), // Slightly more color
-        borderRadius: BorderRadius.circular(10), // Up from 8
-        border: Border.all(color: color.withOpacity(0.18)),
+        color: chipBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: chipBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color.withOpacity(0.85)), // Up from 14
-          const SizedBox(width: 6), // Up from 4
+          Icon(icon, size: 16, color: chipIcon),
+          const SizedBox(width: 6),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
-                color: color,
+                color: chipText,
                 fontWeight: FontWeight.w600,
-                fontSize: 12, // Up from 11
+                fontSize: 12,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -904,6 +929,12 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   }
 
   Widget _buildFindSalonCard(BuildContext context, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final gradient = isDark
+        ? [theme.colorScheme.primary, theme.colorScheme.secondary]
+        : AppTheme.ctaGradient;
+    final textColor = isDark ? theme.colorScheme.onPrimary : Colors.white;
+    final subTextColor = isDark ? theme.colorScheme.onPrimary.withOpacity(0.9) : Colors.white.withOpacity(0.9);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -911,7 +942,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: AppTheme.ctaGradient,
+          colors: gradient,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -928,12 +959,12 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: textColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Icon(
               Icons.explore,
-              color: Colors.white,
+              color: textColor,
               size: 28,
             ),
           ),
@@ -945,7 +976,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                 Text(
                   'Explorar mais salões',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     shadows: [
@@ -966,7 +997,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                       Text(
                         'Ver mapa interativo',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: subTextColor,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -975,7 +1006,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                       Icon(
                         Icons.arrow_forward,
                         size: 16,
-                        color: Colors.white.withOpacity(0.9),
+                        color: subTextColor,
                       ),
                     ],
                   ),

@@ -24,7 +24,8 @@ class QueueStatusScreen extends StatelessWidget {
     final String phone = "(352) 668-4089";
     final double distance = salon.distance;
     final bool isOpen = salon.isOpen;
-    final colors = salon.colors;
+    final brightness = Theme.of(context).brightness;
+    final colors = salon.colors.forBrightness(brightness);
 
     return Scaffold(
       backgroundColor: colors.primary,

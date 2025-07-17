@@ -22,6 +22,10 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final salonColors = CheckInState.isCheckedIn && CheckInState.checkedInSalon != null
+        ? CheckInState.checkedInSalon!.colors.forBrightness(brightness)
+        : null;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     
     return Material(
@@ -29,21 +33,21 @@ class BottomNavBar extends StatelessWidget {
       child: Container(
         height: 80 + bottomPadding,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: salonColors?.background ?? theme.colorScheme.surface,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
+              color: (salonColors?.primary ?? theme.shadowColor).withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, -4),
             ),
           ],
           border: Border(
             top: BorderSide(
-              color: theme.dividerColor.withOpacity(0.15),
+              color: (salonColors?.secondary ?? theme.dividerColor).withOpacity(0.15),
               width: 1.2,
             ),
           ),
@@ -67,6 +71,7 @@ class BottomNavBar extends StatelessWidget {
                   );
                 }
               },
+              salonColors: salonColors,
             ),
             _buildNavItem(
               context,
@@ -76,6 +81,7 @@ class BottomNavBar extends StatelessWidget {
               () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SalonMapScreen()),
               ),
+              salonColors: salonColors,
             ),
             _buildNavItem(
               context,
@@ -85,6 +91,7 @@ class BottomNavBar extends StatelessWidget {
               () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const AccountScreen()),
               ),
+              salonColors: salonColors,
             ),
           ],
         ),
@@ -98,8 +105,11 @@ class BottomNavBar extends StatelessWidget {
     bool isSelected,
     String label,
     VoidCallback onTap,
+    {SalonColors? salonColors}
   ) {
     final theme = Theme.of(context);
+    final selectedColor = salonColors?.primary ?? theme.colorScheme.primary;
+    final unselectedColor = salonColors?.onSurface.withOpacity(0.7) ?? theme.colorScheme.onSurface.withOpacity(0.6);
     return Expanded(
       child: InkWell(
         borderRadius: const BorderRadius.only(
@@ -116,8 +126,8 @@ class BottomNavBar extends StatelessWidget {
               Icon(
                 icon,
                 color: isSelected 
-                  ? theme.colorScheme.primary 
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
+                  ? selectedColor
+                  : unselectedColor,
                 size: 28,
               ),
               const SizedBox(height: 6),
@@ -125,8 +135,8 @@ class BottomNavBar extends StatelessWidget {
                 label,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: isSelected 
-                    ? theme.colorScheme.primary 
-                    : theme.colorScheme.onSurface.withOpacity(0.6),
+                    ? selectedColor
+                    : unselectedColor,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   fontSize: 13,
                 ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import '../../lib/utils/brazilian_names_generator.dart';
+import 'package:eutonafila_frontend/utils/brazilian_names_generator.dart';
 import 'package:eutonafila_frontend/ui/screens/account_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/personal_info_screen.dart';
 import 'package:eutonafila_frontend/ui/screens/favoritos_screen.dart';

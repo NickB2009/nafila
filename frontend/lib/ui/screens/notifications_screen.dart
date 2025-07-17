@@ -29,7 +29,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
-    final colors = CheckInState.checkedInSalon?.colors?.forBrightness(brightness);
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     return Scaffold(
       backgroundColor: colors?.background ?? theme.colorScheme.surface,
       appBar: AppBar(

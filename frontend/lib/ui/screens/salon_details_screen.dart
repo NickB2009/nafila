@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'check_in_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class SalonDetailsScreen extends StatefulWidget {
   final Salon salon;
@@ -223,7 +224,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () {
+                onPressed: CheckInState.isCheckedIn ? null : () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => CheckInScreen(salon: widget.salon),

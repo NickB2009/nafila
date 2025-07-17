@@ -11,6 +11,7 @@ import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../utils/palette_utils.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 
 SalonColors _randomSalonColors(int seed) {
   final palettes = [
@@ -237,6 +238,21 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final salonPalette = CheckInState.checkedInSalon?.colors;
+    // Platform detection for desktop/laptop
+    final isDesktop =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        (defaultTargetPlatform == TargetPlatform.fuchsia) ||
+        (defaultTargetPlatform == TargetPlatform.android && MediaQuery.of(context).size.width > 900) ||
+        (defaultTargetPlatform == TargetPlatform.iOS && MediaQuery.of(context).size.width > 900) ||
+        (Theme.of(context).platform == TargetPlatform.macOS ||
+         Theme.of(context).platform == TargetPlatform.windows ||
+         Theme.of(context).platform == TargetPlatform.linux) ||
+        (MediaQuery.of(context).size.width > 900 && Theme.of(context).platform == TargetPlatform.android);
+    // For web, treat as desktop if width is large
+    final isWebDesktop = MediaQuery.of(context).size.width > 900 && (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS);
+    final showZoomButtons = isDesktop || isWebDesktop;
     return Scaffold(
       backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
       body: Stack(
@@ -246,7 +262,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 options: MapOptions(
               initialCenter: const LatLng(28.3372, -82.2637),
                   initialZoom: 12.0,
-                  minZoom: 10.0,
+                  minZoom: 2.0,
                   maxZoom: 18.0,
                   onTap: (_, __) {
                     setState(() {
@@ -282,6 +298,41 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   ),
                 ],
               ),
+          // Zoom buttons for desktop/laptop only
+          if (showZoomButtons)
+            Positioned(
+              top: 120, // move higher up
+              right: 24, // move to the extreme right
+              child: Column(
+                children: [
+                  FloatingActionButton(
+                    heroTag: 'zoom_in_fab',
+                    mini: true,
+                    backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    onPressed: () {
+                      final center = _mapController.camera.center;
+                      final zoom = _mapController.camera.zoom + 1;
+                      _mapController.move(center, zoom.clamp(2.0, 18.0));
+                    },
+                    child: const Icon(Icons.add),
+                  ),
+                  const SizedBox(height: 8),
+                  FloatingActionButton(
+                    heroTag: 'zoom_out_fab',
+                    mini: true,
+                    backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    onPressed: () {
+                      final center = _mapController.camera.center;
+                      final zoom = _mapController.camera.zoom - 1;
+                      _mapController.move(center, zoom.clamp(2.0, 18.0));
+                    },
+                    child: const Icon(Icons.remove),
+                  ),
+                ],
+              ),
+            ),
           // Minimal floating AppBar
           Positioned(
             top: 32,
@@ -626,7 +677,7 @@ class _SalonListModalState extends State<_SalonListModal> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: widget.theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                    fillColor: widget.theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                   ),
                   onChanged: (value) => setState(() => _search = value),
                 ),
