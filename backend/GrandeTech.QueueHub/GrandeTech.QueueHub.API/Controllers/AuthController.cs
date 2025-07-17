@@ -79,13 +79,29 @@ namespace Grande.Fila.API.Controllers
             var role = User.FindFirst(TenantClaims.Role)?.Value;
             var permissions = User.FindFirst(TenantClaims.Permissions)?.Value;
 
+            string[]? deserializedPermissions = null;
+            if (!string.IsNullOrEmpty(permissions))
+            {
+                try
+                {
+                    deserializedPermissions = System.Text.Json.JsonSerializer.Deserialize<string[]>(permissions);
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    // Handle malformed JSON by splitting on comma or returning raw value
+                    deserializedPermissions = permissions.Contains(',') 
+                        ? permissions.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        : new[] { permissions };
+                }
+            }
+
             return Ok(new
             {
                 UserId = userId,
                 Username = username,
                 Email = email,
                 Role = role,
-                Permissions = permissions != null ? System.Text.Json.JsonSerializer.Deserialize<string[]>(permissions) : null
+                Permissions = deserializedPermissions
             });
         }
 

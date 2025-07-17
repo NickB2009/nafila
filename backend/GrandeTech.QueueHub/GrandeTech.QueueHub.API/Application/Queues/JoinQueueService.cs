@@ -4,6 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.Customers;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Application.Services.Cache;
 
 namespace Grande.Fila.API.Application.Queues
 {
@@ -15,11 +18,22 @@ namespace Grande.Fila.API.Application.Queues
     {
         private readonly IQueueRepository _queueRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IStaffMemberRepository _staffMemberRepository;
+        private readonly ILocationRepository _locationRepository;
+        private readonly IAverageWaitTimeCache _cache;
 
-        public JoinQueueService(IQueueRepository queueRepository, ICustomerRepository customerRepository)
+        public JoinQueueService(
+            IQueueRepository queueRepository, 
+            ICustomerRepository customerRepository,
+            IStaffMemberRepository staffMemberRepository,
+            ILocationRepository locationRepository,
+            IAverageWaitTimeCache cache)
         {
             _queueRepository = queueRepository;
             _customerRepository = customerRepository;
+            _staffMemberRepository = staffMemberRepository;
+            _locationRepository = locationRepository;
+            _cache = cache;
         }
 
         /// <summary>
@@ -135,9 +149,24 @@ namespace Grande.Fila.API.Application.Queues
                     notes: request.Notes?.Trim()
                 );
 
-                // Calculate estimated wait time (simple calculation for now)
-                var activeEntriesCount = queue.Entries.Count(e => e.Status == QueueEntryStatus.Waiting || e.Status == QueueEntryStatus.Called);
-                var estimatedWaitTime = queue.CalculateEstimatedWaitTimeInMinutes(queueEntry.Id, 20.0, 1); // Assume 20 min avg service, 1 active staff
+                // Calculate estimated wait time using real data
+                var location = await _locationRepository.GetByIdAsync(queue.LocationId, cancellationToken);
+                
+                // Get average service time from cache or use location default
+                var averageTimeMinutes = location?.AverageServiceTimeInMinutes ?? 30.0;
+                if (_cache.TryGetAverage(queue.LocationId, out var cachedAverage))
+                {
+                    averageTimeMinutes = cachedAverage;
+                }
+
+                // Get active staff count
+                var staffMembers = await _staffMemberRepository.GetByLocationAsync(queue.LocationId, cancellationToken);
+                var activeStaffCount = staffMembers.Count(s => s.IsActive && !s.IsOnBreak());
+
+                // Use real values for calculation
+                var estimatedWaitTime = activeStaffCount > 0 
+                    ? queue.CalculateEstimatedWaitTimeInMinutes(queueEntry.Id, averageTimeMinutes, activeStaffCount)
+                    : -1; // No staff available
 
                 // Update queue
                 await _queueRepository.UpdateAsync(queue, cancellationToken);
