@@ -70,15 +70,18 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final salonColors = widget.salon.colors;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     
     return Scaffold(
+      backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.background,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 250,
+            expandedHeight: isSmallScreen ? 200 : 250,
+            floating: false,
             pinned: true,
             stretch: true,
-            backgroundColor: salonColors.primary,
+            backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -91,7 +94,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                     child: Center(
                       child: Icon(
                         Icons.store,
-                        size: 64,
+                        size: isSmallScreen ? 48 : 64,
                         color: salonColors.primary.withOpacity(0.3),
                       ),
                     ),
@@ -105,14 +108,14 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                         colors: [
                           Colors.transparent,
                           salonColors.primary.withOpacity(0.8),
-                          salonColors.background,
+                          theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.background,
                         ],
                         stops: const [0.4, 0.8, 1.0],
                       ),
                     ),
                   ),
-                  // Decorative Elements
-                  Positioned(
+                  // Decorative Elements - only show on larger screens
+                  if (!isSmallScreen) Positioned(
                     top: 0,
                     right: 0,
                     child: CustomPaint(
@@ -127,7 +130,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
             ),
             leading: IconButton(
               icon: Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
                 decoration: BoxDecoration(
                   color: salonColors.primary.withOpacity(0.9),
                   shape: BoxShape.circle,
@@ -135,6 +138,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 child: Icon(
                   Icons.arrow_back,
                   color: Colors.white,
+                  size: isSmallScreen ? 20 : 24,
                 ),
               ),
               onPressed: () => Navigator.of(context).pop(),
@@ -142,14 +146,15 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
             actions: [
               IconButton(
                 icon: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
                   decoration: BoxDecoration(
                     color: salonColors.primary.withOpacity(0.9),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: _isFavorite ? Colors.white : Colors.white,
+                    color: Colors.white,
+                    size: isSmallScreen ? 20 : 24,
                   ),
                 ),
                 onPressed: () {
@@ -160,7 +165,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
               ),
               IconButton(
                 icon: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
                   decoration: BoxDecoration(
                     color: salonColors.primary.withOpacity(0.9),
                     shape: BoxShape.circle,
@@ -168,6 +173,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   child: Icon(
                     Icons.share,
                     color: Colors.white,
+                    size: isSmallScreen ? 20 : 24,
                   ),
                 ),
                 onPressed: () async {
@@ -175,30 +181,30 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   await Share.share(shareText);
                 },
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: isSmallScreen ? 4 : 8),
             ],
           ),
           SliverToBoxAdapter(
             child: Container(
-              color: salonColors.background,
+              color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.background,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(context, salonColors),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isSmallScreen ? 16 : 24),
                     _buildInfoSection(context, salonColors),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isSmallScreen ? 16 : 24),
                     _buildServicesSection(context, salonColors),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isSmallScreen ? 16 : 24),
                     _buildBusinessHoursSection(context, salonColors),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isSmallScreen ? 16 : 24),
                     _buildContactSection(context, salonColors),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isSmallScreen ? 16 : 24),
                     _buildReviewsSection(context, salonColors),
                     if (widget.additionalInfo.isNotEmpty) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: isSmallScreen ? 16 : 24),
                       _buildAdditionalInfoSection(context, salonColors),
                     ],
                   ],
@@ -209,7 +215,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         ],
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
         decoration: BoxDecoration(
           color: salonColors.background,
           boxShadow: [
@@ -231,19 +237,19 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                     ),
                   );
                 },
-                icon: const Icon(Icons.check_circle),
-                label: const Text('Check In'),
+                icon: Icon(Icons.check_circle, size: isSmallScreen ? 18 : 24),
+                label: Text('Check In', style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: salonColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 12 : 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: isSmallScreen ? 8 : 12),
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () async {
@@ -262,11 +268,11 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                     }
                   }
                 },
-                icon: const Icon(Icons.directions),
-                label: const Text('Como Chegar'),
+                icon: Icon(Icons.directions, size: isSmallScreen ? 18 : 24),
+                label: Text('Como Chegar', style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: salonColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 12 : 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -338,7 +344,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: colors.background,
+            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -351,8 +357,8 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                colors.background,
-                colors.background.withOpacity(0.95),
+                theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+                theme.brightness == Brightness.dark ? theme.colorScheme.surface.withOpacity(0.95) : colors.background.withOpacity(0.95),
               ],
             ),
           ),
@@ -503,7 +509,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: colors.background,
+            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -585,7 +591,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: colors.background,
+            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -848,7 +854,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: colors.background,
+            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(

@@ -201,10 +201,11 @@ class SalonCard extends StatelessWidget {
 
   void _handleCheckIn(BuildContext context) {
     // TODO: Implement actual check-in logic
+    final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Successfully checked in to ${salon.name}!'),
-        backgroundColor: const Color(0xFF1DB584),
+        backgroundColor: theme.colorScheme.primary,
         behavior: SnackBarBehavior.floating,
       ),
     );

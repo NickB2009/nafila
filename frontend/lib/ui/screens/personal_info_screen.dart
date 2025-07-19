@@ -99,6 +99,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     final brightness = Theme.of(context).brightness;
     final salon = CheckInState.checkedInSalon;
     final colors = salon?.colors.forBrightness(brightness);
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     // Mock user data
     final String name = BrazilianNamesGenerator.generateNameWithInitial();
     const String phone = '(11) 91234-5678';
@@ -106,13 +107,13 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     final String email = BrazilianNamesGenerator.generateEmail();
 
     return Scaffold(
-      backgroundColor: colors?.background ?? theme.colorScheme.surface,
+      backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : (colors?.background ?? theme.colorScheme.surface),
       body: SafeArea(
         child: Column(
           children: [
             // Clean Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -134,31 +135,35 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: Icon(
+                            Icons.arrow_back, 
+                            color: theme.colorScheme.onPrimary,
+                          ),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: isSmallScreen ? 12 : 16),
                       Expanded(
                         child: Text(
                           'Meu Perfil',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
+                            fontSize: isSmallScreen ? 18 : null,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: isSmallScreen ? 16 : 24),
                   // Profile avatar and name
                   Center(
                     child: Column(
                       children: [
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: isSmallScreen ? 60 : 80,
+                          height: isSmallScreen ? 60 : 80,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white.withOpacity(0.2),
@@ -166,22 +171,25 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                           ),
                           child: Icon(
                             Icons.person,
-                            size: 36,
+                            size: isSmallScreen ? 28 : 36,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: isSmallScreen ? 8 : 12),
                         Text(
                           name,
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
+                            fontSize: isSmallScreen ? 18 : null,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           'Membro desde 2024',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.white.withOpacity(0.8),
+                            fontSize: isSmallScreen ? 13 : null,
                           ),
                         ),
                       ],
@@ -192,7 +200,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
             ),
             // Minimal Tab Bar
             Container(
-              margin: const EdgeInsets.all(20),
+              margin: EdgeInsets.all(isSmallScreen ? 12 : 20),
               decoration: BoxDecoration(
                 color: colors?.background ?? theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
@@ -210,13 +218,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                   color: colors?.primary ?? theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                labelColor: Colors.white,
+                labelColor: theme.colorScheme.onPrimary,
                 unselectedLabelColor: (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
                 labelStyle: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
+                  fontSize: isSmallScreen ? 14 : null,
                 ),
                 unselectedLabelStyle: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w500,
+                  fontSize: isSmallScreen ? 14 : null,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
@@ -237,7 +247,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                     child: SlideTransition(
                       position: _slideAnimation,
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 20),
                         child: Column(
                           children: [
                             // Info Cards
@@ -251,7 +261,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                 _buildInfoRow(theme, Icons.email_outlined, 'Email', email),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            SizedBox(height: isSmallScreen ? 16 : 20),
                             // Edit Button
                             SizedBox(
                               width: double.infinity,
@@ -262,26 +272,33 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                   final result = await showModalBottomSheet<Map<String, String>>(
                                     context: context,
                                     isScrollControlled: true,
+                                    backgroundColor: theme.brightness == Brightness.dark 
+                                      ? theme.colorScheme.surfaceContainer 
+                                      : theme.colorScheme.surface,
                                     shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                                     ),
                                     builder: (context) {
                                       final brightness = Theme.of(context).brightness;
                                       final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+                                      final theme = Theme.of(context);
                                       final nameController = TextEditingController(text: name);
                                       final phoneController = TextEditingController(text: phone);
                                       final cityController = TextEditingController(text: city);
                                       final emailController = TextEditingController(text: email);
                                       return Container(
                                         decoration: BoxDecoration(
-                                          color: colors?.background ?? theme.colorScheme.surface,
+                                          color: theme.brightness == Brightness.dark 
+                                            ? theme.colorScheme.surfaceContainer 
+                                            : theme.colorScheme.surface,
                                           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                                         ),
                                         child: Padding(
                                           padding: EdgeInsets.only(
-                                            left: 24, right: 24,
-                                            top: 24,
-                                            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                                            left: isSmallScreen ? 16 : 24, 
+                                            right: isSmallScreen ? 16 : 24,
+                                            top: isSmallScreen ? 16 : 24,
+                                            bottom: MediaQuery.of(context).viewInsets.bottom + (isSmallScreen ? 16 : 24),
                                           ),
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
@@ -325,7 +342,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                                 child: ElevatedButton(
                                                   style: ElevatedButton.styleFrom(
                                                     backgroundColor: colors?.primary ?? theme.colorScheme.primary,
-                                                    foregroundColor: colors?.background ?? Colors.white,
+                                                    foregroundColor: theme.colorScheme.onPrimary,
                                                     shape: RoundedRectangleBorder(
                                                       borderRadius: BorderRadius.circular(12),
                                                     ),
@@ -348,10 +365,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                     },
                                   );
                                   if (result != null) {
+                                    final theme = Theme.of(context);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Informações atualizadas!'),
-                                        duration: Duration(seconds: 2),
+                                      SnackBar(
+                                        content: const Text('Informações atualizadas!'),
+                                        backgroundColor: theme.colorScheme.primary,
+                                        duration: const Duration(seconds: 2),
                                       ),
                                     );
                                     // In a real app, update state/provider here
@@ -361,7 +380,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                 label: const Text('Editar Perfil'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: colors?.primary ?? theme.colorScheme.primary,
-                                  foregroundColor: colors?.background ?? Colors.white,
+                                  foregroundColor: theme.colorScheme.onPrimary,
                                   elevation: 0,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
@@ -723,12 +742,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (icon != null)
-                      Icon(icon, size: 14, color: isSelected ? Colors.white : (colors?.primary ?? theme.colorScheme.primary)),
+                      Icon(icon, size: 14, color: isSelected ? theme.colorScheme.onPrimary : (colors?.primary ?? theme.colorScheme.primary)),
                     if (icon != null) const SizedBox(width: 4),
                     Text(
                       option,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: isSelected ? Colors.white : (colors?.onSurface ?? theme.colorScheme.onSurface),
+                        color: isSelected ? theme.colorScheme.onPrimary : (colors?.onSurface ?? theme.colorScheme.onSurface),
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),
@@ -794,9 +813,10 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
             onPressed: () {
               final summary = 'Laterais: $sides  •  Fade: $fade  •  Topo: $top  •  Franja: $franja  •  Nuca: $neckline  •  Barba: $beard${notes.isNotEmpty ? '  •  Obs: $notes' : ''}';
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Copiado!'),
-                  duration: Duration(seconds: 1),
+                SnackBar(
+                  content: const Text('Copiado!'),
+                  backgroundColor: theme.colorScheme.primary,
+                  duration: const Duration(seconds: 1),
                 ),
               );
             },

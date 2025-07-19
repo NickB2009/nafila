@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/palette_utils.dart';
 
 class SalonColors {
   final Color primary;
@@ -7,7 +8,24 @@ class SalonColors {
   final Color onSurface;
   final SalonColors? dark;
 
-  const SalonColors({
+  // Main constructor: always generates a dark palette if not provided
+  SalonColors({
+    required this.primary,
+    required this.secondary,
+    required this.background,
+    required this.onSurface,
+    SalonColors? dark,
+  }) : dark = dark ?? generateDarkPalette(
+      SalonColors.base(
+        primary: primary,
+        secondary: secondary,
+        background: background,
+        onSurface: onSurface,
+      ),
+    );
+
+  // Private constructor for internal use (does NOT generate a dark palette)
+  SalonColors.base({
     required this.primary,
     required this.secondary,
     required this.background,

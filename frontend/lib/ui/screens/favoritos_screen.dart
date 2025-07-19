@@ -454,7 +454,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                             label: const Text('Check In'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: colors.primary,
-                              foregroundColor: colors.background ?? theme.colorScheme.onPrimary,
+                              foregroundColor: theme.colorScheme.onPrimary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

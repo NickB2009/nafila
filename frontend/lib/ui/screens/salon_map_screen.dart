@@ -133,92 +133,127 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   }
 
   void _showFilterModal() async {
+    final theme = Theme.of(context);
     final result = await showModalBottomSheet<Map<String, bool>>(
       context: context,
+      backgroundColor: theme.brightness == Brightness.dark 
+        ? theme.colorScheme.surfaceContainer 
+        : theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Filtros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Refine sua busca de salões próximos:',
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    value: _filterOpenNow,
-                    onChanged: (val) => setModalState(() => _filterOpenNow = val),
-                    title: const Text('Aberto agora'),
-                    activeColor: Theme.of(context).colorScheme.primary,
-                  ),
-                  SwitchListTile(
-                    value: _filterShortLine,
-                    onChanged: (val) => setModalState(() => _filterShortLine = val),
-                    title: const Text('Fila curta (≤ 3 pessoas)'),
-                    activeColor: Theme.of(context).colorScheme.primary,
-                  ),
-                  SwitchListTile(
-                    value: _filterShortWait,
-                    onChanged: (val) => setModalState(() => _filterShortWait = val),
-                    title: const Text('Espera rápida (≤ 15 min)'),
-                    activeColor: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setModalState(() {
-                              _filterOpenNow = false;
-                              _filterShortLine = false;
-                              _filterShortWait = false;
-                            });
-                          },
-                          child: const Text('Limpar filtros'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop({
-                              'openNow': _filterOpenNow,
-                              'shortLine': _filterShortLine,
-                              'shortWait': _filterShortWait,
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark 
+                  ? theme.colorScheme.surfaceContainer 
+                  : theme.colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Filtros', 
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
                           ),
-                          child: const Text('Aplicar filtros'),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Refine sua busca de salões próximos:',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      value: _filterOpenNow,
+                      onChanged: (val) => setModalState(() => _filterOpenNow = val),
+                      title: Text(
+                        'Aberto agora',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                      activeColor: theme.colorScheme.primary,
+                    ),
+                    SwitchListTile(
+                      value: _filterShortLine,
+                      onChanged: (val) => setModalState(() => _filterShortLine = val),
+                      title: Text(
+                        'Fila curta (≤ 3 pessoas)',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      activeColor: theme.colorScheme.primary,
+                    ),
+                    SwitchListTile(
+                      value: _filterShortWait,
+                      onChanged: (val) => setModalState(() => _filterShortWait = val),
+                      title: Text(
+                        'Espera rápida (≤ 15 min)',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      activeColor: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setModalState(() {
+                                _filterOpenNow = false;
+                                _filterShortLine = false;
+                                _filterShortWait = false;
+                              });
+                            },
+                            child: const Text('Limpar filtros'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop({
+                                'openNow': _filterOpenNow,
+                                'shortLine': _filterShortLine,
+                                'shortWait': _filterShortWait,
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Aplicar filtros'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -253,6 +288,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     // For web, treat as desktop if width is large
     final isWebDesktop = MediaQuery.of(context).size.width > 900 && (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS);
     final showZoomButtons = isDesktop || isWebDesktop;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     return Scaffold(
       backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
       body: Stack(
@@ -277,7 +313,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   TileLayer(
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.eutonafila.frontend',
-                tileProvider: CancellableNetworkTileProvider(),
+                    tileProvider: CancellableNetworkTileProvider(),
                   ),
                   MarkerLayer(
                     markers: _filteredSalons.map((location) {
@@ -335,35 +371,55 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
             ),
           // Minimal floating AppBar
           Positioned(
-            top: 32,
-            left: 16,
-            right: 16,
+            top: isSmallScreen ? 16 : 32,
+            left: isSmallScreen ? 8 : 16,
+            right: isSmallScreen ? 8 : 16,
             child: SafeArea(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                  color: (salonPalette?.background ?? theme.colorScheme.surface).withOpacity(0.85),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 8 : 12, 
+                  vertical: isSmallScreen ? 6 : 8
+                ),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark 
+                    ? theme.colorScheme.surfaceContainer.withOpacity(0.95)
+                    : (salonPalette?.background ?? theme.colorScheme.surface).withOpacity(0.85),
                   borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.brightness == Brightness.dark 
+                        ? Colors.black.withOpacity(0.3)
+                        : Colors.black.withOpacity(0.08),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
+                  ],
+                ),
                 child: Row(
-                      children: [
+                  children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back, color: salonPalette?.primary ?? theme.colorScheme.primary),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Salões',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      icon: Icon(
+                        Icons.arrow_back, 
                         color: salonPalette?.primary ?? theme.colorScheme.primary,
+                        size: isSmallScreen ? 20 : 24,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(
+                        minWidth: isSmallScreen ? 36 : 48,
+                        minHeight: isSmallScreen ? 36 : 48,
+                      ),
+                    ),
+                    SizedBox(width: isSmallScreen ? 6 : 8),
+                    Expanded(
+                      child: Text(
+                        'Salões',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: salonPalette?.primary ?? theme.colorScheme.primary,
+                          fontSize: isSmallScreen ? 16 : null,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -378,8 +434,9 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
               child: Builder(
                 builder: (context) {
                   final isMobile = MediaQuery.of(context).size.width < 600;
+                  final theme = Theme.of(context);
                   return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: 16),
+                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: isMobile ? 12 : 16),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
@@ -388,139 +445,162 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                         child: Material(
                           elevation: 8,
                           borderRadius: BorderRadius.circular(20),
-                          color: theme.colorScheme.surface,
+                          color: theme.brightness == Brightness.dark 
+                            ? theme.colorScheme.surfaceContainer 
+                            : theme.colorScheme.surface,
+                          shadowColor: theme.brightness == Brightness.dark 
+                            ? Colors.black.withOpacity(0.5)
+                            : Colors.black.withOpacity(0.2),
                           child: Container(
                             width: double.infinity,
-                          padding: const EdgeInsets.all(20),
+                            padding: EdgeInsets.all(isMobile ? 16 : 20),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
+                              children: [
+                                Text(
                                   _selectedSalon!.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: isMobile ? 18 : null,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                              ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: isMobile ? 6 : 8),
                                 Text(
                                   _selectedSalon!.address,
-                                  style: theme.textTheme.bodyMedium,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: isMobile ? 13 : null,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                                const SizedBox(height: 16),
+                                SizedBox(height: isMobile ? 12 : 16),
                                 Row(
                                   children: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => SalonDetailsScreen(
-                                              salon: _selectedSalon!,
-                                        services: [
-                                          SalonService(
-                                            id: '1',
-                                            name: 'Corte Feminino',
-                                            description: 'Corte e finalização',
-                                            price: 80.0,
-                                            durationMinutes: 60,
-                                            categories: ['Corte'],
-                                          ),
-                                          SalonService(
-                                            id: '2',
-                                            name: 'Coloração',
-                                            description: 'Coloração completa',
-                                            price: 150.0,
-                                            durationMinutes: 120,
-                                            categories: ['Coloração'],
-                                          ),
-                                        ],
-                                        contact: SalonContact(
-                                          phone: '(555) 123-4567',
-                                          email: 'contato@salon.com',
-                                          website: 'www.salon.com',
-                                          instagram: '@salon',
-                                          facebook: 'Salon',
-                                        ),
-                                        businessHours: [
-                                          SalonHours(
-                                            day: 'Segunda - Sexta',
-                                            isOpen: true,
-                                            openTime: '9:00',
-                                            closeTime: '18:00',
-                                          ),
-                                          SalonHours(
-                                            day: 'Sábado',
-                                            isOpen: true,
-                                            openTime: '9:00',
-                                            closeTime: '14:00',
-                                          ),
-                                          SalonHours(
-                                            day: 'Domingo',
-                                            isOpen: false,
-                                          ),
-                                        ],
-                                        reviews: [
-                                          SalonReview(
-                                            id: '1',
-                                            userName: 'Maria Silva',
-                                            rating: 5,
-                                            comment: 'Excelente atendimento!',
-                                            date: '2024-03-15',
-                                          ),
-                                          SalonReview(
-                                            id: '2',
-                                            userName: 'João Santos',
-                                            rating: 4,
-                                            comment: 'Muito bom serviço',
-                                            date: '2024-03-14',
-                                          ),
-                                        ],
-                                        additionalInfo: {
-                                          'Estacionamento': 'Gratuito',
-                                          'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
-                                          'Acessibilidade': 'Rampa de acesso',
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => SalonDetailsScreen(
+                                                salon: _selectedSalon!,
+                                                services: [
+                                                  SalonService(
+                                                    id: '1',
+                                                    name: 'Corte Feminino',
+                                                    description: 'Corte e finalização',
+                                                    price: 80.0,
+                                                    durationMinutes: 60,
+                                                    categories: ['Corte'],
+                                                  ),
+                                                  SalonService(
+                                                    id: '2',
+                                                    name: 'Coloração',
+                                                    description: 'Coloração completa',
+                                                    price: 150.0,
+                                                    durationMinutes: 120,
+                                                    categories: ['Coloração'],
+                                                  ),
+                                                ],
+                                                contact: SalonContact(
+                                                  phone: '(555) 123-4567',
+                                                  email: 'contato@salon.com',
+                                                  website: 'www.salon.com',
+                                                  instagram: '@salon',
+                                                  facebook: 'Salon',
+                                                ),
+                                                businessHours: [
+                                                  SalonHours(
+                                                    day: 'Segunda - Sexta',
+                                                    isOpen: true,
+                                                    openTime: '9:00',
+                                                    closeTime: '18:00',
+                                                  ),
+                                                  SalonHours(
+                                                    day: 'Sábado',
+                                                    isOpen: true,
+                                                    openTime: '9:00',
+                                                    closeTime: '14:00',
+                                                  ),
+                                                  SalonHours(
+                                                    day: 'Domingo',
+                                                    isOpen: false,
+                                                  ),
+                                                ],
+                                                reviews: [
+                                                  SalonReview(
+                                                    id: '1',
+                                                    userName: 'Maria Silva',
+                                                    rating: 5,
+                                                    comment: 'Excelente atendimento!',
+                                                    date: '2024-03-15',
+                                                  ),
+                                                  SalonReview(
+                                                    id: '2',
+                                                    userName: 'João Santos',
+                                                    rating: 4,
+                                                    comment: 'Muito bom serviço',
+                                                    date: '2024-03-14',
+                                                  ),
+                                                ],
+                                                additionalInfo: {
+                                                  'Estacionamento': 'Gratuito',
+                                                  'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
+                                                  'Acessibilidade': 'Rampa de acesso',
+                                                },
+                                              ),
+                                            ),
+                                          );
                                         },
-                                      ),
-                                    ),
-                                  );
-                                },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: theme.colorScheme.primary,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: theme.colorScheme.primary,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: isMobile ? 10 : 12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Ver detalhes',
+                                          style: TextStyle(fontSize: isMobile ? 13 : 14),
                                         ),
                                       ),
-                                      child: const Text('Ver detalhes'),
                                     ),
-                                    const Spacer(),
+                                    SizedBox(width: isMobile ? 8 : 12),
                                     IconButton(
-                                      icon: const Icon(Icons.close),
+                                      icon: Icon(
+                                        Icons.close,
+                                        size: isMobile ? 20 : 24,
+                                      ),
                                       onPressed: () {
-                                                    setState(() {
+                                        setState(() {
                                           _selectedSalon = null;
-                                                    });
-                                                  },
+                                        });
+                                      },
                                     ),
                                   ],
-                                                ),
-                                              ],
-                                            ),
-                          ),
-                        ),
-                                  ),
                                 ),
-                              );
-                            },
+                              ],
+                            ),
                           ),
                         ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           // Floating action buttons (filter, list, location)
           Positioned(
-            bottom: 32,
-            right: 24,
+            bottom: isSmallScreen ? 16 : 32,
+            right: isSmallScreen ? 16 : 24,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -528,23 +608,29 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 FloatingActionButton.extended(
                   heroTag: 'filter_fab',
                   onPressed: _showFilterModal,
-                  icon: const Icon(Icons.filter_list),
-                  label: const Text('Filtros'),
+                  icon: Icon(
+                    Icons.filter_list,
+                    size: isSmallScreen ? 20 : 24,
+                  ),
+                  label: Text(
+                    'Filtros',
+                    style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
+                  ),
                   backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: theme.colorScheme.onPrimary,
                   elevation: 4,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 FloatingActionButton(
                   heroTag: 'list_fab',
-                  mini: true,
+                  mini: isSmallScreen,
                   backgroundColor: salonPalette?.background ?? theme.colorScheme.surface,
                   foregroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
                   onPressed: () async {
                     final selected = await showModalBottomSheet<int>(
                       context: context,
                       isScrollControlled: true,
-                                                shape: RoundedRectangleBorder(
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                       ),
                       builder: (context) {
@@ -555,24 +641,33 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                       },
                     );
                     if (selected != null) {
-                      final loc = _salonLocations[selected];
-                      _mapController.move(loc.position, 15.0);
-        setState(() {
-                        _selectedSalon = loc.salon;
+                      setState(() {
+                        _selectedSalon = _salonLocations[selected].salon;
                       });
+                      _mapController.move(
+                        _salonLocations[selected].position,
+                        15.0,
+                      );
                     }
                   },
-                  child: const Icon(Icons.list),
+                  child: Icon(
+                    Icons.list,
+                    size: isSmallScreen ? 20 : 24,
+                  ),
                 ),
-                const SizedBox(height: 16),
-          FloatingActionButton(
+                SizedBox(height: isSmallScreen ? 12 : 16),
+                FloatingActionButton(
                   heroTag: 'location_fab',
-            onPressed: () {
-              _mapController.move(const LatLng(28.3372, -82.2637), 14.0);
-            },
-                  backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
-                  foregroundColor: Colors.white,
-            child: const Icon(Icons.my_location),
+                  mini: isSmallScreen,
+                  backgroundColor: salonPalette?.background ?? theme.colorScheme.surface,
+                  foregroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
+                  onPressed: () {
+                    // TODO: Implement location functionality
+                  },
+                  child: Icon(
+                    Icons.my_location,
+                    size: isSmallScreen ? 20 : 24,
+                  ),
                 ),
               ],
             ),
@@ -589,7 +684,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
           decoration: BoxDecoration(
         color: waitTimeToColor(salon.waitTime),
             shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark 
+            ? theme.colorScheme.outline 
+            : Colors.white, 
+          width: 3
+        ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -600,7 +700,9 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
           ),
           child: Icon(
             Icons.content_cut,
-            color: Colors.white,
+            color: theme.brightness == Brightness.dark 
+              ? theme.colorScheme.onSurface 
+              : Colors.white,
         size: 24,
       ),
     );
@@ -636,6 +738,7 @@ class _SalonListModalState extends State<_SalonListModal> {
       return loc.salon.name.toLowerCase().contains(q) ||
              loc.salon.address.toLowerCase().contains(q);
     }).toList();
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.95,
@@ -644,11 +747,15 @@ class _SalonListModalState extends State<_SalonListModal> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: widget.theme.colorScheme.surface,
+            color: widget.theme.brightness == Brightness.dark 
+              ? widget.theme.colorScheme.surfaceContainer
+              : widget.theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: widget.theme.brightness == Brightness.dark 
+                  ? Colors.black.withOpacity(0.3)
+                  : Colors.black.withOpacity(0.08),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
@@ -659,25 +766,40 @@ class _SalonListModalState extends State<_SalonListModal> {
               Container(
                 width: 40,
                 height: 5,
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-              decoration: BoxDecoration(
+                margin: EdgeInsets.only(top: isSmallScreen ? 8 : 12, bottom: isSmallScreen ? 6 : 8),
+                decoration: BoxDecoration(
                   color: widget.theme.colorScheme.outline.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                padding: EdgeInsets.fromLTRB(
+                  isSmallScreen ? 16 : 24, 
+                  0, 
+                  isSmallScreen ? 16 : 24, 
+                  isSmallScreen ? 6 : 8
+                ),
                 child: TextField(
                   autofocus: true,
                   decoration: InputDecoration(
                     hintText: 'Buscar salão...',
-                    prefixIcon: Icon(Icons.search, color: widget.theme.colorScheme.primary),
+                    prefixIcon: Icon(
+                      Icons.search, 
+                      color: widget.theme.colorScheme.primary,
+                      size: isSmallScreen ? 20 : 24,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: widget.theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    fillColor: widget.theme.brightness == Brightness.dark 
+                      ? widget.theme.colorScheme.surfaceContainerHigh
+                      : widget.theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 12 : 16,
+                      vertical: isSmallScreen ? 12 : 16,
+                    ),
                   ),
                   onChanged: (value) => setState(() => _search = value),
                 ),
@@ -685,105 +807,133 @@ class _SalonListModalState extends State<_SalonListModal> {
               Expanded(
                 child: filtered.isEmpty
                     ? Center(
-                        child: Text('Nenhum salão encontrado', style: widget.theme.textTheme.bodyLarge),
+                        child: Text(
+                          'Nenhum salão encontrado', 
+                          style: widget.theme.textTheme.bodyLarge?.copyWith(
+                            fontSize: isSmallScreen ? 14 : null,
+                          ),
+                        ),
                       )
                     : ListView.separated(
                         controller: scrollController,
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                        padding: EdgeInsets.fromLTRB(
+                          isSmallScreen ? 16 : 24, 
+                          0, 
+                          isSmallScreen ? 16 : 24, 
+                          isSmallScreen ? 16 : 24
+                        ),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        separatorBuilder: (_, __) => SizedBox(height: isSmallScreen ? 12 : 16),
                         itemBuilder: (context, index) {
                           final location = filtered[index];
                           final salon = location.salon;
+                          final isSmallScreen = MediaQuery.of(context).size.width < 600;
                           return Material(
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(16),
                               onTap: () => Navigator.of(context).pop(widget.salons.indexOf(location)),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-                                  color: widget.theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-                                      color: Colors.black.withOpacity(0.03),
-                                      blurRadius: 2,
+                              child: Container(
+                                padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                                decoration: BoxDecoration(
+                                  color: widget.theme.brightness == Brightness.dark 
+                                    ? widget.theme.colorScheme.surfaceContainerLow
+                                    : widget.theme.colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: widget.theme.brightness == Brightness.dark 
+                                        ? Colors.black.withOpacity(0.2)
+                                        : Colors.black.withOpacity(0.03),
+                                      blurRadius: widget.theme.brightness == Brightness.dark ? 4 : 2,
                                       offset: const Offset(0, 1),
-            ),
-          ],
-        ),
+                                    ),
+                                  ],
+                                ),
                                 child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                                      width: 48,
-                                      height: 48,
-                  decoration: BoxDecoration(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: isSmallScreen ? 40 : 48,
+                                      height: isSmallScreen ? 40 : 48,
+                                      decoration: BoxDecoration(
                                         color: salon.isOpen ? salon.colors.primary.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
                                         shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.store,
+                                      ),
+                                      child: Icon(
+                                        Icons.store,
                                         color: salon.isOpen ? salon.colors.primary : Colors.grey,
-                                        size: 28,
-                  ),
-                ),
-                                    const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                                        size: isSmallScreen ? 24 : 28,
+                                      ),
+                                    ),
+                                    SizedBox(width: isSmallScreen ? 12 : 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
                                           Text(
                                             salon.name,
-                                            style: widget.theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                                            salon.address,
-                                            style: widget.theme.textTheme.bodySmall,
+                                            style: widget.theme.textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: isSmallScreen ? 16 : null,
+                                            ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                          const SizedBox(height: 8),
-                                          Row(
-                    children: [
+                                          SizedBox(height: isSmallScreen ? 2 : 4),
+                                          Text(
+                                            salon.address,
+                                            style: widget.theme.textTheme.bodySmall?.copyWith(
+                                              fontSize: isSmallScreen ? 12 : null,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          SizedBox(height: isSmallScreen ? 6 : 8),
+                                          // Always use Wrap to prevent overflow
+                                          Wrap(
+                                            spacing: isSmallScreen ? 4 : 6,
+                                            runSpacing: isSmallScreen ? 4 : 6,
+                                            children: [
                                               _buildChip(
                                                 context,
                                                 salon.isOpen ? 'Aberto' : 'Fechado',
                                                 salon.isOpen ? Colors.green : Colors.red,
                                                 icon: salon.isOpen ? Icons.check_circle : Icons.cancel,
+                                                isSmallScreen: isSmallScreen,
                                               ),
-                                              const SizedBox(width: 6),
                                               _buildChip(
                                                 context,
                                                 '${salon.waitTime} min',
                                                 widget.theme.colorScheme.primary,
                                                 icon: Icons.timer,
+                                                isSmallScreen: isSmallScreen,
                                               ),
-                                              const SizedBox(width: 6),
                                               _buildChip(
                                                 context,
                                                 '${salon.queueLength} na fila',
                                                 widget.theme.colorScheme.secondary,
                                                 icon: Icons.people_outline,
+                                                isSmallScreen: isSmallScreen,
                                               ),
-                                              const SizedBox(width: 6),
                                               _buildChip(
                                                 context,
                                                 '${salon.distance} km',
                                                 widget.theme.colorScheme.primary,
                                                 icon: Icons.location_on,
+                                                isSmallScreen: isSmallScreen,
                                               ),
                                             ],
                                           ),
                                         ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                                    Icon(Icons.chevron_right, color: widget.theme.colorScheme.primary),
+                                      ),
+                                    ),
+                                    SizedBox(width: isSmallScreen ? 4 : 8),
+                                    Icon(
+                                      Icons.chevron_right, 
+                                      color: widget.theme.colorScheme.primary,
+                                      size: isSmallScreen ? 20 : 24,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -799,25 +949,38 @@ class _SalonListModalState extends State<_SalonListModal> {
     );
   }
 
-  Widget _buildChip(BuildContext context, String label, Color color, {IconData? icon}) {
+  Widget _buildChip(BuildContext context, String label, Color color, {IconData? icon, bool isSmallScreen = false}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final chipColor = isDark ? color.withOpacity(0.8) : color;
+    final backgroundColor = isDark ? chipColor.withOpacity(0.2) : chipColor.withOpacity(0.1);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-                ),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 4 : 6, 
+        vertical: isSmallScreen ? 2 : 3
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-              children: [
+        children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 2),
+            Icon(
+              icon, 
+              size: isSmallScreen ? 10 : 12, 
+              color: chipColor
+            ),
+            SizedBox(width: isSmallScreen ? 1 : 2),
           ],
           Text(
             label,
-            style: widget.theme.textTheme.labelMedium?.copyWith(
-              color: color,
+            style: widget.theme.textTheme.labelSmall?.copyWith(
+              color: chipColor,
               fontWeight: FontWeight.w600,
+              fontSize: isSmallScreen ? 10 : 11,
             ),
           ),
         ],

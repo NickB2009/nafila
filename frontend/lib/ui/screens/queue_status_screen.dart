@@ -16,133 +16,81 @@ class QueueStatusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final String salonName = salon.name;
-    final String salonAddress = salon.address;
-    final int waitTime = salon.waitTime;
-    final int position = salon.queueLength > 0 ? salon.queueLength : 1;
-    final String closingTime = salon.closingTime;
-    final String phone = "(352) 668-4089";
-    final double distance = salon.distance;
-    final bool isOpen = salon.isOpen;
     final brightness = Theme.of(context).brightness;
-    final colors = salon.colors.forBrightness(brightness);
-
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Scaffold(
-      backgroundColor: colors.primary,
-      appBar: AppBar(
-        backgroundColor: colors.primary,
-        elevation: 0,
-        leading: null,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: colors.secondary,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () async {
-                await Clipboard.setData(ClipboardData(text: position.toString()));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Número copiado!'),
-                    backgroundColor: colors.primary,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: colors.secondary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.copy, size: 16, color: colors.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      position.toString(),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: colors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.error,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'Q2',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onError,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: theme.colorScheme.onPrimary),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              );
-            },
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
+      backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : (colors?.background ?? theme.colorScheme.surface),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Stepper
-                _buildStepper(theme, colors),
-                const SizedBox(height: 20),
-                // Estimated Wait Card
-                _buildWaitCard(theme, colors, waitTime, position, context),
-                const SizedBox(height: 20),
-                // Checked-in Salon Card
-                _buildSalonCard(theme, colors, salonName, salonAddress, isOpen, closingTime, distance, phone, context),
-              ],
-            ),
+          padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Status da Fila',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isSmallScreen ? 18 : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: isSmallScreen ? 20 : 24),
+              
+              // Progress Steps
+              Container(
+                padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colors?.primary ?? theme.colorScheme.primary,
+                      (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: _buildProgressSteps(theme, colors, context),
+              ),
+              SizedBox(height: isSmallScreen ? 16 : 20),
+              
+              // Wait Time Card
+              _buildWaitCard(theme, colors!, 15, 3, context),
+              SizedBox(height: isSmallScreen ? 16 : 20),
+              
+              // Salon Info Card
+              _buildSalonCard(theme, colors, 'Barbearia do João', 'Rua das Flores, 123 - Centro', true, '20:00', 0.5, '(11) 91234-5678', context),
+              SizedBox(height: isSmallScreen ? 16 : 20),
+              
+              // Actions Card
+              _buildActionsCard(theme, colors, context),
+              SizedBox(height: isSmallScreen ? 16 : 20),
+              
+              // Reminder Card
+              _buildReminderCard(theme, colors, context),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 
-  Widget _buildStepper(ThemeData theme, SalonColors colors) {
+  Widget _buildProgressSteps(ThemeData theme, SalonColors? colors, BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildStepCircle(theme, true, colors),
+            _buildStepCircle(theme, true, colors!),
             Expanded(
               child: Divider(
                 color: theme.colorScheme.onPrimary.withOpacity(0.5),
@@ -159,28 +107,38 @@ class QueueStatusScreen extends StatelessWidget {
             _buildStepCircle(theme, false, colors),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: isSmallScreen ? 6 : 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Flexible(
               child: Text(
                 'Na fila', 
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white, 
+                  fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 12 : 14,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
             Flexible(
               child: Text(
                 'Chegada', 
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 12 : 14,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
             Flexible(
               child: Text(
                 'Corte', 
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 12 : 14,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -464,8 +422,8 @@ class QueueStatusScreen extends StatelessWidget {
             if (confirmed == true) {
               CheckInState.isCheckedIn = false;
               CheckInState.checkedInSalon = null;
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
+              // Navigate back to the root and then to the salon finder
+              Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
             }
           }),
         ],
@@ -506,6 +464,139 @@ class QueueStatusScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildActionsCard(ThemeData theme, SalonColors colors, BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'AÇÕES',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 12 : 16),
+          _buildActionButton(theme, Icons.navigation, 'Como chegar', colors, () {}),
+          SizedBox(height: isSmallScreen ? 8 : 12),
+          _buildActionButton(theme, Icons.phone, 'Ligar', colors, () {}),
+          SizedBox(height: isSmallScreen ? 8 : 12),
+          _buildActionButton(theme, Icons.delete_outline, 'Cancelar check-in', colors, () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Cancelar check-in'),
+                content: const Text('Tem certeza que deseja cancelar seu check-in?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text('Voltar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                    child: const Text('Cancelar'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              CheckInState.isCheckedIn = false;
+              CheckInState.checkedInSalon = null;
+              // Navigate back to the root and then to the salon finder
+              Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+            }
+          }, isDestructive: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReminderCard(ThemeData theme, SalonColors colors, BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'LEMBRETE',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 12 : 16),
+          _buildActionButton(theme, Icons.card_giftcard, 'Lembrar próximo corte', colors, () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: theme.colorScheme.surface,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              builder: (modalContext) => HaircutReminderSheet(parentContext: context),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(ThemeData theme, IconData icon, String label, SalonColors colors, VoidCallback onTap, {bool isDestructive = false}) {
+    return Builder(
+      builder: (context) {
+        final isSmallScreen = MediaQuery.of(context).size.width < 600;
+        return InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isDestructive ? theme.colorScheme.error : colors.primary,
+                  size: isSmallScreen ? 20 : 24,
+                ),
+                SizedBox(width: isSmallScreen ? 12 : 16),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: isDestructive ? theme.colorScheme.error : colors.primary,
+                      fontWeight: FontWeight.w500,
+                      fontSize: isSmallScreen ? 14 : null,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: isDestructive ? theme.colorScheme.error : colors.primary,
+                  size: isSmallScreen ? 16 : 20,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class HaircutReminderSheet extends StatefulWidget {
@@ -524,12 +615,13 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
     Navigator.of(context).pop();
     // Show SnackBar after closing the modal
     Future.delayed(const Duration(milliseconds: 300), () {
+      final theme = Theme.of(widget.parentContext);
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-        const SnackBar(
-          content: Text('Lembrete agendado com sucesso!'),
-          backgroundColor: AppTheme.primaryColor,
+        SnackBar(
+          content: const Text('Lembrete agendado com sucesso!'),
+          backgroundColor: theme.colorScheme.primary,
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
     });
@@ -538,89 +630,100 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: MediaQuery.of(context).viewInsets,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    'Agendar meu próximo corte para...',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Avise quando quiser cortar o cabelo de novo e enviaremos um lembrete.',
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 120,
-              child: ListWheelScrollView.useDelegate(
-                itemExtent: 40,
-                diameterRatio: 1.2,
-                physics: const FixedExtentScrollPhysics(),
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    selectedWeek = weeks[index];
-                  });
-                },
-                childDelegate: ListWheelChildBuilderDelegate(
-                  builder: (context, index) {
-                    if (index < 0 || index >= weeks.length) return null;
-                    final week = weeks[index];
-                    final isSelected = week == selectedWeek;
-                    return Center(
-                      child: Text(
-                        week == 1 ? '1 semana' : '$week semanas',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: isSelected ? 22 : 18,
-                        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark 
+          ? theme.colorScheme.surfaceContainer 
+          : theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Agendar meu próximo corte para...',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
-                    );
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Avise quando quiser cortar o cabelo de novo e enviaremos um lembrete.',
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 120,
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 40,
+                  diameterRatio: 1.2,
+                  physics: const FixedExtentScrollPhysics(),
+                  onSelectedItemChanged: (index) {
+                    setState(() {
+                      selectedWeek = weeks[index];
+                    });
                   },
-                  childCount: weeks.length,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                onPressed: _confirmReminder,
-                child: Text(
-                  'Agendar lembrete único',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (context, index) {
+                      if (index < 0 || index >= weeks.length) return null;
+                      final week = weeks[index];
+                      final isSelected = week == selectedWeek;
+                      return Center(
+                        child: Text(
+                          week == 1 ? '1 semana' : '$week semanas',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: isSelected ? 22 : 18,
+                          ),
+                        ),
+                      );
+                    },
+                    childCount: weeks.length,
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  onPressed: _confirmReminder,
+                  child: Text(
+                    'Agendar lembrete único',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -16,10 +16,18 @@ SalonColors generateDarkPalette(SalonColors light) {
     return hslLight.toColor();
   }
 
-  return SalonColors(
-    primary: lighten(light.primary, 0.2),
-    secondary: lighten(light.secondary, 0.2),
-    background: darken(light.background, 0.7),
-    onSurface: Colors.white, // Always white for dark backgrounds
+  // Helper to increase saturation for more vibrant colors in dark mode
+  Color vibrant(Color color, [double saturation = 0.2, double lightness = 0.3]) {
+    final hsl = HSLColor.fromColor(color);
+    final hslVibrant = hsl.withSaturation((hsl.saturation + saturation).clamp(0.0, 1.0))
+                         .withLightness((hsl.lightness + lightness).clamp(0.4, 0.9));
+    return hslVibrant.toColor();
+  }
+
+  return SalonColors.base(
+    primary: vibrant(light.primary, 0.3, 0.4),
+    secondary: vibrant(light.secondary, 0.2, 0.3),
+    background: const Color(0xFF1D1B20),
+    onSurface: const Color(0xFFE6E1E5),
   );
 } 

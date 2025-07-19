@@ -303,6 +303,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
 
   Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size, bool isDark) {
     final onBackground = theme.colorScheme.onSurface;
+    final isSmallScreen = size.width < 600;
     return AnimatedBuilder(
       animation: _floatingController,
       builder: (context, child) {
@@ -322,8 +323,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
           ),
           child: Stack(
             children: [
-              // Floating particles
-              ...List.generate(8, (index) {
+              // Floating particles - only show on larger screens
+              if (!isSmallScreen) ...List.generate(8, (index) {
                 final delay = index * 0.2;
                 return AnimatedBuilder(
                   animation: _floatingAnimation,
@@ -358,11 +359,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
               // Main hero content
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0), // Up from 12
+                  padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 14), // Up from 8
+                      SizedBox(height: isSmallScreen ? 8 : 14),
                       
                       // Animated greeting
                       ScaleTransition(
@@ -375,7 +376,10 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isSmallScreen ? 12 : 18, 
+                                      vertical: isSmallScreen ? 6 : 10
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.black.withOpacity(0.32),
                                       borderRadius: BorderRadius.circular(18),
@@ -642,6 +646,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
 
   Widget _buildBalancedSalonCard(BuildContext context, ThemeData theme, Salon salon, int index) {
     final isDark = theme.brightness == Brightness.dark;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     final isUrgent = salon.waitTime <= 10;
     final isPopular = salon.queueLength >= 4;
     final cardBackground = isDark ? theme.colorScheme.surface : Colors.white;
@@ -693,7 +698,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -711,12 +716,18 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: textColor,
+                                    fontSize: isSmallScreen ? 16 : null,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                               if (isUrgent) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isSmallScreen ? 5 : 7, 
+                                    vertical: isSmallScreen ? 2 : 3
+                                  ),
                                   decoration: BoxDecoration(
                                     color: urgentColor.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12),
@@ -725,16 +736,19 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                                     'RÁPIDO',
                                     style: TextStyle(
                                       color: urgentColor,
-                                      fontSize: 10,
+                                      fontSize: isSmallScreen ? 8 : 10,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                SizedBox(width: isSmallScreen ? 4 : 8),
                               ],
                               if (isPopular) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isSmallScreen ? 5 : 7, 
+                                    vertical: isSmallScreen ? 2 : 3
+                                  ),
                                   decoration: BoxDecoration(
                                     color: popularColor.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12),
@@ -743,18 +757,18 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                                     'POPULAR',
                                     style: TextStyle(
                                       color: popularColor,
-                                      fontSize: 10,
+                                      fontSize: isSmallScreen ? 8 : 10,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                SizedBox(width: isSmallScreen ? 4 : 8),
                               ],
                               IconButton(
                                 icon: Icon(
                                   _favoriteSalons.contains(salon.name) ? Icons.favorite : Icons.favorite_border,
                                   color: favColor,
-                                  size: 22,
+                                  size: isSmallScreen ? 20 : 22,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -766,7 +780,10 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                                   });
                                 },
                                 padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                constraints: BoxConstraints(
+                                  minWidth: isSmallScreen ? 32 : 36, 
+                                  minHeight: isSmallScreen ? 32 : 36
+                                ),
                               ),
                             ],
                           ),
@@ -775,47 +792,81 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                             salon.address,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: subTextColor,
+                              fontSize: isSmallScreen ? 13 : null,
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildBalancedInfoChip(
+                SizedBox(height: isSmallScreen ? 12 : 16),
+                // Info chips - make them wrap on small screens
+                if (isSmallScreen) ...[
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildBalancedInfoChip(
                         context,
                         Icons.access_time,
                         '${salon.waitTime} min',
                         chipTimeColor,
+                        isSmallScreen: true,
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildBalancedInfoChip(
+                      _buildBalancedInfoChip(
                         context,
                         Icons.people_outline,
                         '${salon.queueLength} fila',
                         chipQueueColor,
+                        isSmallScreen: true,
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildBalancedInfoChip(
+                      _buildBalancedInfoChip(
                         context,
                         Icons.location_on_outlined,
                         '${salon.distance.toStringAsFixed(1)} km',
                         chipDistanceColor,
+                        isSmallScreen: true,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                    ],
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildBalancedInfoChip(
+                          context,
+                          Icons.access_time,
+                          '${salon.waitTime} min',
+                          chipTimeColor,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildBalancedInfoChip(
+                          context,
+                          Icons.people_outline,
+                          '${salon.queueLength} fila',
+                          chipQueueColor,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildBalancedInfoChip(
+                          context,
+                          Icons.location_on_outlined,
+                          '${salon.distance.toStringAsFixed(1)} km',
+                          chipDistanceColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: EdgeInsets.all(isSmallScreen ? 10 : 14),
                   decoration: BoxDecoration(
                     color: ctaBg,
                     borderRadius: BorderRadius.circular(16),
@@ -830,7 +881,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               isUrgent ? 'Check-in rápido!' : 'Fazer check-in',
                               style: TextStyle(
                                 color: ctaText,
-                                fontSize: 16,
+                                fontSize: isSmallScreen ? 14 : 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -838,7 +889,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               isUrgent ? 'Sem espera' : 'Entre na fila',
                               style: TextStyle(
                                 color: ctaSubText,
-                                fontSize: 13,
+                                fontSize: isSmallScreen ? 12 : 14,
                               ),
                             ),
                           ],
@@ -893,7 +944,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     );
   }
 
-  Widget _buildBalancedInfoChip(BuildContext context, IconData icon, String label, Color color) {
+  Widget _buildBalancedInfoChip(BuildContext context, IconData icon, String label, Color color, {bool isSmallScreen = false}) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final chipBg = isDark ? color.withOpacity(0.13) : color.withOpacity(0.09);
@@ -901,7 +952,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     final chipText = isDark ? theme.colorScheme.onSurface : color;
     final chipIcon = isDark ? theme.colorScheme.onSurface.withOpacity(0.85) : color.withOpacity(0.85);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 10, vertical: isSmallScreen ? 6 : 8),
       decoration: BoxDecoration(
         color: chipBg,
         borderRadius: BorderRadius.circular(10),
@@ -910,7 +961,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: chipIcon),
+          Icon(icon, size: isSmallScreen ? 14 : 16, color: chipIcon),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -918,7 +969,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
               style: TextStyle(
                 color: chipText,
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: isSmallScreen ? 11 : 12,
               ),
               overflow: TextOverflow.ellipsis,
             ),

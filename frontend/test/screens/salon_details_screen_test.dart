@@ -16,7 +16,7 @@ void main() {
     late List<SalonReview> mockReviews;
 
     setUp(() {
-      mockSalon = const Salon(
+      mockSalon = Salon(
         name: 'Great Clips',
         address: '123 Main St, Tampa, FL',
         waitTime: 34,

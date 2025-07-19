@@ -208,8 +208,9 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildHeader(ThemeData theme, double avatarSize, double iconSize, double titleFontSize, double subtitleFontSize) {
     final brightness = Theme.of(context).brightness;
     final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
       child: Row(
         children: [
           // Profile Avatar
@@ -242,14 +243,16 @@ class _AccountScreenState extends State<AccountScreen> {
                     fontWeight: FontWeight.bold,
                     fontSize: titleFontSize,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: isSmallScreen ? 2 : 4),
                 Text(
                   BrazilianNamesGenerator.generateNameWithInitial(),
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: colors?.primary ?? theme.colorScheme.onPrimary.withOpacity(0.9),
                     fontSize: subtitleFontSize,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -439,7 +442,10 @@ class _AccountScreenState extends State<AccountScreen> {
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Corte favoritado!')),
+                    SnackBar(
+                      content: const Text('Corte favoritado!'),
+                      backgroundColor: theme.colorScheme.primary,
+                    ),
                   );
                 },
                 child: Text('Favoritar', style: TextStyle(color: colors?.primary ?? theme.colorScheme.primary)),
@@ -592,9 +598,10 @@ class _AccountScreenState extends State<AccountScreen> {
                               _reminderDate = picked;
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Lembrete atualizado!'),
-                                duration: Duration(seconds: 1),
+                              SnackBar(
+                                content: const Text('Lembrete atualizado!'),
+                                backgroundColor: theme.colorScheme.primary,
+                                duration: const Duration(seconds: 1),
                               ),
                             );
                           }
@@ -818,7 +825,7 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
                           label: const Text('Transferir para Preferências'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: colors?.primary ?? theme.colorScheme.primary,
-                            foregroundColor: Colors.white,
+                            foregroundColor: theme.colorScheme.onPrimary,
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();

@@ -71,32 +71,39 @@ class AppTheme {
 
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
-    colorScheme: ColorScheme.dark(
-      primary: primaryColor,
-      secondary: secondaryColor,
-      surface: Colors.grey[900]!,
-      error: Colors.red[300]!,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onSurface: Colors.white,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: primaryColor,
+      brightness: Brightness.dark,
+      // Override specific colors for better dark mode experience
+      surface: const Color(0xFF121212), // Material 3 dark surface
+      onSurface: const Color(0xFFE6E1E5), // Better contrast
+      surfaceContainerLowest: const Color(0xFF0F0D13),
+      surfaceContainerLow: const Color(0xFF1D1B20),
+      surfaceContainer: const Color(0xFF211F26),
+      surfaceContainerHigh: const Color(0xFF2B2930),
+      surfaceContainerHighest: const Color(0xFF36343B),
+      outline: const Color(0xFF938F99),
+      outlineVariant: const Color(0xFF49454F),
     ),
-    scaffoldBackgroundColor: Colors.black,
+    scaffoldBackgroundColor: const Color(0xFF121212),
     appBarTheme: AppBarTheme(
       centerTitle: true,
       elevation: 0,
       backgroundColor: primaryColor,
       foregroundColor: Colors.white,
       iconTheme: const IconThemeData(color: Colors.white),
+      surfaceTintColor: Colors.transparent,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        elevation: 0,
+        elevation: 3,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+        shadowColor: Colors.black.withOpacity(0.3),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -112,19 +119,36 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF49454F)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF49454F)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: primaryColor, width: 2),
       ),
+      fillColor: const Color(0xFF1D1B20),
+      filled: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
-    cardTheme: CardThemeData(
-      elevation: 2,
+    cardTheme: const CardThemeData(
+      elevation: 4,
+      shadowColor: Colors.black,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
-      color: Colors.grey[900],
+      color: Color(0xFF1D1B20), // Surface container low
+    ),
+    dividerTheme: const DividerThemeData(
+      color: Color(0xFF49454F),
+      thickness: 0.5,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF1D1B20),
+      elevation: 8,
     ),
   );
 
@@ -171,29 +195,39 @@ class AppTheme {
   static ThemeData highContrastDarkTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.dark(
-      primary: Colors.yellow,
-      secondary: Colors.yellow,
-      surface: Colors.black,
-      error: Colors.red[300]!,
-      onPrimary: Colors.black,
-      onSecondary: Colors.black,
-      onSurface: Colors.yellow,
+      primary: const Color(0xFFFFFF00), // Pure yellow for maximum contrast
+      secondary: const Color(0xFFFFFFFF), // Pure white
+      surface: const Color(0xFF000000), // Pure black
+      error: const Color(0xFFFF4444),
+      onPrimary: const Color(0xFF000000), // Black text on yellow
+      onSecondary: const Color(0xFF000000), // Black text on white
+      onSurface: const Color(0xFFFFFF00), // Yellow text on black
+      outline: const Color(0xFFFFFFFF),
+      outlineVariant: const Color(0xFF666666),
     ),
+    scaffoldBackgroundColor: const Color(0xFF000000),
     appBarTheme: const AppBarTheme(
       centerTitle: true,
       elevation: 0,
+      backgroundColor: Color(0xFF000000),
+      foregroundColor: Color(0xFFFFFF00),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 0,
+        backgroundColor: const Color(0xFFFFFF00),
+        foregroundColor: const Color(0xFF000000),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFFFFFFFF), width: 2),
         ),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFFFFFF00),
+        side: const BorderSide(color: Color(0xFFFFFF00), width: 2),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -203,8 +237,31 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFFFFFFF), width: 2),
       ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFFFFFFF), width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFFFFF00), width: 3),
+      ),
+      fillColor: const Color(0xFF000000),
+      filled: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    ),
+    cardTheme: const CardThemeData(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        side: BorderSide(color: Color(0xFFFFFFFF), width: 2),
+      ),
+      color: Color(0xFF000000),
+    ),
+    dividerTheme: const DividerThemeData(
+      color: Color(0xFFFFFFFF),
+      thickness: 2,
     ),
   );
 }
@@ -216,7 +273,7 @@ class ThemeProvider extends ChangeNotifier {
   static const String _animationsKey = 'animations';
 
   late SharedPreferences? _prefs;
-  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode _themeMode = ThemeMode.system; // Changed to system default
   double _fontSize = 1.0;
   bool _highContrast = false;
   bool _animations = true;
@@ -233,13 +290,18 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> _loadSettings() async {
     try {
       _prefs = await SharedPreferences.getInstance();
-      _themeMode = ThemeMode.values[_prefs?.getInt(_themeModeKey) ?? 1];
+      final savedIndex = _prefs?.getInt(_themeModeKey);
+      if (savedIndex != null && savedIndex >= 0 && savedIndex < ThemeMode.values.length) {
+        _themeMode = ThemeMode.values[savedIndex];
+      } else {
+        _themeMode = ThemeMode.system; // Default to system if no saved preference
+      }
       _fontSize = _prefs?.getDouble(_fontSizeKey) ?? 1.0;
       _highContrast = _prefs?.getBool(_highContrastKey) ?? false;
       _animations = _prefs?.getBool(_animationsKey) ?? true;
     } catch (e) {
       // If shared_preferences fails, use default values
-      _themeMode = ThemeMode.light;
+      _themeMode = ThemeMode.system; // Changed to system default
       _fontSize = 1.0;
       _highContrast = false;
       _animations = true;

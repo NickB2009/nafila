@@ -252,47 +252,71 @@ class QueueScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          'Adicionar Pessoa à Fila',
-          style: theme.textTheme.titleLarge,
-        ),
-        content: TextField(
-          controller: nameController,
-          decoration: InputDecoration(
-            labelText: 'Nome',
-            hintText: 'Digite o nome da pessoa',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+      builder: (dialogContext) => Theme(
+        data: theme.copyWith(
+          dialogTheme: DialogThemeData(
+            backgroundColor: theme.brightness == Brightness.dark 
+              ? theme.colorScheme.surfaceContainer 
+              : theme.colorScheme.surface,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
-          autofocus: true,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              'Cancelar',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: colors?.primary ?? theme.colorScheme.primary,
+        child: AlertDialog(
+          title: Text(
+            'Adicionar Pessoa à Fila',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          content: TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              labelText: 'Nome',
+              labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              hintText: 'Digite o nome da pessoa',
+              hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
               ),
             ),
+            style: TextStyle(color: theme.colorScheme.onSurface),
+            autofocus: true,
           ),
-          FilledButton(
-            onPressed: () {
-              if (nameController.text.trim().isNotEmpty) {
-                context
-                    .read<MockQueueNotifier>()
-                    .addToQueue(nameController.text.trim());
-                Navigator.of(dialogContext).pop();
-              }
-            },
-            child: Text(
-              'Adicionar',
-              style: theme.textTheme.labelLarge,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Cancelar',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colors?.primary ?? theme.colorScheme.primary,
+                ),
+              ),
             ),
-          ),
-        ],
+            FilledButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  context
+                      .read<MockQueueNotifier>()
+                      .addToQueue(nameController.text.trim());
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              child: Text(
+                'Adicionar',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -304,14 +328,37 @@ class QueueScreen extends StatelessWidget {
     
     showModalBottomSheet(
       context: context,
+      backgroundColor: theme.brightness == Brightness.dark 
+        ? theme.colorScheme.surfaceContainer 
+        : theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (bottomSheetContext) => Container(
+        decoration: BoxDecoration(
+          color: theme.brightness == Brightness.dark 
+            ? theme.colorScheme.surfaceContainer 
+            : theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.outline.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             Text(
               entry.name,
-              style: theme.textTheme.titleLarge,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 16),
             if (entry.status == QueueStatus.waiting) ...[
@@ -322,7 +369,9 @@ class QueueScreen extends StatelessWidget {
                 ),
                 title: Text(
                   'Iniciar Atendimento',
-                  style: theme.textTheme.bodyLarge,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
                 onTap: () {
                   context
@@ -340,7 +389,9 @@ class QueueScreen extends StatelessWidget {
                 ),
                 title: Text(
                   'Concluir Atendimento',
-                  style: theme.textTheme.bodyLarge,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
                 onTap: () {
                   context
