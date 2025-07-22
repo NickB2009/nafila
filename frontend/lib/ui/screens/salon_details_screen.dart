@@ -69,11 +69,12 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final salonColors = widget.salon.colors;
+    final brightness = Theme.of(context).brightness;
+    final salonColors = widget.salon.colors.forBrightness(brightness);
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
     
     return Scaffold(
-      backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.background,
+      backgroundColor: salonColors.background,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -81,7 +82,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
             floating: false,
             pinned: true,
             stretch: true,
-            backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.primary,
+            backgroundColor: salonColors.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -108,7 +109,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                         colors: [
                           Colors.transparent,
                           salonColors.primary.withOpacity(0.8),
-                          theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.background,
+                          salonColors.background,
                         ],
                         stops: const [0.4, 0.8, 1.0],
                       ),
@@ -186,7 +187,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           ),
           SliverToBoxAdapter(
             child: Container(
-              color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : salonColors.background,
+              color: salonColors.background,
               child: Padding(
                 padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
                 child: Column(
@@ -336,6 +337,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
 
   Widget _buildInfoSection(BuildContext context, SalonColors colors) {
     final theme = Theme.of(context);
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -344,7 +346,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -357,8 +359,8 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
-                theme.brightness == Brightness.dark ? theme.colorScheme.surface.withOpacity(0.95) : colors.background.withOpacity(0.95),
+                colors.background,
+                colors.background.withOpacity(0.95),
               ],
             ),
           ),
@@ -372,27 +374,30 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
+              Wrap(
+                spacing: isSmallScreen ? 6 : 8,
+                runSpacing: isSmallScreen ? 6 : 8,
                 children: [
                   _buildInfoChip(
                     context,
                     Icons.access_time,
                     '${widget.salon.waitTime} min',
                     colors.primary,
+                    isSmallScreen: isSmallScreen,
                   ),
-                  const SizedBox(width: 8),
                   _buildInfoChip(
                     context,
                     Icons.people_outline,
                     '${widget.salon.queueLength} na fila',
                     colors.primary,
+                    isSmallScreen: isSmallScreen,
                   ),
-                  const SizedBox(width: 8),
                   _buildInfoChip(
                     context,
                     Icons.location_on_outlined,
                     '${widget.salon.distance} km',
                     colors.primary,
+                    isSmallScreen: isSmallScreen,
                   ),
                 ],
               ),
@@ -509,7 +514,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -591,7 +596,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -854,7 +859,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+            color: colors.background,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -913,9 +918,9 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
   }
 
-  Widget _buildInfoChip(BuildContext context, IconData icon, String label, Color color) {
+  Widget _buildInfoChip(BuildContext context, IconData icon, String label, Color color, {bool isSmallScreen = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
@@ -923,12 +928,16 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(icon, size: isSmallScreen ? 14 : 16, color: color),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: color,
+          Flexible(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: color,
+                fontSize: isSmallScreen ? 11 : null,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -1068,17 +1077,30 @@ class AllReviewsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    
     return Scaffold(
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Todas as Avaliações'),
-        backgroundColor: theme.colorScheme.surface,
-        iconTheme: IconThemeData(color: theme.colorScheme.primary),
+        title: Text(
+          'Todas as Avaliações',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: colors?.onSurface ?? theme.colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: colors?.background ?? theme.colorScheme.surface,
+        iconTheme: IconThemeData(color: colors?.primary ?? theme.colorScheme.primary),
+        elevation: 0,
       ),
       body: reviews.isEmpty
           ? Center(
               child: Text(
                 'Nenhuma avaliação ainda.',
-                style: theme.textTheme.bodyLarge,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             )
           : ListView.builder(
@@ -1089,10 +1111,11 @@ class AllReviewsScreen extends StatelessWidget {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   elevation: 0,
+                  color: colors?.background ?? theme.colorScheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                      color: theme.colorScheme.outline.withOpacity(0.1),
+                      color: (colors?.secondary ?? theme.colorScheme.outline).withOpacity(0.1),
                     ),
                   ),
                   child: Padding(
@@ -1104,11 +1127,11 @@ class AllReviewsScreen extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: 20,
-                              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                              backgroundColor: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
                               child: Text(
                                 review.userName[0].toUpperCase(),
                                 style: TextStyle(
-                                  color: theme.colorScheme.primary,
+                                  color: colors?.primary ?? theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -1122,12 +1145,13 @@ class AllReviewsScreen extends StatelessWidget {
                                     review.userName,
                                     style: theme.textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      color: colors?.onSurface ?? theme.colorScheme.onSurface,
                                     ),
                                   ),
                                   Text(
                                     review.date,
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                      color: (colors?.secondary ?? theme.colorScheme.onSurface).withOpacity(0.6),
                                     ),
                                   ),
                                 ],
@@ -1139,7 +1163,7 @@ class AllReviewsScreen extends StatelessWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withOpacity(0.1),
+                                color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -1148,13 +1172,13 @@ class AllReviewsScreen extends StatelessWidget {
                                   Icon(
                                     Icons.star,
                                     size: 16,
-                                    color: theme.colorScheme.primary,
+                                    color: colors?.primary ?? theme.colorScheme.primary,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     review.rating.toString(),
                                     style: theme.textTheme.labelMedium?.copyWith(
-                                      color: theme.colorScheme.primary,
+                                      color: colors?.primary ?? theme.colorScheme.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -1167,7 +1191,9 @@ class AllReviewsScreen extends StatelessWidget {
                           const SizedBox(height: 12),
                           Text(
                             review.comment!,
-                            style: theme.textTheme.bodyMedium,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors?.onSurface ?? theme.colorScheme.onSurface,
+                            ),
                           ),
                         ],
                       ],

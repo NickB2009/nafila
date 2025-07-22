@@ -931,19 +931,71 @@ class _FullHaircutHistoryPageState extends State<FullHaircutHistoryPage> {
 
 // Add the transfer logic
 void _transferCutToPreferences(BuildContext context, Map<String, dynamic> desc) {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => PersonalInfoScreen(
-        initialPreferences: {
-          'sides': desc['sides'] ?? '',
-          'fade': desc['fade'] ?? '',
-          'top': desc['top'] ?? '',
-          'franja': desc['fringe'] ?? '',
-          'neckline': desc['neckline'] ?? '',
-          'beard': desc['beard'] ?? '',
-          'notes': desc['notes'] ?? '',
-        },
-      ),
-    ),
+  final theme = Theme.of(context);
+  final brightness = Theme.of(context).brightness;
+  final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+  
+  showDialog(
+    context: context,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        backgroundColor: colors?.background ?? theme.colorScheme.surface,
+        title: Text(
+          'Transferir Preferências',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: colors?.onSurface ?? theme.colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Deseja transferir os detalhes deste corte para suas preferências futuras? Isso substituirá suas preferências atuais.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'Cancelar',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+              foregroundColor: colors?.background ?? theme.colorScheme.onPrimary,
+            ),
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PersonalInfoScreen(
+                    initialPreferences: {
+                      'sides': desc['sides'] ?? '',
+                      'fade': desc['fade'] ?? '',
+                      'top': desc['top'] ?? '',
+                      'franja': desc['fringe'] ?? '',
+                      'neckline': desc['neckline'] ?? '',
+                      'beard': desc['beard'] ?? '',
+                      'notes': desc['notes'] ?? '',
+                    },
+                  ),
+                ),
+              );
+            },
+            child: Text(
+              'Transferir',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colors?.background ?? theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
   );
 } 

@@ -144,6 +144,10 @@ class LegalPrivacyScreen extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () => _launchURL('https://nafila.com/privacy'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colors?.primary ?? theme.colorScheme.primary,
+                  side: BorderSide(color: colors?.primary ?? theme.colorScheme.primary),
+                ),
                 icon: const Icon(Icons.open_in_new),
                 label: const Text('Ler Política Completa'),
               ),
@@ -206,6 +210,10 @@ class LegalPrivacyScreen extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () => _launchURL('https://nafila.com/terms'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colors?.primary ?? theme.colorScheme.primary,
+                  side: BorderSide(color: colors?.primary ?? theme.colorScheme.primary),
+                ),
                 icon: const Icon(Icons.open_in_new),
                 label: const Text('Ler Termos Completos'),
               ),
@@ -268,6 +276,10 @@ class LegalPrivacyScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => _showDataRequestDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+                  foregroundColor: colors?.background ?? theme.colorScheme.onPrimary,
+                ),
                 icon: const Icon(Icons.data_usage),
                 label: const Text('Solicitar Meus Dados'),
               ),
@@ -588,6 +600,7 @@ class LegalPrivacyScreen extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: colors?.background ?? Theme.of(context).colorScheme.surface,
           title: Text(
             'Solicitar Dados',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -611,6 +624,10 @@ class LegalPrivacyScreen extends StatelessWidget {
               ),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors?.primary ?? Theme.of(context).colorScheme.primary,
+                foregroundColor: colors?.background ?? Theme.of(context).colorScheme.onPrimary,
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 _launchEmail('legal@nafila.com');

@@ -28,10 +28,11 @@ class _CheckInScreenState extends State<CheckInScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
     final salon = widget.salon;
-    final colors = salon.colors;
+    final colors = salon.colors.forBrightness(brightness);
     return Scaffold(
-      backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -44,7 +45,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
             final inputFontSize = isSmallScreen ? 15.0 : 18.0;
             return SingleChildScrollView(
               child: Container(
-                color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+                color: colors.background,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: sectionSpacing),
                   child: Column(
@@ -77,7 +78,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
-                        color: theme.brightness == Brightness.dark ? theme.colorScheme.surface : colors.background,
+                        color: colors.background,
                         child: Padding(
                           padding: EdgeInsets.all(isSmallScreen ? 12.0 : 20.0),
                           child: Row(

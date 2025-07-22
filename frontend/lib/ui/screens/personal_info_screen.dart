@@ -107,7 +107,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     final String email = BrazilianNamesGenerator.generateEmail();
 
     return Scaffold(
-      backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : (colors?.background ?? theme.colorScheme.surface),
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -272,9 +272,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                   final result = await showModalBottomSheet<Map<String, String>>(
                                     context: context,
                                     isScrollControlled: true,
-                                    backgroundColor: theme.brightness == Brightness.dark 
-                                      ? theme.colorScheme.surfaceContainer 
-                                      : theme.colorScheme.surface,
+                                    backgroundColor: colors?.background ?? theme.colorScheme.surface,
                                     shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                                     ),
@@ -288,9 +286,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                                       final emailController = TextEditingController(text: email);
                                       return Container(
                                         decoration: BoxDecoration(
-                                          color: theme.brightness == Brightness.dark 
-                                            ? theme.colorScheme.surfaceContainer 
-                                            : theme.colorScheme.surface,
+                                          color: colors?.background ?? theme.colorScheme.surface,
                                           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                                         ),
                                         child: Padding(

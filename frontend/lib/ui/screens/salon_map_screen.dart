@@ -134,11 +134,12 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
 
   void _showFilterModal() async {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    
     final result = await showModalBottomSheet<Map<String, bool>>(
       context: context,
-      backgroundColor: theme.brightness == Brightness.dark 
-        ? theme.colorScheme.surfaceContainer 
-        : theme.colorScheme.surface,
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -147,9 +148,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
           builder: (context, setModalState) {
             return Container(
               decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark 
-                  ? theme.colorScheme.surfaceContainer 
-                  : theme.colorScheme.surface,
+                color: colors?.background ?? theme.colorScheme.surface,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Padding(
@@ -165,11 +164,11 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                           'Filtros', 
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
+                            color: colors?.onSurface ?? theme.colorScheme.onSurface,
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+                          icon: Icon(Icons.close, color: colors?.onSurface ?? theme.colorScheme.onSurface),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                       ],
@@ -178,7 +177,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     Text(
                       'Refine sua busca de salões próximos:',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -188,10 +187,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                       title: Text(
                         'Aberto agora',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurface,
+                          color: colors?.onSurface ?? theme.colorScheme.onSurface,
                         ),
                       ),
-                      activeColor: theme.colorScheme.primary,
+                      activeColor: colors?.primary ?? theme.colorScheme.primary,
                     ),
                     SwitchListTile(
                       value: _filterShortLine,
@@ -199,10 +198,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                       title: Text(
                         'Fila curta (≤ 3 pessoas)',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurface,
+                          color: colors?.onSurface ?? theme.colorScheme.onSurface,
                         ),
                       ),
-                      activeColor: theme.colorScheme.primary,
+                      activeColor: colors?.primary ?? theme.colorScheme.primary,
                     ),
                     SwitchListTile(
                       value: _filterShortWait,
@@ -210,10 +209,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                       title: Text(
                         'Espera rápida (≤ 15 min)',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurface,
+                          color: colors?.onSurface ?? theme.colorScheme.onSurface,
                         ),
                       ),
-                      activeColor: theme.colorScheme.primary,
+                      activeColor: colors?.primary ?? theme.colorScheme.primary,
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -227,6 +226,10 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                 _filterShortWait = false;
                               });
                             },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: colors?.primary ?? theme.colorScheme.primary,
+                              side: BorderSide(color: colors?.primary ?? theme.colorScheme.primary),
+                            ),
                             child: const Text('Limpar filtros'),
                           ),
                         ),
@@ -241,8 +244,8 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                               });
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: Colors.white,
+                              backgroundColor: colors?.primary ?? theme.colorScheme.primary,
+                              foregroundColor: colors?.background ?? theme.colorScheme.onPrimary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -381,15 +384,11 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   vertical: isSmallScreen ? 6 : 8
                 ),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark 
-                    ? theme.colorScheme.surfaceContainer.withOpacity(0.95)
-                    : (salonPalette?.background ?? theme.colorScheme.surface).withOpacity(0.85),
+                  color: (salonPalette?.background ?? theme.colorScheme.surface).withOpacity(0.85),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.brightness == Brightness.dark 
-                        ? Colors.black.withOpacity(0.3)
-                        : Colors.black.withOpacity(0.08),
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -445,12 +444,8 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                         child: Material(
                           elevation: 8,
                           borderRadius: BorderRadius.circular(20),
-                          color: theme.brightness == Brightness.dark 
-                            ? theme.colorScheme.surfaceContainer 
-                            : theme.colorScheme.surface,
-                          shadowColor: theme.brightness == Brightness.dark 
-                            ? Colors.black.withOpacity(0.5)
-                            : Colors.black.withOpacity(0.2),
+                          color: theme.colorScheme.surface,
+                          shadowColor: Colors.black.withOpacity(0.2),
                           child: Container(
                             width: double.infinity,
                             padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -685,9 +680,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
         color: waitTimeToColor(salon.waitTime),
             shape: BoxShape.circle,
         border: Border.all(
-          color: theme.brightness == Brightness.dark 
-            ? theme.colorScheme.outline 
-            : Colors.white, 
+          color: Colors.white, 
           width: 3
         ),
             boxShadow: [
@@ -700,9 +693,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
           ),
           child: Icon(
             Icons.content_cut,
-            color: theme.brightness == Brightness.dark 
-              ? theme.colorScheme.onSurface 
-              : Colors.white,
+            color: Colors.white,
         size: 24,
       ),
     );
@@ -739,6 +730,9 @@ class _SalonListModalState extends State<_SalonListModal> {
              loc.salon.address.toLowerCase().contains(q);
     }).toList();
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.95,
@@ -747,15 +741,11 @@ class _SalonListModalState extends State<_SalonListModal> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: widget.theme.brightness == Brightness.dark 
-              ? widget.theme.colorScheme.surfaceContainer
-              : widget.theme.colorScheme.surface,
+            color: colors?.background ?? widget.theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: widget.theme.brightness == Brightness.dark 
-                  ? Colors.black.withOpacity(0.3)
-                  : Colors.black.withOpacity(0.08),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
@@ -768,7 +758,7 @@ class _SalonListModalState extends State<_SalonListModal> {
                 height: 5,
                 margin: EdgeInsets.only(top: isSmallScreen ? 8 : 12, bottom: isSmallScreen ? 6 : 8),
                 decoration: BoxDecoration(
-                  color: widget.theme.colorScheme.outline.withOpacity(0.2),
+                  color: colors?.secondary ?? widget.theme.colorScheme.outline.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -785,7 +775,7 @@ class _SalonListModalState extends State<_SalonListModal> {
                     hintText: 'Buscar salão...',
                     prefixIcon: Icon(
                       Icons.search, 
-                      color: widget.theme.colorScheme.primary,
+                      color: colors?.primary ?? widget.theme.colorScheme.primary,
                       size: isSmallScreen ? 20 : 24,
                     ),
                     border: OutlineInputBorder(
@@ -793,8 +783,8 @@ class _SalonListModalState extends State<_SalonListModal> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: widget.theme.brightness == Brightness.dark 
-                      ? widget.theme.colorScheme.surfaceContainerHigh
+                    fillColor: colors?.background != null 
+                      ? colors!.background.withOpacity(0.1)
                       : widget.theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: isSmallScreen ? 12 : 16,
@@ -811,6 +801,7 @@ class _SalonListModalState extends State<_SalonListModal> {
                           'Nenhum salão encontrado', 
                           style: widget.theme.textTheme.bodyLarge?.copyWith(
                             fontSize: isSmallScreen ? 14 : null,
+                            color: colors?.secondary ?? widget.theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       )
@@ -836,16 +827,12 @@ class _SalonListModalState extends State<_SalonListModal> {
                               child: Container(
                                 padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                                 decoration: BoxDecoration(
-                                  color: widget.theme.brightness == Brightness.dark 
-                                    ? widget.theme.colorScheme.surfaceContainerLow
-                                    : widget.theme.colorScheme.surface,
+                                  color: colors?.background ?? widget.theme.colorScheme.surface,
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: widget.theme.brightness == Brightness.dark 
-                                        ? Colors.black.withOpacity(0.2)
-                                        : Colors.black.withOpacity(0.03),
-                                      blurRadius: widget.theme.brightness == Brightness.dark ? 4 : 2,
+                                      color: Colors.black.withOpacity(0.03),
+                                      blurRadius: 2,
                                       offset: const Offset(0, 1),
                                     ),
                                   ],

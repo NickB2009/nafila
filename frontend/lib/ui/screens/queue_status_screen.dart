@@ -21,7 +21,7 @@ class QueueStatusScreen extends StatelessWidget {
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
     
     return Scaffold(
-      backgroundColor: theme.brightness == Brightness.dark ? theme.colorScheme.surface : (colors?.background ?? theme.colorScheme.surface),
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
@@ -70,16 +70,13 @@ class QueueStatusScreen extends StatelessWidget {
               _buildSalonCard(theme, colors, 'Barbearia do João', 'Rua das Flores, 123 - Centro', true, '20:00', 0.5, '(11) 91234-5678', context),
               SizedBox(height: isSmallScreen ? 16 : 20),
               
-              // Actions Card
-              _buildActionsCard(theme, colors, context),
-              SizedBox(height: isSmallScreen ? 16 : 20),
-              
               // Reminder Card
               _buildReminderCard(theme, colors, context),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 
@@ -380,25 +377,47 @@ class QueueStatusScreen extends StatelessWidget {
             }
           }),
           Divider(color: theme.dividerColor),
-          _buildSalonAction(
-            theme,
-            Icons.card_giftcard,
-            'Lembrar próximo corte',
-            trailing: _buildBetaChip(theme, colors),
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: theme.colorScheme.surface,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (modalContext) => HaircutReminderSheet(parentContext: context),
-              );
-            },
-          ),
-          Divider(color: theme.dividerColor),
-          _buildSalonAction(theme, Icons.phone, phone, onTap: () {}),
+          _buildSalonAction(theme, Icons.phone, phone, onTap: () async {
+            // Show options to call or copy
+            showModalBottomSheet(
+              context: context,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              builder: (modalContext) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.phone),
+                    title: const Text('Ligar'),
+                    onTap: () async {
+                      final phoneUri = Uri(scheme: 'tel', path: phone);
+                      if (await launcher.canLaunchUrl(phoneUri)) {
+                        await launcher.launchUrl(phoneUri);
+                      }
+                      Navigator.of(modalContext).pop();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.copy),
+                    title: const Text('Copiar número'),
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: phone));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Número copiado!'),
+                          backgroundColor: theme.colorScheme.primary,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                      Navigator.of(modalContext).pop();
+                    },
+                  ),
+                ],
+              ),
+            );
+          }),
           Divider(color: theme.dividerColor),
           _buildSalonAction(theme, Icons.delete_outline, 'Cancelar check-in', color: theme.colorScheme.error, onTap: () async {
             final confirmed = await showDialog<bool>(
@@ -461,62 +480,6 @@ class QueueStatusScreen extends StatelessWidget {
           color: colors.primary,
           fontWeight: FontWeight.bold,
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionsCard(ThemeData theme, SalonColors colors, BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 600;
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
-      decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'AÇÕES',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
-          ),
-          SizedBox(height: isSmallScreen ? 12 : 16),
-          _buildActionButton(theme, Icons.navigation, 'Como chegar', colors, () {}),
-          SizedBox(height: isSmallScreen ? 8 : 12),
-          _buildActionButton(theme, Icons.phone, 'Ligar', colors, () {}),
-          SizedBox(height: isSmallScreen ? 8 : 12),
-          _buildActionButton(theme, Icons.delete_outline, 'Cancelar check-in', colors, () async {
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: const Text('Cancelar check-in'),
-                content: const Text('Tem certeza que deseja cancelar seu check-in?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: const Text('Voltar'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(true),
-                    style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
-                    child: const Text('Cancelar'),
-                  ),
-                ],
-              ),
-            );
-            if (confirmed == true) {
-              CheckInState.isCheckedIn = false;
-              CheckInState.checkedInSalon = null;
-              // Navigate back to the root and then to the salon finder
-              Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-            }
-          }, isDestructive: true),
-        ],
       ),
     );
   }
@@ -630,11 +593,12 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    
     return Container(
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-          ? theme.colorScheme.surfaceContainer 
-          : theme.colorScheme.surface,
+        color: colors?.background ?? theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Padding(
@@ -653,13 +617,13 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
                       'Agendar meu próximo corte para...',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
+                        color: colors?.onSurface ?? theme.colorScheme.onSurface,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
+                    icon: Icon(Icons.close, color: colors?.onSurface ?? theme.colorScheme.onSurface),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -667,7 +631,7 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
               const SizedBox(height: 8),
               Text(
                 'Avise quando quiser cortar o cabelo de novo e enviaremos um lembrete.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(color: colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -690,7 +654,7 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
                         child: Text(
                           week == 1 ? '1 semana' : '$week semanas',
                           style: theme.textTheme.titleMedium?.copyWith(
-                            color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+                            color: isSelected ? (colors?.onSurface ?? theme.colorScheme.onSurface) : (colors?.secondary ?? theme.colorScheme.onSurfaceVariant),
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             fontSize: isSelected ? 22 : 18,
                           ),
@@ -707,7 +671,7 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
                 height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
+                    backgroundColor: colors?.primary ?? theme.colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
@@ -716,7 +680,7 @@ class _HaircutReminderSheetState extends State<HaircutReminderSheet> {
                   child: Text(
                     'Agendar lembrete único',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
+                      color: colors?.background ?? theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

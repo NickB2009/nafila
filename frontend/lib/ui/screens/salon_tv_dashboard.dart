@@ -85,15 +85,14 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final isSmallScreen = screenSize.width < 600;
     final minLeftWidth = 260.0;
     final minAdWidth = 250.0;
-    final maxAdWidth = screenSize.width - minLeftWidth - 64.0;
+    final maxAdWidth = (screenSize.width - minLeftWidth - 64.0).clamp(minAdWidth, screenSize.width);
     final isLargeScreen = screenSize.width > 900;
     final defaultAdWidth = isLargeScreen ? 700.0 : 340.0;
     final defaultAdHeight = isLargeScreen ? 480.0 : 180.0;
     final adWidth = (customAdWidth ?? defaultAdWidth).clamp(minAdWidth, maxAdWidth);
-    final adHeight = customAdHeight ?? defaultAdHeight;
+    final adHeight = (customAdHeight ?? defaultAdHeight).clamp(120.0, screenSize.height - 80.0);
     final leftWidth = (screenSize.width - adWidth - 64.0).clamp(minLeftWidth, screenSize.width * 0.7);
-    final adFlex = (adWidth / screenSize.width * 100).clamp(20, 80).round();
-    final leftFlex = 100 - adFlex;
+    final adFlex = (adWidth / screenSize.width * 100).clamp(20.0, 80.0).round();
     final showCompactLeft = leftWidth <= minLeftWidth + 20;
 
     return Scaffold(
@@ -201,9 +200,11 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final iconSize = isSmallScreen ? 40.0 : 60.0;
     final titleFontSize = isSmallScreen ? 20.0 : 24.0;
     final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
+    final padding = (constraints.maxWidth * 0.02).clamp(8.0, 24.0);
+    final spacing = (constraints.maxWidth * 0.02).clamp(8.0, 24.0);
     
     return Container(
-      padding: EdgeInsets.all(constraints.maxWidth * 0.02),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -230,7 +231,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               size: iconSize * 0.6,
             ),
           ),
-          SizedBox(width: constraints.maxWidth * 0.02),
+          SizedBox(width: spacing),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,9 +270,13 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
   Widget _buildWaitTimeCard(ThemeData theme, BoxConstraints constraints) {
     final isSmallScreen = constraints.maxWidth < 600;
     final waitTimeFontSize = isSmallScreen ? 36.0 : 48.0;
+    final padding = (constraints.maxWidth * 0.02).clamp(8.0, 24.0);
+    final spacing = (constraints.maxWidth * 0.02).clamp(8.0, 24.0);
+    final iconPadding = (constraints.maxWidth * 0.015).clamp(6.0, 18.0);
+    final verticalSpacing = (constraints.maxHeight * 0.01).clamp(4.0, 16.0);
     
     return Container(
-      padding: EdgeInsets.all(constraints.maxWidth * 0.02),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(16),
@@ -298,7 +303,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                     fontSize: isSmallScreen ? 10.0 : 12.0,
                   ),
                 ),
-                SizedBox(height: constraints.maxHeight * 0.01),
+                SizedBox(height: verticalSpacing),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
@@ -325,11 +330,11 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               ],
             ),
           ),
-          SizedBox(width: constraints.maxWidth * 0.02),
+          SizedBox(width: spacing),
           Column(
             children: [
               Container(
-                padding: EdgeInsets.all(constraints.maxWidth * 0.015),
+                padding: EdgeInsets.all(iconPadding),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -340,7 +345,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                   size: isSmallScreen ? 24.0 : 32.0,
                 ),
               ),
-              SizedBox(height: constraints.maxHeight * 0.01),
+              SizedBox(height: verticalSpacing),
               Text(
                 '$customersWaiting',
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -368,9 +373,13 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final isSmallScreen = constraints.maxWidth < 600;
     final headerFontSize = isSmallScreen ? 16.0 : 20.0;
     final rowFontSize = isSmallScreen ? 16.0 : 20.0;
+    final padding = (constraints.maxWidth * 0.02).clamp(8.0, 24.0);
+    final headerPadding = (constraints.maxWidth * 0.02).clamp(8.0, 24.0);
+    final verticalSpacing = (constraints.maxHeight * 0.02).clamp(8.0, 24.0);
+    final smallVerticalSpacing = (constraints.maxHeight * 0.01).clamp(4.0, 16.0);
     
     return Container(
-      padding: EdgeInsets.all(constraints.maxWidth * 0.02),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -393,10 +402,10 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               fontSize: headerFontSize,
             ),
           ),
-          SizedBox(height: constraints.maxHeight * 0.02),
+          SizedBox(height: verticalSpacing),
           // Queue header
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.02),
+            padding: EdgeInsets.symmetric(horizontal: headerPadding),
             child: Row(
               children: [
                 Expanded(
@@ -436,9 +445,9 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
               ],
             ),
           ),
-          SizedBox(height: constraints.maxHeight * 0.01),
+          SizedBox(height: smallVerticalSpacing),
           Divider(color: theme.dividerColor, thickness: 2),
-          SizedBox(height: constraints.maxHeight * 0.01),
+          SizedBox(height: smallVerticalSpacing),
           // Queue list - let it size naturally for small screens
           if (isSmallScreen)
             ...customerQueue.asMap().entries.map((entry) {
@@ -465,12 +474,15 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final bool isInSalon = customer["inSalon"] ?? false;
     final isSmallScreen = constraints.maxWidth < 600;
     final fontSize = isSmallScreen ? 16.0 : 20.0;
+    final marginBottom = (constraints.maxHeight * 0.01).clamp(4.0, 16.0);
+    final paddingHorizontal = (constraints.maxWidth * 0.02).clamp(8.0, 24.0);
+    final paddingVertical = (constraints.maxHeight * 0.015).clamp(4.0, 16.0);
     
     return Container(
-      margin: EdgeInsets.only(bottom: constraints.maxHeight * 0.01),
+      margin: EdgeInsets.only(bottom: marginBottom),
       padding: EdgeInsets.symmetric(
-        horizontal: constraints.maxWidth * 0.02,
-        vertical: constraints.maxHeight * 0.015,
+        horizontal: paddingHorizontal,
+        vertical: paddingVertical,
       ),
       decoration: BoxDecoration(
         color: isInSalon 
@@ -566,10 +578,10 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final isLargeScreen = constraints.maxWidth > 900;
     final defaultAdWidth = isLargeScreen ? 700.0 : 340.0;
     final defaultAdHeight = isLargeScreen ? 480.0 : 180.0;
-    final adWidth0 = adWidth ?? customAdWidth ?? defaultAdWidth;
-    final adHeight0 = adHeight ?? customAdHeight ?? defaultAdHeight;
+    final adWidth0 = (adWidth ?? customAdWidth ?? defaultAdWidth).clamp(250.0, constraints.maxWidth - 40.0);
+    final adHeight0 = (adHeight ?? customAdHeight ?? defaultAdHeight).clamp(120.0, constraints.maxHeight - 80.0);
     final minAdWidth0 = minAdWidth ?? 250.0;
-    final maxAdWidth0 = maxAdWidth ?? constraints.maxWidth - 40;
+    final maxAdWidth0 = maxAdWidth ?? (constraints.maxWidth - 40.0);
     final minAdHeight = 120.0;
     final verticalPadding = 80.0;
     final maxAdHeight = constraints.maxHeight - verticalPadding;
@@ -704,7 +716,8 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                   onPanUpdate: (details) {
                     if (onResize != null) {
                       final newWidth = (adWidth0 - details.delta.dx).clamp(minAdWidth0, maxAdWidth0);
-                      onResize(newWidth, adHeight0);
+                      final newHeight = adHeight0.clamp(minAdHeight, maxAdHeight);
+                      onResize(newWidth, newHeight);
                     }
                   },
                   child: MouseRegion(
@@ -723,7 +736,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.04),
                             blurRadius: 2,
-                            offset: Offset(1, 1),
+                            offset: const Offset(1, 1),
                           ),
                         ],
                       ),
@@ -738,8 +751,9 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                 child: GestureDetector(
                   onPanUpdate: (details) {
                     if (onResize != null) {
+                      final newWidth = adWidth0.clamp(minAdWidth0, maxAdWidth0);
                       final newHeight = (adHeight0 + details.delta.dy).clamp(minAdHeight, maxAdHeight);
-                      onResize(adWidth0, newHeight);
+                      onResize(newWidth, newHeight);
                     }
                   },
                   child: MouseRegion(
@@ -758,7 +772,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.04),
                             blurRadius: 2,
-                            offset: Offset(1, 1),
+                            offset: const Offset(1, 1),
                           ),
                         ],
                       ),

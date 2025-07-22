@@ -255,9 +255,7 @@ class QueueScreen extends StatelessWidget {
       builder: (dialogContext) => Theme(
         data: theme.copyWith(
           dialogTheme: DialogThemeData(
-            backgroundColor: theme.brightness == Brightness.dark 
-              ? theme.colorScheme.surfaceContainer 
-              : theme.colorScheme.surface,
+            backgroundColor: colors?.background ?? theme.colorScheme.surface,
             surfaceTintColor: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -328,17 +326,13 @@ class QueueScreen extends StatelessWidget {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: theme.brightness == Brightness.dark 
-        ? theme.colorScheme.surfaceContainer 
-        : theme.colorScheme.surface,
+      backgroundColor: colors?.background ?? theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (bottomSheetContext) => Container(
         decoration: BoxDecoration(
-          color: theme.brightness == Brightness.dark 
-            ? theme.colorScheme.surfaceContainer 
-            : theme.colorScheme.surface,
+          color: colors?.background ?? theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(16),
