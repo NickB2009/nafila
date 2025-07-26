@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Grande.Fila.API.Tests.Integration;
+using Grande.Fila.API.Domain.Locations;
+using Microsoft.Extensions.Configuration;
+using System.Linq;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -22,18 +26,48 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         private WebApplicationFactory<Program> _factory;
         private HttpClient _client;
         private static BogusUserRepository _userRepository;
+        private static BogusLocationRepository _locationRepository;
 
         [TestInitialize]
         public void TestInitialize()
         {
             if (_userRepository == null)
                 _userRepository = new BogusUserRepository();
+            if (_locationRepository == null)
+                _locationRepository = new BogusLocationRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
+                    builder.UseEnvironment("Testing");
+                    builder.ConfigureAppConfiguration((context, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
+                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test",
+                            ["Database:UseSqlDatabase"] = "false",
+                            ["Database:UseInMemoryDatabase"] = "false",
+                            ["Database:UseBogusRepositories"] = "true",
+                            ["Database:AutoMigrate"] = "false",
+                            ["Database:SeedData"] = "false"
+                        });
+                    });
                     builder.ConfigureServices(services =>
                     {
+                        // Remove existing repository registrations
+                        var servicesToRemove = new[]
+                        {
+                            typeof(IUserRepository),
+                            typeof(ILocationRepository)
+                        };
+                        var descriptors = services.Where(d => servicesToRemove.Contains(d.ServiceType)).ToList();
+                        foreach (var descriptor in descriptors)
+                        {
+                            services.Remove(descriptor);
+                        }
                         services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddSingleton<ILocationRepository>(_locationRepository);
                         services.AddScoped<AuthService>();
                     });
                 });

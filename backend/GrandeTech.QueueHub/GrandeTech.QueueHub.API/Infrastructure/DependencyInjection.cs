@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Grande.Fila.API.Domain.Common;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Domain.Organizations;
@@ -9,8 +10,10 @@ using Grande.Fila.API.Domain.Customers;
 using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
-using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Domain.ServicesOffered;
+using Grande.Fila.API.Infrastructure.Data;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using Grande.Fila.API.Infrastructure.Repositories.Sql;
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Application.Organizations;
 using Grande.Fila.API.Application.Locations;
@@ -42,17 +45,11 @@ namespace Grande.Fila.API.Infrastructure
             // Add memory cache for cache invalidation handler
             services.AddMemoryCache();
             
-            // Add bogus repositories for in-memory testing
-            services.AddScoped(typeof(IRepository<>), typeof(BogusGenericRepository<>));
-            services.AddScoped<IUserRepository, BogusUserRepository>();
-            services.AddScoped<IOrganizationRepository, BogusOrganizationRepository>();
-            services.AddScoped<ILocationRepository, BogusLocationRepository>();
-            services.AddScoped<IQueueRepository, BogusQueueRepository>();
-            services.AddScoped<ICustomerRepository, BogusCustomerRepository>();
-            services.AddScoped<IStaffMemberRepository, BogusStaffMemberRepository>();
-            services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
-            services.AddScoped<ISubscriptionPlanRepository, BogusSubscriptionPlanRepository>();
-            services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
+            // Database configuration
+            AddDataPersistence(services, configuration);
+            
+            // Add repositories based on configuration
+            AddRepositories(services, configuration);
             
             // Add queue services
             services.AddSingleton<IQueueService, InMemoryQueueService>();
@@ -69,6 +66,113 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<ISmsProvider, MockSmsProvider>();
             
             // Add application services
+            AddApplicationServices(services);
+            
+            return services;
+        }
+
+        private static void AddDataPersistence(IServiceCollection services, IConfiguration configuration)
+        {
+            var useInMemoryDatabase = configuration.GetValue<bool>("Database:UseInMemoryDatabase", false);
+            var useSqlDatabase = configuration.GetValue<bool>("Database:UseSqlDatabase", true);
+            var useBogusRepositories = configuration.GetValue<bool>("Database:UseBogusRepositories", false);
+
+            if (useBogusRepositories)
+            {
+                // When using Bogus repositories, don't register DbContext or health checks
+                return;
+            }
+
+            if (useSqlDatabase && !useInMemoryDatabase)
+            {
+                // Add Entity Framework DbContext for SQL Server
+                services.AddDbContext<QueueHubDbContext>(options =>
+                {
+                    var connectionString = configuration.GetConnectionString("DefaultConnection");
+                    
+                    options.UseSqlServer(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null);
+                        
+                        sqlOptions.CommandTimeout(30);
+                    });
+
+                    // Configure additional options based on environment
+                    var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT");
+                    if (environment == "Development")
+                    {
+                        options.EnableSensitiveDataLogging();
+                        options.EnableDetailedErrors();
+                    }
+                });
+
+                // Add health checks for SQL Server
+                services.AddHealthChecks()
+                    .AddDbContextCheck<QueueHubDbContext>();
+            }
+            else if (useInMemoryDatabase)
+            {
+                // Add Entity Framework DbContext for In-Memory database (for testing)
+                services.AddDbContext<QueueHubDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase("QueueHubTestDb");
+                    options.EnableSensitiveDataLogging();
+                    options.EnableDetailedErrors();
+                });
+            }
+        }
+
+        private static void AddRepositories(IServiceCollection services, IConfiguration configuration)
+        {
+            var useInMemoryDatabase = configuration.GetValue<bool>("Database:UseInMemoryDatabase", false);
+            var useSqlDatabase = configuration.GetValue<bool>("Database:UseSqlDatabase", true);
+            var useBogusRepositories = configuration.GetValue<bool>("Database:UseBogusRepositories", false);
+
+            if (useBogusRepositories || (!useSqlDatabase && !useInMemoryDatabase))
+            {
+                // Use Bogus repositories for testing/development
+                AddBogusRepositories(services);
+            }
+            else
+            {
+                // Use SQL repositories for production/testing with actual database
+                AddSqlRepositories(services);
+            }
+        }
+
+        private static void AddBogusRepositories(IServiceCollection services)
+        {
+            services.AddScoped(typeof(IRepository<>), typeof(BogusGenericRepository<>));
+            services.AddScoped<IUserRepository, BogusUserRepository>();
+            services.AddScoped<IOrganizationRepository, BogusOrganizationRepository>();
+            services.AddScoped<ILocationRepository, BogusLocationRepository>();
+            services.AddScoped<IQueueRepository, BogusQueueRepository>();
+            services.AddScoped<ICustomerRepository, BogusCustomerRepository>();
+            services.AddScoped<IStaffMemberRepository, BogusStaffMemberRepository>();
+            services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
+            services.AddScoped<ISubscriptionPlanRepository, BogusSubscriptionPlanRepository>();
+            services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
+        }
+
+        private static void AddSqlRepositories(IServiceCollection services)
+        {
+            // All SQL repository implementations are now complete
+            services.AddScoped<IOrganizationRepository, SqlOrganizationRepository>();
+            services.AddScoped<IQueueRepository, SqlQueueRepository>();
+            services.AddScoped<ILocationRepository, SqlLocationRepository>();
+            services.AddScoped<ICustomerRepository, SqlCustomerRepository>();
+            services.AddScoped<IUserRepository, SqlUserRepository>();
+            services.AddScoped<IStaffMemberRepository, SqlStaffMemberRepository>();
+            services.AddScoped<IServicesOfferedRepository, SqlServicesOfferedRepository>();
+            services.AddScoped<ISubscriptionPlanRepository, SqlSubscriptionPlanRepository>();
+            services.AddScoped<IAuditLogRepository, SqlAuditLogRepository>();
+        }
+
+        private static void AddApplicationServices(IServiceCollection services)
+        {
             // Auth services
             services.AddScoped<AuthService>();
             
@@ -125,8 +229,6 @@ namespace Grande.Fila.API.Infrastructure
             
             // Kiosk services
             services.AddScoped<KioskDisplayService>();
-            
-            return services;
         }
     }
 }

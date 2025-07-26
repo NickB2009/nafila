@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # SQL Server for database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: nafila-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=DevPassword123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P DevPassword123! -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+      timeout: 3s
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend/GrandeTech.QueueHub
+      dockerfile: GrandeTech.QueueHub.API/Dockerfile
+    container_name: nafila-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;Encrypt=False;
+    ports:
+      - "5098:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+    driver: local 

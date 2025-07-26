@@ -25,6 +25,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Grande.Fila.API.Tests.Integration;
 using BCrypt.Net;
 using Grande.Fila.API.Infrastructure;
+using System.Collections.Generic;
+using Microsoft.Extensions.Hosting;
 
 namespace Grande.Fila.Tests.Integration.Controllers
 {
@@ -49,6 +51,21 @@ namespace Grande.Fila.Tests.Integration.Controllers
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
+                    builder.UseEnvironment("Testing");
+                    builder.ConfigureAppConfiguration((context, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
+                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test",
+                            ["Database:UseSqlDatabase"] = "false",
+                            ["Database:UseInMemoryDatabase"] = "false",
+                            ["Database:UseBogusRepositories"] = "true",
+                            ["Database:AutoMigrate"] = "false",
+                            ["Database:SeedData"] = "false"
+                        });
+                    });
                     builder.ConfigureServices(services =>
                     {
                         var servicesToRemove = new[]

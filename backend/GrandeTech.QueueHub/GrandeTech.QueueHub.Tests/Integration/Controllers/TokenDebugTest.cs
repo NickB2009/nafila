@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 
 namespace Grande.Fila.Tests.Integration.Controllers
 {
@@ -24,10 +25,14 @@ namespace Grande.Fila.Tests.Integration.Controllers
     {
         private WebApplicationFactory<Program>? _factory;
         private HttpClient? _client;
+        private static BogusUserRepository? _userRepository;
 
         [TestInitialize]
         public void Setup()
         {
+            if (_userRepository == null)
+                _userRepository = new BogusUserRepository();
+                
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
@@ -38,11 +43,24 @@ namespace Grande.Fila.Tests.Integration.Controllers
                         {
                             ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
                             ["Jwt:Issuer"] = "Grande.Fila.API.Test",
-                            ["Jwt:Audience"] = "Grande.Fila.API.Test"
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test",
+                            ["Database:UseSqlDatabase"] = "false",
+                            ["Database:UseInMemoryDatabase"] = "false",
+                            ["Database:UseBogusRepositories"] = "true",
+                            ["Database:AutoMigrate"] = "false",
+                            ["Database:SeedData"] = "false"
                         });
                     });
                     builder.ConfigureServices(services =>
                     {
+                        // Remove existing IUserRepository registrations
+                        var descriptors = services.Where(d => d.ServiceType == typeof(IUserRepository)).ToList();
+                        foreach (var descriptor in descriptors)
+                        {
+                            services.Remove(descriptor);
+                        }
+                        // Use shared repository instance for testing
+                        services.AddSingleton<IUserRepository>(_userRepository);
                         // Register AuthService for JWT token generation
                         services.AddScoped<AuthService>();
                     });

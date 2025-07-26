@@ -13,6 +13,13 @@ using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Infrastructure;
 using System.Linq;
 using Grande.Fila.API.Domain.Customers;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Application.Services.Cache;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -23,27 +30,58 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         private static WebApplicationFactory<Program> _factory = null!;
         private static BogusQueueRepository _queueRepository = null!;
         private static BogusCustomerRepository _customerRepository = null!;
+        private static BogusStaffMemberRepository _staffMemberRepository = null!;
+        private static BogusLocationRepository _locationRepository = null!;
+        private static BogusUserRepository _userRepository = null!;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
             _queueRepository = new BogusQueueRepository();
             _customerRepository = new BogusCustomerRepository();
+            _staffMemberRepository = new BogusStaffMemberRepository();
+            _locationRepository = new BogusLocationRepository();
+            _userRepository = new BogusUserRepository();
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
+                    builder.UseEnvironment("Testing");
+                    builder.ConfigureAppConfiguration((context, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
+                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test",
+                            ["Database:UseSqlDatabase"] = "false",
+                            ["Database:UseInMemoryDatabase"] = "false",
+                            ["Database:UseBogusRepositories"] = "true",
+                            ["Database:AutoMigrate"] = "false",
+                            ["Database:SeedData"] = "false"
+                        });
+                    });
                     builder.ConfigureServices(services =>
                     {
                         // Remove existing repository registrations
-                        var descriptors = services.Where(d => 
-                            d.ServiceType == typeof(IQueueRepository) ||
-                            d.ServiceType == typeof(ICustomerRepository)).ToList();
+                        var servicesToRemove = new[]
+                        {
+                            typeof(IQueueRepository),
+                            typeof(ICustomerRepository),
+                            typeof(IStaffMemberRepository),
+                            typeof(ILocationRepository),
+                            typeof(IUserRepository)
+                        };
+                        var descriptors = services.Where(d => servicesToRemove.Contains(d.ServiceType)).ToList();
                         foreach (var descriptor in descriptors)
                         {
                             services.Remove(descriptor);
                         }
                         services.AddSingleton<IQueueRepository>(_queueRepository);
                         services.AddSingleton<ICustomerRepository>(_customerRepository);
+                        services.AddSingleton<IStaffMemberRepository>(_staffMemberRepository);
+                        services.AddSingleton<ILocationRepository>(_locationRepository);
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddSingleton<IAverageWaitTimeCache, InMemoryAverageWaitTimeCache>();
                     });
                 });
         }

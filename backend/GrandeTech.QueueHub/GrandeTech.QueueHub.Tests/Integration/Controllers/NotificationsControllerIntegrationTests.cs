@@ -10,6 +10,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System;
+using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -17,11 +22,43 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
     public class NotificationsControllerIntegrationTests
     {
         private static WebApplicationFactory<Program> _factory = null!;
+        private static BogusUserRepository _userRepository = null!;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
-            _factory = new WebApplicationFactory<Program>();
+            _userRepository = new BogusUserRepository();
+            _factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.UseEnvironment("Testing");
+                    builder.ConfigureAppConfiguration((context, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
+                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test",
+                            ["Database:UseSqlDatabase"] = "false",
+                            ["Database:UseInMemoryDatabase"] = "false",
+                            ["Database:UseBogusRepositories"] = "true",
+                            ["Database:AutoMigrate"] = "false",
+                            ["Database:SeedData"] = "false"
+                        });
+                    });
+                    builder.ConfigureServices(services =>
+                    {
+                        // Remove existing IUserRepository registrations
+                        var descriptors = services.Where(d => d.ServiceType == typeof(IUserRepository)).ToList();
+                        foreach (var descriptor in descriptors)
+                        {
+                            services.Remove(descriptor);
+                        }
+                        // Use shared repository instance for testing
+                        services.AddSingleton<IUserRepository>(_userRepository);
+                        services.AddScoped<AuthService>();
+                    });
+                });
         }
 
         [TestMethod]
@@ -80,7 +117,24 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var email = $"{username}@test.com";
             var password = "testpassword123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), role);
+            // Map old test roles to new roles
+            var mappedRole = role.ToLower() switch
+            {
+                "platformadmin" => UserRoles.PlatformAdmin,
+                "owner" => UserRoles.Owner,
+                "staff" => UserRoles.Staff,
+                "customer" => UserRoles.Customer,
+                "serviceaccount" => UserRoles.ServiceAccount,
+                // Legacy mappings for backward compatibility
+                "admin" => UserRoles.Owner,
+                "barber" => UserRoles.Staff,
+                "client" => UserRoles.Customer,
+                "user" => UserRoles.Customer, // Default user becomes Customer
+                _ => UserRoles.Customer // Default fallback
+            };
+
+            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
+            user.DisableTwoFactor(); // Disable 2FA for test users
             await userRepo.AddAsync(user, CancellationToken.None);
 
             var loginReq = new LoginRequest { Username = username, Password = password };

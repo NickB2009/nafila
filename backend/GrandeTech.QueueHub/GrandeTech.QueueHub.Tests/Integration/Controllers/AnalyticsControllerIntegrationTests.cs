@@ -22,6 +22,11 @@ using Grande.Fila.API.Application.Analytics;
 using System.Linq;
 using System.Collections.Generic;
 using Grande.Fila.API.Application.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using System.Net.Http.Headers;
+using System.Text;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Grande.Fila.API.Tests.Integration.Controllers
 {
@@ -53,6 +58,21 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             _factory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
+                    builder.UseEnvironment("Testing");
+                    builder.ConfigureAppConfiguration((context, config) =>
+                    {
+                        config.AddInMemoryCollection(new Dictionary<string, string?>
+                        {
+                            ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
+                            ["Jwt:Issuer"] = "Grande.Fila.API.Test",
+                            ["Jwt:Audience"] = "Grande.Fila.API.Test",
+                            ["Database:UseSqlDatabase"] = "false",
+                            ["Database:UseInMemoryDatabase"] = "false",
+                            ["Database:UseBogusRepositories"] = "true",
+                            ["Database:AutoMigrate"] = "false",
+                            ["Database:SeedData"] = "false"
+                        });
+                    });
                     builder.ConfigureServices(services =>
                     {
                         // Remove existing repository registrations

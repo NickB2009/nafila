@@ -3,6 +3,7 @@ using Grande.Fila.API.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Grande.Fila.API.Application;
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Application.Queues;
 using Grande.Fila.API.Domain.Users;
@@ -20,6 +21,12 @@ using Grande.Fila.API.Application.Promotions;
 using Grande.Fila.API.Domain.Promotions;
 using Grande.Fila.API.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -179,6 +186,9 @@ builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.Mock
 builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
 builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
 
+// Add database seeding service
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Data.DatabaseSeeder>();
+
 builder.Services.AddSingleton<IAuthorizationHandler, HasPermissionHandler>();
 builder.Services.AddAuthorization(options =>
 {
@@ -187,6 +197,30 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+// Configure database and seeding
+var autoMigrate = builder.Configuration.GetValue<bool>("Database:AutoMigrate", false);
+var seedData = builder.Configuration.GetValue<bool>("Database:SeedData", false);
+var useSqlDatabase = builder.Configuration.GetValue<bool>("Database:UseSqlDatabase", true);
+
+if ((autoMigrate || seedData) && useSqlDatabase)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.QueueHubDbContext>();
+        
+        if (autoMigrate)
+        {
+            await context.Database.MigrateAsync();
+        }
+        
+        if (seedData)
+        {
+            var seeder = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.DatabaseSeeder>();
+            await seeder.SeedAsync();
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 // Swagger is available in all environments
