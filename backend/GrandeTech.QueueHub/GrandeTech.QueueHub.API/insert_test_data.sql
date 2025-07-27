@@ -1,50 +1,41 @@
--- FULL RESET: Delete all test data in the correct order to avoid FK constraint errors
-DELETE FROM Customers;
-DELETE FROM Locations;
-DELETE FROM Organizations;
-DELETE FROM SubscriptionPlans;
+-- SIMPLIFIED SEEDING: Only seed tables that exist in the current DbContext
+-- (Organizations, Locations, SubscriptionPlans, Customers are disabled due to Slug value object issues)
 
--- Insert test data for Organizations (Barber Shop and Health Clinic)
-INSERT INTO Organizations (
-  Id, Name, Slug, Description, ContactEmail, ContactPhone, WebsiteUrl, BrandingPrimaryColor, BrandingSecondaryColor, BrandingLogoUrl, BrandingFaviconUrl, BrandingCompanyName, BrandingTagLine, BrandingFontFamily, SubscriptionPlanId, IsActive, SharesDataForAnalytics, CreatedBy, CreatedAt, LastModifiedBy, LastModifiedAt, IsDeleted
+-- Clear existing data (delete in order due to foreign key constraints)
+DELETE FROM QueueEntries;
+DELETE FROM Queues;
+DELETE FROM Users;
+
+-- Insert test data for Users
+INSERT INTO Users (
+  Id, Username, Email, PasswordHash, Role, LastLoginAt, IsLocked, RequiresTwoFactor, CreatedAt, CreatedBy, LastModifiedAt, LastModifiedBy, IsDeleted
 )
 VALUES
-  ('11111111-1111-1111-1111-111111111111', 'Downtown Barbers', 'downtown-barbers', 'Trendy barber shop in the city center', 'contact@downtownbarbers.com', '555-1234', 'https://downtownbarbers.com', '#222222', '#FFD700', 'https://barbers.com/logo.png', 'https://barbers.com/favicon.ico', 'Downtown Barbers', 'Look sharp, feel sharp', 'Roboto', '22222222-2222-2222-2222-222222222222', 1, 1, 'seed', GETDATE(), 'seed', GETDATE(), 0),
-  ('11111111-1111-1111-1111-111111111112', 'Healthy Life Clinic', 'healthy-life-clinic', 'Family health clinic with modern facilities', 'info@healthylife.com', '555-5678', 'https://healthylife.com', '#4CAF50', '#2196F3', 'https://healthylife.com/logo.png', 'https://healthylife.com/favicon.ico', 'Healthy Life', 'Your health, our priority', 'Open Sans', '22222222-2222-2222-2222-222222222223', 1, 0, 'seed', GETDATE(), 'seed', GETDATE(), 0);
+  ('55555555-5555-5555-5555-555555555551', 'platformadmin_test', 'platformadmin@test.com', '$2a$11$8qkrKVPZzSuQGKYvHJgRMuZRvXJgKZ1K8XJJzT4yE.FQtq8WzYkO6', 'PlatformAdmin', NULL, 0, 0, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('55555555-5555-5555-5555-555555555552', 'owner_test', 'owner@test.com', '$2a$11$7nKLTUVsN1WqP2rJrJ5R1e8D8lxqJ2zQ5JjF5sN8xQ5xJ8xN5sQ8x', 'Owner', NULL, 0, 0, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('55555555-5555-5555-5555-555555555553', 'staff_test', 'staff@test.com', '$2a$11$9mJsY3xP5vJ2mJ8mJ5sN8xQ5xJ8xN5sQ8x2zQ5JjF5sN8xQ5xJ8xN', 'Staff', NULL, 0, 0, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('55555555-5555-5555-5555-555555555554', 'customer_test', 'customer@test.com', '$2a$11$6lIsX2yO4wI1lI7lI4rM7yP4yI7yM4rP7y1zP4IiE4rM7yP4yI7yM', 'Customer', NULL, 0, 0, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('55555555-5555-5555-5555-555555555555', 'service_test', 'service@test.com', '$2a$11$5kHrW1zN3vH0kH6kH3qL6zO3zH6zL3qO6z0yO3HhD3qL6zO3zH6zL', 'ServiceAccount', NULL, 0, 0, GETDATE(), 'seed', GETDATE(), 'seed', 0);
 
--- Insert test data for SubscriptionPlans
-INSERT INTO SubscriptionPlans (
-  Id, Name, Description, Price, MaxLocations, MaxStaffPerLocation, MaxQueueEntriesPerDay, IncludesAnalytics, IncludesAdvancedReporting, IncludesAdvertising, IncludesMultipleLocations, IsDefault, IsActive, IsFeatured, CreatedBy, CreatedAt, LastModifiedBy, LastModifiedAt,
-  MonthlyPriceAmount, MonthlyPriceCurrency, YearlyPriceAmount, YearlyPriceCurrency, IsDeleted
+-- Insert test data for Queues (using different placeholder LocationIds since Locations are disabled)
+INSERT INTO Queues (
+  Id, LocationId, QueueDate, IsActive, MaxSize, LateClientCapTimeInMinutes, CreatedAt, CreatedBy, LastModifiedAt, LastModifiedBy, IsDeleted
 )
 VALUES
-  ('22222222-2222-2222-2222-222222222222', 'Barber Gold', 'Premium plan for barber shops', 49.99, 5, 20, 200, 1, 1, 1, 0, 1, 1, 1, 'seed', GETDATE(), 'seed', GETDATE(), 10, 'USD', 100, 'USD', 0),
-  ('22222222-2222-2222-2222-222222222223', 'Clinic Pro', 'Professional plan for health clinics', 99.99, 10, 50, 500, 1, 1, 1, 1, 0, 1, 1, 'seed', GETDATE(), 'seed', GETDATE(), 20, 'USD', 200, 'USD', 0);
+  ('11111111-1111-1111-1111-111111111111', '99999999-9999-9999-9999-999999999991', CAST(GETDATE() AS DATE), 1, 50, 15, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('11111111-1111-1111-1111-111111111112', '99999999-9999-9999-9999-999999999992', CAST(GETDATE() AS DATE), 1, 10, 5, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('11111111-1111-1111-1111-111111111113', '99999999-9999-9999-9999-999999999993', CAST(GETDATE() AS DATE), 1, 20, 10, GETDATE(), 'seed', GETDATE(), 'seed', 0);
 
--- Insert test data for Locations (Barber Shop and Health Clinic)
-INSERT INTO Locations (
-  Id, Name, Slug, Description, OrganizationId, Street, Number, Complement, Neighborhood, City, State, Country, PostalCode, Latitude, Longitude,
-  ContactPhone, ContactPhoneCountryCode, ContactPhoneNationalNumber, ContactEmail, BrandingPrimaryColor, BrandingSecondaryColor, BrandingLogoUrl, BrandingFontFamily,
-  BusinessHoursStart, BusinessHoursEnd, IsQueueEnabled, MaxQueueSize, LateClientCapTimeInMinutes, IsActive, AverageServiceTimeInMinutes, LastAverageTimeReset,
-  CreatedBy, CreatedAt, LastModifiedBy, LastModifiedAt, IsDeleted, DeletedAt, DeletedBy
-) VALUES
-  ('33333333-3333-3333-3333-333333333333', 'Main Street Barbers', 'main-street-barbers', 'Classic cuts and shaves', '11111111-1111-1111-1111-111111111111',
-   '101 Main St', '10', '', 'Downtown', 'Metropolis', 'NY', 'USA', '10001', 40.7128, -74.0060,
-   '555-1111', '+1', '5551111', 'main@barbers.com', '#333333', '#E91E63', 'https://barbers.com/mainlogo.png', 'Roboto',
-   '08:00', '19:00', 1, 30, 5, 1, 20, GETDATE(),
-   'seed', GETDATE(), 'seed', GETDATE(), 0, NULL, NULL),
-  ('33333333-3333-3333-3333-333333333334', 'Healthy Life Pediatrics', 'healthy-life-pediatrics', 'Pediatric care for your family', '11111111-1111-1111-1111-111111111112',
-   '202 Clinic Ave', '20', '', 'Medical District', 'Springfield', 'IL', 'USA', '62704', 39.7817, -89.6501,
-   '555-2222', '+1', '5552222', 'peds@healthylife.com', '#8BC34A', '#03A9F4', 'https://healthylife.com/pedslogo.png', 'Open Sans',
-   '09:00', '17:00', 1, 40, 10, 1, 30, GETDATE(),
-   'seed', GETDATE(), 'seed', GETDATE(), 0, NULL, NULL);
-
--- Insert test data for Customers
-INSERT INTO Customers (
-  Id, Name, IsAnonymous, NotificationsEnabled, PreferredNotificationChannel, UserId, PhoneNumber, PhoneCountryCode, PhoneNationalNumber, Email, FavoriteLocationIds, CreatedBy, CreatedAt, LastModifiedBy, LastModifiedAt, IsDeleted
+-- Insert test data for QueueEntries (using placeholder CustomerId since Customers are disabled)
+INSERT INTO QueueEntries (
+  Id, QueueId, CustomerId, CustomerName, Position, Status, StaffMemberId, ServiceTypeId, Notes, EnteredAt, CalledAt, CheckedInAt, CompletedAt, CancelledAt, CreatedAt, CreatedBy, LastModifiedAt, LastModifiedBy, IsDeleted
 )
 VALUES
-  ('44444444-4444-4444-4444-444444444444', 'Clark Kent', 0, 1, 'sms', 'user-ck', '555-0001', '+1', '5550001', 'clark.kent@example.com', '33333333-3333-3333-3333-333333333333', 'seed', GETDATE(), 'seed', GETDATE(), 0),
-  ('44444444-4444-4444-4444-444444444445', 'Lois Lane', 0, 1, 'email', 'user-ll', '555-0002', '+1', '5550002', 'lois.lane@example.com', '33333333-3333-3333-3333-333333333334', 'seed', GETDATE(), 'seed', GETDATE(), 0),
-  ('44444444-4444-4444-4444-444444444446', 'Bruce Wayne', 0, 1, 'sms', 'user-bw', '555-0003', '+1', '5550003', 'bruce.wayne@example.com', '33333333-3333-3333-3333-333333333333', 'seed', GETDATE(), 'seed', GETDATE(), 0),
-  ('44444444-4444-4444-4444-444444444447', 'Diana Prince', 0, 1, 'email', 'user-dp', '555-0004', '+1', '5550004', 'diana.prince@example.com', '33333333-3333-3333-3333-333333333334', 'seed', GETDATE(), 'seed', GETDATE(), 0); 
+  ('22222222-2222-2222-2222-222222222221', '11111111-1111-1111-1111-111111111111', '88888888-8888-8888-8888-888888888881', 'João Silva', 1, 'Waiting', NULL, NULL, 'Regular haircut', GETDATE(), NULL, NULL, NULL, NULL, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', '88888888-8888-8888-8888-888888888882', 'Maria Santos', 2, 'Waiting', NULL, NULL, 'Wash and cut', GETDATE(), NULL, NULL, NULL, NULL, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('22222222-2222-2222-2222-222222222223', '11111111-1111-1111-1111-111111111112', '88888888-8888-8888-8888-888888888883', 'Carlos Oliveira', 1, 'CheckedIn', '55555555-5555-5555-5555-555555555553', NULL, 'VIP service', DATEADD(MINUTE, -10, GETDATE()), DATEADD(MINUTE, -8, GETDATE()), DATEADD(MINUTE, -5, GETDATE()), NULL, NULL, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('22222222-2222-2222-2222-222222222224', '11111111-1111-1111-1111-111111111113', '88888888-8888-8888-8888-888888888884', 'Ana Costa', 1, 'Waiting', NULL, NULL, 'Appointment scheduled', GETDATE(), NULL, NULL, NULL, NULL, GETDATE(), 'seed', GETDATE(), 'seed', 0);
+
+-- Note: Organizations, Locations, SubscriptionPlans, and Customers are not included
+-- because they are disabled in QueueHubDbContext.cs due to Slug value object issues.
+-- These can be added back once the value object issues are resolved. 

@@ -173,7 +173,6 @@ builder.Services.AddScoped<CancelQueueService>();
 builder.Services.AddScoped<SaveHaircutDetailsService>();
 builder.Services.AddScoped<EstimatedWaitTimeService>();
 builder.Services.AddScoped<ResetAverageService>();
-builder.Services.AddScoped<Grande.Fila.API.Domain.Queues.IQueueRepository, BogusQueueRepository>();
 
 builder.Services.AddSingleton<IAverageWaitTimeCache, Grande.Fila.API.Infrastructure.InMemoryAverageWaitTimeCache>();
 builder.Services.AddScoped<UpdateCacheService>();
