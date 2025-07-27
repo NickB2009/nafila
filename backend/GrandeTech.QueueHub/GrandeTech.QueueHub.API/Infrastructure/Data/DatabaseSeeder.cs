@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace Grande.Fila.API.Infrastructure.Data
 {
@@ -7,11 +6,13 @@ namespace Grande.Fila.API.Infrastructure.Data
     {
         private readonly QueueHubDbContext _context;
         private readonly ILogger<DatabaseSeeder> _logger;
+        private readonly IConfiguration _configuration;
 
-        public DatabaseSeeder(QueueHubDbContext context, ILogger<DatabaseSeeder> logger)
+        public DatabaseSeeder(QueueHubDbContext context, ILogger<DatabaseSeeder> logger, IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task SeedAsync()
@@ -20,8 +21,30 @@ namespace Grande.Fila.API.Infrastructure.Data
             {
                 _logger.LogInformation("Starting database seeding...");
 
-                // Always clear and reseed - don't skip if data exists
-                _logger.LogInformation("Force clearing and reseeding database...");
+                // Check if we should force reseed (useful for development)
+                var forceReseed = _configuration.GetValue<bool>("Database:ForceReseed", false);
+
+                if (!forceReseed)
+                {
+                    // Check if data already exists
+                    try
+                    {
+                        var hasUserData = await _context.Users.AnyAsync();
+                        if (hasUserData)
+                        {
+                            _logger.LogInformation("Database already contains data. Skipping seeding.");
+                            return;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        _logger.LogInformation("Tables might not exist yet, proceeding with seeding...");
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Force reseed enabled. Clearing and reseeding database...");
+                }
 
                 // Read from file system
                 var sqlFilePath = Path.Combine(Directory.GetCurrentDirectory(), "insert_test_data.sql");
@@ -29,12 +52,10 @@ namespace Grande.Fila.API.Infrastructure.Data
                 {
                     var fileContent = await File.ReadAllTextAsync(sqlFilePath);
                     await ExecuteSqlScript(fileContent);
-                    return;
                 }
                 else
                 {
                     _logger.LogWarning("Could not find insert_test_data.sql file for seeding");
-                    return;
                 }
             }
             catch (Exception ex)
@@ -89,7 +110,7 @@ namespace Grande.Fila.API.Infrastructure.Data
                     }
                 }
 
-                _logger.LogInformation("Found {Count} SQL statements to execute", statements.Count);
+                _logger.LogInformation("Executing {Count} SQL statements for database seeding", statements.Count);
 
                 foreach (var statement in statements)
                 {
@@ -99,18 +120,11 @@ namespace Grande.Fila.API.Infrastructure.Data
 
                     try
                     {
-                        _logger.LogInformation("Executing SQL: {Statement}", 
-                            trimmedStatement.Length > 100 ? trimmedStatement.Substring(0, 100) + "..." : trimmedStatement);
-                        
                         await _context.Database.ExecuteSqlRawAsync(trimmedStatement);
-                        
-                        _logger.LogInformation("Successfully executed SQL statement");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error executing SQL statement: {Error}. Statement: {Statement}", 
-                            ex.Message, trimmedStatement.Length > 200 ? trimmedStatement.Substring(0, 200) + "..." : trimmedStatement);
-                        // Don't continue on error - we want to know about failures
+                        _logger.LogError(ex, "Error executing SQL statement: {Error}", ex.Message);
                         throw;
                     }
                 }
