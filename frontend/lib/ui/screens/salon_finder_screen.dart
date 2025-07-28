@@ -192,23 +192,23 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                 margin: const EdgeInsets.only(right: 16),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: theme.colorScheme.onSurface.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.person, color: Colors.white, size: 16),
+                    Icon(Icons.person, color: theme.colorScheme.onSurface, size: 16),
                     const SizedBox(width: 4),
-                    Text('1', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text('1', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.dangerColor,
+                        color: theme.colorScheme.primary,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text('Q2', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      child: Text('Q2', style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -886,20 +886,13 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.8),
-          ],
-        ),
+        color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: theme.shadowColor.withOpacity(0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -909,12 +902,12 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: theme.colorScheme.onPrimary.withOpacity(0.2),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Icon(
               Icons.explore,
-              color: Colors.white,
+              color: theme.colorScheme.onPrimary,
               size: 28,
             ),
           ),
@@ -926,7 +919,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                 Text(
                   'Explorar mais salões',
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
+                    color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 18,
                   ),
@@ -941,7 +934,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                       Text(
                         'Ver mapa interativo',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
+                          color: theme.colorScheme.onPrimary.withOpacity(0.9),
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -950,7 +943,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                       Icon(
                         Icons.arrow_forward,
                         size: 16,
-                        color: Colors.white.withOpacity(0.9),
+                        color: theme.colorScheme.onPrimary.withOpacity(0.9),
                       ),
                     ],
                   ),
@@ -1014,18 +1007,6 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       ],
     );
   }
-}
-
-SalonColors _randomSalonColors(int seed) {
-  final palettes = [
-    SalonColors(primary: Colors.redAccent, secondary: Colors.orange, background: Colors.red.shade50, onSurface: Colors.red.shade900),
-    SalonColors(primary: Colors.blueAccent, secondary: Colors.cyan, background: Colors.blue.shade50, onSurface: Colors.blue.shade900),
-    SalonColors(primary: Colors.green, secondary: Colors.teal, background: Colors.green.shade50, onSurface: Colors.green.shade900),
-    SalonColors(primary: Colors.purple, secondary: Colors.pinkAccent, background: Colors.purple.shade50, onSurface: Colors.purple.shade900),
-    SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50, onSurface: Colors.amber.shade900),
-    SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50, onSurface: Colors.indigo.shade900),
-  ];
-  return palettes[seed % palettes.length];
 }
 
 /// Custom painter for the salon decoration
