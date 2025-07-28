@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Theme configuration for the application
 class AppTheme {
   /// Primary brand color
-  static const Color primaryColor = Color(0xFFD4AF37); // Rich Gold
+  static const Color primaryColor = Color(0xFFB8860B); // Refined Gold
   
   /// Secondary brand color
   static const Color secondaryColor = Color(0xFF2C3E50);
@@ -33,17 +33,16 @@ class AppTheme {
   
   /// Gradient colors for hero sections and special elements
   static const List<Color> heroGradient = [
-    primaryColor, // Gold
-    infoColor,    // Blue
-    accentColor,  // Purple accent (optional, can be removed if you want only blue/gold)
+    primaryColor, // Refined Gold
+    Color(0xFF8B7355), // Darker gold
   ];
   static const List<Color> offerGradient = [
-    primaryColor, // Gold
-    infoColor,    // Blue
+    primaryColor, // Refined Gold
+    Color(0xFF8B7355), // Darker gold
   ];
   static const List<Color> ctaGradient = [
-    primaryColor, // Gold
-    infoColor,    // Blue
+    primaryColor, // Refined Gold
+    Color(0xFF8B7355), // Darker gold
   ];
   static const List<Color> statsGradient = [
     Color(0xFF667eea), // Soft blue
@@ -57,8 +56,8 @@ class AppTheme {
   /// Semantic colors for different states
   static const Map<String, Color> semanticColors = {
     'urgent': Color(0xFF4CAF50),     // Green for urgent/fast
-    'popular': Color(0xFFFF9800),    // Orange for popular
-    'premium': Color(0xFFD4AF37),    // Gold for premium
+    'popular': Color(0xFFB8860B),    // Refined gold for popular
+    'premium': Color(0xFFB8860B),    // Refined gold for premium
     'distance': Color(0xFF009688),   // Teal for distance
     'time': Color(0xFF2196F3),       // Blue for time
     'queue': Color(0xFF6B73FF),      // Purple for queue
