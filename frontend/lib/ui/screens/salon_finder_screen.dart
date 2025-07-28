@@ -15,7 +15,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import '../../utils/palette_utils.dart';
 
-/// Salon finder screen for mobile web interface
+/// Clean and efficient salon finder screen
 class SalonFinderScreen extends StatefulWidget {
   const SalonFinderScreen({super.key});
 
@@ -23,18 +23,11 @@ class SalonFinderScreen extends StatefulWidget {
   State<SalonFinderScreen> createState() => _SalonFinderScreenState();
 }
 
-class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProviderStateMixin {
+class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTickerProviderStateMixin {
   final Set<String> _favoriteSalons = {};
   late AnimationController _animationController;
-  late AnimationController _heroAnimationController;
-  late AnimationController _pulseController;
-  late AnimationController _floatingController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  late Animation<double> _heroScaleAnimation;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _floatingAnimation;
-  late Animation<Color?> _gradientAnimation;
   
   Timer? _waitTimeTimer;
   Timer? _offerTimer;
@@ -53,22 +46,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
 
   void _setupAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _heroAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    );
-
-    _floatingController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
@@ -77,130 +55,129 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
+      begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
-    _heroScaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _heroAnimationController, curve: Curves.elasticOut),
-    );
-
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    _floatingAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _floatingController, curve: Curves.easeInOut),
-    );
-
-    _gradientAnimation = ColorTween(
-      begin: AppTheme.heroGradient[0],
-      end: AppTheme.heroGradient[1],
-    ).animate(_floatingController);
-
     _animationController.forward();
-    _heroAnimationController.forward();
-    _pulseController.repeat(reverse: true);
-    _floatingController.repeat(reverse: true);
-  }
-
-  void _startDynamicUpdates() {
-    _waitTimeTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      setState(() {
-        _updateWaitTimes();
-      });
-    });
-
-    _offerTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _secondsRemaining--;
-        if (_secondsRemaining <= 0) {
-          _secondsRemaining = 300; // Reset to 5 minutes
-        }
-      });
-    });
-  }
-
-  void _generateDynamicSalons() {
-    final random = math.Random();
-    _dynamicSalons = List.generate(4, (index) {
-      final baseWaitTime = [5, 12, 18, 25][index];
-      final names = ['Studio Elegance', 'Beleza Premium', 'Hair Lounge', 'Salon Luxe'];
-      final addresses = [
-        'Rua das Flores, 123 - Centro',
-        'Av. Paulista, 456 - Bela Vista',
-        'Rua Augusta, 789 - Consolação',
-        'Av. Brigadeiro, 321 - Jardins'
-      ];
-      
-      return Salon(
-        name: names[index],
-        address: addresses[index],
-        waitTime: baseWaitTime + random.nextInt(10),
-        distance: 0.5 + (index * 0.3) + (random.nextDouble() * 0.5),
-        isOpen: true,
-        closingTime: index < 2 ? '9 PM' : '7 PM',
-        isFavorite: index == 0,
-        queueLength: math.max(1, (baseWaitTime / 5).round() + random.nextInt(3)),
-        colors: _randomSalonColors(index),
-      );
-    });
-  }
-
-  void _updateWaitTimes() {
-    final random = math.Random();
-    for (int i = 0; i < _dynamicSalons.length; i++) {
-      final currentWait = _dynamicSalons[i].waitTime;
-      final change = random.nextInt(6) - 3; // -3 to +2 minutes
-      _dynamicSalons[i] = Salon(
-        name: _dynamicSalons[i].name,
-        address: _dynamicSalons[i].address,
-        waitTime: math.max(1, currentWait + change),
-        distance: _dynamicSalons[i].distance,
-        isOpen: _dynamicSalons[i].isOpen,
-        closingTime: _dynamicSalons[i].closingTime,
-        isFavorite: _dynamicSalons[i].isFavorite,
-        queueLength: math.max(1, _dynamicSalons[i].queueLength + (change > 0 ? 1 : -1)),
-        colors: _dynamicSalons[i].colors,
-      );
-    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    _heroAnimationController.dispose();
-    _pulseController.dispose();
-    _floatingController.dispose();
     _waitTimeTimer?.cancel();
     _offerTimer?.cancel();
     super.dispose();
+  }
+
+  void _startDynamicUpdates() {
+    _waitTimeTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        setState(() {
+          _updateSalonWaitTimes();
+        });
+      }
+    });
+
+    _offerTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && _secondsRemaining > 0) {
+        setState(() {
+          _secondsRemaining--;
+        });
+      }
+    });
+  }
+
+  SalonColors _generateSalonColors(int index) {
+    final colors = [
+      SalonColors(
+        primary: const Color(0xFFD4AF37),
+        secondary: const Color(0xFF2C3E50),
+        background: const Color(0xFFF5F5F5),
+        onSurface: const Color(0xFF2C3E50),
+      ),
+      SalonColors(
+        primary: const Color(0xFF6B73FF),
+        secondary: const Color(0xFF4CAF50),
+        background: const Color(0xFFF8F9FA),
+        onSurface: const Color(0xFF2C3E50),
+      ),
+      SalonColors(
+        primary: const Color(0xFFFF9800),
+        secondary: const Color(0xFF1976D2),
+        background: const Color(0xFFFFF8E1),
+        onSurface: const Color(0xFF2C3E50),
+      ),
+    ];
+    return colors[index % colors.length];
+  }
+
+  void _updateSalonWaitTimes() {
+    final random = math.Random();
+    for (int i = 0; i < _dynamicSalons.length; i++) {
+      final currentWait = _dynamicSalons[i].waitTime;
+      final change = random.nextInt(6) - 3; // -3 to +2 minutes
+      _dynamicSalons[i] = _dynamicSalons[i].copyWith(
+        waitTime: math.max(1, currentWait + change),
+        queueLength: math.max(1, _dynamicSalons[i].queueLength + (change > 0 ? 1 : -1)),
+      );
+    }
+  }
+
+  void _generateDynamicSalons() {
+    final random = math.Random();
+    _dynamicSalons = [
+      Salon(
+        name: 'Barbearia Moderna',
+        address: 'Rua das Flores, 123',
+        waitTime: 25,
+        distance: 0.8,
+        isOpen: true,
+        closingTime: '19:00',
+        isFavorite: false,
+        queueLength: 3,
+        colors: _generateSalonColors(0),
+      ),
+      Salon(
+        name: 'Studio Hair',
+        address: 'Av. Paulista, 456',
+        waitTime: 35,
+        distance: 1.2,
+        isOpen: true,
+        closingTime: '20:00',
+        isFavorite: false,
+        queueLength: 2,
+        colors: _generateSalonColors(1),
+      ),
+      Salon(
+        name: 'Barbearia Clássica',
+        address: 'Rua Augusta, 789',
+        waitTime: 20,
+        distance: 1.5,
+        isOpen: true,
+        closingTime: '18:00',
+        isFavorite: false,
+        queueLength: 4,
+        colors: _generateSalonColors(2),
+      ),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final brightness = theme.brightness;
-    final isDark = brightness == Brightness.dark;
-    final background = theme.colorScheme.surface;
-    final surface = theme.colorScheme.surface;
-    final onBackground = theme.colorScheme.onSurface;
-    final onSurface = theme.colorScheme.onSurface;
-    final cardShadow = theme.shadowColor.withOpacity(isDark ? 0.18 : 0.06);
-    final cardBorder = isDark ? Colors.white12 : Colors.grey.shade100;
-    final lightGradient = [Colors.white, Colors.grey.shade50];
-    final darkGradient = [surface, background];
-    final mainGradient = isDark ? darkGradient : lightGradient;
-    
+    final isDark = theme.brightness == Brightness.dark;
+    final mainGradient = isDark ? AppTheme.darkGradient : [Colors.white, Colors.grey.shade50];
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Hero App Bar with stunning gradient - SLIGHTLY LARGER
+          // Clean Hero App Bar
           SliverAppBar(
-            expandedHeight: size.height * 0.29, // Up from 0.24
+            expandedHeight: size.height * 0.23,
             floating: false,
             pinned: true,
             backgroundColor: Colors.transparent,
@@ -239,55 +216,49 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             ],
           ),
           
-          // Main content with balanced spacing
+          // Main content
           SliverToBoxAdapter(
             child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: mainGradient,
-                ),
-              ),
+              color: theme.colorScheme.background,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Stats section
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     child: _buildStatsSection(context, theme, size),
                   ),
                   
-                  // Divider for visual grouping
+                  // Divider
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Divider(
-                      color: Colors.grey.shade200,
-                      thickness: 1.2,
-                      height: 36, // Slightly more space
+                      color: theme.colorScheme.outline.withOpacity(0.3),
+                      thickness: 1,
+                      height: 32,
                     ),
                   ),
                   
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: size.width > 600 ? 36.0 : 24.0),
+                    padding: EdgeInsets.symmetric(horizontal: size.width > 600 ? 32.0 : 20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 24), // More space before section header
+                        const SizedBox(height: 20),
                         
                         // Closest salons header
                         _buildSectionHeader(context, theme, 'Salões mais próximos', 'Tempo real'),
-                        const SizedBox(height: 22), // More space before cards
+                        const SizedBox(height: 16),
                         
                         // Dynamic salon cards
                         ..._buildDynamicSalonCards(context, theme),
                         
-                        const SizedBox(height: 32), // More space before find card
+                        const SizedBox(height: 24),
                         
                         // Find salon card
                         _buildFindSalonCard(context, theme),
                         
-                        const SizedBox(height: 36), // More space at bottom
+                        const SizedBox(height: 32),
                       ],
                     ),
                   ),
@@ -302,159 +273,84 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   }
 
   Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size, bool isDark) {
-    final onBackground = theme.colorScheme.onSurface;
-    final isSmallScreen = size.width < 600;
-    return AnimatedBuilder(
-      animation: _floatingController,
-      builder: (context, child) {
-        final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                ? [theme.colorScheme.primary, theme.colorScheme.secondary, theme.colorScheme.surface]
-                : [_gradientAnimation.value ?? AppTheme.heroGradient[0], AppTheme.heroGradient[1], AppTheme.heroGradient[2]],
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: theme.colorScheme.surface,
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(size.width < 400 ? 20.0 : 24.0),
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: size.width < 400 ? 12 : 16),
+                  
+                  // Greeting
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width < 400 ? 14 : 16, 
+                      vertical: size.width < 400 ? 6 : 8
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.waving_hand, 
+                          color: theme.colorScheme.onPrimaryContainer, 
+                          size: size.width < 400 ? 18 : 20
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          greetingName,
+                          style: TextStyle(
+                            color: theme.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                            fontSize: size.width < 400 ? 14 : 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  SizedBox(height: size.width < 400 ? 16 : 20),
+                  
+                  // Main heading
+                  Text(
+                    "Transforme seu\nvisual hoje mesmo",
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                      color: theme.colorScheme.onSurface,
+                      fontSize: size.width < 400 ? 22 : 28,
+                    ),
+                  ),
+                  
+                  SizedBox(height: size.width < 400 ? 8 : 12),
+                  
+                  // Simple subtitle
+                  Text(
+                    "Profissionais qualificados",
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      fontSize: size.width < 400 ? 13 : 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          child: Stack(
-            children: [
-              // Floating particles - only show on larger screens
-              if (!isSmallScreen) ...List.generate(8, (index) {
-                final delay = index * 0.2;
-                return AnimatedBuilder(
-                  animation: _floatingAnimation,
-                  builder: (context, child) {
-                    final progress = (_floatingAnimation.value + delay) % 1.0;
-                    return Positioned(
-                      left: size.width * (0.1 + (index % 3) * 0.3),
-                      top: size.height * (0.1 + progress * 0.6),
-                      child: Opacity(
-                        opacity: 0.3 + (math.sin(progress * math.pi) * 0.4),
-                        child: Container(
-                          width: 4 + (index % 3) * 2,
-                          height: 4 + (index % 3) * 2,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.5),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }),
-              
-              // Main hero content
-              SafeArea(
-                child: Padding(
-                  padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: isSmallScreen ? 8 : 14),
-                      
-                      // Animated greeting
-                      ScaleTransition(
-                        scale: _heroScaleAnimation,
-                        child: FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: isSmallScreen ? 12 : 18, 
-                                      vertical: isSmallScreen ? 6 : 10
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.32),
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.waving_hand, color: Colors.white, size: 22),
-                                        const SizedBox(width: 14),
-                                        Text(
-                                          greetingName,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20,
-                                            letterSpacing: 0.2,
-                                            shadows: [
-                                              Shadow(
-                                                color: Colors.black26,
-                                                offset: Offset(0, 2),
-                                                blurRadius: 6,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10), // Up from 8/6
-                              Text(
-                                "Transforme seu\nvisual hoje mesmo",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.2,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black54,
-                                      offset: Offset(0, 2),
-                                      blurRadius: 6,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8), // Up from 6
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Text(
-                                  "Profissionais qualificados • Produtos premium • Resultados garantidos",
-                                  style: TextStyle(
-                                    color: Colors.black87,
-                                    fontSize: 12,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -576,7 +472,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                 title,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               Row(
@@ -585,7 +481,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: AppTheme.successColor,
+                      color: theme.colorScheme.tertiary,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -593,7 +489,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                   Text(
                     subtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.successColor,
+                      color: theme.colorScheme.tertiary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -649,23 +545,23 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
     final isUrgent = salon.waitTime <= 10;
     final isPopular = salon.queueLength >= 4;
-    final cardBackground = isDark ? theme.colorScheme.surface : Colors.white;
-    final cardBorder = isDark ? Colors.white12 : Colors.grey.shade100;
-    final cardShadow = theme.shadowColor.withOpacity(isDark ? 0.18 : 0.06);
+    final cardBackground = theme.colorScheme.surface;
+    final cardBorder = theme.colorScheme.outline.withOpacity(0.2);
+    final cardShadow = theme.shadowColor.withOpacity(0.08);
     final textColor = theme.colorScheme.onSurface;
-    final subTextColor = theme.colorScheme.onSurface.withOpacity(0.7);
-    final urgentColor = isDark ? theme.colorScheme.secondary : AppTheme.semanticColors['urgent']!;
-    final popularColor = isDark ? theme.colorScheme.primary : AppTheme.semanticColors['popular']!;
-    final chipTimeColor = isUrgent ? urgentColor : (isDark ? theme.colorScheme.primary : AppTheme.semanticColors['time']!);
-    final chipQueueColor = isPopular ? popularColor : (isDark ? theme.colorScheme.secondary : AppTheme.semanticColors['queue']!);
-    final chipDistanceColor = isDark ? theme.colorScheme.secondary : AppTheme.semanticColors['distance']!;
-    final ctaBg = theme.colorScheme.primary.withOpacity(0.13);
-    final ctaText = theme.colorScheme.primary;
-    final ctaSubText = theme.colorScheme.onSurface.withOpacity(0.8);
-    final buttonBg = isDark ? theme.colorScheme.surface : Colors.white;
+    final subTextColor = theme.colorScheme.onSurfaceVariant;
+    final urgentColor = theme.colorScheme.tertiary;
+    final popularColor = theme.colorScheme.primary;
+    final chipTimeColor = isUrgent ? urgentColor : theme.colorScheme.primary;
+    final chipQueueColor = isPopular ? popularColor : theme.colorScheme.secondary;
+    final chipDistanceColor = theme.colorScheme.secondary;
+    final ctaBg = theme.colorScheme.primaryContainer;
+    final ctaText = theme.colorScheme.onPrimaryContainer;
+    final ctaSubText = theme.colorScheme.onSurfaceVariant;
+    final buttonBg = theme.colorScheme.surface;
     final buttonText = theme.colorScheme.primary;
-    final buttonShadow = theme.colorScheme.primary.withOpacity(0.10);
-    final favColor = _favoriteSalons.contains(salon.name) ? AppTheme.dangerColor : (isDark ? theme.colorScheme.onSurface.withOpacity(0.4) : Colors.grey.shade300);
+    final buttonShadow = theme.colorScheme.primary.withOpacity(0.1);
+    final favColor = _favoriteSalons.contains(salon.name) ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant;
     return Container(
       decoration: BoxDecoration(
         color: cardBackground,
@@ -713,10 +609,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               Expanded(
                                 child: Text(
                                   salon.name,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
                                     color: textColor,
-                                    fontSize: isSmallScreen ? 16 : null,
+                                    fontSize: isSmallScreen ? 18 : 20,
+                                    letterSpacing: -0.2,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
@@ -792,7 +689,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                             salon.address,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: subTextColor,
-                              fontSize: isSmallScreen ? 13 : null,
+                              fontSize: isSmallScreen ? 14 : 15,
+                              fontWeight: FontWeight.w400,
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -866,10 +764,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                 ],
                 SizedBox(height: isSmallScreen ? 12 : 16),
                 Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 10 : 14),
+                  padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                   decoration: BoxDecoration(
                     color: ctaBg,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: ctaText.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
@@ -879,17 +778,18 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                           children: [
                             Text(
                               isUrgent ? 'Check-in rápido!' : 'Fazer check-in',
-                              style: TextStyle(
+                              style: theme.textTheme.titleMedium?.copyWith(
                                 color: ctaText,
-                                fontSize: isSmallScreen ? 14 : 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
+                                fontSize: isSmallScreen ? 15 : 16,
                               ),
                             ),
                             Text(
                               isUrgent ? 'Sem espera' : 'Entre na fila',
-                              style: TextStyle(
-                                color: ctaSubText,
-                                fontSize: isSmallScreen ? 12 : 14,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: ctaText.withOpacity(0.7),
+                                fontSize: isSmallScreen ? 11 : 12,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -904,15 +804,15 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           decoration: BoxDecoration(
                             color: buttonBg,
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
                                 color: buttonShadow,
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                                blurRadius: 12,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
@@ -923,10 +823,10 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                               const SizedBox(width: 6),
                               Text(
                                 'Check-in',
-                                style: TextStyle(
+                                style: theme.textTheme.labelLarge?.copyWith(
                                   color: buttonText,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
@@ -946,29 +846,31 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
 
   Widget _buildBalancedInfoChip(BuildContext context, IconData icon, String label, Color color, {bool isSmallScreen = false}) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final chipBg = isDark ? color.withOpacity(0.13) : color.withOpacity(0.09);
-    final chipBorder = isDark ? color.withOpacity(0.22) : color.withOpacity(0.18);
-    final chipText = isDark ? theme.colorScheme.onSurface : color;
-    final chipIcon = isDark ? theme.colorScheme.onSurface.withOpacity(0.85) : color.withOpacity(0.85);
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 10, vertical: isSmallScreen ? 6 : 8),
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 10 : 12, vertical: isSmallScreen ? 8 : 10),
       decoration: BoxDecoration(
-        color: chipBg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: chipBorder),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: isSmallScreen ? 14 : 16, color: chipIcon),
+          Icon(icon, size: isSmallScreen ? 14 : 16, color: color),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
-                color: chipText,
-                fontWeight: FontWeight.w600,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
                 fontSize: isSmallScreen ? 11 : 12,
               ),
               overflow: TextOverflow.ellipsis,
@@ -980,12 +882,6 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
   }
 
   Widget _buildFindSalonCard(BuildContext context, ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
-    final gradient = isDark
-        ? [theme.colorScheme.primary, theme.colorScheme.secondary]
-        : AppTheme.ctaGradient;
-    final textColor = isDark ? theme.colorScheme.onPrimary : Colors.white;
-    final subTextColor = isDark ? theme.colorScheme.onPrimary.withOpacity(0.9) : Colors.white.withOpacity(0.9);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -993,12 +889,15 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: gradient,
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withOpacity(0.8),
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: theme.colorScheme.primary.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1010,12 +909,12 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: textColor.withOpacity(0.15),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Icon(
               Icons.explore,
-              color: textColor,
+              color: Colors.white,
               size: 28,
             ),
           ),
@@ -1026,16 +925,10 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
               children: [
                 Text(
                   'Explorar mais salões',
-                  style: TextStyle(
-                    color: textColor,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 2,
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1047,8 +940,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                     children: [
                       Text(
                         'Ver mapa interativo',
-                        style: TextStyle(
-                          color: subTextColor,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.9),
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1057,7 +950,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
                       Icon(
                         Icons.arrow_forward,
                         size: 16,
-                        color: subTextColor,
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ],
                   ),
@@ -1077,47 +970,45 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with TickerProvid
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.white, // Use white background for less visual noise
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: theme.shadowColor.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatItem(context, Icons.store, '$salonCount', 'Salões', AppTheme.primaryColor),
-          _buildStatItem(context, Icons.people, '${avgQueue.round()}', 'Fila média', AppTheme.warningColor),
-          _buildStatItem(context, Icons.schedule, '${avgWait.round()}', 'Espera média', AppTheme.successColor),
+          _buildStatItem(context, theme, Icons.store, '$salonCount', 'Salões', theme.colorScheme.primary),
+          _buildStatItem(context, theme, Icons.people, '${avgQueue.round()}', 'Fila média', theme.colorScheme.tertiary),
+          _buildStatItem(context, theme, Icons.schedule, '${avgWait.round()}', 'Espera média', theme.colorScheme.secondary),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(BuildContext context, IconData icon, String value, String label, Color color) {
+  Widget _buildStatItem(BuildContext context, ThemeData theme, IconData icon, String value, String label, Color color) {
     return Column(
       children: [
-        Icon(icon, color: color.withOpacity(0.85), size: 22),
+        Icon(icon, color: color, size: 22),
         const SizedBox(height: 6),
         Text(
           value,
-          style: TextStyle(
-            color: Colors.grey.shade800,
-            fontSize: 18,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.grey.shade500,
-            fontSize: 12,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ],
