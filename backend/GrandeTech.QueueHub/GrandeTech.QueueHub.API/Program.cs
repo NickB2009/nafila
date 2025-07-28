@@ -195,14 +195,40 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new HasPermissionRequirement("")));
 });
 
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<Grande.Fila.API.Infrastructure.Data.QueueHubDbContext>("Database");
+
 var app = builder.Build();
 
-// Configure database and seeding
+// Configure database and seeding based on environment
+var useSqlDatabase = builder.Configuration.GetValue<bool>("Database:UseSqlDatabase", true);
+var useInMemoryDatabase = builder.Configuration.GetValue<bool>("Database:UseInMemoryDatabase", false);
+var useBogusRepositories = builder.Configuration.GetValue<bool>("Database:UseBogusRepositories", false);
 var autoMigrate = builder.Configuration.GetValue<bool>("Database:AutoMigrate", false);
 var seedData = builder.Configuration.GetValue<bool>("Database:SeedData", false);
-var useSqlDatabase = builder.Configuration.GetValue<bool>("Database:UseSqlDatabase", true);
+var forceReseed = builder.Configuration.GetValue<bool>("Database:ForceReseed", false);
 
-if ((autoMigrate || seedData) && useSqlDatabase)
+// Environment-specific configuration
+var environment = app.Environment.EnvironmentName;
+var isDevelopment = environment == "Development";
+var isProduction = environment == "Production";
+
+if (isProduction)
+{
+    // Production-specific settings
+    app.UseHsts();
+    
+    // Ensure HTTPS in production
+    app.Use((context, next) =>
+    {
+        context.Request.Scheme = "https";
+        return next();
+    });
+}
+
+// Database migration and seeding (only in development or when explicitly enabled)
+if ((autoMigrate || seedData) && useSqlDatabase && !isProduction)
 {
     using (var scope = app.Services.CreateScope())
     {
@@ -239,6 +265,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Health check endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.Run();
 

@@ -1,13 +1,30 @@
--- EXPANDED SEEDING: Now includes Organizations, Locations, and Customers with proper value object support
+-- COMPLETE SEEDING: Now includes all major entities with proper value object support
 
 -- Clear existing data (delete in order due to foreign key constraints)
 DELETE FROM QueueEntries;
 DELETE FROM Queues;
+DELETE FROM StaffBreaks;
+DELETE FROM StaffMembers;
+DELETE FROM ServicesOffered;
 DELETE FROM CustomerServiceHistory;
 DELETE FROM Customers;
 DELETE FROM Locations;
 DELETE FROM Organizations;
+DELETE FROM SubscriptionPlans;
 DELETE FROM Users;
+
+-- Insert test data for SubscriptionPlans (must come first due to foreign key references)
+INSERT INTO SubscriptionPlans (
+  Id, Name, Description, Price, MonthlyPriceAmount, MonthlyPriceCurrency, YearlyPriceAmount, YearlyPriceCurrency,
+  IsActive, IsDefault, MaxLocations, MaxStaffPerLocation, IncludesAnalytics, IncludesAdvancedReporting, 
+  IncludesCustomBranding, IncludesAdvertising, IncludesMultipleLocations, MaxQueueEntriesPerDay, IsFeatured,
+  CreatedAt, CreatedBy, LastModifiedAt, LastModifiedBy, IsDeleted
+)
+VALUES
+  ('77777777-7777-7777-7777-777777777771', 'Basic Plan', 'Perfect for single location barbershops starting their digital journey', 29.99, 29.99, 'USD', 299.99, 'USD', 1, 1, 1, 3, 0, 0, 0, 0, 0, 50, 0, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('77777777-7777-7777-7777-777777777772', 'Professional Plan', 'Ideal for growing businesses with multiple staff members', 59.99, 59.99, 'USD', 599.99, 'USD', 1, 0, 1, 10, 1, 0, 1, 0, 0, 200, 1, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('77777777-7777-7777-7777-777777777773', 'Business Plan', 'Advanced features for multi-location barbershop chains', 99.99, 99.99, 'USD', 999.99, 'USD', 1, 0, 5, 15, 1, 1, 1, 1, 1, 500, 1, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('77777777-7777-7777-7777-777777777774', 'Enterprise Plan', 'Full-featured solution for large barbershop enterprises', 199.99, 199.99, 'USD', 1999.99, 'USD', 1, 0, 99, 50, 1, 1, 1, 1, 1, 9999, 0, GETDATE(), 'seed', GETDATE(), 'seed', 0);
 
 -- Insert test data for Users
 INSERT INTO Users (
@@ -109,4 +126,35 @@ VALUES
   ('22222222-2222-2222-2222-222222222224', '11111111-1111-1111-1111-111111111113', '88888888-8888-8888-8888-888888888884', 'Ana Costa', 1, 'Waiting', NULL, NULL, 'Appointment scheduled', GETDATE(), NULL, NULL, NULL, NULL, GETDATE(), 'seed', GETDATE(), 'seed', 0),
   ('22222222-2222-2222-2222-222222222225', '11111111-1111-1111-1111-111111111111', '88888888-8888-8888-8888-888888888885', 'Walk-in Customer', 3, 'Waiting', NULL, NULL, 'Quick trim', GETDATE(), NULL, NULL, NULL, NULL, GETDATE(), 'seed', GETDATE(), 'seed', 0);
 
--- Now all entities are properly seeded with realistic relationships 
+-- Insert test data for StaffMembers
+INSERT INTO StaffMembers (
+  Id, Name, LocationId, Email, PhoneNumber, ProfilePictureUrl, Role, IsActive, IsOnDuty, StaffStatus, 
+  UserId, AverageServiceTimeInMinutes, CompletedServicesCount, EmployeeCode, Username, SpecialtyServiceTypeIds,
+  CreatedAt, CreatedBy, LastModifiedAt, LastModifiedBy, IsDeleted
+)
+VALUES
+  ('66666666-6666-6666-6666-666666666661', 'Marco Silva', '99999999-9999-9999-9999-999999999991', 'marco.silva@grandetech.com', '+55-11-99998-0001', 'https://grandetech.com/staff/marco.jpg', 'Senior Barber', 1, 1, 'available', '55555555-5555-5555-5555-555555555553', 28.5, 156, 'EMP001', 'marco.silva', '["88888888-8888-8888-8888-888888888881","88888888-8888-8888-8888-888888888882"]', GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('66666666-6666-6666-6666-666666666662', 'Ana Costa', '99999999-9999-9999-9999-999999999991', 'ana.costa@grandetech.com', '+55-11-99998-0002', 'https://grandetech.com/staff/ana.jpg', 'Stylist', 1, 1, 'busy', NULL, 35.2, 89, 'EMP002', 'ana.costa', '["88888888-8888-8888-8888-888888888883"]', GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('66666666-6666-6666-6666-666666666663', 'Pedro Santos', '99999999-9999-9999-9999-999999999992', 'pedro.santos@grandetech.com', '+55-11-99998-0003', NULL, 'Barber', 1, 1, 'available', NULL, 22.8, 67, 'EMP003', 'pedro.santos', '["88888888-8888-8888-8888-888888888881"]', GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('66666666-6666-6666-6666-666666666664', 'Carlos Oliveira', '99999999-9999-9999-9999-999999999993', 'carlos.oliveira@classiccuts.com', '+55-21-99998-0004', 'https://classiccuts.com/staff/carlos.jpg', 'Master Barber', 1, 1, 'available', NULL, 45.0, 234, 'EMP004', 'carlos.oliveira', '["88888888-8888-8888-8888-888888888883","88888888-8888-8888-8888-888888888884"]', GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('66666666-6666-6666-6666-666666666665', 'Roberto Lima', '99999999-9999-9999-9999-999999999993', 'roberto.lima@classiccuts.com', '+55-21-99998-0005', NULL, 'Barber', 1, 0, 'off_duty', NULL, 38.5, 145, 'EMP005', 'roberto.lima', '["88888888-8888-8888-8888-888888888884"]', GETDATE(), 'seed', GETDATE(), 'seed', 0);
+
+-- Insert test data for ServicesOffered
+INSERT INTO ServicesOffered (
+  Id, Name, Description, LocationId, EstimatedDurationMinutes, PriceAmount, PriceCurrency, ImageUrl, 
+  IsActive, TimesProvided, ActualAverageDurationMinutes, CreatedAt, CreatedBy, LastModifiedAt, LastModifiedBy, IsDeleted
+)
+VALUES
+  ('88888888-8888-8888-8888-888888888881', 'Classic Haircut', 'Traditional men''s haircut with scissors and clipper', '99999999-9999-9999-9999-999999999991', 30, 25.00, 'USD', 'https://grandetech.com/services/classic-cut.jpg', 1, 45, 28.5, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('88888888-8888-8888-8888-888888888882', 'Beard Trim', 'Professional beard trimming and shaping', '99999999-9999-9999-9999-999999999991', 20, 15.00, 'USD', 'https://grandetech.com/services/beard-trim.jpg', 1, 32, 18.2, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('88888888-8888-8888-8888-888888888883', 'Premium Styling', 'Full styling service with wash, cut, and finish', '99999999-9999-9999-9999-999999999991', 45, 45.00, 'USD', 'https://grandetech.com/services/premium-styling.jpg', 1, 28, 42.8, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('88888888-8888-8888-8888-888888888884', 'Quick Trim', 'Fast 15-minute cleanup cut', '99999999-9999-9999-9999-999999999992', 15, 18.00, 'USD', NULL, 1, 67, 14.5, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('88888888-8888-8888-8888-888888888885', 'Traditional Shave', 'Classic straight razor shave with hot towel', '99999999-9999-9999-9999-999999999993', 35, 30.00, 'USD', 'https://classiccuts.com/services/traditional-shave.jpg', 1, 23, 38.2, GETDATE(), 'seed', GETDATE(), 'seed', 0),
+  ('88888888-8888-8888-8888-888888888886', 'Father & Son Cut', 'Special package for father and son haircuts', '99999999-9999-9999-9999-999999999993', 50, 40.00, 'USD', NULL, 1, 15, 52.5, GETDATE(), 'seed', GETDATE(), 'seed', 0);
+
+-- Update Location StaffMemberIds and ServiceTypeIds to reference actual data
+UPDATE Locations SET StaffMemberIds = '["66666666-6666-6666-6666-666666666661","66666666-6666-6666-6666-666666666662"]', ServiceTypeIds = '["88888888-8888-8888-8888-888888888881","88888888-8888-8888-8888-888888888882","88888888-8888-8888-8888-888888888883"]' WHERE Id = '99999999-9999-9999-9999-999999999991';
+UPDATE Locations SET StaffMemberIds = '["66666666-6666-6666-6666-666666666663"]', ServiceTypeIds = '["88888888-8888-8888-8888-888888888884"]' WHERE Id = '99999999-9999-9999-9999-999999999992';
+UPDATE Locations SET StaffMemberIds = '["66666666-6666-6666-6666-666666666664","66666666-6666-6666-6666-666666666665"]', ServiceTypeIds = '["88888888-8888-8888-8888-888888888885","88888888-8888-8888-8888-888888888886"]' WHERE Id = '99999999-9999-9999-9999-999999999993';
+
+-- Now all entities are properly seeded with realistic relationships and comprehensive business data 

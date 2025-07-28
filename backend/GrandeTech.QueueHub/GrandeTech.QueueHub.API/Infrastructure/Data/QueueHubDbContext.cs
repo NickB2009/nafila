@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Linq;
 using Grande.Fila.API.Domain.Common;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Domain.Organizations;
@@ -34,10 +35,12 @@ namespace Grande.Fila.API.Infrastructure.Data
         public DbSet<Location> Locations { get; set; }
         public DbSet<Customer> Customers { get; set; }
         
-        // These will be added back once we create proper entity configurations
-        // public DbSet<StaffMember> StaffMembers { get; set; }
-        // public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
-        // public DbSet<ServiceOffered> ServicesOffered { get; set; }
+        // Newly enabled entities with complete repository implementations
+        public DbSet<StaffMember> StaffMembers { get; set; }
+        public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+        public DbSet<ServiceOffered> ServicesOffered { get; set; }
+        
+        // These remain disabled for now
         // public DbSet<Coupon> Coupons { get; set; }
         // public DbSet<Advertisement> Advertisements { get; set; }
         // public DbSet<AuditLogEntry> AuditLogs { get; set; }
@@ -47,6 +50,9 @@ namespace Grande.Fila.API.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Ignore entities that should only exist as owned types (do this first)
+            modelBuilder.Ignore<StaffBreak>();
+
             // Apply entity configurations
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new QueueConfiguration());
@@ -54,6 +60,9 @@ namespace Grande.Fila.API.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
             modelBuilder.ApplyConfiguration(new LocationConfiguration());
             modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+            modelBuilder.ApplyConfiguration(new StaffMemberConfiguration());
+            modelBuilder.ApplyConfiguration(new SubscriptionPlanConfiguration());
+            modelBuilder.ApplyConfiguration(new ServiceOfferedConfiguration());
 
             // Configure base entity properties
             ConfigureBaseEntityProperties(modelBuilder);
@@ -73,9 +82,13 @@ namespace Grande.Fila.API.Infrastructure.Data
                 optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=GrandeTechQueueHub;Trusted_Connection=True;MultipleActiveResultSets=true");
             }
 
-            // Enable sensitive data logging in development
-            optionsBuilder.EnableSensitiveDataLogging();
-            optionsBuilder.EnableDetailedErrors();
+            // Enable sensitive data logging and detailed errors only in development
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            if (environment == "Development")
+            {
+                optionsBuilder.EnableSensitiveDataLogging();
+                optionsBuilder.EnableDetailedErrors();
+            }
         }
 
         private static void ConfigureBaseEntityProperties(ModelBuilder modelBuilder)
@@ -351,6 +364,85 @@ namespace Grande.Fila.API.Infrastructure.Data
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList()));
+
+            // ================================
+            // STAFFMEMBER VALUE OBJECTS
+            // ================================
+            
+            // Configure Email for StaffMember
+            modelBuilder.Entity<StaffMember>()
+                .Property(e => e.Email)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? Email.Create(v) : null)
+                .HasColumnName("Email")
+                .HasMaxLength(320);
+
+            // Configure PhoneNumber for StaffMember
+            modelBuilder.Entity<StaffMember>()
+                .Property(e => e.PhoneNumber)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? PhoneNumber.Create(v) : null)
+                .HasColumnName("PhoneNumber")
+                .HasMaxLength(50);
+
+            // Configure SpecialtyServiceTypeIds as JSON
+            var staffSpecialtyProperty = modelBuilder.Entity<StaffMember>()
+                .Property(e => e.SpecialtyServiceTypeIds)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .HasColumnName("SpecialtyServiceTypeIds");
+            
+            staffSpecialtyProperty.Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
+                (c1, c2) => c1!.SequenceEqual(c2!),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList()));
+
+            // ================================
+            // SUBSCRIPTIONPLAN VALUE OBJECTS
+            // ================================
+            
+            // Configure MonthlyPrice as owned type
+            modelBuilder.Entity<SubscriptionPlan>()
+                .OwnsOne(e => e.MonthlyPrice, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasColumnName("MonthlyPriceAmount")
+                        .HasColumnType("decimal(18,2)");
+                    money.Property(m => m.Currency)
+                        .HasColumnName("MonthlyPriceCurrency")
+                        .HasMaxLength(3);
+                });
+
+            // Configure YearlyPrice as owned type
+            modelBuilder.Entity<SubscriptionPlan>()
+                .OwnsOne(e => e.YearlyPrice, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasColumnName("YearlyPriceAmount")
+                        .HasColumnType("decimal(18,2)");
+                    money.Property(m => m.Currency)
+                        .HasColumnName("YearlyPriceCurrency")
+                        .HasMaxLength(3);
+                });
+
+            // ================================
+            // SERVICEOFFERED VALUE OBJECTS
+            // ================================
+            
+            // Configure Price as owned type (nullable)
+            modelBuilder.Entity<ServiceOffered>()
+                .OwnsOne(e => e.Price, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasColumnName("PriceAmount")
+                        .HasColumnType("decimal(18,2)");
+                    money.Property(m => m.Currency)
+                        .HasColumnName("PriceCurrency")
+                        .HasMaxLength(3);
+                });
         }
 
         private static void IgnoreDomainEvents(ModelBuilder modelBuilder)

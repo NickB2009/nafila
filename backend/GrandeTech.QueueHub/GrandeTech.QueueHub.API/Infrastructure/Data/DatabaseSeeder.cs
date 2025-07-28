@@ -19,32 +19,31 @@ namespace Grande.Fila.API.Infrastructure.Data
         {
             try
             {
-                _logger.LogInformation("Starting database seeding...");
-
-                // Check if we should force reseed (useful for development)
+                // Check if we're in production and seeding is not explicitly enabled
+                var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+                var isProduction = environment == "Production";
                 var forceReseed = _configuration.GetValue<bool>("Database:ForceReseed", false);
+                
+                if (isProduction && !forceReseed)
+                {
+                    _logger.LogWarning("Database seeding skipped in production environment. Use ForceReseed=true to override.");
+                    return;
+                }
 
-                if (!forceReseed)
+                var hasUserData = await _context.Users.AnyAsync();
+                if (hasUserData && !forceReseed)
                 {
-                    // Check if data already exists
-                    try
-                    {
-                        var hasUserData = await _context.Users.AnyAsync();
-                        if (hasUserData)
-                        {
-                            _logger.LogInformation("Database already contains data. Skipping seeding.");
-                            return;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        _logger.LogInformation("Tables might not exist yet, proceeding with seeding...");
-                    }
+                    _logger.LogInformation("Database already contains data. Skipping seeding.");
+                    return;
                 }
-                else
+
+                if (forceReseed)
                 {
-                    _logger.LogInformation("Force reseed enabled. Clearing and reseeding database...");
+                    _logger.LogInformation("Force reseed enabled. Clearing existing data...");
+                    await ClearExistingData();
                 }
+
+                _logger.LogInformation("Starting database seeding...");
 
                 // Read from file system
                 var sqlFilePath = Path.Combine(Directory.GetCurrentDirectory(), "insert_test_data.sql");
@@ -60,9 +59,26 @@ namespace Grande.Fila.API.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while seeding database");
+                _logger.LogError(ex, "Error occurred during database seeding");
                 throw;
             }
+        }
+
+        private async Task ClearExistingData()
+        {
+            // Clear data in proper order due to foreign key constraints
+            _context.QueueEntries.RemoveRange(_context.QueueEntries);
+            _context.Queues.RemoveRange(_context.Queues);
+            _context.StaffMembers.RemoveRange(_context.StaffMembers);
+            _context.ServicesOffered.RemoveRange(_context.ServicesOffered);
+            _context.Customers.RemoveRange(_context.Customers);
+            _context.Locations.RemoveRange(_context.Locations);
+            _context.Organizations.RemoveRange(_context.Organizations);
+            _context.SubscriptionPlans.RemoveRange(_context.SubscriptionPlans);
+            _context.Users.RemoveRange(_context.Users);
+            
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Existing data cleared successfully.");
         }
 
         private async Task ExecuteSqlScript(string sqlScript)
