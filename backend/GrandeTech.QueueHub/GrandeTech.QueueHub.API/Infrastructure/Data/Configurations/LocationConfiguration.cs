@@ -11,8 +11,8 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             // Table configuration
             builder.ToTable("Locations");
             builder.HasKey(l => l.Id);
-
-            // Configure only known properties
+            
+            // Basic properties
             builder.Property(l => l.Name)
                 .IsRequired()
                 .HasMaxLength(200);
@@ -23,20 +23,54 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.Property(l => l.OrganizationId)
                 .IsRequired();
 
-            // Ignore complex properties for now
-            builder.Ignore("IsActive");
-            builder.Ignore("Timezone");
-            builder.Ignore("Address");
-            builder.Ignore("ContactInfo");
-            builder.Ignore("BusinessHours");
-            builder.Ignore("QueueConfig");
+            builder.Property(l => l.IsQueueEnabled)
+                .IsRequired()
+                .HasDefaultValue(true);
 
-            // Basic indexes
+            builder.Property(l => l.MaxQueueSize)
+                .IsRequired()
+                .HasDefaultValue(100);
+
+            builder.Property(l => l.LateClientCapTimeInMinutes)
+                .IsRequired()
+                .HasDefaultValue(15);
+
+            builder.Property(l => l.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            builder.Property(l => l.AverageServiceTimeInMinutes)
+                .IsRequired()
+                .HasDefaultValue(30.0);
+
+            builder.Property(l => l.LastAverageTimeReset)
+                .IsRequired()
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            // Value objects are now configured in QueueHubDbContext.ConfigureValueObjects()
+            // No need to ignore them anymore
+
+            // Indexes
+            builder.HasIndex(l => l.Name)
+                .HasDatabaseName("IX_Locations_Name");
+
             builder.HasIndex(l => l.OrganizationId)
                 .HasDatabaseName("IX_Locations_OrganizationId");
 
-            builder.HasIndex(l => l.Name)
-                .HasDatabaseName("IX_Locations_Name");
+            builder.HasIndex(l => l.IsActive)
+                .HasDatabaseName("IX_Locations_IsActive");
+
+            builder.HasIndex(l => l.IsQueueEnabled)
+                .HasDatabaseName("IX_Locations_IsQueueEnabled");
+
+            // Index on Slug for faster lookups
+            builder.HasIndex("Slug")
+                .IsUnique()
+                .HasDatabaseName("IX_Locations_Slug");
+
+            // Index on ContactEmail for searches
+            builder.HasIndex("ContactEmail")
+                .HasDatabaseName("IX_Locations_ContactEmail");
         }
     }
 } 

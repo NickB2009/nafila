@@ -13,6 +13,7 @@ using Grande.Fila.API.Domain.ServicesOffered;
 using Grande.Fila.API.Domain.Promotions;
 using Grande.Fila.API.Domain.Advertising;
 using Grande.Fila.API.Domain.Notifications;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Infrastructure.Data.Configurations;
 
 namespace Grande.Fila.API.Infrastructure.Data
@@ -23,15 +24,15 @@ namespace Grande.Fila.API.Infrastructure.Data
         {
         }
 
-        // Aggregate Roots - Starting with known working entities
+        // Aggregate Roots
         public DbSet<User> Users { get; set; }
         public DbSet<Queue> Queues { get; set; }
         public DbSet<QueueEntry> QueueEntries { get; set; }
         
-        // Temporarily disabled to isolate Slug value object issues
-        // public DbSet<Organization> Organizations { get; set; }  
-        // public DbSet<Location> Locations { get; set; }
-        // public DbSet<Customer> Customers { get; set; }
+        // Now enabled with proper value object configurations
+        public DbSet<Organization> Organizations { get; set; }  
+        public DbSet<Location> Locations { get; set; }
+        public DbSet<Customer> Customers { get; set; }
         
         // These will be added back once we create proper entity configurations
         // public DbSet<StaffMember> StaffMembers { get; set; }
@@ -46,11 +47,13 @@ namespace Grande.Fila.API.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Apply only specific entity configurations to avoid auto-discovery of problematic ones
+            // Apply entity configurations
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new QueueConfiguration());
             modelBuilder.ApplyConfiguration(new QueueEntryConfiguration());
-            // modelBuilder.ApplyConfiguration(new OrganizationConfiguration());  // Disabled due to Slug issues
+            modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
+            modelBuilder.ApplyConfiguration(new LocationConfiguration());
+            modelBuilder.ApplyConfiguration(new CustomerConfiguration());
 
             // Configure base entity properties
             ConfigureBaseEntityProperties(modelBuilder);
@@ -98,8 +101,256 @@ namespace Grande.Fila.API.Infrastructure.Data
 
         private static void ConfigureValueObjects(ModelBuilder modelBuilder)
         {
-            // Configure value objects as owned types
-            // This will be expanded in entity configurations
+            // ================================
+            // ORGANIZATION VALUE OBJECTS
+            // ================================
+            
+            // Configure Slug value object
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.Slug)
+                .HasConversion(
+                    v => v.Value,
+                    v => Slug.Create(v))
+                .HasColumnName("Slug")
+                .HasMaxLength(100);
+
+            // Configure Email value objects
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.ContactEmail)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? Email.Create(v) : null)
+                .HasColumnName("ContactEmail")
+                .HasMaxLength(320);
+
+            // Configure PhoneNumber value objects
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.ContactPhone)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? PhoneNumber.Create(v) : null)
+                .HasColumnName("ContactPhone")
+                .HasMaxLength(50);
+
+            // Configure BrandingConfig as owned type (complex value object)
+            modelBuilder.Entity<Organization>()
+                .OwnsOne(e => e.BrandingConfig, branding =>
+                {
+                    branding.Property(b => b.PrimaryColor)
+                        .HasColumnName("BrandingPrimaryColor")
+                        .HasMaxLength(50);
+                    branding.Property(b => b.SecondaryColor)
+                        .HasColumnName("BrandingSecondaryColor")
+                        .HasMaxLength(50);
+                    branding.Property(b => b.LogoUrl)
+                        .HasColumnName("BrandingLogoUrl")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.FaviconUrl)
+                        .HasColumnName("BrandingFaviconUrl")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.CompanyName)
+                        .HasColumnName("BrandingCompanyName")
+                        .HasMaxLength(200);
+                    branding.Property(b => b.TagLine)
+                        .HasColumnName("BrandingTagLine")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.FontFamily)
+                        .HasColumnName("BrandingFontFamily")
+                        .HasMaxLength(100);
+                });
+
+            // Configure LocationIds collection as JSON
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.LocationIds)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
+
+            // ================================
+            // LOCATION VALUE OBJECTS
+            // ================================
+            
+            // Configure Slug for Location
+            modelBuilder.Entity<Location>()
+                .Property(e => e.Slug)
+                .HasConversion(
+                    v => v.Value,
+                    v => Slug.Create(v))
+                .HasColumnName("Slug")
+                .HasMaxLength(100);
+
+            // Configure Email for Location
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ContactEmail)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? Email.Create(v) : null)
+                .HasColumnName("ContactEmail")
+                .HasMaxLength(320);
+
+            // Configure PhoneNumber for Location
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ContactPhone)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? PhoneNumber.Create(v) : null)
+                .HasColumnName("ContactPhone")
+                .HasMaxLength(50);
+
+            // Configure Address as owned type
+            modelBuilder.Entity<Location>()
+                .OwnsOne(e => e.Address, address =>
+                {
+                    address.Property(a => a.Street)
+                        .HasColumnName("AddressStreet")
+                        .HasMaxLength(200);
+                    address.Property(a => a.Number)
+                        .HasColumnName("AddressNumber")
+                        .HasMaxLength(20);
+                    address.Property(a => a.Complement)
+                        .HasColumnName("AddressComplement")
+                        .HasMaxLength(100);
+                    address.Property(a => a.Neighborhood)
+                        .HasColumnName("AddressNeighborhood")
+                        .HasMaxLength(100);
+                    address.Property(a => a.City)
+                        .HasColumnName("AddressCity")
+                        .HasMaxLength(100);
+                    address.Property(a => a.State)
+                        .HasColumnName("AddressState")
+                        .HasMaxLength(50);
+                    address.Property(a => a.Country)
+                        .HasColumnName("AddressCountry")
+                        .HasMaxLength(50);
+                    address.Property(a => a.PostalCode)
+                        .HasColumnName("AddressPostalCode")
+                        .HasMaxLength(20);
+                    address.Property(a => a.Latitude)
+                        .HasColumnName("AddressLatitude");
+                    address.Property(a => a.Longitude)
+                        .HasColumnName("AddressLongitude");
+                });
+
+            // Configure CustomBranding as owned type (nullable)
+            modelBuilder.Entity<Location>()
+                .OwnsOne(e => e.CustomBranding, branding =>
+                {
+                    branding.Property(b => b.PrimaryColor)
+                        .HasColumnName("CustomBrandingPrimaryColor")
+                        .HasMaxLength(50);
+                    branding.Property(b => b.SecondaryColor)
+                        .HasColumnName("CustomBrandingSecondaryColor")
+                        .HasMaxLength(50);
+                    branding.Property(b => b.LogoUrl)
+                        .HasColumnName("CustomBrandingLogoUrl")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.FaviconUrl)
+                        .HasColumnName("CustomBrandingFaviconUrl")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.CompanyName)
+                        .HasColumnName("CustomBrandingCompanyName")
+                        .HasMaxLength(200);
+                    branding.Property(b => b.TagLine)
+                        .HasColumnName("CustomBrandingTagLine")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.FontFamily)
+                        .HasColumnName("CustomBrandingFontFamily")
+                        .HasMaxLength(100);
+                });
+
+            // Configure BusinessHours as owned type
+            modelBuilder.Entity<Location>()
+                .OwnsOne(e => e.BusinessHours, hours =>
+                {
+                    hours.Property(h => h.Start)
+                        .HasColumnName("BusinessHoursStart");
+                    hours.Property(h => h.End)
+                        .HasColumnName("BusinessHoursEnd");
+                });
+
+            // Configure collections as JSON
+            modelBuilder.Entity<Location>()
+                .Property(e => e.StaffMemberIds)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ServiceTypeIds)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.AdvertisementIds)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
+
+            // ================================
+            // CUSTOMER VALUE OBJECTS
+            // ================================
+            
+            // Configure Email for Customer
+            modelBuilder.Entity<Customer>()
+                .Property(e => e.Email)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? Email.Create(v) : null)
+                .HasColumnName("Email")
+                .HasMaxLength(320);
+
+            // Configure PhoneNumber for Customer
+            modelBuilder.Entity<Customer>()
+                .Property(e => e.PhoneNumber)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => v != null ? PhoneNumber.Create(v) : null)
+                .HasColumnName("PhoneNumber")
+                .HasMaxLength(50);
+
+            // Configure ServiceHistory as owned collection
+            modelBuilder.Entity<Customer>()
+                .OwnsMany(e => e.ServiceHistory, history =>
+                {
+                    history.ToTable("CustomerServiceHistory");
+                    history.WithOwner().HasForeignKey("CustomerId");
+                    history.HasKey("Id");
+                    history.Property(h => h.LocationId);
+                    history.Property(h => h.StaffMemberId);
+                    history.Property(h => h.ServiceTypeId);
+                    history.Property(h => h.ServiceDate);
+                    history.Property(h => h.Notes).HasMaxLength(1000);
+                    history.Property(h => h.Rating);
+                    history.Property(h => h.Feedback).HasMaxLength(2000);
+                });
+
+            // Configure FavoriteLocationIds as JSON
+            modelBuilder.Entity<Customer>()
+                .Property(e => e.FavoriteLocationIds)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
         }
 
         private static void IgnoreDomainEvents(ModelBuilder modelBuilder)

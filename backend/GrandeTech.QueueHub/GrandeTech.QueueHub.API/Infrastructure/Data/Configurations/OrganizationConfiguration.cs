@@ -34,14 +34,10 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasDefaultValue(false);
 
-            // Ignore complex value objects for now - will add them back later
-            builder.Ignore(o => o.Slug);
-            builder.Ignore(o => o.ContactEmail);
-            builder.Ignore(o => o.ContactPhone);
-            builder.Ignore(o => o.BrandingConfig);
-            builder.Ignore(o => o.LocationIds);
+            // Value objects are now configured in QueueHubDbContext.ConfigureValueObjects()
+            // No need to ignore them anymore
 
-            // Basic indexes on simple properties
+            // Indexes
             builder.HasIndex(o => o.Name)
                 .HasDatabaseName("IX_Organizations_Name");
 
@@ -50,6 +46,15 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
 
             builder.HasIndex(o => o.IsActive)
                 .HasDatabaseName("IX_Organizations_IsActive");
+
+            // Index on Slug for faster lookups
+            builder.HasIndex("Slug")
+                .IsUnique()
+                .HasDatabaseName("IX_Organizations_Slug");
+
+            // Index on ContactEmail for searches
+            builder.HasIndex("ContactEmail")
+                .HasDatabaseName("IX_Organizations_ContactEmail");
         }
     }
 } 

@@ -4,6 +4,7 @@ using Grande.Fila.API.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Grande.Fila.API.Migrations
 {
     [DbContext(typeof(QueueHubDbContext))]
-    partial class QueueHubDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250727183900_AddOrganizationLocationCustomer")]
+    partial class AddOrganizationLocationCustomer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,7 +52,8 @@ namespace Grande.Fila.API.Migrations
 
                     b.Property<string>("FavoriteLocationIds")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("FavoriteLocationIds");
 
                     b.Property<bool>("IsAnonymous")
                         .ValueGeneratedOnAdd()
@@ -116,7 +120,8 @@ namespace Grande.Fila.API.Migrations
 
                     b.Property<string>("AdvertisementIds")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("AdvertisementIds");
 
                     b.Property<double>("AverageServiceTimeInMinutes")
                         .ValueGeneratedOnAdd()
@@ -195,7 +200,8 @@ namespace Grande.Fila.API.Migrations
 
                     b.Property<string>("ServiceTypeIds")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ServiceTypeIds");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -205,7 +211,8 @@ namespace Grande.Fila.API.Migrations
 
                     b.Property<string>("StaffMemberIds")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("StaffMemberIds");
 
                     b.HasKey("Id");
 
@@ -281,7 +288,8 @@ namespace Grande.Fila.API.Migrations
 
                     b.Property<string>("LocationIds")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("LocationIds");
 
                     b.Property<string>("Name")
                         .IsRequired()
