@@ -13,17 +13,72 @@ This frontend is for a SaaS queue management platform with a multi-tenant archit
 
 The frontend is scoped for **Client**, **Barber**, and partial **Admin** interfaces in the MVP.
 
-## 🧱 Development Context & Use Cases
+## 🧱 Current Development Context
 
-We're in the **MVP Core Features (Priority 1)** phase. Focused use cases:
+We're in the **Backend Integration Phase**. All frontend services and controllers are implemented and ready for backend API connection.
 
-- **UC-ENTRY**: Client joins queue
-- **UC-QUEUELISTCLI**: Client-side real-time queue viewer
-- **UC-BARBERQUEUE**: Barber's queue management view
-- **UC-CALLNEXT**: Interface for calling next client
-- **UC-CANCEL**: Client cancelation workflow
+### ✅ Completed Phases
+- **Phase 1**: UI Layer Development - All screens and widgets complete
+- **Phase 2**: State Management - Controllers and Provider integration complete  
+- **Phase 3**: Service Layer - All API services implemented and tested
+- **Phase 4**: Anonymous Access - Public salon browsing implemented
 
-📄 Reference: `USE_CASES.md` for detailed logic.
+### 🚧 Current Phase: Backend Integration
+- **Frontend Status**: All services ready for backend connection
+- **Backend Status**: Endpoints need implementation (see BACKEND_API_SPECIFICATION.md)
+- **Testing**: Frontend services tested with mock data
+
+## 🔌 Backend API Integration
+
+### API Configuration
+**Base URL**: `https://localhost:7126/api`
+**Swagger Docs**: `https://localhost:7126/swagger/index.html`
+
+### Frontend Services Ready for Integration
+
+```dart
+// All services implemented and ready:
+AuthService         // → /api/Auth/* endpoints
+QueueService        // → /api/Queues/* endpoints  
+LocationService     // → /api/Locations/* endpoints
+OrganizationService // → /api/Organizations/* endpoints
+StaffService        // → /api/Staff/* endpoints
+ServicesService     // → /api/ServicesOffered/* endpoints
+PublicSalonService  // → /api/Public/* endpoints (anonymous access)
+
+// Controllers managing state:
+AppController       // Main application coordinator
+AuthController      // Authentication state management
+QueueController     // Queue operations state
+AnonymousController // Anonymous browsing state
+```
+
+### Testing Backend Integration
+
+#### 1. Start with Anonymous Access
+```bash
+# Test public endpoints first (no auth required)
+curl https://localhost:7126/api/Public/salons
+curl https://localhost:7126/api/Public/queue-status/salon-1
+```
+
+#### 2. Test Authentication Flow
+```dart
+// Frontend login flow
+final authService = await AuthService.create();
+final result = await authService.login(LoginRequest(
+  username: 'testuser',
+  password: 'testpass',
+));
+// Should receive JWT token and store it automatically
+```
+
+#### 3. Test Authenticated Endpoints
+```dart
+// All services will automatically include JWT token
+final queueService = await QueueService.create();
+final queues = await queueService.getQueue('queue-id');
+```
 
 ---
 
@@ -40,19 +95,19 @@ We're in the **MVP Core Features (Priority 1)** phase. Focused use cases:
 ```bash
 flutter config --enable-web
 flutter devices
-````
+```
 
 ### Repository Setup
 
 ```bash
-git checkout -b feature/ui-YYYYMMDD
+git checkout -b feature/backend-integration-YYYYMMDD
 # Example:
-# git checkout -b feature/ui-20250611
+# git checkout -b feature/backend-integration-20250611
 
 # After your changes:
 git add .
-git commit -m "feat: implement [feature] UI components"
-git push origin feature/ui-YYYYMMDD
+git commit -m "feat: integrate [service] with backend API"
+git push origin feature/backend-integration-YYYYMMDD
 ```
 
 ---
@@ -62,16 +117,33 @@ git push origin feature/ui-YYYYMMDD
 ```plaintext
 lib/
 ├── main.dart
+├── config/
+│   └── api_config.dart              # API endpoints and configuration
+├── models/                          # Request/Response models
+│   ├── auth_models.dart            # Login, register, profile
+│   ├── location_models.dart        # Location CRUD operations
+│   ├── organization_models.dart    # Organization management
+│   ├── queue_models.dart           # Queue operations
+│   ├── staff_models.dart           # Staff management
+│   ├── services_models.dart        # Service offerings
+│   └── public_salon.dart           # Anonymous browsing
+├── services/                        # API communication layer
+│   ├── api_client.dart             # HTTP client with auth
+│   ├── auth_service.dart           # Authentication operations
+│   ├── queue_service.dart          # Queue management
+│   ├── location_service.dart       # Location operations
+│   ├── organization_service.dart   # Organization management
+│   ├── staff_service.dart          # Staff operations
+│   ├── services_service.dart       # Service offerings
+│   └── public_salon_service.dart   # Anonymous browsing
+├── controllers/                     # State management
+│   ├── app_controller.dart         # Main coordinator
+│   ├── auth_controller.dart        # Auth state
+│   ├── queue_controller.dart       # Queue state
+│   └── anonymous_controller.dart   # Anonymous state
 └── ui/
-    ├── screens/
-    │   └── queue_screen.dart
-    ├── widgets/
-    │   ├── queue_card.dart
-    │   └── status_panel.dart
-    ├── view_models/
-    │   └── mock_queue_notifier.dart
-    └── data/
-        └── mock_data.dart
+    ├── screens/                    # Application screens
+    └── widgets/                    # Reusable components
 ```
 
 ---
@@ -87,147 +159,300 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^6.1.1
+  dio: ^5.4.0
+  shared_preferences: ^2.2.2
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
 ```
 
-### App Entry
+### App Entry with Backend Integration
 
 ```dart
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => MockQueueNotifier(),
-      child: MyApp(),
+    FutureBuilder<AppController>(
+      future: _initializeApp(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return ChangeNotifierProvider<AppController>.value(
+            value: snapshot.data!,
+            child: MyApp(),
+          );
+        }
+        return MaterialApp(
+          home: Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+        );
+      },
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Eutonafila Queue Manager',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: QueueScreen(),
-      debugShowCheckedModeBanner: false,
-    );
+Future<AppController> _initializeApp() async {
+  final appController = AppController();
+  await appController.initialize(); // Loads auth state, connects to backend
+  return appController;
+}
+```
+
+---
+
+## 🔌 Backend Integration Implementation
+
+### Service Integration Pattern
+
+All services follow this pattern for backend integration:
+
+```dart
+class ExampleService {
+  final ApiClient _apiClient;
+
+  // Service automatically handles auth tokens
+  Future<ResponseModel> performOperation(RequestModel request) async {
+    try {
+      final response = await _apiClient.post(
+        ApiConfig.exampleEndpoint,
+        data: request.toJson(),
+      );
+      return ResponseModel.fromJson(response.data);
+    } catch (e) {
+      // Error logged automatically, rethrown for controller handling
+      rethrow;
+    }
+  }
+}
+```
+
+### Controller Integration Pattern
+
+Controllers manage state and coordinate service calls:
+
+```dart
+class ExampleController extends ChangeNotifier {
+  final ExampleService _service;
+  bool _isLoading = false;
+  String? _error;
+  List<DataModel> _data = [];
+
+  // Getters
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  List<DataModel> get data => _data;
+
+  Future<void> performOperation() async {
+    try {
+      _setLoading(true);
+      _setError(null);
+      
+      final result = await _service.performOperation(request);
+      _data = result.data;
+      
+      notifyListeners();
+    } catch (e) {
+      _setError('Operation failed: ${e.toString()}');
+    } finally {
+      _setLoading(false);
+    }
   }
 }
 ```
 
 ---
 
-## 🖼️ UI Layer Implementation Priorities
+## 🧪 Backend Integration Testing
 
-### Phase 1: Core Components
-
-* **QueueScreen**: Full layout
-* **QueueCard**: Single client entry
-* **StatusPanel**: Queue state indicator
-
-### Constraints
-
-* Target width: `390–430dp`
-* Responsive: Use `LayoutBuilder`
-* Mobile-first & touch optimized
-* Accessibility: semantic labeling
-
-### Component Props
-
-| Component     | Props                         |
-| ------------- | ----------------------------- |
-| `QueueCard`   | `name`, `status`, `width`     |
-| `StatusPanel` | `status`, `iconData`, `color` |
-
----
-
-## 🧪 Testing Strategy
-
-### Widget Tests
+### Testing Strategy
 
 ```dart
-testWidgets('QueueCard displays name and status correctly', (WidgetTester tester) async {
-  // Test logic
+// Integration test example
+testWidgets('should handle complete authentication workflow', (WidgetTester tester) async {
+  // Arrange
+  final appController = AppController();
+  await appController.initialize();
+  
+  // Act
+  final result = await appController.auth.login(LoginRequest(
+    username: 'testuser',
+    password: 'testpass',
+  ));
+  
+  // Assert
+  expect(result.success, isTrue);
+  expect(appController.auth.isAuthenticated, isTrue);
+  expect(appController.isAnonymousMode, isFalse);
 });
 ```
 
-### Test File Structure
+### Manual Testing Workflow
 
-```plaintext
-test/
-├── widget_test.dart
-└── widgets/
-    ├── queue_card_test.dart
-    └── status_panel_test.dart
-```
+1. **Test Anonymous Access First**
+   ```dart
+   // Should work without authentication
+   await anonymousController.loadPublicSalons();
+   expect(anonymousController.nearbySalons.isNotEmpty, isTrue);
+   ```
+
+2. **Test Authentication Flow**
+   ```dart
+   // Should authenticate and switch modes
+   await authController.login(validCredentials);
+   expect(authController.isAuthenticated, isTrue);
+   ```
+
+3. **Test Authenticated Operations**
+   ```dart
+   // Should include auth token automatically
+   await queueController.addQueue(queueRequest);
+   expect(queueController.error, isNull);
+   ```
 
 ---
 
-## 🤖 AI Workflow for UI
+## 🚨 Backend Requirements for Frontend Integration
 
-### Prompt Strategy
+### Priority 1: Public Endpoints (Required for Anonymous Access)
 
-```txt
-Goal: Generate a QueueCard widget matching this screenshot  
-Inputs: name (String), status (String), width (double)  
-Constraints:
-- Mobile-first design
-- Provider for state management
-- Minimal mocking
-- Material Design components
+```csharp
+[AllowAnonymous]
+public class PublicController : Controller 
+{
+    [HttpGet("salons")]
+    public async Task<IActionResult> GetPublicSalons() 
+    {
+        // Return List<PublicSalon> format
+        // See BACKEND_API_SPECIFICATION.md for model definition
+    }
+    
+    [HttpPost("salons/nearby")]
+    public async Task<IActionResult> GetNearbySalons([FromBody] NearbySearchRequest request) 
+    {
+        // Input: latitude, longitude, radiusKm, limit, openOnly
+        // Output: List<PublicSalon>
+    }
+    
+    [HttpGet("queue-status/{salonId}")]  
+    public async Task<IActionResult> GetQueueStatus(string salonId) 
+    {
+        // Return PublicQueueStatus format
+    }
+}
 ```
 
-### Screenshot Usage
+### Priority 2: Authentication Verification
 
-Attach PNG/JPG mockups
-Refer to component parts visually
-Clarify responsive behavior in prompt
+Ensure JWT tokens match frontend expectations:
+
+```json
+{
+  "success": true,
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "username": "testuser",
+  "role": "Client",
+  "message": "Login successful"
+}
+```
+
+### Priority 3: All Other Endpoints
+
+All endpoints documented in `BACKEND_API_SPECIFICATION.md` with corresponding frontend services ready.
+
+---
+
+## 🤖 AI Workflow for Backend Integration
+
+### Backend Development Prompts
+
+When requesting backend features, use these structured prompts:
+
+```txt
+Implement the [endpoint name] backend endpoint to match this frontend service:
+
+Frontend Service: [ServiceClass.methodName()]
+Expected Request: [RequestModel definition]
+Expected Response: [ResponseModel definition]
+Authentication: [Required/Anonymous]
+
+Additional Requirements:
+- [Specific business logic requirements]
+- [Error handling scenarios]
+- [Performance considerations]
+
+Reference: BACKEND_API_SPECIFICATION.md for complete context.
+```
+
+### Integration Testing Prompts
+
+```txt
+Test the integration between frontend service [ServiceName] and backend endpoint [endpoint].
+
+Frontend Implementation:
+[Include specific service method code]
+
+Expected Backend Behavior:
+[Include expected request/response flow]
+
+Verify:
+- Request format matches backend expectations
+- Response format matches frontend models
+- Error handling works correctly
+- Authentication tokens are validated
+```
 
 ---
 
 ## 📅 Development Phases
 
-### ✅ Current Phase: Presentation Layer
+### ✅ Completed Phases
 
-* Project structure ready
-* QueueScreen in progress
-* QueueCard + StatusPanel pending
-* Initial responsiveness testing
+* **Phase 1: Presentation Layer** - All UI components implemented
+* **Phase 2: State Management** - Controllers and Provider setup complete
+* **Phase 3: Service Layer** - All API services implemented and tested
+* **Phase 4: Anonymous Access** - Public salon browsing complete
 
-### 🔜 Next Phase: ViewModel Layer
+### 🚧 Current Phase: Backend Integration
 
-* Replace mocks with real data
-* Business logic integration
-* Error + state handling
+* Connect frontend services to live backend endpoints
+* Verify authentication flows
+* Test all CRUD operations
+* Performance testing with real data
 
-### 📡 Future Phase: Data Layer
+### 🔜 Next Phase: Analytics & Production
 
-* API integration
-* HTTP client & repositories
+* Implement analytics frontend service
+* Production deployment preparation
+* Performance optimization
+* Monitoring and error tracking
 
 ---
 
 ## 🧼 Quality Standards
 
 ### Code
-
 * Descriptive naming
 * Follow Dart style guide
 * Public methods = documented
 * Handle errors gracefully
+* Comprehensive test coverage
 
-### UI/UX
+### Backend Integration
+* All services tested with live backend
+* Error scenarios handled appropriately
+* Performance meets requirements (<2s response times)
+* Authentication security verified
+* Data validation on both frontend and backend
 
-* Consistent layout and type
-* Loading and error states
-* Accessibility compliance
-* Smooth transitions
+### Production Readiness
+* No mock data in production builds
+* Error tracking and monitoring
+* Performance benchmarks established
+* Security audit completed
+* Documentation updated for deployment
 
-### Testing
+---
 
-* Widget test for all custom components
-* Integration tests for flows
-* Golden tests for major screens
-* Performance checks on target devices
+For detailed backend API specifications, see `BACKEND_API_SPECIFICATION.md`.
+For implementation progress tracking, see `IMPLEMENTATION_CHECKLIST.md`.
