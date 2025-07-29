@@ -150,6 +150,11 @@ builder.Services.AddScoped<AuthService>();
 // Register application services
 builder.Services.AddScoped<Grande.Fila.API.Application.Locations.CreateLocationService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Locations.ToggleQueueService>();
+
+// Register public API services
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetPublicSalonsService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetPublicSalonDetailService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetPublicQueueStatusService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.AddBarberService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.EditBarberService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.UpdateStaffStatusService>();

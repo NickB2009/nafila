@@ -19,6 +19,12 @@ class ApiConfig {
   static const String verify2FAEndpoint = '$authBaseEndpoint/verify-two-factor';
   static const String profileEndpoint = '$authBaseEndpoint/profile';
   static const String logoutEndpoint = '$authBaseEndpoint/logout';
+  
+  // Legacy endpoint getters (for compatibility)
+  static String get authLoginEndpoint => loginEndpoint;
+  static String get authRegisterEndpoint => registerEndpoint;
+  static String get authVerify2FAEndpoint => verify2FAEndpoint;
+  static String get authProfileEndpoint => profileEndpoint;
 
   // Organization endpoints
   static const String organizationsEndpoint = '/Organizations';

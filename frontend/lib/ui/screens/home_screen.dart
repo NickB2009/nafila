@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/app_controller.dart';
-import '../widgets/nearby_salons_widget.dart';
+import '../widgets/public_salons_widget.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 /// Home screen that shows different content based on authentication state
@@ -51,7 +51,7 @@ class HomeScreen extends StatelessWidget {
             child: RefreshIndicator(
               onRefresh: () async {
                 if (appController.isAnonymousMode) {
-                  await appController.anonymous.refresh();
+                  await appController.anonymous.loadPublicSalons();
                 } else {
                   // Refresh authenticated user data
                   await appController.queue.refresh();
@@ -63,9 +63,9 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (appController.isAnonymousMode) ...[
-                      // Anonymous user content
+                      // Anonymous user content - show all available salons
                       const SizedBox(height: 16),
-                      const NearbySalonsWidget(),
+                      const PublicSalonsWidget(),
                       const SizedBox(height: 32),
                       _buildAnonymousFooter(context),
                     ] else ...[
