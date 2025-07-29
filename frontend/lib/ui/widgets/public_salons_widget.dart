@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/anonymous_controller.dart';
 import '../../controllers/app_controller.dart';
 import '../../models/public_salon.dart';
+import '../screens/anonymous_join_queue_screen.dart';
 
 /// Widget showing all public salons for anonymous users (before login)
 class PublicSalonsWidget extends StatelessWidget {
@@ -237,7 +238,7 @@ class PublicSalonsWidget extends StatelessWidget {
             
             const SizedBox(height: 16),
             
-            // Check-in button
+            // Join Queue button
             Container(
               width: double.infinity,
               height: 56,
@@ -253,7 +254,7 @@ class PublicSalonsWidget extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => _handleCheckInAttempt(context, salon, appController),
+                  onTap: () => _handleJoinQueueAttempt(context, salon),
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -265,7 +266,7 @@ class PublicSalonsWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Check-in rápido!',
+                                'Entrar na fila!',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -282,17 +283,10 @@ class PublicSalonsWidget extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.login,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                        Icon(
+                          Icons.add_to_queue,
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ],
                     ),
@@ -342,6 +336,15 @@ class PublicSalonsWidget extends StatelessWidget {
   void _handleCheckInAttempt(BuildContext context, PublicSalon salon, AppController appController) {
     // Show login dialog since user is not authenticated
     _showLoginRequired(context, 'fazer check-in');
+  }
+
+  void _handleJoinQueueAttempt(BuildContext context, PublicSalon salon) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AnonymousJoinQueueScreen(salon: salon),
+      ),
+    );
   }
 
   void _showLoginRequired(BuildContext context, String action) {

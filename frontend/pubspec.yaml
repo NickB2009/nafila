@@ -28,6 +28,8 @@ dependencies:
   dio: ^5.4.0
   json_annotation: ^4.8.1
   logger: ^2.0.1
+  # Anonymous user management
+  uuid: ^4.2.1
 
 dev_dependencies:
   flutter_test:
