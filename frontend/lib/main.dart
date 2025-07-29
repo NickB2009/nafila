@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
+import 'controllers/app_controller.dart';
+import 'ui/screens/home_screen.dart';
 import 'ui/screens/salon_finder_screen.dart';
 import 'ui/screens/salon_tv_dashboard.dart';
-import 'ui/view_models/mock_queue_notifier.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
@@ -25,9 +26,9 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return ChangeNotifierProvider(
-      create: (context) => MockQueueNotifier(),
+      create: (context) => AppController(),
       child: MaterialApp(
-        title: 'Nafila',
+        title: 'EutoNaFila',
         debugShowCheckedModeBanner: false,
         theme: themeProvider.getTheme(false),
         darkTheme: themeProvider.getTheme(true),
@@ -40,8 +41,10 @@ class MyApp extends StatelessWidget {
             child: child!,
           );
         },
-        home: const SalonFinderScreen(),
+        home: const AppInitializer(),
         routes: {
+          '/home': (context) => const HomeScreen(),
+          '/salon-finder': (context) => const SalonFinderScreen(),
           '/tv-dashboard': (context) => const SalonTvDashboard(),
         },
         localizationsDelegates: const [
@@ -50,14 +53,74 @@ class MyApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [
-          Locale('pt', 'BR'), // Portuguese (Brazil)
-          Locale('en', ''),   // English (default)
-          // Add more if you want
+          Locale('pt', 'BR'),
+          Locale('en', 'US'),
         ],
-        // Performance optimizations
-        showPerformanceOverlay: false,
-        showSemanticsDebugger: false,
       ),
+    );
+  }
+}
+
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    final appController = Provider.of<AppController>(context, listen: false);
+    await appController.initialize();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppController>(
+      builder: (context, appController, child) {
+        if (!appController.isInitialized && appController.error == null) {
+          return const Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Carregando dados...'),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (appController.error != null) {
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error: ${appController.error}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => _initializeApp(),
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return const HomeScreen();
+      },
     );
   }
 }

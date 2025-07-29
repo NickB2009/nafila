@@ -11,30 +11,28 @@ class PublicSalonsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appController = Provider.of<AppController>(context);
-    final anonymousController = appController.anonymous;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        _buildHeader(context),
-        const SizedBox(height: 16),
+    
+    return Consumer<AppController>(
+      builder: (context, appController, child) {
+        final controller = appController.anonymous;
         
-        // Salons list
-        Consumer<AnonymousController>(
-          builder: (context, controller, child) {
-            if (controller.isLoading) {
-              return const Center(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            _buildHeader(context),
+            const SizedBox(height: 16),
+            
+            // Salons list
+            if (controller.isLoading)
+              const Center(
                 child: Padding(
                   padding: EdgeInsets.all(32.0),
                   child: CircularProgressIndicator(),
                 ),
-              );
-            }
-
-            if (controller.error != null) {
-              return Padding(
+              )
+            else if (controller.error != null)
+              Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
@@ -51,36 +49,23 @@ class PublicSalonsWidget extends StatelessWidget {
                     ),
                   ],
                 ),
-              );
-            }
-
-            final salons = controller.nearbySalons;
-            if (salons.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  children: [
-                    const Text('Nenhum salão encontrado'),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () async {
-                        await controller.loadPublicSalons();
-                      },
-                      child: const Text('Recarregar'),
-                    ),
-                  ],
+              )
+            else if (controller.nearbySalons.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(
+                  child: Text('Nenhum salão encontrado'),
                 ),
-              );
-            }
-
-            return Column(
-              children: salons.map((salon) => 
-                _buildSalonCard(context, salon, appController)
-              ).toList(),
-            );
-          },
-        ),
-      ],
+              )
+            else
+              Column(
+                children: controller.nearbySalons.map((salon) => 
+                  _buildSalonCard(context, salon, appController)
+                ).toList(),
+              ),
+          ],
+        );
+      },
     );
   }
 

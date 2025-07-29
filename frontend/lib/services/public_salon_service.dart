@@ -1,6 +1,7 @@
 import '../models/public_salon.dart';
 import '../config/api_config.dart';
 import 'api_client.dart';
+import 'package:dio/dio.dart';
 
 /// Service for public salon data (no authentication required)
 class PublicSalonService {
@@ -24,39 +25,43 @@ class PublicSalonService {
     int limit = 20,
     bool openOnly = false,
   }) async {
-    try {
-      final request = NearbySearchRequest(
-        latitude: latitude,
-        longitude: longitude,
-        radiusKm: radiusKm,
-        limit: limit,
-        openOnly: openOnly,
-      );
+    print('🔥 getNearbySlons() called - SHOULD NOT BE USED FOR MAIN PAGE!');
+    
+    final request = NearbySearchRequest(
+      latitude: latitude,
+      longitude: longitude,
+      radiusKm: radiusKm,
+      limit: limit,
+      openOnly: openOnly,
+    );
 
-      final response = await _apiClient.postPublic(
-        ApiConfig.publicLocationSearchEndpoint,
-        data: request.toJson(),
-      );
+    final response = await _apiClient.postPublic(
+      ApiConfig.publicLocationSearchEndpoint,
+      data: request.toJson(),
+    );
 
-      final List<dynamic> data = response.data;
-      return data.map((json) => PublicSalon.fromJson(json)).toList();
-    } catch (e) {
-      // Return mock data if API fails (for development/testing)
-      return _getMockNearbySlons();
-    }
+    final List<dynamic> data = response.data;
+    return data.map((json) => PublicSalon.fromJson(json)).toList();
   }
 
   /// Gets all public salons without authentication
   Future<List<PublicSalon>> getPublicSalons() async {
-    try {
-      final response = await _apiClient.getPublic(ApiConfig.publicSalonsEndpoint);
-      
-      final List<dynamic> data = response.data;
-      return data.map((json) => PublicSalon.fromJson(json)).toList();
-    } catch (e) {
-      // Return mock data if API fails (for development/testing)
-      return _getMockPublicSalons();
-    }
+    // Use direct Dio call (avoiding ApiClient timeout issues)
+    final dio = Dio();
+    final response = await dio.get(
+      'https://localhost:7126/api/Public/salons',
+      options: Options(
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+    
+    final List<dynamic> data = response.data;
+    final salons = data.map((json) => PublicSalon.fromJson(json)).toList();
+    
+    return salons;
   }
 
   /// Gets public queue status for a salon

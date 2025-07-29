@@ -74,6 +74,7 @@ class AnonymousController extends ChangeNotifier {
       _setError(null);
 
       final salons = await _publicSalonService.getPublicSalons();
+      
       _nearbySalons = salons;
       notifyListeners();
     } catch (e) {
