@@ -12,10 +12,10 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj", "GrandeTech.QueueHub.API/"]
-COPY ["GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj", "GrandeTech.QueueHub.Tests/"]
+COPY ["backend/GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj", "GrandeTech.QueueHub.API/"]
+COPY ["backend/GrandeTech.QueueHub/GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj", "GrandeTech.QueueHub.Tests/"]
 RUN dotnet restore "GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj"
-COPY . .
+COPY backend/GrandeTech.QueueHub/ .
 WORKDIR "/src/GrandeTech.QueueHub.API"
 RUN dotnet build "GrandeTech.QueueHub.API.csproj" -c Release -o /app/build
 
