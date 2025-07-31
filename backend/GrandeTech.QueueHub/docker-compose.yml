@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: queuehub-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=DevPassword123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./GrandeTech.QueueHub.API/insert_test_data.sql:/docker-entrypoint-initdb.d/insert_test_data.sql
+    networks:
+      - queuehub-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P DevPassword123! -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  queuehub-api:
+    build:
+      context: .
+      dockerfile: GrandeTech.QueueHub.API/Dockerfile
+    container_name: queuehub-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;Encrypt=False;
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - queuehub-network
+    volumes:
+      - ./GrandeTech.QueueHub.API/appsettings.json:/app/appsettings.json:ro
+
+volumes:
+  sqlserver_data:
+    driver: local
+
+networks:
+  queuehub-network:
+    driver: bridge 
