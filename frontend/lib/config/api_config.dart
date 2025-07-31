@@ -1,7 +1,9 @@
 /// API configuration for the application
 class ApiConfig {
-  // Base configuration
-  static const String baseUrl = 'https://localhost:7126/api';
+  // Environment-based configuration
+  static const String _developmentUrl = 'https://localhost:7126/api';
+  static const String _productionUrl = 'https://api.eutonafila.com.br/api'; // Update with actual production URL
+  
   static const Duration defaultTimeout = Duration(seconds: 30);
 
   // Timeout configurations (for compatibility)
@@ -10,7 +12,11 @@ class ApiConfig {
   static const Duration sendTimeout = Duration(seconds: 30);
 
   // Environment detection and base URL
-  static String get currentBaseUrl => baseUrl;
+  static String get currentBaseUrl {
+    // TODO: Update this when production backend URL is available
+    // For now, using development URL - ensure backend is running on localhost:7126
+    return _developmentUrl;
+  }
 
   // Authentication endpoints
   static const String authBaseEndpoint = '/Auth';
@@ -72,8 +78,8 @@ class ApiConfig {
   /// Gets complete URL for an endpoint
   static String getUrl(String endpoint) {
     if (endpoint.startsWith('/')) {
-      return '$baseUrl$endpoint';
+      return '$currentBaseUrl$endpoint';
     }
-    return '$baseUrl/$endpoint';
+    return '$currentBaseUrl/$endpoint';
   }
 }

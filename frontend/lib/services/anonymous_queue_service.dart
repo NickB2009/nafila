@@ -63,13 +63,10 @@ class AnonymousQueueService {
     try {
       // Call backend API
       final response = await _dio.post(
-        'https://localhost:7126/api/Public/queue/join',
+        ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/join'),
         data: request.toJson(),
         options: Options(
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: ApiConfig.defaultHeaders,
         ),
       );
 
@@ -93,11 +90,17 @@ class AnonymousQueueService {
 
       return queueEntry;
     } catch (e) {
-      // For development: create mock queue entry if API not available
-      if (e is DioException && e.response?.statusCode == 404) {
-        return _createMockQueueEntry(user, salon, serviceRequested);
+      // Throw error instead of using mock data - ensures only real database data is used
+      if (e is DioException) {
+        if (e.response?.statusCode == 404) {
+          throw Exception('Queue service is not available. Please try again later.');
+        } else if (e.response?.statusCode == 500) {
+          throw Exception('Server error. Please try again later.');
+        } else {
+          throw Exception('Failed to join queue: ${e.message}');
+        }
       }
-      rethrow;
+      throw Exception('Failed to join queue: ${e.toString()}');
     }
   }
 
@@ -106,12 +109,9 @@ class AnonymousQueueService {
     try {
       // Call backend API
       await _dio.post(
-        'https://localhost:7126/api/Public/queue/leave/$entryId',
+        ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/leave/$entryId'),
         options: Options(
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: ApiConfig.defaultHeaders,
         ),
       );
     } catch (e) {
@@ -127,12 +127,9 @@ class AnonymousQueueService {
   Future<AnonymousQueueEntry?> getQueueStatus(String entryId) async {
     try {
       final response = await _dio.get(
-        'https://localhost:7126/api/Public/queue/status/$entryId',
+        ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/status/$entryId'),
         options: Options(
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: ApiConfig.defaultHeaders,
         ),
       );
 
@@ -176,7 +173,7 @@ class AnonymousQueueService {
   }) async {
     try {
       await _dio.put(
-        'https://localhost:7126/api/Public/queue/update/$entryId',
+        ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/update/$entryId'),
         data: {
           if (name != null) 'name': name,
           if (email != null) 'email': email,
@@ -184,10 +181,7 @@ class AnonymousQueueService {
           if (browserNotifications != null) 'browserNotifications': browserNotifications,
         },
         options: Options(
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: ApiConfig.defaultHeaders,
         ),
       );
 
@@ -240,25 +234,7 @@ class AnonymousQueueService {
     }
   }
 
-  /// Create a mock queue entry for development when backend is not available
-  AnonymousQueueEntry _createMockQueueEntry(
-    AnonymousUser user, 
-    PublicSalon salon, 
-    String? serviceRequested,
-  ) {
-    return AnonymousQueueEntry(
-      id: _userService.generateAnonymousId(),
-      anonymousUserId: user.id,
-      salonId: salon.id,
-      salonName: salon.name,
-      position: 3, // Mock position
-      estimatedWaitMinutes: 25, // Mock wait time
-      joinedAt: DateTime.now(),
-      lastUpdated: DateTime.now(),
-      status: QueueEntryStatus.waiting,
-      serviceRequested: serviceRequested,
-    );
-  }
+
 
   /// Parse queue status from API response
   QueueEntryStatus _parseQueueStatus(String status) {
