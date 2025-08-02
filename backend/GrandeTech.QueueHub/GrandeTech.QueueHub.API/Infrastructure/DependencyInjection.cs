@@ -88,7 +88,7 @@ namespace Grande.Fila.API.Infrastructure
                 // Add Entity Framework DbContext for SQL Server
                 services.AddDbContext<QueueHubDbContext>(options =>
                 {
-                    var connectionString = configuration.GetConnectionString("DefaultConnection");
+                    var connectionString = configuration.GetConnectionString("AzureSqlConnection");
                     
                     options.UseSqlServer(connectionString, sqlOptions =>
                     {

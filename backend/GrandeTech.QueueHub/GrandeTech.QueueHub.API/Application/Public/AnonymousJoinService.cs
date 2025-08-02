@@ -98,12 +98,12 @@ namespace Grande.Fila.API.Application.Public
                 var existingCustomer = await _customerRepository.GetByEmailAsync(request.Email.Trim(), cancellationToken);
                 if (existingCustomer != null)
                 {
-                    // Check if customer is already in this queue
-                    if (queue.Entries.Any(e => e.CustomerId == existingCustomer.Id && e.Status != "completed" && e.Status != "cancelled"))
-                    {
-                        result.Errors.Add("User already in queue for this salon");
-                        return result;
-                    }
+                                    // Check if customer is already in this queue
+                if (queue.Entries.Any(e => e.CustomerId == existingCustomer.Id && e.Status != QueueEntryStatus.Completed && e.Status != QueueEntryStatus.Cancelled))
+                {
+                    result.Errors.Add("User already in queue for this salon");
+                    return result;
+                }
                 }
 
                 // Create anonymous customer
@@ -126,7 +126,7 @@ namespace Grande.Fila.API.Application.Public
                 );
 
                 // Calculate estimated wait time
-                var averageTimeMinutes = location.AverageServiceTimeInMinutes ?? 30.0;
+                var averageTimeMinutes = location.AverageServiceTimeInMinutes;
                 if (_cache.TryGetAverage(salonId, out var cachedAverage))
                 {
                     averageTimeMinutes = cachedAverage;
@@ -148,7 +148,7 @@ namespace Grande.Fila.API.Application.Public
                 result.Id = queueEntry.Id.ToString();
                 result.Position = queueEntry.Position;
                 result.EstimatedWaitMinutes = estimatedWaitTime;
-                result.JoinedAt = queueEntry.JoinedAt;
+                result.JoinedAt = queueEntry.EnteredAt;
                 result.Status = "waiting";
 
                 return result;

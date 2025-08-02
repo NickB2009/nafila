@@ -7,6 +7,7 @@ using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.Customers;
 using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Application.Services.Cache;
 using Moq;
 using System.Linq;
@@ -58,12 +59,20 @@ namespace Grande.Fila.API.Tests.Application.Public
                 BrowserNotifications = true
             };
 
+            var address = Address.Create("Test St", "123", "", "Test Neighborhood", "Test City", "TS", "Test Country", "12345");
             var location = new Location(
-                organizationId: Guid.NewGuid(),
                 name: "Test Salon",
-                address: "123 Test St",
-                phoneNumber: "123-456-7890",
-                email: "test@salon.com"
+                slug: "test-salon",
+                description: "Test salon for tests",
+                organizationId: Guid.NewGuid(),
+                address: address,
+                contactPhone: "+11234567890",
+                contactEmail: "test@salon.com",
+                openingTime: TimeSpan.FromHours(9),
+                closingTime: TimeSpan.FromHours(17),
+                maxQueueSize: 100,
+                lateClientCapTimeInMinutes: 15,
+                createdBy: "system"
             );
 
             var queue = new Queue(
@@ -209,12 +218,20 @@ namespace Grande.Fila.API.Tests.Application.Public
                 ServiceRequested = "Haircut"
             };
 
+            var address = Address.Create("Test St", "123", "", "Test Neighborhood", "Test City", "TS", "Test Country", "12345");
             var location = new Location(
-                organizationId: Guid.NewGuid(),
                 name: "Test Salon",
-                address: "123 Test St",
-                phoneNumber: "123-456-7890",
-                email: "test@salon.com"
+                slug: "test-salon",
+                description: "Test salon for tests",
+                organizationId: Guid.NewGuid(),
+                address: address,
+                contactPhone: "+11234567890",
+                contactEmail: "test@salon.com",
+                openingTime: TimeSpan.FromHours(9),
+                closingTime: TimeSpan.FromHours(17),
+                maxQueueSize: 100,
+                lateClientCapTimeInMinutes: 15,
+                createdBy: "system"
             );
 
             _mockLocationRepository.Setup(x => x.GetByIdAsync(salonId, It.IsAny<CancellationToken>()))
@@ -246,12 +263,20 @@ namespace Grande.Fila.API.Tests.Application.Public
                 ServiceRequested = "Haircut"
             };
 
+            var address = Address.Create("Test St", "123", "", "Test Neighborhood", "Test City", "TS", "Test Country", "12345");
             var location = new Location(
-                organizationId: Guid.NewGuid(),
                 name: "Test Salon",
-                address: "123 Test St",
-                phoneNumber: "123-456-7890",
-                email: "test@salon.com"
+                slug: "test-salon",
+                description: "Test salon for tests",
+                organizationId: Guid.NewGuid(),
+                address: address,
+                contactPhone: "+11234567890",
+                contactEmail: "test@salon.com",
+                openingTime: TimeSpan.FromHours(9),
+                closingTime: TimeSpan.FromHours(17),
+                maxQueueSize: 100,
+                lateClientCapTimeInMinutes: 15,
+                createdBy: "system"
             );
 
             var queue = new Queue(
@@ -293,16 +318,20 @@ namespace Grande.Fila.API.Tests.Application.Public
         private StaffMember CreateMockStaffMember(bool isActive = true)
         {
             var staff = new StaffMember(
-                locationId: Guid.NewGuid(),
                 name: "Test Staff",
+                locationId: Guid.NewGuid(),
+                email: "staff@test.com",
+                phoneNumber: "+11234567890",
+                profilePictureUrl: null,
                 role: "Barber",
-                phoneNumber: "123-456-7890",
-                email: "staff@test.com"
+                username: "teststaff",
+                userId: null,
+                createdBy: "system"
             );
             
             if (isActive)
             {
-                staff.Activate();
+                staff.Activate("system");
             }
             
             return staff;

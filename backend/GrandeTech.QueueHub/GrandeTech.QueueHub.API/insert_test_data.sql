@@ -3,7 +3,6 @@
 -- Clear existing data (delete in order due to foreign key constraints)
 DELETE FROM QueueEntries;
 DELETE FROM Queues;
-DELETE FROM StaffBreaks;
 DELETE FROM StaffMembers;
 DELETE FROM ServicesOffered;
 DELETE FROM CustomerServiceHistory;
