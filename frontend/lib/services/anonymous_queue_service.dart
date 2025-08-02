@@ -90,12 +90,12 @@ class AnonymousQueueService {
 
       return queueEntry;
     } catch (e) {
-      // Handle API errors with specific messages for missing endpoint
+      // Handle API errors with specific messages
       if (e is DioException) {
         if (e.response?.statusCode == 404) {
-          throw Exception('Anonymous queue joining is not yet available. The backend endpoint POST /api/Public/queue/join needs to be implemented.');
+          throw Exception('Queue service is not available. Please try again later.');
         } else if (e.response?.statusCode == 500) {
-          throw Exception('Server error. Please try again later.');
+          throw Exception('Server error. There appears to be a backend configuration issue. Please try again later.');
         } else {
           throw Exception('Failed to join queue: ${e.message}');
         }

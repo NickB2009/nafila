@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Infrastructure.Data;
 
 namespace Grande.Fila.API.Infrastructure.Repositories.Sql
@@ -20,8 +21,10 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(slug))
                 throw new ArgumentException("Slug cannot be null or whitespace", nameof(slug));
 
+            // Create Slug value object for comparison
+            var slugValueObject = Slug.Create(slug);
             return await _dbSet
-                .Where(l => l.Slug.Value == slug)
+                .Where(l => l.Slug == slugValueObject)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -81,8 +84,10 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(slug))
                 return false;
 
+            // Create Slug value object for comparison
+            var slugValueObject = Slug.Create(slug);
             return !await _dbSet
-                .AnyAsync(l => l.Slug.Value == slug, cancellationToken);
+                .AnyAsync(l => l.Slug == slugValueObject, cancellationToken);
         }
 
         public async Task<bool> IsSlugUniqueForOrganizationAsync(string slug, Guid organizationId, CancellationToken cancellationToken = default)
@@ -90,8 +95,10 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(slug))
                 return false;
 
+            // Create Slug value object for comparison
+            var slugValueObject = Slug.Create(slug);
             return !await _dbSet
-                .AnyAsync(l => l.Slug.Value == slug && l.OrganizationId == organizationId, cancellationToken);
+                .AnyAsync(l => l.Slug == slugValueObject && l.OrganizationId == organizationId, cancellationToken);
         }
 
         public async Task<IReadOnlyList<Location>> GetLocationsByQueueStatusAsync(bool isQueueEnabled, CancellationToken cancellationToken = default)

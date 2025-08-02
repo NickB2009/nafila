@@ -72,6 +72,10 @@ namespace Grande.Fila.API.Domain.Queues
                 notes);
 
             _entries.Add(queueEntry);
+            
+            // Mark the queue as modified so EF Core knows it has been updated
+            MarkAsModified("System"); // TODO: Pass actual user context when available
+            
             AddDomainEvent(new CustomerAddedToQueueEvent(Id, queueEntry.Id, customerId, position));
             
             return queueEntry;
@@ -90,6 +94,10 @@ namespace Grande.Fila.API.Domain.Queues
                 throw new InvalidOperationException("No customers in queue");
 
             nextEntry.Call(staffMemberId);
+            
+            // Mark the queue as modified since it affects queue state
+            MarkAsModified("System"); // TODO: Pass actual user context when available
+            
             AddDomainEvent(new CustomerCalledFromQueueEvent(Id, nextEntry.Id, nextEntry.CustomerId, staffMemberId));
             
             return nextEntry;
@@ -145,6 +153,9 @@ namespace Grande.Fila.API.Domain.Queues
 
             if (lateEntries.Any())
             {
+                // Mark the queue as modified since entries were changed
+                MarkAsModified("System"); // TODO: Pass actual user context when available
+                
                 AddDomainEvent(new LateCustomersRemovedEvent(Id, lateEntries.Count));
             }
         }

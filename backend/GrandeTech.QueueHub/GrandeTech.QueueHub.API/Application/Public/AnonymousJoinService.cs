@@ -114,6 +114,7 @@ namespace Grande.Fila.API.Application.Public
                     isAnonymous: true
                 );
 
+                // Add customer to repository (don't save yet)
                 customer = await _customerRepository.AddAsync(customer, cancellationToken);
 
                 // Add customer to queue
@@ -176,5 +177,7 @@ namespace Grande.Fila.API.Application.Public
                 return false;
             }
         }
+
+
     }
 }

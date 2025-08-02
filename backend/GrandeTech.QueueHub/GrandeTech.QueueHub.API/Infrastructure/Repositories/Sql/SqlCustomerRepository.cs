@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Grande.Fila.API.Domain.Customers;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Infrastructure.Data;
 
 namespace Grande.Fila.API.Infrastructure.Repositories.Sql
@@ -20,9 +21,11 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(phoneNumber))
                 throw new ArgumentException("Phone number cannot be null or whitespace", nameof(phoneNumber));
 
-            // PhoneNumber is a value object, so we need to compare the underlying value
+            // Create PhoneNumber value object for comparison
+            // EF Core will use the configured converter to translate this to the database column
+            var phoneNumberValueObject = PhoneNumber.Create(phoneNumber);
             return await _dbSet
-                .Where(c => c.PhoneNumber != null && c.PhoneNumber.Value == phoneNumber)
+                .Where(c => c.PhoneNumber != null && c.PhoneNumber == phoneNumberValueObject)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -31,9 +34,11 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be null or whitespace", nameof(email));
 
-            // Email is a value object, so we need to compare the underlying value
+            // Create Email value object for comparison
+            // EF Core will use the configured converter to translate this to the database column
+            var emailValueObject = Email.Create(email);
             return await _dbSet
-                .Where(c => c.Email != null && c.Email.Value == email)
+                .Where(c => c.Email != null && c.Email == emailValueObject)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -92,8 +97,10 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(phoneNumber))
                 return false;
 
+            // Create PhoneNumber value object for comparison
+            var phoneNumberValueObject = PhoneNumber.Create(phoneNumber);
             return !await _dbSet
-                .AnyAsync(c => c.PhoneNumber != null && c.PhoneNumber.Value == phoneNumber, cancellationToken);
+                .AnyAsync(c => c.PhoneNumber != null && c.PhoneNumber == phoneNumberValueObject, cancellationToken);
         }
 
         public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
@@ -101,8 +108,12 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(email))
                 return false;
 
+            // Create Email value object for comparison
+            var emailValueObject = Email.Create(email);
             return !await _dbSet
-                .AnyAsync(c => c.Email != null && c.Email.Value == email, cancellationToken);
+                .AnyAsync(c => c.Email != null && c.Email == emailValueObject, cancellationToken);
         }
+
+        // Removed immediate SaveChanges - let service layer handle transactions
     }
 } 

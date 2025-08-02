@@ -18,6 +18,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
         public async Task<Queue?> GetByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
         {
             return await _dbSet
+                .Include(q => q.Entries)
                 .Where(q => q.LocationId == locationId && q.QueueDate == DateTime.Today)
                 .FirstOrDefaultAsync(cancellationToken);
         }
@@ -25,6 +26,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
         public async Task<Queue?> GetActiveQueueByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
         {
             return await _dbSet
+                .Include(q => q.Entries)
                 .Where(q => q.LocationId == locationId && q.IsActive && q.QueueDate == DateTime.Today)
                 .FirstOrDefaultAsync(cancellationToken);
         }
@@ -174,16 +176,45 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
         public override async Task<Queue> AddAsync(Queue entity, CancellationToken cancellationToken = default)
         {
             var result = await base.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            // Removed immediate SaveChanges - let service layer handle transactions
             return result;
         }
 
         // Override UpdateAsync to handle queue entry management
         public override async Task<Queue> UpdateAsync(Queue entity, CancellationToken cancellationToken = default)
         {
-            var result = await base.UpdateAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-            return result;
+            // Load the existing queue with its entries to properly handle navigation properties
+            var existingQueue = await _dbSet
+                .Include(q => q.Entries)
+                .FirstOrDefaultAsync(q => q.Id == entity.Id, cancellationToken);
+                
+            if (existingQueue == null)
+            {
+                throw new KeyNotFoundException($"Queue with ID {entity.Id} not found");
+            }
+
+            // Update scalar properties
+            _context.Entry(existingQueue).CurrentValues.SetValues(entity);
+
+            // Handle queue entries - find new entries that need to be added
+            var existingEntryIds = existingQueue.Entries.Select(e => e.Id).ToHashSet();
+            var newEntries = entity.Entries.Where(e => !existingEntryIds.Contains(e.Id)).ToList();
+
+            // Add new queue entries
+            foreach (var newEntry in newEntries)
+            {
+                _context.QueueEntries.Add(newEntry);
+            }
+
+            // Update existing entries if needed
+            foreach (var updatedEntry in entity.Entries.Where(e => existingEntryIds.Contains(e.Id)))
+            {
+                var existingEntry = existingQueue.Entries.First(e => e.Id == updatedEntry.Id);
+                _context.Entry(existingEntry).CurrentValues.SetValues(updatedEntry);
+            }
+
+            // Removed immediate SaveChanges - let service layer handle transactions
+            return existingQueue;
         }
     }
 } 

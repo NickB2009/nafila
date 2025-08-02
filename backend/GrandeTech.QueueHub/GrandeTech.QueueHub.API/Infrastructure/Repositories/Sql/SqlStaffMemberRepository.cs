@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Infrastructure.Data;
 
 namespace Grande.Fila.API.Infrastructure.Repositories.Sql
@@ -56,8 +57,10 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(email))
                 return false;
 
+            // Create Email value object for comparison
+            var emailValueObject = Email.Create(email);
             return await _dbSet
-                .AnyAsync(s => s.Email != null && s.Email.Value == email, cancellationToken);
+                .AnyAsync(s => s.Email != null && s.Email == emailValueObject, cancellationToken);
         }
 
         public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
