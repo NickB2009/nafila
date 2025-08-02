@@ -99,15 +99,11 @@ public class GetPublicQueueStatusService
     {
         try
         {
-            var queue = await _queueRepository.GetByLocationIdAsync(locationId, cancellationToken);
+            var queue = await _queueRepository.GetActiveQueueByLocationIdAsync(locationId, cancellationToken);
             
-            // Check if the queue is for today
-            if (queue?.QueueDate.Date == DateTime.UtcNow.Date)
-            {
-                return queue;
-            }
-            
-            return null;
+            // The GetActiveQueueByLocationIdAsync already filters for today's date and active status
+            // so we just need to return the queue if it exists
+            return queue;
         }
         catch (Exception ex)
         {

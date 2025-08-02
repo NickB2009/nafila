@@ -9,6 +9,8 @@ using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Common.ValueObjects;
 using Grande.Fila.API.Application.Services.Cache;
+using Grande.Fila.API.Domain.Common;
+using Grande.Fila.API.Infrastructure.Data;
 using Moq;
 using System.Linq;
 
@@ -33,12 +35,17 @@ namespace Grande.Fila.API.Tests.Application.Public
             _mockStaffRepository = new Mock<IStaffMemberRepository>();
             _mockCache = new Mock<IAverageWaitTimeCache>();
             
+            // Create a mock DbContext for testing
+            var mockDbContext = new Mock<QueueHubDbContext>();
+            
             _service = new AnonymousJoinService(
                 _mockQueueRepository.Object,
                 _mockCustomerRepository.Object,
                 _mockLocationRepository.Object,
                 _mockStaffRepository.Object,
-                _mockCache.Object
+                _mockCache.Object,
+                new Mock<IUnitOfWork>().Object,
+                mockDbContext.Object
             );
         }
 
