@@ -32,6 +32,11 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasDefaultValue(15);
 
+            // Configure concurrency token
+            builder.Property(q => q.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
+
             // Configure the entries collection - this will be a separate table
             builder.HasMany(q => q.Entries)
                 .WithOne()

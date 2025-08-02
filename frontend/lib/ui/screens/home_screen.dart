@@ -1,12 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../../controllers/app_controller.dart';
 import '../widgets/public_salons_widget.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 /// Home screen that shows different content based on authentication state
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Refresh salon data every 30 seconds to keep queue lengths updated
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        final appController = Provider.of<AppController>(context, listen: false);
+        if (appController.isAnonymousMode) {
+          appController.anonymous.loadPublicSalons();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

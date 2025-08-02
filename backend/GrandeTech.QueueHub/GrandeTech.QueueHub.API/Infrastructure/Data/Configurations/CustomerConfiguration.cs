@@ -51,6 +51,11 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             // Index on PhoneNumber for searches
             builder.HasIndex("PhoneNumber")
                 .HasDatabaseName("IX_Customers_PhoneNumber");
+
+            // Configure concurrency token
+            builder.Property(c => c.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
         }
     }
 } 

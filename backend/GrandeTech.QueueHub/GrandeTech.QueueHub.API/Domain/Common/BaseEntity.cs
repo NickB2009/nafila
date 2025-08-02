@@ -17,6 +17,7 @@ namespace Grande.Fila.API.Domain.Common
         public bool IsDeleted { get; protected set; }
         public DateTime? DeletedAt { get; protected set; }
         public string? DeletedBy { get; protected set; }
+        public byte[] RowVersion { get; set; } = new byte[8]; // Concurrency token
 
         public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 

@@ -182,4 +182,122 @@ void main() {
       });
     });
   });
+
+  group('AnonymousQueueService - Database Integration', () {
+    late MockDio mockDio;
+    late MockAnonymousUserService mockUserService;
+    late AnonymousQueueService queueService;
+    late AnonymousUser testUser;
+    late PublicSalon testSalon;
+
+    setUp(() {
+      mockDio = MockDio();
+      mockUserService = MockAnonymousUserService();
+      queueService = AnonymousQueueService(
+        userService: mockUserService,
+        dio: mockDio,
+      );
+
+      testUser = AnonymousUser(
+        id: 'user123',
+        name: 'Test User',
+        email: 'test@example.com',
+        createdAt: DateTime.now(),
+        preferences: AnonymousUserPreferences.defaultPreferences(),
+        activeQueues: [],
+        queueHistory: [],
+      );
+
+      testSalon = const PublicSalon(
+        id: 'salon123',
+        name: 'Test Salon',
+        address: 'Test Address',
+        latitude: -23.5505,
+        longitude: -46.6333,
+        isOpen: true,
+        queueLength: 5,
+        currentWaitTimeMinutes: 15,
+        services: ['Haircut', 'Beard Trim'],
+      );
+    });
+
+    test('should successfully insert queue entry into database', () async {
+      // Arrange
+      when(mockUserService.getAnonymousUser()).thenAnswer((_) async => testUser);
+      
+      final mockResponse = Response(
+        data: {
+          'id': 'queue123',
+          'position': 6,
+          'estimatedWaitMinutes': 20,
+          'joinedAt': '2024-01-01T10:00:00Z',
+        },
+        statusCode: 200,
+        requestOptions: RequestOptions(path: ''),
+      );
+      
+      when(mockDio.post(
+        any,
+        data: anyNamed('data'),
+        options: anyNamed('options'),
+      )).thenAnswer((_) async => mockResponse);
+
+      when(mockUserService.addQueueEntry(any)).thenAnswer((_) async {});
+
+      // Act
+      final result = await queueService.joinQueue(
+        salon: testSalon,
+        name: 'Test User',
+        email: 'test@example.com',
+        serviceRequested: 'Haircut',
+      );
+
+      // Assert
+      expect(result.id, 'queue123');
+      expect(result.position, 6);
+      expect(result.estimatedWaitMinutes, 20);
+      expect(result.salonId, 'salon123');
+      expect(result.serviceRequested, 'Haircut');
+
+      // Verify API was called with correct data
+      verify(mockDio.post(
+        any,
+        data: argThat(isA<Map<String, dynamic>>()),
+        options: anyNamed('options'),
+      )).called(1);
+
+      // Verify local storage was updated
+      verify(mockUserService.addQueueEntry(any)).called(1);
+    });
+
+    test('should handle API errors gracefully without creating mock data', () async {
+      // Arrange
+      when(mockUserService.getAnonymousUser()).thenAnswer((_) async => testUser);
+      
+      when(mockDio.post(
+        any,
+        data: anyNamed('data'),
+        options: anyNamed('options'),
+      )).thenThrow(DioException(
+        requestOptions: RequestOptions(path: ''),
+        response: Response(
+          statusCode: 500,
+          requestOptions: RequestOptions(path: ''),
+        ),
+      ));
+
+      // Act & Assert
+      expect(
+        () => queueService.joinQueue(
+          salon: testSalon,
+          name: 'Test User',
+          email: 'test@example.com',
+        ),
+        throwsA(isA<Exception>()),
+      );
+
+      // Verify no mock data was created
+      verifyNever(mockUserService.addQueueEntry(any));
+    });
+  });
 } 

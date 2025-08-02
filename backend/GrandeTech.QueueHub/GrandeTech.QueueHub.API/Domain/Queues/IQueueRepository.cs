@@ -33,5 +33,13 @@ namespace Grande.Fila.API.Domain.Queues
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>A collection of queues for the organization within the date range</returns>
         Task<IReadOnlyList<Queue>> GetQueuesByOrganizationIdAsync(Guid organizationId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Gets the next position number for a queue
+        /// </summary>
+        /// <param name="queueId">Queue ID</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The next position number</returns>
+        Task<int> GetNextPositionAsync(Guid queueId, CancellationToken cancellationToken = default);
     }
 } 

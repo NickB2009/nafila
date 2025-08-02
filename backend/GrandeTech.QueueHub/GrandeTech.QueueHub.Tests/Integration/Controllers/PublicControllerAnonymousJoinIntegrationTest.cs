@@ -64,11 +64,12 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 salonId = salonId,
                 name = "Integration Test Customer",
                 email = "integration.test@example.com",
-                serviceRequested = "Haircut"
+                serviceRequested = "Haircut",
+                anonymousUserId = "11111111-1111-1111-1111-111111111111"
             };
 
             // Act
-            var response = await _client.PostAsJsonAsync("/api/Public/join-queue", request);
+            var response = await _client.PostAsJsonAsync("/api/Public/queue/join", request);
 
             // Assert
             Console.WriteLine($"Response Status: {response.StatusCode}");
@@ -133,10 +134,11 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                     salonId = salonId,
                     name = $"Concurrent Test Customer {i}",
                     email = $"concurrent.test{i}@example.com",
-                    serviceRequested = "Haircut"
+                    serviceRequested = "Haircut",
+                    anonymousUserId = $"22222222-2222-2222-2222-22222222222{i}"
                 };
                 
-                tasks.Add(_client.PostAsJsonAsync("/api/Public/join-queue", request));
+                tasks.Add(_client.PostAsJsonAsync("/api/Public/queue/join", request));
             }
 
             // Wait for all requests to complete

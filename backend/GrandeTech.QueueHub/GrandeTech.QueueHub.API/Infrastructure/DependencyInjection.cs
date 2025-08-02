@@ -169,6 +169,9 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<IServicesOfferedRepository, SqlServicesOfferedRepository>();
             services.AddScoped<ISubscriptionPlanRepository, SqlSubscriptionPlanRepository>();
             services.AddScoped<IAuditLogRepository, SqlAuditLogRepository>();
+            
+            // Add Unit of Work for transaction management
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
         }
 
         private static void AddApplicationServices(IServiceCollection services)

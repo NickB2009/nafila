@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'dart:async';
 import '../../models/anonymous_user.dart';
 import '../../models/public_salon.dart';
 import '../../services/anonymous_queue_service.dart';
+import '../../controllers/app_controller.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../theme/app_theme.dart';
 
@@ -115,6 +117,10 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       try {
         await _queueService.leaveQueue(_currentEntry.id);
         if (mounted) {
+          // Refresh salon data before going back to show updated queue length
+          final appController = Provider.of<AppController>(context, listen: false);
+          await appController.anonymous.loadPublicSalons();
+          
           Navigator.of(context).pop(); // Go back to salon list
         }
       } catch (e) {
@@ -168,7 +174,13 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
     return Row(
       children: [
         IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () async {
+            // Refresh salon data before going back to show updated queue length
+            final appController = Provider.of<AppController>(context, listen: false);
+            await appController.anonymous.loadPublicSalons();
+            
+            Navigator.of(context).pop();
+          },
           icon: const Icon(Icons.arrow_back),
         ),
         Expanded(

@@ -95,6 +95,11 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
 
             builder.HasIndex(qe => qe.ServiceTypeId)
                 .HasDatabaseName("IX_QueueEntries_ServiceTypeId");
+
+            // Configure concurrency token
+            builder.Property(qe => qe.RowVersion)
+                .IsRowVersion()
+                .IsConcurrencyToken();
         }
     }
 } 

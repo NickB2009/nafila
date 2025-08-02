@@ -152,5 +152,15 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 q.QueueDate.Date >= startDate.Date &&
                 q.QueueDate.Date <= endDate.Date).ToList();
         }
+
+        public async Task<int> GetNextPositionAsync(Guid queueId, CancellationToken cancellationToken = default)
+        {
+            var queue = await GetByIdAsync(queueId, cancellationToken);
+            if (queue == null)
+                return 1;
+
+            var maxPosition = queue.Entries.Any() ? queue.Entries.Max(e => e.Position) : 0;
+            return maxPosition + 1;
+        }
     }
 }

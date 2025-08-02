@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/public_salon.dart';
 import '../../services/anonymous_queue_service.dart';
+import '../../controllers/app_controller.dart';
 import '../theme/app_theme.dart';
 import 'anonymous_queue_status_screen.dart';
 
@@ -90,6 +92,13 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
             ),
           ),
         );
+        
+        // Refresh salon data on main page to show updated queue length
+        // This ensures the queue length is updated when user goes back
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final appController = Provider.of<AppController>(context, listen: false);
+          appController.anonymous.loadPublicSalons();
+        });
       }
     } catch (e) {
       if (mounted) {
