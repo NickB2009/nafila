@@ -90,10 +90,10 @@ class AnonymousQueueService {
 
       return queueEntry;
     } catch (e) {
-      // Throw error instead of using mock data - ensures only real database data is used
+      // Handle API errors with specific messages for missing endpoint
       if (e is DioException) {
         if (e.response?.statusCode == 404) {
-          throw Exception('Queue service is not available. Please try again later.');
+          throw Exception('Anonymous queue joining is not yet available. The backend endpoint POST /api/Public/queue/join needs to be implemented.');
         } else if (e.response?.statusCode == 500) {
           throw Exception('Server error. Please try again later.');
         } else {

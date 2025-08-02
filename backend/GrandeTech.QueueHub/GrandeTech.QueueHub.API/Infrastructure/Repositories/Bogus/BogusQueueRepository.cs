@@ -94,6 +94,15 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             return queues.FirstOrDefault(q => q.LocationId == locationId);
         }
 
+        public async Task<Queue?> GetActiveQueueByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
+        {
+            var queues = await GetAllAsync(cancellationToken);
+            return queues.FirstOrDefault(q => 
+                q.LocationId == locationId && 
+                q.QueueDate.Date == DateTime.Today.Date && 
+                q.IsActive);
+        }
+
         public async Task<IList<Queue>> GetAllByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
         {
             var queues = await GetAllAsync(cancellationToken);

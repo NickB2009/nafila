@@ -22,6 +22,13 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
+        public async Task<Queue?> GetActiveQueueByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
+        {
+            return await _dbSet
+                .Where(q => q.LocationId == locationId && q.IsActive && q.QueueDate == DateTime.Today)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task<IList<Queue>> GetAllByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
         {
             return await _dbSet

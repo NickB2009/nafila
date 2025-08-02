@@ -186,6 +186,7 @@ builder.Services.AddScoped<SmsNotificationService>();
 builder.Services.AddScoped<KioskDisplayService>();
 builder.Services.AddScoped<QrJoinService>();
 builder.Services.AddScoped<CouponNotificationService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.AnonymousJoinService>();
 builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.MockQrCodeGenerator>();
 builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
 builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
