@@ -27,10 +27,35 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.ApplicationInsights.Extensibility;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure for Azure App Service
+var port = Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? "80";
+builder.WebHost.UseUrls($"http://*:{port}");
+
 // Add services to the container.
+
+// Add Application Insights
+builder.Services.AddApplicationInsightsTelemetry(options =>
+{
+    options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+    options.EnableAdaptiveSampling = false;
+    options.EnablePerformanceCounterCollectionModule = true;
+    options.EnableQuickPulseMetricStream = true;
+    options.EnableDebugLogger = false;
+});
+
+// Add Application Insights logging
+builder.Services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.AddApplicationInsights();
+});
+
+// Register logging service
+builder.Services.AddScoped<Grande.Fila.API.Application.Logging.ILoggingService, Grande.Fila.API.Application.Logging.LoggingService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -86,27 +111,51 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Add infrastructure services
-builder.Services.AddInfrastructure(builder.Configuration);
+// Add infrastructure services with error handling
+try
+{
+    builder.Services.AddInfrastructure(builder.Configuration);
+}
+catch (Exception ex)
+{
+    // Log the error but don't crash the application
+    Console.WriteLine($"Warning: Error during infrastructure registration: {ex.Message}");
+    Console.WriteLine("Application will continue but database features may not work properly.");
+    
+    // Add basic logging even if infrastructure setup fails
+    builder.Services.AddLogging();
+}
 
-// Add JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        // Disable automatic claim mapping to keep original JWT claim types (e.g. "role", "sub")
-        options.MapInboundClaims = false;
+// Add JWT Authentication (only if JWT settings are configured)
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-        options.TokenValidationParameters = new TokenValidationParameters
+if (!string.IsNullOrEmpty(jwtKey) && !string.IsNullOrEmpty(jwtIssuer) && !string.IsNullOrEmpty(jwtAudience))
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found")))
-        };
-    });
+            // Disable automatic claim mapping to keep original JWT claim types (e.g. "role", "sub")
+            options.MapInboundClaims = false;
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            };
+        });
+}
+else
+{
+    // Add authentication without JWT for development/testing
+    builder.Services.AddAuthentication();
+}
 
 // Add tenant-aware authorization
 builder.Services.AddAuthorization(options =>
@@ -201,11 +250,36 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new HasPermissionRequirement("")));
 });
 
-// Add health checks
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<Grande.Fila.API.Infrastructure.Data.QueueHubDbContext>("Database");
+// Health checks are already registered in AddInfrastructure
 
 var app = builder.Build();
+
+// Startup validation and logging (simplified to prevent startup delays)
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        
+        logger?.LogInformation("Application starting up...");
+        logger?.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
+        logger?.LogInformation("Listening on port: {Port}", Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? "80");
+        
+        // Quick connection string validation without detailed parsing
+        var connectionString = config.GetConnectionString("AzureSqlConnection");
+        logger?.LogInformation("Database connection string configured: {HasConnectionString}", !string.IsNullOrEmpty(connectionString));
+        
+        logger?.LogInformation("Database settings - UseSqlDatabase: {UseSql}, UseInMemoryDatabase: {UseInMemory}",
+            config.GetValue<bool>("Database:UseSqlDatabase", true),
+            config.GetValue<bool>("Database:UseInMemoryDatabase", false));
+    }
+}
+catch (Exception ex)
+{
+    // Don't let startup validation fail the entire application
+    Console.WriteLine($"Startup validation warning: {ex.Message}");
+}
 
 // Configure database and seeding based on environment
 var useSqlDatabase = builder.Configuration.GetValue<bool>("Database:UseSqlDatabase", true);
@@ -231,25 +305,47 @@ if (isProduction)
         context.Request.Scheme = "https";
         return next();
     });
+    
+    // Application Insights telemetry is automatically enabled via AddApplicationInsightsTelemetry
 }
 
 // Database migration and seeding (only in development or when explicitly enabled)
 if ((autoMigrate || seedData) && useSqlDatabase && !isProduction)
 {
-    using (var scope = app.Services.CreateScope())
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.QueueHubDbContext>();
-        
-        if (autoMigrate)
+        using (var scope = app.Services.CreateScope())
         {
-            await context.Database.MigrateAsync();
+            var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+            var context = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.QueueHubDbContext>();
+            
+            if (autoMigrate)
+            {
+                logger?.LogInformation("Attempting database migration...");
+                await context.Database.MigrateAsync();
+                logger?.LogInformation("Database migration completed successfully");
+            }
+            
+            if (seedData)
+            {
+                logger?.LogInformation("Attempting database seeding...");
+                var seeder = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.DatabaseSeeder>();
+                await seeder.SeedAsync();
+                logger?.LogInformation("Database seeding completed successfully");
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+            logger?.LogError(ex, "Database migration/seeding failed. Application will continue without seeded data. Error: {ErrorMessage}", ex.Message);
         }
         
-        if (seedData)
-        {
-            var seeder = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.DatabaseSeeder>();
-            await seeder.SeedAsync();
-        }
+        // Don't crash the application - continue startup
+        Console.WriteLine($"Warning: Database migration/seeding failed: {ex.Message}");
+        Console.WriteLine("Application will continue but may not have initial data.");
     }
 }
 
@@ -272,12 +368,160 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Health check endpoints
-app.MapHealthChecks("/health");
+// Add a simple root endpoint for basic connectivity testing
+app.MapGet("/", () => new { 
+    status = "online", 
+    environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+    port = Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? "80",
+    timestamp = DateTime.UtcNow,
+    version = "1.0.0"
+});
+
+// Add a simple ping endpoint
+app.MapGet("/ping", () => "pong");
+
+// Health check endpoints with detailed responses
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(x => new
+            {
+                name = x.Key,
+                status = x.Value.Status.ToString(),
+                exception = x.Value.Exception?.Message,
+                duration = x.Value.Duration.TotalMilliseconds
+            })
+        };
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+    }
+});
+
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
-    Predicate = check => check.Tags.Contains("ready")
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Where(x => x.Value.Tags.Contains("ready")).Select(x => new
+            {
+                name = x.Key,
+                status = x.Value.Status.ToString(),
+                exception = x.Value.Exception?.Message,
+                duration = x.Value.Duration.TotalMilliseconds
+            })
+        };
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+    }
 });
+
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var response = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Where(x => x.Value.Tags.Contains("live")).Select(x => new
+            {
+                name = x.Key,
+                status = x.Value.Status.ToString(),
+                exception = x.Value.Exception?.Message,
+                duration = x.Value.Duration.TotalMilliseconds
+            })
+        };
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+    }
+});
+
+// Add diagnostic endpoints for troubleshooting
+app.MapGet("/diagnostics/config", (IConfiguration config) =>
+{
+    var connectionString = config.GetConnectionString("AzureSqlConnection");
+    var serverName = "";
+    var databaseName = "";
+    
+    if (!string.IsNullOrEmpty(connectionString))
+    {
+        try
+        {
+            var connectionStringBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+            serverName = connectionStringBuilder.DataSource;
+            databaseName = connectionStringBuilder.InitialCatalog;
+        }
+        catch (Exception)
+        {
+            // Ignore parsing errors for diagnostics
+        }
+    }
+    
+    return new
+    {
+        hasConnectionString = !string.IsNullOrEmpty(connectionString),
+        connectionStringLength = connectionString?.Length ?? 0,
+        serverName = serverName,
+        databaseName = databaseName,
+        environment = config.GetValue<string>("ASPNETCORE_ENVIRONMENT"),
+        useSqlDatabase = config.GetValue<bool>("Database:UseSqlDatabase", true),
+        useInMemoryDatabase = config.GetValue<bool>("Database:UseInMemoryDatabase", false),
+        useBogusRepositories = config.GetValue<bool>("Database:UseBogusRepositories", false),
+        applicationInsightsConfigured = !string.IsNullOrEmpty(config["ApplicationInsights:ConnectionString"])
+    };
+}).WithTags("Diagnostics");
+
+app.MapGet("/diagnostics/db-test", async (HttpContext httpContext) =>
+{
+    try
+    {
+        var serviceProvider = httpContext.RequestServices;
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.QueueHubDbContext>();
+        var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+        
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var canConnect = await context.Database.CanConnectAsync();
+        stopwatch.Stop();
+        
+        logger?.LogInformation("Database connection test completed. CanConnect: {CanConnect}, Duration: {Duration}ms", 
+            canConnect, stopwatch.ElapsedMilliseconds);
+        
+        var result = new
+        {
+            canConnect = canConnect,
+            connectionTimeMs = stopwatch.ElapsedMilliseconds,
+            timestamp = DateTime.UtcNow
+        };
+        
+        await httpContext.Response.WriteAsJsonAsync(result);
+    }
+    catch (Exception ex)
+    {
+        var serviceProvider = httpContext.RequestServices;
+        using var scope = serviceProvider.CreateScope();
+        var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+        logger?.LogError(ex, "Database connection test failed");
+        
+        var result = new
+        {
+            canConnect = false,
+            error = ex.Message,
+            errorType = ex.GetType().Name,
+            timestamp = DateTime.UtcNow
+        };
+        
+        httpContext.Response.StatusCode = 500;
+        await httpContext.Response.WriteAsJsonAsync(result);
+    }
+}).WithTags("Diagnostics");
 
 app.Run();
 

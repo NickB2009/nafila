@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Data.SqlClient;
 using Grande.Fila.API.Domain.Common;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Domain.Organizations;
@@ -85,23 +88,34 @@ namespace Grande.Fila.API.Infrastructure
 
             if (useSqlDatabase && !useInMemoryDatabase)
             {
-                // Add Entity Framework DbContext for SQL Server
+                // Validate connection string
+                var connectionString = configuration.GetConnectionString("AzureSqlConnection");
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "AzureSqlConnection connection string is not configured. " +
+                        "Please set ConnectionStrings__AzureSqlConnection environment variable or configure it in Azure App Service.");
+                }
+
+                // Note: Using simplified retry logic built into Entity Framework instead of Polly for now
+
+                // Add Entity Framework DbContext for SQL Server with enhanced error handling
                 services.AddDbContext<QueueHubDbContext>(options =>
                 {
-                    var connectionString = configuration.GetConnectionString("AzureSqlConnection");
+                    var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT");
                     
                     options.UseSqlServer(connectionString, sqlOptions =>
                     {
+                        // Enhanced retry configuration for Azure SQL Database
                         sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
-                            maxRetryDelay: TimeSpan.FromSeconds(30),
-                            errorNumbersToAdd: null);
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(15),
+                            errorNumbersToAdd: new[] { 40613, 40501, 40540, 40197, 10928, 10929 });
                         
-                        sqlOptions.CommandTimeout(30);
+                        sqlOptions.CommandTimeout(30); // Connection timeout
                     });
 
                     // Configure additional options based on environment
-                    var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT");
                     if (environment == "Development")
                     {
                         options.EnableSensitiveDataLogging();
@@ -109,9 +123,9 @@ namespace Grande.Fila.API.Infrastructure
                     }
                 });
 
-                // Add health checks for SQL Server
+                // Add health checks
                 services.AddHealthChecks()
-                    .AddDbContextCheck<QueueHubDbContext>();
+                    .AddDbContextCheck<QueueHubDbContext>("database", tags: new[] { "ready", "live" });
             }
             else if (useInMemoryDatabase)
             {
@@ -122,6 +136,10 @@ namespace Grande.Fila.API.Infrastructure
                     options.EnableSensitiveDataLogging();
                     options.EnableDetailedErrors();
                 });
+
+                // Add health checks for in-memory database
+                services.AddHealthChecks()
+                    .AddDbContextCheck<QueueHubDbContext>("database", tags: new[] { "ready", "live" });
             }
         }
 
