@@ -1,8 +1,12 @@
-/// API configuration for the application
+/// API configuration for the application with environment-based URL detection
 class ApiConfig {
   // Environment-based configuration
+  static const String _localUrl = 'https://localhost:7126/api';
   static const String _developmentUrl = 'https://localhost:7126/api';
-  static const String _productionUrl = 'https://api.eutonafila.com.br/api'; // Update with actual production URL
+  static const String _productionUrl = 'https://api.eutonafila.com.br/api';
+  
+  // Custom API URL for manual override (set this for your specific setup)
+  static String? _customApiUrl;
   
   static const Duration defaultTimeout = Duration(seconds: 30);
 
@@ -11,11 +15,54 @@ class ApiConfig {
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);
 
+  /// Set a custom API URL for development/testing
+  static void setCustomApiUrl(String? url) {
+    _customApiUrl = url;
+  }
+
+  /// Get the current environment
+  static ApiEnvironment get currentEnvironment {
+    if (_customApiUrl != null) return ApiEnvironment.custom;
+    
+    // You can add more sophisticated environment detection here
+    // For now, defaulting to development
+    return ApiEnvironment.development;
+  }
+
   // Environment detection and base URL
   static String get currentBaseUrl {
-    // TODO: Update this when production backend URL is available
-    // For now, using development URL - ensure backend is running on localhost:7126
-    return _developmentUrl;
+    if (_customApiUrl != null) {
+      // Ensure custom URL has /api suffix
+      final url = _customApiUrl!;
+      return url.endsWith('/api') ? url : '$url/api';
+    }
+    
+    switch (currentEnvironment) {
+      case ApiEnvironment.local:
+        return _localUrl;
+      case ApiEnvironment.development:
+        return _developmentUrl;
+      case ApiEnvironment.production:
+        return _productionUrl;
+      case ApiEnvironment.custom:
+        return _customApiUrl!;
+    }
+  }
+
+  /// Initialize API configuration with optional custom URL
+  /// Call this in main() to set your API URL
+  /// 
+  /// Examples:
+  /// - ApiConfig.initialize(); // Uses default localhost:7126
+  /// - ApiConfig.initialize(apiUrl: 'https://your-api.com'); // Custom API
+  /// - ApiConfig.initialize(apiUrl: 'http://192.168.1.100:7126'); // Local network
+  static void initialize({String? apiUrl}) {
+    if (apiUrl != null) {
+      setCustomApiUrl(apiUrl);
+      print('🔗 API configured for: $currentBaseUrl');
+    } else {
+      print('🔗 API configured for: $currentBaseUrl (default)');
+    }
   }
 
   // Authentication endpoints
@@ -82,4 +129,12 @@ class ApiConfig {
     }
     return '$currentBaseUrl/$endpoint';
   }
+}
+
+/// API Environment enumeration
+enum ApiEnvironment {
+  local,
+  development,
+  production,
+  custom,
 }

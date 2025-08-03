@@ -46,15 +46,12 @@ class PublicSalonService {
 
   /// Gets all public salons without authentication
   Future<List<PublicSalon>> getPublicSalons() async {
-    // Use direct Dio call (avoiding ApiClient timeout issues)
+    // Use direct Dio call with centralized API configuration
     final dio = Dio();
     final response = await dio.get(
-      'https://localhost:7126/api/Public/salons',
+      ApiConfig.getUrl(ApiConfig.publicSalonsEndpoint),
       options: Options(
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: ApiConfig.defaultHeaders,
       ),
     );
     
@@ -146,9 +143,7 @@ class PublicSalonService {
     ];
   }
 
-  List<PublicSalon> _getMockPublicSalons() {
-    return _getMockNearbySlons();
-  }
+
 
   PublicQueueStatus _getMockQueueStatus(String salonId) {
     return PublicQueueStatus(

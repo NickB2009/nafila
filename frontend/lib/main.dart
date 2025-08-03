@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'controllers/app_controller.dart';
+import 'config/api_config.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/salon_finder_screen.dart';
 import 'ui/screens/salon_tv_dashboard.dart';
@@ -9,6 +10,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 🔧 API Configuration - Using PRODUCTION API
+  // 
+  // Using production API instead of localhost
+  ApiConfig.initialize(apiUrl: 'https://api.eutonafila.com.br');
+  
+  // ALTERNATIVE OPTIONS (commented out):
+  // ApiConfig.initialize(); // Default localhost
+  // ApiConfig.initialize(apiUrl: 'http://192.168.1.100:7126'); // Local network IP
   
   runApp(
     ChangeNotifierProvider(
