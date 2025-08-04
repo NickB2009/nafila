@@ -1,4 +1,4 @@
-# EuToNaFila Azure Container Deployment Script with Database Migrations
+# EuToNaFila Azure Container Deployment Script with Working Database Migrations
 # This script runs migrations locally then deploys the container
 
 # Stop on first error
@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 # Ensure we're running from the repository root
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$repoRoot = Split-Path -Parent $scriptPath
+$repoRoot = Split-Path -Parent (Split-Path -Parent $scriptPath)
 Set-Location $repoRoot
 Write-Host "Working from repository root: $repoRoot" -ForegroundColor Yellow
 
@@ -36,6 +36,9 @@ try {
     
     if ([string]::IsNullOrEmpty($connectionString)) {
         Write-Host "Error: Could not retrieve connection string from App Service." -ForegroundColor Red
+        Write-Host "Please ensure the connection string is configured in Azure App Service." -ForegroundColor Yellow
+        Write-Host "You can set it manually with:" -ForegroundColor Yellow
+        Write-Host "az webapp config appsettings set --name $appServiceName --resource-group $resourceGroup --settings 'ConnectionStrings__AzureSqlConnection=your-connection-string'" -ForegroundColor Cyan
         exit 1
     }
     
@@ -68,7 +71,7 @@ try {
 }
 
 # ============================================================
-# STEP 2: Build and Deploy Container
+# STEP 2: Build and Deploy Container (Original Logic)
 # ============================================================
 
 # Login to Azure Container Registry
@@ -140,7 +143,7 @@ try {
 }
 
 # ============================================================
-# SUCCESS MESSAGE
+# STEP 3: Success Message and URLs
 # ============================================================
 
 Write-Host "" -ForegroundColor White
@@ -170,3 +173,4 @@ Write-Host "   - RefactorToJsonColumn (Complete)" -ForegroundColor Green
 Write-Host "" -ForegroundColor White
 Write-Host "Sunday business hours are now configurable via API!" -ForegroundColor Yellow
 Write-Host "Use endpoint: PUT /api/locations/{id}/weekly-hours" -ForegroundColor Yellow
+Write-Host "" -ForegroundColor White

@@ -214,7 +214,25 @@ namespace Grande.Fila.API.Domain.Common.ValueObjects
             if (!IsOpen || !OpenTime.HasValue || !CloseTime.HasValue)
                 return false;
 
-            return time >= OpenTime.Value && time <= CloseTime.Value;
+            var openTime = OpenTime.Value;
+            var closeTime = CloseTime.Value;
+
+            // Handle midnight closing (00:00:00) as end of day
+            if (closeTime == TimeSpan.Zero)
+            {
+                // Open until midnight means open from openTime through 23:59:59
+                return time >= openTime;
+            }
+
+            // Handle closing after midnight (e.g., 02:00 for 2 AM)
+            if (closeTime < openTime)
+            {
+                // Business spans midnight (e.g., 22:00-02:00)
+                return time >= openTime || time <= closeTime;
+            }
+
+            // Normal case: open and close within same day
+            return time >= openTime && time <= closeTime;
         }
 
         /// <summary>

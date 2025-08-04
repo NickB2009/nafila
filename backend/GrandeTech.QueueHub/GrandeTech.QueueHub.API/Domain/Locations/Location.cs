@@ -263,7 +263,9 @@ namespace Grande.Fila.API.Domain.Locations
         {
             if (!IsActive) return false;
             
-            var now = DateTime.Now;
+            // Use Brazil timezone (UTC-3) since all locations are in Brazil
+            var brazilTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+            var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brazilTimeZone);
             return WeeklyHours.IsOpenAt(now);
         }
 
