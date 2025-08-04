@@ -210,6 +210,7 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<CreateLocationService>();
             services.AddScoped<ResetAverageService>();
             services.AddScoped<ToggleQueueService>();
+            services.AddScoped<UpdateWeeklyHoursService>();
             
             // Queue services
             services.AddScoped<AddQueueService>();

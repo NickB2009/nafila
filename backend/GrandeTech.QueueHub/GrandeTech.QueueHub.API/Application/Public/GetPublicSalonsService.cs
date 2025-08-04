@@ -132,19 +132,7 @@ public class GetPublicSalonsService
 
     private static Dictionary<string, string> GetBusinessHoursDto(Location location)
     {
-        var businessHours = new Dictionary<string, string>();
-        
-        // For now, assume same hours every day except Sunday (closed)
-        var hours = $"{location.BusinessHours.Start:hh\\:mm}-{location.BusinessHours.End:hh\\:mm}";
-        
-        businessHours["monday"] = hours;
-        businessHours["tuesday"] = hours;
-        businessHours["wednesday"] = hours;
-        businessHours["thursday"] = hours;
-        businessHours["friday"] = hours;
-        businessHours["saturday"] = hours;
-        businessHours["sunday"] = "closed";
-        
-        return businessHours;
+        // Use the new weekly hours from the domain model
+        return location.GetBusinessHoursDictionary();
     }
 }

@@ -1,0 +1,54 @@
+### Test JSON Storage - Get a Location to verify business hours
+GET {{host}}/api/public/salons
+Content-Type: application/json
+
+### Test Sunday Open Hours - Update Weekly Hours
+PUT {{host}}/api/locations/{{locationId}}/weekly-hours
+Content-Type: application/json
+
+{
+  "monday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "tuesday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "wednesday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "thursday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "friday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "20:00"
+  },
+  "saturday": {
+    "isOpen": true,
+    "openTime": "10:00",
+    "closeTime": "16:00"
+  },
+  "sunday": {
+    "isOpen": true,
+    "openTime": "12:00",
+    "closeTime": "16:00"
+  }
+}
+
+### Verify the update worked - Get Public Salon Details
+GET {{host}}/api/public/salons/{{locationSlug}}
+Content-Type: application/json
+
+### Variables for testing
+@host = https://localhost:7001
+@locationId = your-location-id-here
+@locationSlug = your-location-slug-here

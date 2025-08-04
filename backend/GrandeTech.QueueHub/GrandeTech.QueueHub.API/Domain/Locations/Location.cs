@@ -18,7 +18,7 @@ namespace Grande.Fila.API.Domain.Locations
         public PhoneNumber? ContactPhone { get; private set; }
         public Email? ContactEmail { get; private set; }
         public BrandingConfig? CustomBranding { get; private set; }
-        public TimeSpanRange BusinessHours { get; private set; } = null!;
+        public WeeklyBusinessHours WeeklyHours { get; private set; } = null!;
         public bool IsQueueEnabled { get; private set; }
         public int MaxQueueSize { get; private set; }
         public int LateClientCapTimeInMinutes { get; private set; }
@@ -66,7 +66,7 @@ namespace Grande.Fila.API.Domain.Locations
             Address = address;
             ContactPhone = contactPhone != null ? PhoneNumber.Create(contactPhone) : null;
             ContactEmail = contactEmail != null ? Email.Create(contactEmail) : null;
-            BusinessHours = TimeSpanRange.Create(openingTime, closingTime);
+            WeeklyHours = WeeklyBusinessHours.CreateMondayToSaturday(openingTime, closingTime); // Default: Monday-Saturday same hours, Sunday closed
             IsQueueEnabled = true;
             MaxQueueSize = maxQueueSize > 0 ? maxQueueSize : 100;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes >= 0 ? lateClientCapTimeInMinutes : 15;
@@ -97,7 +97,7 @@ namespace Grande.Fila.API.Domain.Locations
             Address = address;
             ContactPhone = contactPhone != null ? PhoneNumber.Create(contactPhone) : null;
             ContactEmail = contactEmail != null ? Email.Create(contactEmail) : null;
-            BusinessHours = TimeSpanRange.Create(openingTime, closingTime);
+            WeeklyHours = WeeklyBusinessHours.CreateMondayToSaturday(openingTime, closingTime); // Maintain backward compatibility
 
             MarkAsModified(updatedBy);
             AddDomainEvent(new LocationUpdatedEvent(Id));
@@ -261,16 +261,31 @@ namespace Grande.Fila.API.Domain.Locations
 
         public bool IsOpen()
         {
-            var currentTime = TimeOnly.FromTimeSpan(DateTime.Now.TimeOfDay);
-            var businessStart = TimeOnly.FromTimeSpan(BusinessHours.Start);
-            var businessEnd = TimeOnly.FromTimeSpan(BusinessHours.End);
+            if (!IsActive) return false;
             
-            return currentTime >= businessStart && currentTime <= businessEnd && IsActive;
+            var now = DateTime.Now;
+            return WeeklyHours.IsOpenAt(now);
         }
 
         public bool CanAcceptQueueEntries()
         {
             return IsActive && IsQueueEnabled && IsOpen();
+        }
+
+        public void UpdateWeeklyHours(WeeklyBusinessHours weeklyHours, string updatedBy)
+        {
+            WeeklyHours = weeklyHours ?? throw new ArgumentNullException(nameof(weeklyHours));
+            MarkAsModified(updatedBy);
+            AddDomainEvent(new LocationUpdatedEvent(Id));
+        }
+
+        /// <summary>
+        /// Gets business hours as a dictionary for API responses
+        /// This replaces the hardcoded logic in service classes
+        /// </summary>
+        public Dictionary<string, string> GetBusinessHoursDictionary()
+        {
+            return WeeklyHours.ToDictionary();
         }
 
         public int CalculateEstimatedWaitTime(int positionInQueue, double? overrideAverageTime = null)

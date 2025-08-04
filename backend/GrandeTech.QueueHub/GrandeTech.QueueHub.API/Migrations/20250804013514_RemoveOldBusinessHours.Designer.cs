@@ -4,6 +4,7 @@ using Grande.Fila.API.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Grande.Fila.API.Migrations
 {
     [DbContext(typeof(QueueHubDbContext))]
-    partial class QueueHubDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250804013514_RemoveOldBusinessHours")]
+    partial class RemoveOldBusinessHours
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -216,11 +219,6 @@ namespace Grande.Fila.API.Migrations
                     b.Property<string>("StaffMemberIds")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("WeeklyHours")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("WeeklyBusinessHours");
 
                     b.HasKey("Id");
 
@@ -1111,6 +1109,215 @@ namespace Grande.Fila.API.Migrations
                                 .HasForeignKey("LocationId");
                         });
 
+                    b.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.WeeklyBusinessHours", "WeeklyHours", b1 =>
+                        {
+                            b1.Property<Guid>("LocationId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.HasKey("LocationId");
+
+                            b1.ToTable("Locations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("LocationId");
+
+                            b1.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.DayBusinessHours", "Friday", b2 =>
+                                {
+                                    b2.Property<Guid>("WeeklyBusinessHoursLocationId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<TimeSpan?>("CloseTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("FridayCloseTime");
+
+                                    b2.Property<bool>("IsOpen")
+                                        .HasColumnType("bit")
+                                        .HasColumnName("FridayIsOpen");
+
+                                    b2.Property<TimeSpan?>("OpenTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("FridayOpenTime");
+
+                                    b2.HasKey("WeeklyBusinessHoursLocationId");
+
+                                    b2.ToTable("Locations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WeeklyBusinessHoursLocationId");
+                                });
+
+                            b1.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.DayBusinessHours", "Monday", b2 =>
+                                {
+                                    b2.Property<Guid>("WeeklyBusinessHoursLocationId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<TimeSpan?>("CloseTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("MondayCloseTime");
+
+                                    b2.Property<bool>("IsOpen")
+                                        .HasColumnType("bit")
+                                        .HasColumnName("MondayIsOpen");
+
+                                    b2.Property<TimeSpan?>("OpenTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("MondayOpenTime");
+
+                                    b2.HasKey("WeeklyBusinessHoursLocationId");
+
+                                    b2.ToTable("Locations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WeeklyBusinessHoursLocationId");
+                                });
+
+                            b1.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.DayBusinessHours", "Saturday", b2 =>
+                                {
+                                    b2.Property<Guid>("WeeklyBusinessHoursLocationId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<TimeSpan?>("CloseTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("SaturdayCloseTime");
+
+                                    b2.Property<bool>("IsOpen")
+                                        .HasColumnType("bit")
+                                        .HasColumnName("SaturdayIsOpen");
+
+                                    b2.Property<TimeSpan?>("OpenTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("SaturdayOpenTime");
+
+                                    b2.HasKey("WeeklyBusinessHoursLocationId");
+
+                                    b2.ToTable("Locations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WeeklyBusinessHoursLocationId");
+                                });
+
+                            b1.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.DayBusinessHours", "Sunday", b2 =>
+                                {
+                                    b2.Property<Guid>("WeeklyBusinessHoursLocationId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<TimeSpan?>("CloseTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("SundayCloseTime");
+
+                                    b2.Property<bool>("IsOpen")
+                                        .HasColumnType("bit")
+                                        .HasColumnName("SundayIsOpen");
+
+                                    b2.Property<TimeSpan?>("OpenTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("SundayOpenTime");
+
+                                    b2.HasKey("WeeklyBusinessHoursLocationId");
+
+                                    b2.ToTable("Locations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WeeklyBusinessHoursLocationId");
+                                });
+
+                            b1.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.DayBusinessHours", "Thursday", b2 =>
+                                {
+                                    b2.Property<Guid>("WeeklyBusinessHoursLocationId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<TimeSpan?>("CloseTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("ThursdayCloseTime");
+
+                                    b2.Property<bool>("IsOpen")
+                                        .HasColumnType("bit")
+                                        .HasColumnName("ThursdayIsOpen");
+
+                                    b2.Property<TimeSpan?>("OpenTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("ThursdayOpenTime");
+
+                                    b2.HasKey("WeeklyBusinessHoursLocationId");
+
+                                    b2.ToTable("Locations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WeeklyBusinessHoursLocationId");
+                                });
+
+                            b1.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.DayBusinessHours", "Tuesday", b2 =>
+                                {
+                                    b2.Property<Guid>("WeeklyBusinessHoursLocationId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<TimeSpan?>("CloseTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("TuesdayCloseTime");
+
+                                    b2.Property<bool>("IsOpen")
+                                        .HasColumnType("bit")
+                                        .HasColumnName("TuesdayIsOpen");
+
+                                    b2.Property<TimeSpan?>("OpenTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("TuesdayOpenTime");
+
+                                    b2.HasKey("WeeklyBusinessHoursLocationId");
+
+                                    b2.ToTable("Locations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WeeklyBusinessHoursLocationId");
+                                });
+
+                            b1.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.DayBusinessHours", "Wednesday", b2 =>
+                                {
+                                    b2.Property<Guid>("WeeklyBusinessHoursLocationId")
+                                        .HasColumnType("uniqueidentifier");
+
+                                    b2.Property<TimeSpan?>("CloseTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("WednesdayCloseTime");
+
+                                    b2.Property<bool>("IsOpen")
+                                        .HasColumnType("bit")
+                                        .HasColumnName("WednesdayIsOpen");
+
+                                    b2.Property<TimeSpan?>("OpenTime")
+                                        .HasColumnType("time")
+                                        .HasColumnName("WednesdayOpenTime");
+
+                                    b2.HasKey("WeeklyBusinessHoursLocationId");
+
+                                    b2.ToTable("Locations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("WeeklyBusinessHoursLocationId");
+                                });
+
+                            b1.Navigation("Friday")
+                                .IsRequired();
+
+                            b1.Navigation("Monday")
+                                .IsRequired();
+
+                            b1.Navigation("Saturday")
+                                .IsRequired();
+
+                            b1.Navigation("Sunday")
+                                .IsRequired();
+
+                            b1.Navigation("Thursday")
+                                .IsRequired();
+
+                            b1.Navigation("Tuesday")
+                                .IsRequired();
+
+                            b1.Navigation("Wednesday")
+                                .IsRequired();
+                        });
+
                     b.OwnsOne("Grande.Fila.API.Domain.Common.ValueObjects.BrandingConfig", "CustomBranding", b1 =>
                         {
                             b1.Property<Guid>("LocationId")
@@ -1170,6 +1377,9 @@ namespace Grande.Fila.API.Migrations
                         .IsRequired();
 
                     b.Navigation("CustomBranding");
+
+                    b.Navigation("WeeklyHours")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Grande.Fila.API.Domain.Organizations.Organization", b =>

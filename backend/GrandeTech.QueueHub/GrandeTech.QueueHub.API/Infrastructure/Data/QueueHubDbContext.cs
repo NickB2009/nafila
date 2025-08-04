@@ -275,15 +275,14 @@ namespace Grande.Fila.API.Infrastructure.Data
                         .HasMaxLength(100);
                 });
 
-            // Configure BusinessHours as owned type
+            // Configure WeeklyBusinessHours as JSON column
             modelBuilder.Entity<Location>()
-                .OwnsOne(e => e.BusinessHours, hours =>
-                {
-                    hours.Property(h => h.Start)
-                        .HasColumnName("BusinessHoursStart");
-                    hours.Property(h => h.End)
-                        .HasColumnName("BusinessHoursEnd");
-                });
+                .Property(e => e.WeeklyHours)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<WeeklyBusinessHours>(v, (System.Text.Json.JsonSerializerOptions?)null)!)
+                .HasColumnName("WeeklyBusinessHours")
+                .HasColumnType("nvarchar(max)");
 
             // Configure collections as JSON
             modelBuilder.Entity<Location>()

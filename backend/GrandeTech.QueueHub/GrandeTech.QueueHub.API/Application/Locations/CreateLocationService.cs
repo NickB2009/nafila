@@ -86,6 +86,10 @@ public class CreateLocationService
                 }
             }
 
+            // Note: The Location constructor will automatically create WeeklyBusinessHours
+            // with Monday-Saturday using these hours and Sunday closed by default.
+            // In the future, we can enhance this to read individual day hours from request.BusinessHours.
+
             // For now, use a default organization ID - this will be from the authenticated user's context
             var organizationId = Guid.NewGuid();
 

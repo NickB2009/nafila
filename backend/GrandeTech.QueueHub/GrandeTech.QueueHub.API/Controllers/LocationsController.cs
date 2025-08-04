@@ -75,10 +75,7 @@ public class LocationsController : ControllerBase
                 PostalCode = location.Address.PostalCode,
                 Country = location.Address.Country
             },
-            BusinessHours = new Dictionary<string, string>
-            {
-                ["Monday"] = $"{location.BusinessHours.Start:hh\\:mm}-{location.BusinessHours.End:hh\\:mm}"
-            },
+            BusinessHours = location.GetBusinessHoursDictionary(),
             MaxQueueCapacity = location.MaxQueueSize,
             Description = location.Description ?? string.Empty
         };
@@ -178,5 +175,36 @@ public class LocationsController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    [HttpPut("{locationId}/weekly-hours")]
+    public async Task<IActionResult> UpdateWeeklyHours(
+        string locationId,
+        [FromBody] WeeklyHoursDto weeklyHours,
+        [FromServices] UpdateWeeklyHoursService updateService,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new UpdateWeeklyHoursRequest
+        {
+            LocationId = locationId,
+            WeeklyHours = weeklyHours
+        };
+
+        var result = await updateService.UpdateWeeklyHoursAsync(request, cancellationToken);
+
+        if (!result.Success)
+        {
+            if (result.FieldErrors.Count > 0)
+                return BadRequest(result.FieldErrors);
+            
+            return BadRequest(new { errors = result.Errors });
+        }
+
+        return Ok(new 
+        { 
+            success = true,
+            locationId = result.LocationId,
+            businessHours = result.UpdatedBusinessHours
+        });
     }
 }

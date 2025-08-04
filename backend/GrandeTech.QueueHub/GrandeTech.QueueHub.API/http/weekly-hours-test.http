@@ -1,0 +1,85 @@
+### Update Weekly Business Hours - Example with Sunday Open
+PUT {{host}}/api/locations/{{locationId}}/weekly-hours
+Content-Type: application/json
+
+{
+  "monday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "tuesday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "wednesday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "thursday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "friday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "20:00"
+  },
+  "saturday": {
+    "isOpen": true,
+    "openTime": "10:00",
+    "closeTime": "16:00"
+  },
+  "sunday": {
+    "isOpen": true,
+    "openTime": "12:00",
+    "closeTime": "16:00"
+  }
+}
+
+### Update Weekly Business Hours - Sunday Closed
+PUT {{host}}/api/locations/{{locationId}}/weekly-hours
+Content-Type: application/json
+
+{
+  "monday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "tuesday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "wednesday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "thursday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "18:00"
+  },
+  "friday": {
+    "isOpen": true,
+    "openTime": "09:00",
+    "closeTime": "20:00"
+  },
+  "saturday": {
+    "isOpen": true,
+    "openTime": "10:00",
+    "closeTime": "16:00"
+  },
+  "sunday": {
+    "isOpen": false
+  }
+}
+
+### Variables for testing
+@host = https://localhost:7001
+@locationId = your-location-id-here
