@@ -1,18 +1,26 @@
 import 'dart:convert';
-import 'dart:html' as html;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/anonymous_user.dart';
 
-/// Service for managing anonymous user data in browser localStorage
+/// Service for managing anonymous user data using SharedPreferences
 class AnonymousUserService {
   static const String _storageKey = 'eutonafila_anonymous_user';
   static const String _sessionKey = 'eutonafila_session_backup';
   static const Uuid _uuid = Uuid();
+  
+  late final SharedPreferences _prefs;
 
-  /// Get the current anonymous user from localStorage
+  /// Initialize the service
+  Future<void> _initialize() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  /// Get the current anonymous user from SharedPreferences
   Future<AnonymousUser?> getAnonymousUser() async {
     try {
-      final storedData = html.window.localStorage[_storageKey];
+      await _initialize();
+      final storedData = _prefs.getString(_storageKey);
       if (storedData == null || storedData.isEmpty) {
         return null;
       }
@@ -45,14 +53,15 @@ class AnonymousUserService {
     return user;
   }
 
-  /// Save anonymous user to localStorage
+  /// Save anonymous user to SharedPreferences
   Future<void> saveAnonymousUser(AnonymousUser user) async {
     try {
+      await _initialize();
       final jsonString = jsonEncode(user.toJson());
-      html.window.localStorage[_storageKey] = jsonString;
+      await _prefs.setString(_storageKey, jsonString);
       
-      // Also save to sessionStorage as backup
-      html.window.sessionStorage[_sessionKey] = jsonString;
+      // Also save to session storage as backup
+      await _prefs.setString(_sessionKey, jsonString);
     } catch (e) {
       print('Error saving anonymous user: $e');
       rethrow;
@@ -111,46 +120,28 @@ class AnonymousUserService {
     return updatedUser;
   }
 
-  /// Move a queue entry from active to history
-  Future<AnonymousUser> moveToHistory(String entryId) async {
-    final currentUser = await getAnonymousUser();
-    if (currentUser == null) {
-      throw Exception('No anonymous user found');
-    }
-
-    final entryToMove = currentUser.activeQueues.firstWhere(
-      (entry) => entry.id == entryId,
-      orElse: () => throw Exception('Queue entry not found'),
-    );
-
-    final updatedActiveQueues = currentUser.activeQueues
-        .where((entry) => entry.id != entryId)
-        .toList();
-
-    final updatedHistory = List<AnonymousQueueEntry>.from(currentUser.queueHistory)
-      ..add(entryToMove);
-
-    final updatedUser = currentUser.copyWith(
-      activeQueues: updatedActiveQueues,
-      queueHistory: updatedHistory,
-    );
-
-    await saveAnonymousUser(updatedUser);
-    return updatedUser;
-  }
-
-  /// Remove a queue entry completely
+  /// Remove a queue entry
   Future<AnonymousUser> removeQueueEntry(String entryId) async {
     final currentUser = await getAnonymousUser();
     if (currentUser == null) {
       throw Exception('No anonymous user found');
     }
 
+    final entryToRemove = currentUser.activeQueues
+        .firstWhere((entry) => entry.id == entryId);
+
     final updatedQueues = currentUser.activeQueues
         .where((entry) => entry.id != entryId)
         .toList();
 
-    final updatedUser = currentUser.copyWith(activeQueues: updatedQueues);
+    // Move to history
+    final updatedHistory = List<AnonymousQueueEntry>.from(currentUser.queueHistory)
+      ..add(entryToRemove);
+
+    final updatedUser = currentUser.copyWith(
+      activeQueues: updatedQueues,
+      queueHistory: updatedHistory,
+    );
     await saveAnonymousUser(updatedUser);
     return updatedUser;
   }
@@ -175,8 +166,9 @@ class AnonymousUserService {
 
   /// Clear all anonymous user data
   Future<void> clearAnonymousUser() async {
-    html.window.localStorage.remove(_storageKey);
-    html.window.sessionStorage.remove(_sessionKey);
+    await _initialize();
+    await _prefs.remove(_storageKey);
+    await _prefs.remove(_sessionKey);
   }
 
   /// Generate unique anonymous ID
@@ -205,12 +197,13 @@ class AnonymousUserService {
     }
   }
 
-  /// Check if localStorage is available
-  bool get isStorageAvailable {
+  /// Check if storage is available
+  Future<bool> get isStorageAvailable async {
     try {
+      await _initialize();
       const testKey = '__test_storage__';
-      html.window.localStorage[testKey] = 'test';
-      html.window.localStorage.remove(testKey);
+      await _prefs.setString(testKey, 'test');
+      await _prefs.remove(testKey);
       return true;
     } catch (e) {
       return false;
@@ -218,9 +211,10 @@ class AnonymousUserService {
   }
 
   /// Get storage usage estimate (in bytes)
-  int getStorageUsage() {
+  Future<int> getStorageUsage() async {
     try {
-      final data = html.window.localStorage[_storageKey];
+      await _initialize();
+      final data = _prefs.getString(_storageKey);
       return data?.length ?? 0;
     } catch (e) {
       return 0;

@@ -332,13 +332,17 @@ class _AccountScreenState extends State<AccountScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Histórico de Cortes',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: titleFontSize * 0.9,
+              Flexible(
+                child: Text(
+                  'Histórico de Cortes',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: titleFontSize * 0.9,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).push(
