@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
-import '../../lib/services/anonymous_queue_service.dart';
-import '../../lib/services/anonymous_user_service.dart';
-import '../../lib/models/anonymous_user.dart';
-import '../../lib/models/public_salon.dart';
+import 'package:eutonafila_frontend/services/anonymous_queue_service.dart';
+import 'package:eutonafila_frontend/services/anonymous_user_service.dart';
+import 'package:eutonafila_frontend/models/anonymous_user.dart';
+import 'package:eutonafila_frontend/models/public_salon.dart';
 
 void main() {
   group('AnonymousQueueService - Basic Tests', () {

@@ -61,6 +61,24 @@ class AnonymousQueueService {
     );
 
     try {
+      // If salonId is not a valid GUID, fallback to local mock join (frontend demo)
+      if (!_isValidGuid(salon.id)) {
+        final localEntry = AnonymousQueueEntry(
+          id: 'local-${DateTime.now().millisecondsSinceEpoch}',
+          anonymousUserId: user.id,
+          salonId: salon.id,
+          salonName: salon.name,
+          position: 1,
+          estimatedWaitMinutes: salon.currentWaitTimeMinutes ?? 10,
+          joinedAt: DateTime.now(),
+          lastUpdated: DateTime.now(),
+          status: QueueEntryStatus.waiting,
+          serviceRequested: serviceRequested,
+        );
+        await _userService.addQueueEntry(localEntry);
+        return localEntry;
+      }
+
       // Call backend API
       final response = await _dio.post(
         ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/join'),
@@ -96,6 +114,23 @@ class AnonymousQueueService {
           throw Exception('Queue service is not available. Please try again later.');
         } else if (e.response?.statusCode == 500) {
           throw Exception('Server error. There appears to be a backend configuration issue. Please try again later.');
+        } else if (e.response?.statusCode == 400) {
+          // Extract field errors if available
+          final data = e.response?.data;
+          String message = 'Não foi possível entrar na fila. Verifique os dados informados.';
+          if (data is Map && data['errors'] != null) {
+            final errors = data['errors'];
+            if (errors is Map) {
+              final parts = <String>[];
+              errors.forEach((k, v) {
+                parts.add('$k: $v');
+              });
+              if (parts.isNotEmpty) {
+                message = parts.join(' | ');
+              }
+            }
+          }
+          throw Exception(message);
         } else {
           throw Exception('Failed to join queue: ${e.message}');
         }
@@ -259,5 +294,10 @@ class AnonymousQueueService {
     return AnonymousQueueService(
       userService: AnonymousUserService(),
     );
+  }
+
+  bool _isValidGuid(String value) {
+    final guidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\$');
+    return guidRegex.hasMatch(value);
   }
 } 

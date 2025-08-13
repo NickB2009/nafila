@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/ui/screens/anonymous_join_queue_screen.dart';
-import '../../lib/models/public_salon.dart';
+import 'package:eutonafila_frontend/ui/screens/anonymous_join_queue_screen.dart';
+import 'package:eutonafila_frontend/models/public_salon.dart';
 
 void main() {
   group('AnonymousJoinQueueScreen - Service Dropdown', () {

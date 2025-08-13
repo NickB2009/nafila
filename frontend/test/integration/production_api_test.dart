@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
-import '../../lib/config/api_config.dart';
-import '../../lib/services/public_salon_service.dart';
+import 'package:eutonafila_frontend/config/api_config.dart';
+import 'package:eutonafila_frontend/services/public_salon_service.dart';
 
 void main() {
   group('Production API Integration Tests', () {

@@ -9,18 +9,20 @@ class AnonymousUserService {
   static const String _sessionKey = 'eutonafila_session_backup';
   static const Uuid _uuid = Uuid();
   
-  late final SharedPreferences _prefs;
+  SharedPreferences? _prefs;
 
   /// Initialize the service
   Future<void> _initialize() async {
-    _prefs = await SharedPreferences.getInstance();
+    if (_prefs == null) {
+      _prefs = await SharedPreferences.getInstance();
+    }
   }
 
   /// Get the current anonymous user from SharedPreferences
   Future<AnonymousUser?> getAnonymousUser() async {
     try {
       await _initialize();
-      final storedData = _prefs.getString(_storageKey);
+      final storedData = _prefs!.getString(_storageKey);
       if (storedData == null || storedData.isEmpty) {
         return null;
       }
@@ -58,10 +60,10 @@ class AnonymousUserService {
     try {
       await _initialize();
       final jsonString = jsonEncode(user.toJson());
-      await _prefs.setString(_storageKey, jsonString);
+      await _prefs!.setString(_storageKey, jsonString);
       
       // Also save to session storage as backup
-      await _prefs.setString(_sessionKey, jsonString);
+      await _prefs!.setString(_sessionKey, jsonString);
     } catch (e) {
       print('Error saving anonymous user: $e');
       rethrow;
@@ -167,8 +169,8 @@ class AnonymousUserService {
   /// Clear all anonymous user data
   Future<void> clearAnonymousUser() async {
     await _initialize();
-    await _prefs.remove(_storageKey);
-    await _prefs.remove(_sessionKey);
+    await _prefs!.remove(_storageKey);
+    await _prefs!.remove(_sessionKey);
   }
 
   /// Generate unique anonymous ID
@@ -202,8 +204,8 @@ class AnonymousUserService {
     try {
       await _initialize();
       const testKey = '__test_storage__';
-      await _prefs.setString(testKey, 'test');
-      await _prefs.remove(testKey);
+      await _prefs!.setString(testKey, 'test');
+      await _prefs!.remove(testKey);
       return true;
     } catch (e) {
       return false;
@@ -214,7 +216,7 @@ class AnonymousUserService {
   Future<int> getStorageUsage() async {
     try {
       await _initialize();
-      final data = _prefs.getString(_storageKey);
+      final data = _prefs!.getString(_storageKey);
       return data?.length ?? 0;
     } catch (e) {
       return 0;

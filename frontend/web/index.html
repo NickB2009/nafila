@@ -47,7 +47,7 @@
     const serviceWorkerVersion = "{{flutter_service_worker_version}}" || null;
   </script>
   <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js"></script>
+  <script src="flutter.js" defer></script>
   <style>
     body {
       margin: 0;
@@ -150,36 +150,41 @@
       const loading = document.getElementById('loading');
 
       try {
-        // Check if Flutter is available
-        if (typeof _flutter === 'undefined') {
-          throw new Error('Flutter não está disponível');
-        }
-
-        // Try to initialize Flutter with service worker first
-        try {
-          await _flutter.loader.loadEntrypoint({
-            serviceWorker: { serviceWorkerVersion: serviceWorkerVersion },
-            onEntrypointLoaded: async function(engineInitializer) {
-              await initializeApp(engineInitializer);
-            }
-          });
-        } catch (serviceWorkerError) {
-          console.warn('Service worker failed, trying without it:', serviceWorkerError);
-          
-          // Fallback: initialize without service worker
-          await _flutter.loader.loadEntrypoint({
-            onEntrypointLoaded: async function(engineInitializer) {
-              await initializeApp(engineInitializer);
-            }
-          });
+        // Use official, stable pattern with _flutter.loader.loadEntrypoint Promise
+        if (typeof _flutter !== 'undefined' && _flutter.loader && _flutter.loader.loadEntrypoint) {
+          try {
+            const engineInitializer = await _flutter.loader.loadEntrypoint({
+              serviceWorker: { serviceWorkerVersion: serviceWorkerVersion },
+            });
+            await initializeApp(engineInitializer);
+          } catch (e1) {
+            console.warn('Falha com service worker, tentando sem:', e1);
+            const engineInitializer = await _flutter.loader.loadEntrypoint({});
+            await initializeApp(engineInitializer);
+          }
+        } else if (typeof _flutter !== 'undefined' && _flutter.loader && _flutter.loader.load) {
+          // Older fallback
+          try {
+            const engineInitializer = await _flutter.loader.load({
+              serviceWorker: { serviceWorkerVersion: serviceWorkerVersion },
+            });
+            await initializeApp(engineInitializer);
+          } catch (e2) {
+            console.warn('Falha com service worker (fallback), tentando sem:', e2);
+            const engineInitializer = await _flutter.loader.load({});
+            await initializeApp(engineInitializer);
+          }
+        } else {
+          throw new Error('API de inicialização do Flutter não encontrada');
         }
       } catch (e) {
         console.error('Flutter web initialization error:', e);
         clearInterval(progressInterval);
+        const msg = (e && (e.message || e.toString())) || 'Erro desconhecido';
         loading.innerHTML = `
           <div class="error">
             <h3>Erro ao carregar o aplicativo</h3>
-            <p>${e.message}</p>
+            <p>${msg}</p>
             <button class="retry-button" onclick="location.reload()">Tentar Novamente</button>
           </div>
         `;
@@ -212,10 +217,11 @@
       } catch (e) {
         console.error('Error running app:', e);
         clearInterval(progressInterval);
+        const msg = (e && (e.message || e.toString())) || 'Erro desconhecido';
         loading.innerHTML = `
           <div class="error">
             <h3>Erro ao carregar o aplicativo</h3>
-            <p>${e.message}</p>
+            <p>${msg}</p>
             <button class="retry-button" onclick="location.reload()">Tentar Novamente</button>
           </div>
         `;

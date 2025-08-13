@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/models/auth_models.dart';
+import 'package:eutonafila_frontend/models/auth_models.dart';
 
 void main() {
   group('Authentication Models Tests', () {

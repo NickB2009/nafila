@@ -48,6 +48,13 @@ class AppController extends ChangeNotifier {
 
   /// Initializes all services and controllers
   Future<void> initialize() async {
+    // Prevent multiple initializations
+    if (_isInitialized) {
+      print('🔄 AppController already initialized, skipping...');
+      return;
+    }
+    
+    print('🚀 Initializing AppController...');
     try {
       // Initialize services
       _authService = await AuthService.create();
@@ -74,13 +81,16 @@ class AppController extends ChangeNotifier {
         _isAnonymousMode = false;
       }
 
-      // Load initial anonymous data
+      // Load initial anonymous data (don't block init if it fails)
       if (_isAnonymousMode) {
-        await _anonymousController.loadPublicSalons();
+        try {
+          await _anonymousController.loadPublicSalons();
+        } catch (_) {}
       }
 
       _isInitialized = true;
       _error = null;
+      print('✅ AppController initialization complete');
       notifyListeners();
     } catch (e) {
       _error = 'Failed to initialize app: ${e.toString()}';
@@ -222,6 +232,14 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _authController.dispose();
     _queueController.dispose();
+    _anonymousController.dispose();
     super.dispose();
+  }
+
+  /// Resets the controller state for re-initialization
+  void reset() {
+    _isInitialized = false;
+    _error = null;
+    _isAnonymousMode = true;
   }
 }

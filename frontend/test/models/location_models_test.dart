@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/models/location_models.dart';
+import 'package:eutonafila_frontend/models/location_models.dart';
 
 void main() {
   group('Location Models Tests', () {

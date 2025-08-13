@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/brazilian_names_generator.dart';
 import '../theme/app_theme.dart';
-import 'notifications_screen.dart';
 import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'package:flutter/foundation.dart' show kIsWeb;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/salon.dart';
+import '../../models/public_salon.dart';
 import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
@@ -7,7 +8,10 @@ import '../../models/salon_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
-import 'check_in_screen.dart';
+// import removed: anonymous flow not used in authenticated check-in
+import 'package:provider/provider.dart';
+import '../../controllers/app_controller.dart';
+import 'anonymous_join_queue_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class SalonDetailsScreen extends StatefulWidget {
@@ -17,6 +21,7 @@ class SalonDetailsScreen extends StatefulWidget {
   final List<SalonHours> businessHours;
   final List<SalonReview> reviews;
   final Map<String, dynamic> additionalInfo;
+  final PublicSalon? publicSalon;
 
   const SalonDetailsScreen({
     super.key,
@@ -26,6 +31,7 @@ class SalonDetailsScreen extends StatefulWidget {
     required this.businessHours,
     required this.reviews,
     this.additionalInfo = const {},
+    this.publicSalon,
   });
 
   @override
@@ -37,6 +43,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isFavorite = false;
+  final Set<String> _selectedServices = {};
 
   @override
   void initState() {
@@ -58,6 +65,23 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
 
     _animationController.forward();
+  }
+
+  PublicSalon _mapSalonToPublic(Salon salon) {
+    return PublicSalon(
+      id: salon.name.toLowerCase().replaceAll(' ', '_'),
+      name: salon.name,
+      address: salon.address,
+      latitude: null,
+      longitude: null,
+      distanceKm: salon.distance,
+      isOpen: salon.isOpen,
+      currentWaitTimeMinutes: salon.waitTime,
+      queueLength: salon.queueLength,
+      services: widget.services.map((s) => s.name).toList(),
+      rating: null,
+      reviewCount: null,
+    );
   }
 
   @override
@@ -231,15 +255,16 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: CheckInState.isCheckedIn ? null : () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CheckInScreen(salon: widget.salon),
-                    ),
-                  );
+                onPressed: () async {
+                  final app = Provider.of<AppController>(context, listen: false);
+                  if (!app.auth.isAuthenticated) {
+                    await _showLoginOrGuest(context);
+                  } else {
+                    await _showServiceSelection(context);
+                  }
                 },
                 icon: Icon(Icons.check_circle, size: isSmallScreen ? 18 : 24),
-                label: Text('Check In', style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
+                label: Text('Check-in', style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: salonColors.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
@@ -284,6 +309,130 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showServiceSelection(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Selecione os serviços', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: widget.services.map((s) {
+                  final isSelected = _selectedServices.contains(s.id);
+                  return FilterChip(
+                    label: Text(s.name),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedServices.add(s.id);
+                        } else {
+                          _selectedServices.remove(s.id);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _selectedServices.isEmpty ? null : () {
+                    Navigator.of(ctx).pop();
+                    // TODO: integrate real queue join for authenticated
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Check-in iniciado')),
+                    );
+                  },
+                  child: const Text('Confirmar check-in'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showLoginOrGuest(BuildContext context) async {
+    final ps = widget.publicSalon ?? _mapSalonToPublic(widget.salon);
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Como deseja continuar?', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text('Faça login para salvar histórico e favoritos ou entre como convidado para testar.'),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).pushNamed(
+                      '/login',
+                      arguments: {
+                        'fromCheckIn': true,
+                        'salon': ps,
+                      },
+                    );
+                      },
+                      icon: const Icon(Icons.login),
+                      label: const Text('Fazer login'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AnonymousJoinQueueScreen(salon: ps),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.person_outline),
+                      label: const Text('Entrar como convidado'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

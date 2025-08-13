@@ -304,7 +304,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: theme.colorScheme.outline.withOpacity(0.2),
@@ -514,7 +514,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: theme.colorScheme.outline.withOpacity(0.2),
@@ -626,7 +626,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: theme.colorScheme.outline.withOpacity(0.2),

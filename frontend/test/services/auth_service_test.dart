@@ -3,9 +3,9 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../lib/services/auth_service.dart';
-import '../../lib/services/api_client.dart';
-import '../../lib/models/auth_models.dart';
+import 'package:eutonafila_frontend/services/auth_service.dart';
+import 'package:eutonafila_frontend/services/api_client.dart';
+import 'package:eutonafila_frontend/models/auth_models.dart';
 
 // Generate mocks
 @GenerateNiceMocks([
