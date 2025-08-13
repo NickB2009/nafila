@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 import '../models/auth_models.dart';
 import '../config/api_config.dart';
 import 'api_client.dart';
@@ -69,7 +70,17 @@ class AuthService {
 
       return loginResult;
     } catch (e) {
-      rethrow;
+      // Parse structured errors returned with 4xx
+      if (e is DioException && e.response?.data != null) {
+        try {
+          final data = e.response!.data;
+          final result = LoginResult.fromJson(data);
+          return result;
+        } catch (_) {
+          // Fall through to generic error
+        }
+      }
+      return const LoginResult(success: false, error: 'Erro ao efetuar login');
     }
   }
 
@@ -83,7 +94,12 @@ class AuthService {
 
       return RegisterResult.fromJson(response.data);
     } catch (e) {
-      rethrow;
+      if (e is DioException && e.response?.data != null) {
+        try {
+          return RegisterResult.fromJson(e.response!.data);
+        } catch (_) {}
+      }
+      return const RegisterResult(success: false, error: 'Erro ao criar conta');
     }
   }
 
@@ -187,5 +203,12 @@ class AuthService {
   /// Checks if the current user has a specific role
   bool hasRole(String role) {
     return _currentRole == role;
+  }
+
+  /// Demo-only login (local token without hitting the server)
+  Future<void> demoLogin({String username = 'demo', String role = 'Customer'}) async {
+    // Generate a pseudo token and store
+    final token = 'demo-token-${DateTime.now().millisecondsSinceEpoch}';
+    await _storeAuthData(token: token, username: username, role: role);
   }
 }

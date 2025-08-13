@@ -93,6 +93,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (args is Map) {
       if (args['salon'] is PublicSalon) targetSalon = args['salon'] as PublicSalon;
       if (args['fromCheckIn'] is bool) fromCheckIn = args['fromCheckIn'] as bool;
+      final prefillUsername = args['prefillUsername'] as String?;
+      final prefillPassword = args['prefillPassword'] as String?;
+      if (prefillUsername != null && _usernameController.text.isEmpty) {
+        _usernameController.text = prefillUsername;
+      }
+      if (prefillPassword != null && _passwordController.text.isEmpty) {
+        _passwordController.text = prefillPassword;
+      }
     }
 
     return Scaffold(
@@ -171,6 +179,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                     : const Text('Entrar'),
                               ),
                             ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: auth.isLoading
+                      ? null
+                      : () async {
+                          await app.auth.demoLogin(username: _usernameController.text.trim().isEmpty ? 'demo' : _usernameController.text.trim());
+                          if (!mounted) return;
+                          Navigator.pushReplacementNamed(context, '/home');
+                        },
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Entrar em modo demo'),
+                ),
                           ],
                         ),
                       ),

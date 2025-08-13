@@ -306,13 +306,20 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             leading: null,
             automaticallyImplyLeading: false,
             actions: [
-              if (isAnonymous)
+              if (isAnonymous) ...[
                 TextButton.icon(
                   onPressed: () => Navigator.pushNamed(context, '/login'),
                   icon: const Icon(Icons.login, size: 18),
                   label: const Text('Entrar'),
                 ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/register'),
+                  icon: const Icon(Icons.person_add_alt, size: 18),
+                  label: const Text('Criar conta'),
+                ),
+                const SizedBox(width: 8),
+              ],
               if (!isAnonymous)
                 Container(
                   margin: const EdgeInsets.only(right: 16),

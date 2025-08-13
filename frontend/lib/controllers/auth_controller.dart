@@ -197,4 +197,10 @@ class AuthController extends ChangeNotifier {
     _twoFactorToken = null;
     notifyListeners();
   }
+
+  /// Demo login (local token without backend) for development
+  Future<void> demoLogin({String username = 'demo', String role = 'Customer'}) async {
+    await _authService.demoLogin(username: username, role: role);
+    notifyListeners();
+  }
 }
