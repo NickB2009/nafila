@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'dart:async';
@@ -8,7 +7,6 @@ import '../../models/public_salon.dart';
 import '../../services/anonymous_queue_service.dart';
 import '../../controllers/app_controller.dart';
 import '../widgets/bottom_nav_bar.dart';
-import '../theme/app_theme.dart';
 
 /// Screen for displaying real-time anonymous queue status with backend data
 class AnonymousQueueStatusScreen extends StatefulWidget {
@@ -87,27 +85,28 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage = 'Connection error';
+          _errorMessage = 'Erro de conexão';
         });
       }
     }
   }
 
   Future<void> _leaveQueue() async {
+    final theme = Theme.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Leave Queue'),
-        content: const Text('Are you sure you want to leave the queue?'),
+        title: const Text('Sair da fila'),
+        content: const Text('Tem certeza que deseja sair da fila?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Leave'),
+            style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+            child: const Text('Sair'),
           ),
         ],
       ),
@@ -117,18 +116,16 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       try {
         await _queueService.leaveQueue(_currentEntry.id);
         if (mounted) {
-          // Refresh salon data before going back to show updated queue length
           final appController = Provider.of<AppController>(context, listen: false);
           await appController.anonymous.loadPublicSalons();
-          
-          Navigator.of(context).pop(); // Go back to salon list
+          Navigator.of(context).pop();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to leave queue: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              content: Text('Falha ao sair da fila: ${e.toString()}'),
+              backgroundColor: theme.colorScheme.error,
             ),
           );
         }
@@ -171,21 +168,20 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildHeader(ThemeData theme, bool isSmallScreen) {
+    final colors = theme.colorScheme;
     return Row(
       children: [
         IconButton(
           onPressed: () async {
-            // Refresh salon data before going back to show updated queue length
             final appController = Provider.of<AppController>(context, listen: false);
             await appController.anonymous.loadPublicSalons();
-            
             Navigator.of(context).pop();
           },
           icon: const Icon(Icons.arrow_back),
         ),
         Expanded(
           child: Text(
-            'Queue Status',
+            'Status da Fila',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: isSmallScreen ? 18 : null,
@@ -195,7 +191,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         if (_hasError)
           Icon(
             Icons.warning,
-            color: Colors.orange,
+            color: colors.tertiary,
             size: isSmallScreen ? 20 : 24,
           ),
       ],
@@ -203,7 +199,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildProgressSteps(ThemeData theme, bool isSmallScreen) {
-    final isWaiting = _currentEntry.status == QueueEntryStatus.waiting;
+    final cs = theme.colorScheme;
     final isCalled = _currentEntry.status == QueueEntryStatus.called;
     final isCompleted = _currentEntry.status == QueueEntryStatus.completed;
 
@@ -214,8 +210,8 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryColor,
-            AppTheme.primaryColor.withOpacity(0.8),
+            cs.primary,
+            cs.primary.withOpacity(0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -225,7 +221,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStepCircle(theme, true), // Always checked (in queue)
+              _buildStepCircle(theme, true),
               Expanded(
                 child: Divider(
                   color: Colors.white.withOpacity(0.5),
@@ -248,7 +244,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
             children: [
               Flexible(
                 child: Text(
-                  'In Queue',
+                  'Na fila',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -259,7 +255,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
               ),
               Flexible(
                 child: Text(
-                  'Called',
+                  'Chamado',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: isSmallScreen ? 12 : 14,
@@ -269,7 +265,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
               ),
               Flexible(
                 child: Text(
-                  'Service',
+                  'Atendimento',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: isSmallScreen ? 12 : 14,
@@ -285,6 +281,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildStepCircle(ThemeData theme, bool active) {
+    final cs = theme.colorScheme;
     return Container(
       width: 20,
       height: 20,
@@ -293,21 +290,20 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         border: Border.all(color: Colors.white, width: 2),
         shape: BoxShape.circle,
       ),
-      child: active
-          ? Icon(Icons.check, size: 14, color: AppTheme.primaryColor)
-          : null,
+      child: active ? Icon(Icons.check, size: 14, color: cs.primary) : null,
     );
   }
 
   Widget _buildWaitCard(ThemeData theme, bool isSmallScreen) {
+    final cs = theme.colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: cs.outline.withOpacity(0.2),
         ),
       ),
       child: _buildWaitContent(theme),
@@ -324,21 +320,21 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       case QueueEntryStatus.expired:
         return _buildInactiveStatus(theme);
       case QueueEntryStatus.waiting:
-      default:
         return _buildWaitingStatus(theme);
     }
   }
 
   Widget _buildWaitingStatus(ThemeData theme) {
+    final cs = theme.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Text(
-              'YOUR WAIT TIME',
+              'SEU TEMPO DE ESPERA',
               style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
               ),
@@ -356,7 +352,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         Text(
           '${_currentEntry.estimatedWaitMinutes} min',
           style: theme.textTheme.displayMedium?.copyWith(
-            color: AppTheme.primaryColor,
+            color: cs.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -364,31 +360,31 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         Divider(color: theme.dividerColor),
         const SizedBox(height: 8),
         Text(
-          'You are in the queue',
+          'Você está na fila',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         RichText(
           text: TextSpan(
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: cs.onSurfaceVariant,
             ),
             children: [
-              const TextSpan(text: 'You are '),
+              const TextSpan(text: 'Você é o '),
               TextSpan(
                 text: '${_currentEntry.position}º',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              const TextSpan(text: ' in line'),
+              const TextSpan(text: ' da fila'),
             ],
           ),
         ),
         if (_hasError) ...[
           const SizedBox(height: 8),
           Text(
-            _errorMessage ?? 'Connection error',
+            _errorMessage ?? 'Erro de conexão',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.orange,
+              color: cs.tertiary,
             ),
           ),
         ],
@@ -397,20 +393,21 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildCalledStatus(ThemeData theme) {
+    final cs = theme.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'YOU\'RE UP!',
+          'SUA VEZ!',
           style: theme.textTheme.headlineSmall?.copyWith(
-            color: Colors.green,
+            color: cs.primary,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Please proceed to the salon',
+          'Por favor, dirija-se ao salão',
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.w500,
           ),
@@ -419,18 +416,18 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.1),
+            color: cs.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              const Icon(Icons.notifications_active, color: Colors.green),
+              Icon(Icons.notifications_active, color: cs.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Your turn has arrived! Head to the salon now.',
+                  'Chegou a sua vez! Vá ao salão agora.',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.green.shade800,
+                    color: cs.primary,
                   ),
                 ),
               ),
@@ -442,20 +439,21 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildCompletedStatus(ThemeData theme) {
+    final cs = theme.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'COMPLETED',
+          'CONCLUÍDO',
           style: theme.textTheme.headlineSmall?.copyWith(
-            color: Colors.blue,
+            color: cs.secondary,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Your service is complete',
+          'Seu atendimento foi concluído',
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.w500,
           ),
@@ -464,18 +462,18 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: cs.secondary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              const Icon(Icons.check_circle, color: Colors.blue),
+              Icon(Icons.check_circle, color: cs.secondary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Thank you for visiting ${widget.salon.name}!',
+                  'Obrigado por visitar ${widget.salon.name}!',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.blue.shade800,
+                    color: cs.secondary,
                   ),
                 ),
               ),
@@ -487,20 +485,21 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildInactiveStatus(ThemeData theme) {
+    final cs = theme.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _currentEntry.status == QueueEntryStatus.cancelled ? 'CANCELLED' : 'EXPIRED',
+          _currentEntry.status == QueueEntryStatus.cancelled ? 'CANCELADO' : 'EXPIRADO',
           style: theme.textTheme.headlineSmall?.copyWith(
-            color: Colors.red,
+            color: cs.error,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Your queue entry is no longer active',
+          'Sua entrada na fila não está mais ativa',
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.w500,
           ),
@@ -510,14 +509,15 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildSalonCard(ThemeData theme, bool isSmallScreen) {
+    final cs = theme.colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: cs.outline.withOpacity(0.2),
         ),
       ),
       child: Column(
@@ -526,13 +526,13 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: cs.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'JOINED QUEUE',
+              'NA FILA',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: AppTheme.primaryColor,
+                color: cs.primary,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.1,
               ),
@@ -554,16 +554,16 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
           Row(
             children: [
               Text(
-                widget.salon.isOpen ? 'Open' : 'Closed',
+                widget.salon.isOpen ? 'Aberto' : 'Fechado',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: widget.salon.isOpen ? Colors.green : theme.colorScheme.error,
+                  color: widget.salon.isOpen ? cs.primary : cs.error,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(width: 16),
               Icon(Icons.people, size: 16, color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: 4),
-              Text('${widget.salon.queueLength} in queue'),
+              Text('${widget.salon.queueLength} na fila'),
             ],
           ),
           if (_currentEntry.serviceRequested != null) ...[
@@ -572,7 +572,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
               children: [
                 Icon(Icons.content_cut, size: 16, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 4),
-                Text('Service: ${_currentEntry.serviceRequested}'),
+                Text('Serviço: ${_currentEntry.serviceRequested}'),
               ],
             ),
           ],
@@ -589,7 +589,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
         _buildSalonAction(
           theme,
           Icons.navigation,
-          'Get Directions',
+          'Como chegar',
           onTap: () => _openMaps(),
         ),
         Divider(color: theme.dividerColor),
@@ -603,13 +603,14 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
     String label, {
     VoidCallback? onTap,
   }) {
+    final cs = theme.colorScheme;
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: AppTheme.primaryColor),
+      leading: Icon(icon, color: cs.primary),
       title: Text(
         label,
         style: theme.textTheme.bodyLarge?.copyWith(
-          color: AppTheme.primaryColor,
+          color: cs.primary,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -618,6 +619,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   }
 
   Widget _buildActionsCard(ThemeData theme, bool isSmallScreen) {
+    final cs = theme.colorScheme;
     if (!_currentEntry.isActive) {
       return const SizedBox.shrink();
     }
@@ -626,17 +628,17 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: cs.outline.withOpacity(0.2),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ACTIONS',
+            'AÇÕES',
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.bold,
@@ -648,8 +650,8 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
             width: double.infinity,
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red, width: 2),
+                foregroundColor: cs.error,
+                side: BorderSide(color: cs.error, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -657,7 +659,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
               ),
               onPressed: _leaveQueue,
               child: const Text(
-                'Leave Queue',
+                'Sair da fila',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -683,11 +685,9 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open maps')),
+          const SnackBar(content: Text('Não foi possível abrir o mapa')),
         );
       }
     }
   }
-
-
 } 

@@ -13,9 +13,7 @@ class AnonymousUserService {
 
   /// Initialize the service
   Future<void> _initialize() async {
-    if (_prefs == null) {
-      _prefs = await SharedPreferences.getInstance();
-    }
+    _prefs ??= await SharedPreferences.getInstance();
   }
 
   /// Get the current anonymous user from SharedPreferences

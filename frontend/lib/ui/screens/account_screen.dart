@@ -8,6 +8,8 @@ import 'atendimento_screen.dart';
 import 'accessibility_notice_screen.dart';
 import 'legal_privacy_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/app_controller.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -110,6 +112,18 @@ class _AccountScreenState extends State<AccountScreen> {
       appBar: AppBar(
         backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         foregroundColor: colors?.background ?? theme.colorScheme.onPrimary,
+        actions: [
+          IconButton(
+            tooltip: 'Sair',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final app = Provider.of<AppController>(context, listen: false);
+              await app.auth.logout();
+              if (!mounted) return;
+              Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: LayoutBuilder(

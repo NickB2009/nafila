@@ -13,6 +13,7 @@ import '../../services/anonymous_user_service.dart';
 import 'salon_map_screen.dart';
 import 'salon_details_screen.dart';
 import 'anonymous_queue_status_screen.dart';
+import 'account_screen.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -41,7 +42,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
   late AnonymousUserService _userService;
   AnonymousUser? _currentUser;
   List<AnonymousQueueEntry> _activeQueues = [];
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void initState() {
@@ -320,9 +321,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                 ),
                 const SizedBox(width: 8),
               ],
-              if (!isAnonymous)
+              if (!isAnonymous) ...[
                 Container(
-                  margin: const EdgeInsets.only(right: 16),
+                  margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onSurface.withOpacity(0.1),
@@ -333,26 +334,35 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                     children: [
                       Icon(Icons.person, color: theme.colorScheme.onSurface, size: 16),
                       const SizedBox(width: 4),
-                      Text('1', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Q0',
-                          style: TextStyle(
-                            color: theme.colorScheme.onPrimary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      Text('Conta', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    if (value == 'logout') {
+                      final app = Provider.of<AppController>(context, listen: false);
+                      await app.auth.logout();
+                      if (!mounted) return;
+                      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                    } else if (value == 'account') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const AccountScreen()),
+                      );
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'account',
+                      child: Text('Conta'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'logout',
+                      child: Text('Sair'),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
           
@@ -640,6 +650,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                     businessHours: [],
                     reviews: [],
                     additionalInfo: const {},
+                    publicSalon: salon,
                   ),
                 ),
               );
@@ -860,7 +871,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                  contact: SalonContact(phone: '', email: ''),
                                  businessHours: [],
                                  reviews: [],
-                                 additionalInfo: const {},
+                                  additionalInfo: const {},
+                                  publicSalon: salon,
                                ),
                              ),
                            );

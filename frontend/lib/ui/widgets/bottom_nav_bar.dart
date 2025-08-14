@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../screens/salon_finder_screen.dart';
 import '../screens/salon_map_screen.dart';
 import '../screens/account_screen.dart';
-import '../screens/queue_status_screen.dart';
 import '../../models/salon.dart';
 import '../../controllers/app_controller.dart';
 
