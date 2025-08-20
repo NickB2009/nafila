@@ -50,6 +50,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (success) {
+      // Optional sanity check: verify token by fetching profile
+      final okProfile = await auth.verifyProfile();
+      if (!mounted) return;
+      if (!okProfile) {
+        setState(() => _error = 'Sessão inválida. Tente novamente.');
+        return;
+      }
       await app.switchToAuthenticatedMode();
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/home');
@@ -110,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: colors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),

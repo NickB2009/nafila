@@ -27,29 +27,57 @@ class ApiClient {
       receiveTimeout: ApiConfig.receiveTimeout,
       sendTimeout: ApiConfig.sendTimeout,
       headers: ApiConfig.defaultHeaders,
+      // Treat all <500 responses as valid to avoid throwing for expected 4xx
+      validateStatus: (status) => status != null && status < 500,
     );
   }
 
   /// Sets up interceptors for logging and error handling
   void _setupInterceptors() {
-    // Request/Response logging interceptor
-    _dio.interceptors.add(
-      LogInterceptor(
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: false,
-        responseBody: true,
-        error: true,
-        logPrint: (object) => _logger.d(object),
-      ),
-    );
-
-    // Error handling interceptor
+    // Sanitized logging + error handling interceptor
     _dio.interceptors.add(
       InterceptorsWrapper(
+        onRequest: (options, handler) {
+          // Build a sanitized snapshot for logging (do not modify real request body)
+          dynamic bodyPreview;
+          final data = options.data;
+          if (data is Map) {
+            final cloned = Map<String, dynamic>.from(data);
+            for (final key in ['password', 'confirmPassword', 'token', 'refreshToken']) {
+              if (cloned.containsKey(key)) cloned[key] = '***';
+            }
+            bodyPreview = cloned;
+          } else {
+            bodyPreview = data is String && data.length > 200 ? '${data.substring(0, 200)}…' : data;
+          }
+
+          // Sanitize headers
+          final sanitizedHeaders = Map<String, dynamic>.from(options.headers);
+          for (final key in ['Authorization', 'authorization']) {
+            if (sanitizedHeaders.containsKey(key)) sanitizedHeaders[key] = 'Bearer ***';
+          }
+
+          _logger.d('HTTP → ${options.method} ${options.uri}\nheaders: $sanitizedHeaders\nconnectTimeout: ${_dio.options.connectTimeout}\nreceiveTimeout: ${_dio.options.receiveTimeout}\nsendTimeout: ${_dio.options.sendTimeout}\nbody: $bodyPreview');
+          handler.next(options);
+        },
         onError: (error, handler) {
+          final status = error.response?.statusCode;
+          // Convert expected client errors into normal responses
+          if (status != null && status < 500 && error.response != null) {
+            handler.resolve(error.response!);
+            return;
+          }
           _logger.e('API Error: ${error.message}', error: error);
           handler.next(error);
+        },
+        onResponse: (response, handler) {
+          // Log concise response info
+          final isBinary = response.data is List<int>;
+          final bodyPreview = isBinary
+              ? '<binary ${ (response.data as List<int>).length } bytes>'
+              : response.data;
+          _logger.d('HTTP ← ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.uri}\nbody: $bodyPreview');
+          handler.next(response);
         },
       ),
     );

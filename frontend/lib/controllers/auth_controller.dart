@@ -13,6 +13,7 @@ class AuthController extends ChangeNotifier {
   String? _error;
   bool _requiresTwoFactor = false;
   String? _twoFactorToken;
+  Map<String, String>? _fieldErrors;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -23,6 +24,7 @@ class AuthController extends ChangeNotifier {
   String? get currentRole => _authService.currentRole;
   bool get requiresTwoFactor => _requiresTwoFactor;
   String? get twoFactorToken => _twoFactorToken;
+  Map<String, String>? get fieldErrors => _fieldErrors;
 
   /// Sets loading state and notifies listeners
   void _setLoading(bool loading) {
@@ -39,6 +41,7 @@ class AuthController extends ChangeNotifier {
   /// Clears error state
   void clearError() {
     _setError(null);
+    _fieldErrors = null;
   }
 
   /// Sets two-factor authentication state
@@ -53,6 +56,7 @@ class AuthController extends ChangeNotifier {
     try {
       _setLoading(true);
       _setError(null);
+      _fieldErrors = null;
       _setTwoFactorState(false, null);
 
       final result = await _authService.login(request);
@@ -82,12 +86,14 @@ class AuthController extends ChangeNotifier {
     try {
       _setLoading(true);
       _setError(null);
+      _fieldErrors = null;
 
       final result = await _authService.register(request);
       
       if (result.success) {
         return true;
       } else {
+        _fieldErrors = result.fieldErrors;
         _setError(result.error ?? 'Registration failed');
         return false;
       }
@@ -202,5 +208,15 @@ class AuthController extends ChangeNotifier {
   Future<void> demoLogin({String username = 'demo', String role = 'Customer'}) async {
     await _authService.demoLogin(username: username, role: role);
     notifyListeners();
+  }
+
+  /// Verifies token by calling profile; returns true on success
+  Future<bool> verifyProfile() async {
+    try {
+      final profile = await _authService.getProfile();
+      return profile.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 }
