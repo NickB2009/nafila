@@ -5,8 +5,10 @@ import 'dart:async';
 import '../../models/anonymous_user.dart';
 import '../../models/public_salon.dart';
 import '../../services/anonymous_queue_service.dart';
+import '../../services/signalr_service.dart';
 import '../../controllers/app_controller.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/analytics_card.dart';
 
 /// Screen for displaying real-time anonymous queue status with backend data
 class AnonymousQueueStatusScreen extends StatefulWidget {
@@ -30,16 +32,24 @@ class AnonymousQueueStatusScreen extends StatefulWidget {
 class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> {
   late AnonymousQueueService _queueService;
   late AnonymousQueueEntry _currentEntry;
+  late SignalRService _signalRService;
   Timer? _updateTimer;
   bool _isLoading = false;
   bool _hasError = false;
   String? _errorMessage;
+  bool _signalRConnected = false;
 
   @override
   void initState() {
     super.initState();
     _queueService = widget.queueService ?? AnonymousQueueService.create();
     _currentEntry = widget.queueEntry;
+
+    // Get SignalR service from app controller
+    final appController = Provider.of<AppController>(context, listen: false);
+    _signalRService = appController.signalRService;
+
+    _setupSignalRCallbacks();
     _startPeriodicUpdates();
     _refreshQueueStatus();
   }
@@ -47,7 +57,80 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   @override
   void dispose() {
     _updateTimer?.cancel();
+    // Unsubscribe from SignalR when disposing
+    _unsubscribeFromUpdates();
     super.dispose();
+  }
+
+  /// Set up SignalR callbacks for real-time updates
+  void _setupSignalRCallbacks() {
+    // Set callback for queue entry updates
+    _signalRService.setQueueEntryUpdateCallback((entryId, updateData) {
+      if (entryId == _currentEntry.id && mounted) {
+        setState(() {
+          // Update the queue entry with real-time data
+          final newPosition = updateData['position'] ?? _currentEntry.position;
+          final newWaitTime = updateData['estimatedWaitMinutes'] ?? _currentEntry.estimatedWaitMinutes;
+
+          _currentEntry = _currentEntry.copyWith(
+            position: newPosition,
+            estimatedWaitMinutes: newWaitTime,
+            lastUpdated: DateTime.now(),
+          );
+        });
+      }
+    });
+
+    // Set callback for notifications
+    _signalRService.setNotificationCallback((message) {
+      if (mounted) {
+        // Show notification to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    });
+  }
+
+  /// Subscribe to real-time updates for this queue entry
+  Future<void> _subscribeToUpdates() async {
+    try {
+      // Subscribe to updates for this specific queue entry
+      await _signalRService.subscribeToQueueEntry(_currentEntry.id);
+
+      // Also subscribe to the queue for general updates
+      await _signalRService.subscribeToQueue(_currentEntry.salonId);
+
+      setState(() {
+        _signalRConnected = true;
+      });
+
+      debugPrint('✅ Subscribed to real-time updates for queue entry: ${_currentEntry.id}');
+    } catch (e) {
+      debugPrint('❌ Failed to subscribe to real-time updates: $e');
+      setState(() {
+        _signalRConnected = false;
+      });
+    }
+  }
+
+  /// Unsubscribe from real-time updates
+  Future<void> _unsubscribeFromUpdates() async {
+    try {
+      await _signalRService.unsubscribeFromQueueEntry(_currentEntry.id);
+      await _signalRService.unsubscribeFromQueue(_currentEntry.salonId);
+
+      setState(() {
+        _signalRConnected = false;
+      });
+
+      debugPrint('✅ Unsubscribed from real-time updates');
+    } catch (e) {
+      debugPrint('❌ Failed to unsubscribe from real-time updates: $e');
+    }
   }
 
   void _startPeriodicUpdates() {
@@ -79,6 +162,11 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
           _currentEntry = updatedEntry;
           _isLoading = false;
         });
+
+        // Subscribe to real-time updates if not already subscribed
+        if (!_signalRConnected && _signalRService.isConnected) {
+          await _subscribeToUpdates();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -157,6 +245,10 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
                 SizedBox(height: isSmallScreen ? 16 : 20),
                 _buildSalonCard(theme, isSmallScreen),
                 SizedBox(height: isSmallScreen ? 16 : 20),
+                if (_currentEntry.status == QueueEntryStatus.completed)
+                  _buildSatisfactionFeedback(theme, isSmallScreen),
+                if (_currentEntry.status == QueueEntryStatus.completed)
+                  SizedBox(height: isSmallScreen ? 16 : 20),
                 _buildActionsCard(theme, isSmallScreen),
               ],
             ),
@@ -194,6 +286,37 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
             color: colors.tertiary,
             size: isSmallScreen ? 20 : 24,
           ),
+        // SignalR connection indicator
+        Container(
+          margin: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: _signalRConnected ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _signalRConnected ? Colors.green : Colors.orange,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _signalRConnected ? Icons.wifi : Icons.wifi_off,
+                size: 16,
+                color: _signalRConnected ? Colors.green : Colors.orange,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _signalRConnected ? 'Live' : 'Polling',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: _signalRConnected ? Colors.green : Colors.orange,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -669,6 +792,20 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSatisfactionFeedback(ThemeData theme, bool isSmallScreen) {
+    return SatisfactionFeedbackCard(
+      queueEntryId: _currentEntry.id,
+      onSubmit: (rating, feedback) async {
+        final appController = Provider.of<AppController>(context, listen: false);
+        await appController.queueAnalyticsService.recordCustomerSatisfaction(
+          _currentEntry.id,
+          rating,
+          feedback: feedback,
+        );
+      },
     );
   }
 

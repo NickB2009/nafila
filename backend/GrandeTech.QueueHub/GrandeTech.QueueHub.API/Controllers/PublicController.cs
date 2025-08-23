@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Grande.Fila.API.Application.Public;
 using Grande.Fila.API.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Http;
+using System;
+using System.Collections.Generic;
 
 namespace Grande.Fila.API.Controllers;
 
@@ -174,4 +176,173 @@ public class PublicController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Gets the current status of a queue entry
+    /// </summary>
+    /// <param name="entryId">The queue entry ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Queue entry status information</returns>
+    [HttpGet("queue/entry-status/{entryId}")]
+    [AllowPublicAccess] // No authentication required for public queue status
+    [ProducesResponseType(typeof(QueueEntryStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetQueueEntryStatus(string entryId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Getting queue status for entry {EntryId}", entryId);
+
+        if (string.IsNullOrWhiteSpace(entryId))
+        {
+            return BadRequest(new { message = "Entry ID is required" });
+        }
+
+        if (!Guid.TryParse(entryId, out var queueEntryId))
+        {
+            return BadRequest(new { message = "Invalid entry ID format" });
+        }
+
+        // For now, return a mock response until we implement the service
+        var mockResult = new QueueEntryStatusDto
+        {
+            Id = entryId,
+            Position = 1,
+            EstimatedWaitMinutes = 15,
+            Status = "waiting",
+            JoinedAt = DateTime.UtcNow.AddMinutes(-5),
+            ServiceRequested = "Haircut"
+        };
+
+        return Ok(mockResult);
+    }
+
+    /// <summary>
+    /// Allows anonymous users to leave a queue
+    /// </summary>
+    /// <param name="entryId">The queue entry ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Leave queue result</returns>
+    [HttpPost("queue/leave/{entryId}")]
+    [AllowPublicAccess] // No authentication required for leaving queue
+    [ProducesResponseType(typeof(LeaveQueueResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> LeaveQueue(string entryId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Anonymous user leaving queue entry {EntryId}", entryId);
+
+        if (string.IsNullOrWhiteSpace(entryId))
+        {
+            return BadRequest(new LeaveQueueResult
+            {
+                Success = false,
+                Errors = new List<string> { "Entry ID is required" }
+            });
+        }
+
+        if (!Guid.TryParse(entryId, out var queueEntryId))
+        {
+            return BadRequest(new LeaveQueueResult
+            {
+                Success = false,
+                Errors = new List<string> { "Invalid entry ID format" }
+            });
+        }
+
+        // For now, return a mock success response until we implement the service
+        var result = new LeaveQueueResult
+        {
+            Success = true,
+            QueueEntryId = entryId,
+            LeftAt = DateTime.UtcNow
+        };
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Updates contact information for a queue entry
+    /// </summary>
+    /// <param name="entryId">The queue entry ID</param>
+    /// <param name="request">Update request with new contact info</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Update result</returns>
+    [HttpPut("queue/update/{entryId}")]
+    [AllowPublicAccess] // No authentication required for updating contact info
+    [ProducesResponseType(typeof(UpdateQueueEntryResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateQueueEntry(
+        string entryId,
+        [FromBody] UpdateQueueEntryRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Updating queue entry {EntryId}", entryId);
+
+        if (string.IsNullOrWhiteSpace(entryId))
+        {
+            return BadRequest(new UpdateQueueEntryResult
+            {
+                Success = false,
+                Errors = new List<string> { "Entry ID is required" }
+            });
+        }
+
+        if (!Guid.TryParse(entryId, out var queueEntryId))
+        {
+            return BadRequest(new UpdateQueueEntryResult
+            {
+                Success = false,
+                Errors = new List<string> { "Invalid entry ID format" }
+            });
+        }
+
+        // For now, return a mock success response until we implement the service
+        var result = new UpdateQueueEntryResult
+        {
+            Success = true,
+            QueueEntryId = entryId,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        return Ok(result);
+    }
+}
+
+// DTOs for Public Queue Operations
+public class QueueEntryStatusDto
+{
+    public string? Id { get; set; }
+    public int Position { get; set; }
+    public int EstimatedWaitMinutes { get; set; }
+    public string? Status { get; set; }
+    public DateTime? JoinedAt { get; set; }
+    public string? ServiceRequested { get; set; }
+}
+
+public class LeaveQueueResult
+{
+    public bool Success { get; set; }
+    public string? QueueEntryId { get; set; }
+    public DateTime? LeftAt { get; set; }
+    public List<string> Errors { get; set; } = new();
+}
+
+public class UpdateQueueEntryRequest
+{
+    public string? Name { get; set; }
+    public string? Email { get; set; }
+    public bool? EmailNotifications { get; set; }
+    public bool? BrowserNotifications { get; set; }
+}
+
+public class UpdateQueueEntryResult
+{
+    public bool Success { get; set; }
+    public string? QueueEntryId { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public List<string> Errors { get; set; } = new();
 }

@@ -1,0 +1,43 @@
+### Test Guest Login Integration - Phase 1
+### Base URL: http://localhost:7126/api
+
+### 1. Test Queue Join (Anonymous)
+POST {{baseUrl}}/Public/queue/join
+Content-Type: application/json
+
+{
+    "salonId": "99999999-9999-9999-9999-999999999993",
+    "name": "Integration Test User",
+    "email": "integration.test@example.com",
+    "serviceRequested": "Haircut",
+    "anonymousUserId": "11111111-1111-1111-1111-111111111111",
+    "emailNotifications": true,
+    "browserNotifications": false
+}
+
+###
+
+### 2. Test Queue Status (using ID from join response)
+GET {{baseUrl}}/Public/queue/entry-status/99999999-9999-9999-9999-999999999999
+Content-Type: application/json
+
+###
+
+### 3. Test Queue Leave
+POST {{baseUrl}}/Public/queue/leave/99999999-9999-9999-9999-999999999999
+Content-Type: application/json
+
+###
+
+### 4. Test Queue Update
+PUT {{baseUrl}}/Public/queue/update/99999999-9999-9999-9999-999999999999
+Content-Type: application/json
+
+{
+    "name": "Updated Test User",
+    "email": "updated.integration.test@example.com",
+    "emailNotifications": false,
+    "browserNotifications": true
+}
+
+###

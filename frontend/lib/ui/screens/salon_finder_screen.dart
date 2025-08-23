@@ -14,6 +14,7 @@ import 'salon_map_screen.dart';
 import 'salon_details_screen.dart';
 import 'anonymous_queue_status_screen.dart';
 import 'account_screen.dart';
+import 'qr_join_screen.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -420,6 +421,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                         ..._buildDynamicSalonCards(context, theme),
                         
                         const SizedBox(height: 24),
+                        
+                        // QR Scanner card
+                        _buildQrScannerCard(context, theme),
+                        
+                        const SizedBox(height: 20),
                         
                         // Find salon card
                         _buildFindSalonCard(context, theme),
@@ -964,6 +970,82 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQrScannerCard(BuildContext context, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondary,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const QrJoinScreen()),
+        ),
+        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSecondary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Icon(
+                Icons.qr_code_scanner,
+                color: theme.colorScheme.onSecondary,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Entrar com QR Code',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.onSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        'Escaneie o código do salão',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSecondary.withOpacity(0.9),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: theme.colorScheme.onSecondary.withOpacity(0.9),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Grande.Fila.API.Application;
 using Grande.Fila.API.Application.Auth;
+
 using Grande.Fila.API.Application.Queues;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
@@ -75,6 +76,8 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+
+// WebSocket support is built into ASP.NET Core
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -367,6 +370,41 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// WebSocket endpoint for queue updates
+app.Map("/queueHub", async context =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+        await HandleWebSocketConnection(webSocket);
+    }
+    else
+    {
+        context.Response.StatusCode = 400;
+    }
+});
+
+// WebSocket connection handler
+static async Task HandleWebSocketConnection(System.Net.WebSockets.WebSocket webSocket)
+{
+    var buffer = new byte[1024 * 4];
+    var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+    
+    while (!result.CloseStatus.HasValue)
+    {
+        // Echo back the message for now
+        await webSocket.SendAsync(
+            new ArraySegment<byte>(buffer, 0, result.Count),
+            result.MessageType,
+            result.EndOfMessage,
+            CancellationToken.None);
+        
+        result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+    }
+    
+    await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+}
 
 // Add a simple root endpoint for basic connectivity testing
 app.MapGet("/", () => new { 
