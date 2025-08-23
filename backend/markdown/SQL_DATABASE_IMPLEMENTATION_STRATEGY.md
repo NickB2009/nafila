@@ -2,353 +2,122 @@
 
 ## 🎯 Executive Summary
 
-This document outlines a comprehensive strategy for implementing SQL database support in the GrandeTech QueueHub application, with a focus on local testing capabilities before Azure SQL deployment.
+This document describes how the QueueHub backend uses SQL Server with Entity Framework Core in local Docker and cloud (Azure SQL) environments. It reflects the current Docker‑based development setup.
 
 ## 📋 Current Status
 
 ✅ **COMPLETED:**
-- Added Entity Framework Core packages
-- Created QueueHubDbContext with proper configuration
-- Implemented base SQL repository pattern
-- Created entity configurations for key domain objects
-- Updated dependency injection for flexible repository switching
-- Configured multi-environment database settings
+- EF Core setup and DbContext
+- Repository abstraction with SQL and Bogus implementations
+- SQL Server 2022 containerized in Docker with healthcheck
+- Connection string binding via `ConnectionStrings:AzureSqlConnection`
 
 🚧 **IN PROGRESS:**
-- SQL repository implementations (Organization and Queue completed)
+- Additional SQL repositories beyond Organization/Queue
 
 ⏳ **PENDING:**
-- Database migrations and seeding
-- Remaining SQL repository implementations
-- Unit of Work pattern
+- Migrations and seeding pipeline stabilization
 - Azure SQL deployment configuration
 
 ## 🏗️ Architecture Overview
 
-### Database Strategy Layers
+### Layers
+1. Domain (entities, rules)
+2. Infrastructure (EF Core, repositories, configurations)
+3. Application (services)
+4. API (controllers/endpoints)
 
-1. **Domain Layer**: Pure domain entities with business logic
-2. **Infrastructure Layer**: EF Core DbContext, repositories, and configurations
-3. **Application Layer**: Services that use repositories through interfaces
-4. **Presentation Layer**: Controllers that use application services
-
-### Repository Pattern Implementation
-
+### Repository Pattern (overview)
 ```
-IRepository<T> (Generic Interface)
-├── BogusBaseRepository<T> (In-memory testing)
-└── SqlBaseRepository<T> (EF Core implementation)
-    ├── SqlOrganizationRepository
-    ├── SqlQueueRepository
-    ├── SqlLocationRepository (TODO)
-    └── ... (Other specific implementations)
+IRepository<T>
+├─ BogusBaseRepository<T> (tests/dev fake)
+└─ SqlBaseRepository<T> (EF Core)
+   ├─ SqlOrganizationRepository
+   ├─ SqlQueueRepository
+   ├─ ...
 ```
 
 ## 🔧 Configuration Strategy
 
-### Environment-Based Configuration
-
-| Environment | Database | Repository | Use Case |
-|-------------|----------|------------|----------|
-| **Development** | SQL Server LocalDB | SQL Repositories | Local development with persistent data |
-| **Testing** | In-Memory EF Core | SQL Repositories | Integration tests |
-| **Staging** | Azure SQL | SQL Repositories | Pre-production testing |
-| **Production** | Azure SQL | SQL Repositories | Live environment |
-| **Unit Tests** | Bogus (In-memory) | Bogus Repositories | Fast unit testing |
-
-### Configuration Settings
-
-```json
-{
-  "Database": {
-    "UseSqlDatabase": true,      // Use SQL Server/Azure SQL
-    "UseInMemoryDatabase": false, // Use EF Core In-Memory for testing
-    "UseBogusRepositories": false, // Use Bogus fake data
-    "AutoMigrate": true,         // Auto-run migrations on startup
-    "SeedData": true            // Seed initial data
-  }
-}
-```
-
-## 📊 Database Schema Design
-
-### Core Tables Structure
-
-```sql
--- Base audit fields for all tables
-CreatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-CreatedBy       NVARCHAR(100)
-LastModifiedAt  DATETIME2
-LastModifiedBy  NVARCHAR(100)
-IsDeleted       BIT NOT NULL DEFAULT 0
-DeletedAt       DATETIME2
-DeletedBy       NVARCHAR(100)
-```
-
-### Key Entity Mappings
-
-1. **Organizations** - Multi-tenant support with slug-based routing
-2. **Locations** - Physical barbershop locations
-3. **Queues** - Daily queue instances per location
-4. **QueueEntries** - Individual customer queue positions
-5. **Staff** - Barber/staff member management
-6. **Customers** - Customer profiles and history
-
-## 🚀 Implementation Phases
-
-### Phase 1: Foundation (COMPLETED)
-- [x] EF Core setup and configuration
-- [x] Base repository pattern
-- [x] Dependency injection configuration
-- [x] Entity configurations for core entities
-
-### Phase 2: Core Repositories (IN PROGRESS)
-- [x] SqlOrganizationRepository
-- [x] SqlQueueRepository
-- [ ] SqlLocationRepository
-- [ ] SqlCustomerRepository
-- [ ] SqlUserRepository
-- [ ] SqlStaffMemberRepository
-
-### Phase 3: Advanced Features (PENDING)
-- [ ] Unit of Work pattern implementation
-- [ ] Database migrations
-- [ ] Data seeding logic
-- [ ] Performance optimization
-- [ ] Bulk operations support
-
-### Phase 4: Testing & Migration (PENDING)
-- [ ] Integration tests with SQL repositories
-- [ ] Migration from Bogus to SQL repositories
-- [ ] Performance benchmarking
-- [ ] Data migration scripts
-
-### Phase 5: Azure Deployment (PENDING)
-- [ ] Azure SQL Database setup
-- [ ] Connection string configuration
-- [ ] CI/CD pipeline updates
-- [ ] Production data migration
-
-## 🛠️ Local Development Setup
-
-### Prerequisites
-- SQL Server LocalDB (installed with Visual Studio)
-- .NET 8 SDK
-- Entity Framework Core tools
-
-### Setup Steps
-
-1. **Install EF Core Tools:**
-   ```bash
-   dotnet tool install --global dotnet-ef
-   ```
-
-2. **Create Initial Migration:**
-   ```bash
-   cd backend/GrandeTech.QueueHub/GrandeTech.QueueHub.API
-   dotnet ef migrations add InitialCreate
-   ```
-
-3. **Update Database:**
-   ```bash
-   dotnet ef database update
-   ```
-
-4. **Run Application:**
-   ```bash
-   dotnet run
-   ```
-
-### Switching Between Repository Types
-
-**For Bogus (In-memory) Testing:**
-```json
-{
-  "Database": {
-    "UseBogusRepositories": true
-  }
-}
-```
-
-**For SQL LocalDB:**
+### Environment Settings
 ```json
 {
   "Database": {
     "UseSqlDatabase": true,
-    "UseBogusRepositories": false
+    "UseInMemoryDatabase": false,
+    "UseBogusRepositories": false,
+    "AutoMigrate": true,
+    "SeedData": true
   }
 }
 ```
 
-**For EF In-Memory (Integration Tests):**
-```json
-{
-  "Database": {
-    "UseInMemoryDatabase": true
-  }
-}
+### Connection String Keys
+- App uses `ConnectionStrings:AzureSqlConnection`.
+- In Docker, this is set via env var `ConnectionStrings__AzureSqlConnection`.
+
+### Docker Compose Example
+```yaml
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1434:1433"
+  queuehub-api:
+    ports:
+      - "8080:80"
+    environment:
+      - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+```
+
+## 📊 Schema and Conventions
+- Common audit fields on all tables (CreatedAt, LastModifiedAt, etc.)
+- Soft delete via `IsDeleted` and `DeletedAt`
+
+## 🚀 Implementation Phases
+- Phase 1: EF Core + base repos ✅
+- Phase 2: Remaining SQL repos ◻︎
+- Phase 3: Migrations + seeding ◻︎
+- Phase 4: Integration tests with SQL ◻︎
+- Phase 5: Azure SQL rollout ◻︎
+
+## 🛠️ Local Development
+
+### Prerequisites
+- Docker Desktop
+- .NET 8 SDK
+- EF Core Tools (`dotnet tool install --global dotnet-ef`)
+
+### Running locally with Docker
+```powershell
+cd GrandeTech.QueueHub
+docker-compose up -d --build
+# API → http://localhost:8080
+```
+
+### Migrations (example)
+```powershell
+cd GrandeTech.QueueHub/GrandeTech.QueueHub.API
+# Create or update schema
+# dotnet ef migrations add InitialCreate
+# dotnet ef database update
 ```
 
 ## 🧪 Testing Strategy
+- Unit tests: Bogus repositories
+- Integration tests: in‑memory or Docker SQL (preferred for E2E)
 
-### Unit Tests
-- Use Bogus repositories for fast, isolated tests
-- Mock application services
-- Focus on business logic testing
+## 📈 Performance
+- Indexing, pagination, pooling, and batching where appropriate
 
-### Integration Tests
-- Use EF Core In-Memory database
-- Test repository implementations
-- Test complete application flows
+## 🔒 Security
+- Secrets via environment variables locally
+- Use Azure Key Vault in cloud
+- TLS enforced in Azure SQL (disable AutoMigrate/Seed in prod)
 
-### Performance Tests
-- Use SQL Server LocalDB or Azure SQL
-- Benchmark repository operations
-- Test with realistic data volumes
-
-## 📈 Performance Considerations
-
-### Database Optimization
-- **Indexes**: Strategic indexing on frequently queried columns
-- **Pagination**: Built-in pagination support in base repository
-- **Connection Pooling**: EF Core connection pooling enabled
-- **Query Optimization**: LINQ to SQL optimization
-- **Bulk Operations**: Batch operations for large data sets
-
-### EF Core Configuration
-- **Change Tracking**: Optimized for domain scenarios
-- **Lazy Loading**: Disabled by default, explicit loading preferred
-- **Query Filters**: Global filters for soft delete
-- **Connection Resiliency**: Retry policies for Azure SQL
-
-## 🔒 Security & Compliance
-
-### Data Protection
-- **Encryption at Rest**: Azure SQL TDE (Transparent Data Encryption)
-- **Encryption in Transit**: SSL/TLS connections
-- **Access Control**: Azure AD integration
-- **Audit Logging**: Built-in audit trail for all entities
-
-### Compliance Features
-- **Soft Delete**: GDPR-compliant data deletion
-- **Audit Trail**: Complete change tracking
-- **Data Retention**: Configurable retention policies
-- **Privacy Controls**: Customer data anonymization
-
-## 🌐 Azure SQL Deployment Strategy
-
-### Azure Resources Required
-1. **Azure SQL Database** (Standard/Premium tier)
-2. **Azure Key Vault** (connection string storage)
-3. **Azure App Service** (application hosting)
-4. **Azure Monitor** (logging and monitoring)
-
-### Deployment Configuration
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "@Microsoft.KeyVault(SecretUri=https://your-vault.vault.azure.net/secrets/sql-connection-string/)"
-  },
-  "Database": {
-    "UseSqlDatabase": true,
-    "AutoMigrate": false,  // Disable in production
-    "SeedData": false     // Disable in production
-  }
-}
-```
-
-### Migration Strategy
-1. **Schema Migration**: Use EF Core migrations
-2. **Data Migration**: Custom migration scripts
-3. **Rollback Plan**: Database backup before migration
-4. **Validation**: Comprehensive post-migration testing
-
-## 📋 Next Steps & Action Items
-
-### Immediate Tasks (Week 1-2)
-1. **Complete remaining SQL repositories**
-   - Location, Customer, User, Staff repositories
-   - Follow the established pattern from Organization/Queue repos
-
-2. **Create database migrations**
-   ```bash
-   dotnet ef migrations add InitialCreate
-   dotnet ef database update
-   ```
-
-3. **Implement data seeding**
-   - Create development seed data
-   - Add seed data configuration
-
-### Short-term Tasks (Week 3-4)
-1. **Add Unit of Work pattern**
-   - Transaction management
-   - Change tracking optimization
-
-2. **Performance optimization**
-   - Index analysis and optimization
-   - Query performance profiling
-
-3. **Integration testing**
-   - Create comprehensive integration tests
-   - Test repository switching
-
-### Medium-term Tasks (Month 2)
-1. **Azure SQL setup**
-   - Provision Azure SQL Database
-   - Configure connection strings
-   - Set up monitoring
-
-2. **Production migration**
-   - Data migration scripts
-   - Deployment automation
-   - Performance validation
-
-## 🔍 Monitoring & Observability
-
-### Key Metrics to Track
-- **Database Performance**: Query execution times, connection pool usage
-- **Repository Performance**: Operation latencies, error rates
-- **Data Growth**: Table sizes, index effectiveness
-- **Business Metrics**: Queue throughput, customer satisfaction
-
-### Logging Strategy
-- **EF Core Logging**: SQL query logging in development
-- **Application Logging**: Structured logging with Serilog
-- **Performance Logging**: Slow query detection
-- **Error Logging**: Exception tracking and alerting
-
-## 📚 Documentation & Knowledge Transfer
-
-### Developer Resources
-1. **Repository Pattern Guide**: How to implement new repositories
-2. **Entity Configuration Guide**: EF Core configuration patterns
-3. **Migration Guide**: Database schema changes
-4. **Testing Guide**: Repository and integration testing
-
-### Operational Documentation
-1. **Deployment Guide**: Azure SQL deployment steps
-2. **Monitoring Guide**: Performance monitoring setup
-3. **Troubleshooting Guide**: Common issues and solutions
-4. **Backup & Recovery**: Data protection procedures
+## 🌐 Azure SQL
+- Store connection string in Key Vault
+- CI/CD injects `ConnectionStrings__AzureSqlConnection`
 
 ---
-
-## 🎯 Success Criteria
-
-✅ **Technical Success:**
-- All repositories implemented with SQL support
-- Sub-100ms response times for typical queries
-- Zero data loss during migration
-- 99.9% uptime in production
-
-✅ **Business Success:**
-- Seamless user experience during migration
-- Improved application performance
-- Enhanced data analytics capabilities
-- Scalable foundation for future growth
-
----
-
-*This strategy provides a solid foundation for implementing SQL database support while maintaining flexibility for testing and ensuring a smooth transition to Azure SQL in production.* 
+This strategy reflects the current Dockerized SQL setup and prepares for Azure SQL migration. 

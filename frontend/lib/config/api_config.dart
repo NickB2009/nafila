@@ -32,9 +32,9 @@ class ApiConfig {
   // Environment detection and base URL
   static String get currentBaseUrl {
     if (_customApiUrl != null) {
-      // Ensure custom URL has /api suffix
-      final url = _customApiUrl!;
-      return url.endsWith('/api') ? url : '$url/api';
+      // For custom URLs, don't automatically add /api suffix
+      // The initialization should handle the correct URL format
+      return _customApiUrl!;
     }
     
     switch (currentEnvironment) {

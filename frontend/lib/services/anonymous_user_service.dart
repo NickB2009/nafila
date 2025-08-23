@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:html' as html;
 import 'package:uuid/uuid.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/anonymous_user.dart';
 
 /// Service for managing anonymous user data in browser localStorage
@@ -9,15 +9,18 @@ class AnonymousUserService {
   static const String _sessionKey = 'eutonafila_session_backup';
   static const Uuid _uuid = Uuid();
 
-  /// Get the current anonymous user from localStorage
+  /// Get the current anonymous user from localStorage/SharedPreferences
   Future<AnonymousUser?> getAnonymousUser() async {
     try {
-      final storedData = html.window.localStorage[_storageKey];
+      final prefs = await SharedPreferences.getInstance();
+      final storedData = prefs.getString(_storageKey);
       if (storedData == null || storedData.isEmpty) {
+        print('📱 No stored anonymous user found');
         return null;
       }
 
       final json = jsonDecode(storedData);
+      print('📱 Retrieved stored anonymous user: ${json['id']}');
       return AnonymousUser.fromJson(json);
     } catch (e) {
       print('Error loading anonymous user: $e');
@@ -31,28 +34,40 @@ class AnonymousUserService {
     required String email,
     AnonymousUserPreferences? preferences,
   }) async {
-    final user = AnonymousUser(
-      id: _uuid.v4(),
-      name: name,
-      email: email,
-      createdAt: DateTime.now(),
-      preferences: preferences ?? AnonymousUserPreferences.defaultPreferences(),
-      activeQueues: [],
-      queueHistory: [],
-    );
+    try {
+      print('📱 Creating new anonymous user for: $name ($email)');
+      
+      final userId = _uuid.v4();
+      print('📱 Generated UUID: $userId');
+      
+      final user = AnonymousUser(
+        id: userId,
+        name: name,
+        email: email,
+        createdAt: DateTime.now(),
+        preferences: preferences ?? AnonymousUserPreferences.defaultPreferences(),
+        activeQueues: [],
+        queueHistory: [],
+      );
 
-    await saveAnonymousUser(user);
-    return user;
+      await saveAnonymousUser(user);
+      print('📱 Successfully created and saved anonymous user: $userId');
+      return user;
+    } catch (e) {
+      print('❌ Error creating anonymous user: $e');
+      rethrow;
+    }
   }
 
-  /// Save anonymous user to localStorage
+  /// Save anonymous user to localStorage/SharedPreferences
   Future<void> saveAnonymousUser(AnonymousUser user) async {
     try {
       final jsonString = jsonEncode(user.toJson());
-      html.window.localStorage[_storageKey] = jsonString;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_storageKey, jsonString);
       
-      // Also save to sessionStorage as backup
-      html.window.sessionStorage[_sessionKey] = jsonString;
+      // Also save to sessionStorage as backup (secondary key)
+      await prefs.setString(_sessionKey, jsonString);
     } catch (e) {
       print('Error saving anonymous user: $e');
       rethrow;
@@ -175,8 +190,9 @@ class AnonymousUserService {
 
   /// Clear all anonymous user data
   Future<void> clearAnonymousUser() async {
-    html.window.localStorage.remove(_storageKey);
-    html.window.sessionStorage.remove(_sessionKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey);
+    await prefs.remove(_sessionKey);
   }
 
   /// Generate unique anonymous ID
@@ -206,11 +222,12 @@ class AnonymousUserService {
   }
 
   /// Check if localStorage is available
-  bool get isStorageAvailable {
+  Future<bool> get isStorageAvailable async {
     try {
       const testKey = '__test_storage__';
-      html.window.localStorage[testKey] = 'test';
-      html.window.localStorage.remove(testKey);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(testKey, 'test');
+      await prefs.remove(testKey);
       return true;
     } catch (e) {
       return false;
@@ -218,9 +235,10 @@ class AnonymousUserService {
   }
 
   /// Get storage usage estimate (in bytes)
-  int getStorageUsage() {
+  Future<int> getStorageUsage() async {
     try {
-      final data = html.window.localStorage[_storageKey];
+      final prefs = await SharedPreferences.getInstance();
+      final data = prefs.getString(_storageKey);
       return data?.length ?? 0;
     } catch (e) {
       return 0;

@@ -29,6 +29,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Data.SqlClient; // Added for SqlException specific handling
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -318,14 +319,14 @@ if ((autoMigrate || seedData) && useSqlDatabase && !isProduction)
         {
             var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
             var context = scope.ServiceProvider.GetRequiredService<Grande.Fila.API.Infrastructure.Data.QueueHubDbContext>();
-            
+
             if (autoMigrate)
             {
                 logger?.LogInformation("Attempting database migration...");
                 await context.Database.MigrateAsync();
                 logger?.LogInformation("Database migration completed successfully");
             }
-            
+
             if (seedData)
             {
                 logger?.LogInformation("Attempting database seeding...");
@@ -335,6 +336,21 @@ if ((autoMigrate || seedData) && useSqlDatabase && !isProduction)
             }
         }
     }
+    catch (SqlException ex) when (ex.Number == 40615) // Azure SQL firewall block
+    {
+        using var scope = app.Services.CreateScope();
+        var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+        logger?.LogError(ex, "Azure SQL firewall blocked the connection (Error 40615). Public IP is not whitelisted. Add your current public IP to the SQL Server firewall rules. Message: {Message}", ex.Message);
+        logger?.LogWarning("Skipping migration/seeding due to firewall block. Application will continue without database updates.");
+    }
+    catch (SqlException ex)
+    {
+        using var scope = app.Services.CreateScope();
+        var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+        logger?.LogError(ex, "SQL error during migration/seeding. Number={Number} State={State} Class={Class}. Message: {Message}", ex.Number, ex.State, ex.Class, ex.Message);
+        logger?.LogWarning("Application will continue without applying migrations/seeding.");
+        Console.WriteLine($"Warning: SQL migration/seeding failed (#{ex.Number}): {ex.Message}");
+    }
     catch (Exception ex)
     {
         using (var scope = app.Services.CreateScope())
@@ -342,7 +358,7 @@ if ((autoMigrate || seedData) && useSqlDatabase && !isProduction)
             var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
             logger?.LogError(ex, "Database migration/seeding failed. Application will continue without seeded data. Error: {ErrorMessage}", ex.Message);
         }
-        
+
         // Don't crash the application - continue startup
         Console.WriteLine($"Warning: Database migration/seeding failed: {ex.Message}");
         Console.WriteLine("Application will continue but may not have initial data.");
@@ -361,7 +377,11 @@ app.UseSwaggerUI(options =>
 // Add CORS middleware
 app.UseCors();
 
-app.UseHttpsRedirection();
+// Only redirect to HTTPS in production (or if explicitly enabled via config)
+if (isProduction || builder.Configuration.GetValue<bool>("EnableHttpsRedirect", false))
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
