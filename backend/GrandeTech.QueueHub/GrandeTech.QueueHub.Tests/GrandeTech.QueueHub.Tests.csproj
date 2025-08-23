@@ -27,6 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Integration/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GrandeTech.QueueHub.API\GrandeTech.QueueHub.API.csproj" />
   </ItemGroup>
 

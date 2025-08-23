@@ -79,7 +79,7 @@ namespace Grande.Fila.API.Tests.Application.Public
                 .ReturnsAsync(location);
 
             _mockQueueRepository
-                .Setup(r => r.GetByLocationIdAsync(locationId, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetActiveQueueByLocationIdAsync(locationId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queue);
 
             _mockServiceRepository
@@ -185,7 +185,7 @@ namespace Grande.Fila.API.Tests.Application.Public
                 .ReturnsAsync(location);
 
             _mockQueueRepository
-                .Setup(r => r.GetByLocationIdAsync(locationId, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetActiveQueueByLocationIdAsync(locationId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queue);
 
             _mockServiceRepository
