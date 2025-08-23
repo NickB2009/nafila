@@ -30,6 +30,16 @@ dependencies:
   logger: ^2.0.1
   # Anonymous user management
   uuid: ^4.2.1
+  # Real-time communication
+  web_socket_channel: ^2.4.0
+  # QR Code functionality
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^3.5.6
+  permission_handler: ^11.3.0
+  # Push Notifications
+  flutter_local_notifications: ^17.2.3
+  firebase_core: ^3.15.2
+  firebase_messaging: ^15.2.10
 
 dev_dependencies:
   flutter_test:

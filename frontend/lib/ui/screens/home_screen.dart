@@ -6,6 +6,7 @@ import '../widgets/public_salons_widget.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 /// Home screen that shows different content based on authentication state
+// Deprecated: replaced by SalonFinderScreen as the main entry. Kept for reference.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 

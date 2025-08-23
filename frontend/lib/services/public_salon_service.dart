@@ -46,19 +46,27 @@ class PublicSalonService {
 
   /// Gets all public salons without authentication
   Future<List<PublicSalon>> getPublicSalons() async {
-    // Use direct Dio call with centralized API configuration
-    final dio = Dio();
-    final response = await dio.get(
-      ApiConfig.getUrl(ApiConfig.publicSalonsEndpoint),
-      options: Options(
-        headers: ApiConfig.defaultHeaders,
-      ),
-    );
-    
-    final List<dynamic> data = response.data;
-    final salons = data.map((json) => PublicSalon.fromJson(json)).toList();
-    
-    return salons;
+    try {
+      // Use direct Dio call with timeouts and centralized API configuration
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 8),
+          receiveTimeout: const Duration(seconds: 8),
+          sendTimeout: const Duration(seconds: 8),
+          headers: ApiConfig.defaultHeaders,
+        ),
+      );
+      final response = await dio.get(
+        ApiConfig.getUrl(ApiConfig.publicSalonsEndpoint),
+      );
+
+      final List<dynamic> data = response.data;
+      return data.map((json) => PublicSalon.fromJson(json)).toList();
+    } catch (e) {
+      // Fallback to mock data to avoid blocking app initialization on web (CORS/network)
+      // print('getPublicSalons error: $e');
+      return _getMockNearbySlons();
+    }
   }
 
   /// Gets public queue status for a salon

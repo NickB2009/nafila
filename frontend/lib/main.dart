@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'controllers/app_controller.dart';
 import 'config/api_config.dart';
-import 'ui/screens/home_screen.dart';
+// import removed: HomeScreen deprecated in favor of SalonFinderScreen
+import 'ui/screens/login_screen.dart';
+import 'ui/screens/register_screen.dart';
 import 'ui/screens/salon_finder_screen.dart';
 import 'ui/screens/salon_tv_dashboard.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'ui/widgets/error_boundary.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,9 +56,11 @@ void main() {
   // ApiConfig.initialize(apiUrl: 'http://192.168.1.100:7126'); // Local network IP
   
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: const MyApp(),
+    ErrorBoundary(
+      child: ChangeNotifierProvider(
+        create: (_) => ThemeProvider(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -68,7 +73,10 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return ChangeNotifierProvider(
-      create: (context) => AppController(),
+      create: (context) {
+        print('🏗️ Creating new AppController instance');
+        return AppController();
+      },
       child: MaterialApp(
         title: 'EutoNaFila',
         debugShowCheckedModeBanner: false,
@@ -85,9 +93,11 @@ class MyApp extends StatelessWidget {
         },
         home: const AppInitializer(),
         routes: {
-          '/home': (context) => const HomeScreen(),
+          '/home': (context) => const SalonFinderScreen(),
           '/salon-finder': (context) => const SalonFinderScreen(),
           '/tv-dashboard': (context) => const SalonTvDashboard(),
+          '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
         },
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
@@ -111,6 +121,8 @@ class AppInitializer extends StatefulWidget {
 }
 
 class _AppInitializerState extends State<AppInitializer> {
+  bool _isInitializing = false;
+
   @override
   void initState() {
     super.initState();
@@ -118,8 +130,15 @@ class _AppInitializerState extends State<AppInitializer> {
   }
 
   Future<void> _initializeApp() async {
-    final appController = Provider.of<AppController>(context, listen: false);
-    await appController.initialize();
+    if (_isInitializing) return;
+    
+    _isInitializing = true;
+    try {
+      final appController = Provider.of<AppController>(context, listen: false);
+      await appController.initialize();
+    } finally {
+      _isInitializing = false;
+    }
   }
 
   @override
@@ -161,7 +180,7 @@ class _AppInitializerState extends State<AppInitializer> {
           );
         }
 
-        return const HomeScreen();
+        return const SalonFinderScreen();
       },
     );
   }

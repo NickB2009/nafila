@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Domain.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json;
@@ -16,18 +17,39 @@ namespace Grande.Fila.API.Application.Auth
     {
         private readonly IUserRepository _userRepo;
         private readonly IConfiguration _config;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AuthService(IUserRepository userRepo, IConfiguration config)
+        public AuthService(IUserRepository userRepo, IConfiguration config, IUnitOfWork unitOfWork)
         {
             _userRepo = userRepo;
             _config = config;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<LoginResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
         {
             var result = new LoginResult { Success = false };
 
-            var user = await _userRepo.GetByUsernameAsync(request.Username, cancellationToken);
+            // Normalize identifier
+            var identifier = request.Username?.Trim();
+            if (string.IsNullOrWhiteSpace(identifier))
+            {
+                result.Error = "Invalid username or password.";
+                return result;
+            }
+
+            // Support email-or-username login
+            User? user;
+            if (identifier.Contains("@"))
+            {
+                var emailNorm = identifier.ToLowerInvariant();
+                user = await _userRepo.GetByEmailAsync(emailNorm, cancellationToken);
+            }
+            else
+            {
+                var usernameNorm = identifier; // keep original casing for username, DB collation may be CI
+                user = await _userRepo.GetByUsernameAsync(usernameNorm, cancellationToken);
+            }
             if (user == null)
             {
                 result.Error = "Invalid username or password.";
@@ -101,14 +123,17 @@ namespace Grande.Fila.API.Application.Auth
                 return result;
 
             // Check uniqueness
-            var usernameExists = await _userRepo.ExistsByUsernameAsync(request.Username, cancellationToken);
+            var normalizedUsername = request.Username?.Trim();
+            var normalizedEmail = request.Email?.Trim().ToLowerInvariant();
+
+            var usernameExists = await _userRepo.ExistsByUsernameAsync(normalizedUsername!, cancellationToken);
             if (usernameExists)
             {
                 result.FieldErrors["Username"] = "Username is already taken.";
                 return result;
             }
 
-            var emailExists = await _userRepo.ExistsByEmailAsync(request.Email, cancellationToken);
+            var emailExists = await _userRepo.ExistsByEmailAsync(normalizedEmail!, cancellationToken);
             if (emailExists)
             {
                 result.FieldErrors["Email"] = "Email is already registered.";
@@ -117,11 +142,12 @@ namespace Grande.Fila.API.Application.Auth
 
             // Create user
             var passwordHash = HashPassword(request.Password);
-            var user = new User(request.Username, request.Email, passwordHash, "User"); // Default role is "User"
+            var user = new User(normalizedUsername!, normalizedEmail!, passwordHash, "User"); // Default role is "User"
 
             try
             {
                 await _userRepo.AddAsync(user, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 result.Success = true;
             }
             catch (Exception)

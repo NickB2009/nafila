@@ -77,15 +77,15 @@ class AnonymousQueueService {
       // Parse response and create queue entry
       final queueData = response.data;
       final queueEntry = AnonymousQueueEntry(
-        id: queueData['id'],
+        id: queueData['id'] ?? queueData['Id'],
         anonymousUserId: user.id,
         salonId: salon.id,
         salonName: salon.name,
-        position: queueData['position'],
-        estimatedWaitMinutes: queueData['estimatedWaitMinutes'],
-        joinedAt: DateTime.parse(queueData['joinedAt']),
+        position: queueData['position'] ?? queueData['Position'],
+        estimatedWaitMinutes: queueData['estimatedWaitMinutes'] ?? queueData['EstimatedWaitMinutes'],
+        joinedAt: DateTime.parse(queueData['joinedAt'] ?? queueData['JoinedAt']),
         lastUpdated: DateTime.now(),
-        status: QueueEntryStatus.waiting,
+        status: _parseQueueStatus(queueData['status'] ?? queueData['Status'] ?? 'waiting'),
         serviceRequested: serviceRequested,
       );
 
@@ -180,7 +180,24 @@ class AnonymousQueueService {
           }
           throw Exception('Invalid request data. Please check your information and try again.');
         } else if (e.response?.statusCode == 500) {
-          throw Exception('Server error. Please try again in a few minutes.');
+          throw Exception('Server error. There appears to be a backend configuration issue. Please try again later.');
+        } else if (e.response?.statusCode == 400) {
+          // Extract field errors if available
+          final data = e.response?.data;
+          String message = 'Não foi possível entrar na fila. Verifique os dados informados.';
+          if (data is Map && data['errors'] != null) {
+            final errors = data['errors'];
+            if (errors is Map) {
+              final parts = <String>[];
+              errors.forEach((k, v) {
+                parts.add('$k: $v');
+              });
+              if (parts.isNotEmpty) {
+                message = parts.join(' | ');
+              }
+            }
+          }
+          throw Exception(message);
         } else {
           throw Exception('Failed to join queue: ${e.message ?? 'Network error'}');
         }
@@ -199,20 +216,31 @@ class AnonymousQueueService {
           headers: ApiConfig.defaultHeaders,
         ),
       );
-    } catch (e) {
-      // Continue with local removal even if API call fails
-      print('Failed to notify backend of queue leave: $e');
-    }
 
-    // Remove from local storage
-    await _userService.removeQueueEntry(entryId);
+      // Remove from local storage
+      await _userService.removeQueueEntry(entryId);
+    } catch (e) {
+      // Handle API errors with specific messages
+      if (e is DioException) {
+        if (e.response?.statusCode == 404) {
+          throw Exception('Queue entry not found. It may have already been removed.');
+        } else if (e.response?.statusCode == 500) {
+          throw Exception('Server error while leaving queue. Please try again.');
+        } else if (e.response?.statusCode == 400) {
+          throw Exception('Invalid request to leave queue.');
+        } else {
+          throw Exception('Failed to leave queue: ${e.message}');
+        }
+      }
+      throw Exception('Failed to leave queue: ${e.toString()}');
+    }
   }
 
   /// Get current queue status for an entry
   Future<AnonymousQueueEntry?> getQueueStatus(String entryId) async {
     try {
       final response = await _dio.get(
-        ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/status/$entryId'),
+        ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/entry-status/$entryId'),
         options: Options(
           headers: ApiConfig.defaultHeaders,
         ),
@@ -225,14 +253,14 @@ class AnonymousQueueService {
       final updatedEntry = AnonymousQueueEntry(
         id: entryId,
         anonymousUserId: user.id,
-        salonId: data['salonId'],
-        salonName: data['salonName'],
-        position: data['position'],
-        estimatedWaitMinutes: data['estimatedWaitMinutes'],
-        joinedAt: DateTime.parse(data['joinedAt']),
+        salonId: data['salonId'] ?? data['SalonId'] ?? 'unknown',
+        salonName: data['salonName'] ?? data['SalonName'] ?? 'Unknown Salon',
+        position: data['position'] ?? data['Position'] ?? 1,
+        estimatedWaitMinutes: data['estimatedWaitMinutes'] ?? data['EstimatedWaitMinutes'] ?? 10,
+        joinedAt: DateTime.parse(data['joinedAt'] ?? data['JoinedAt'] ?? DateTime.now().toIso8601String()),
         lastUpdated: DateTime.now(),
-        status: _parseQueueStatus(data['status']),
-        serviceRequested: data['serviceRequested'],
+        status: _parseQueueStatus(data['status'] ?? data['Status'] ?? 'waiting'),
+        serviceRequested: data['serviceRequested'] ?? data['ServiceRequested'],
       );
 
       // Update local storage
@@ -240,11 +268,7 @@ class AnonymousQueueService {
 
       return updatedEntry;
     } catch (e) {
-      // Return local data if API call fails
-      final user = await _userService.getAnonymousUser();
-      return user?.activeQueues
-          .where((entry) => entry.id == entryId)
-          .firstOrNull;
+      throw Exception('Failed to get queue status: ${e.toString()}');
     }
   }
 
@@ -278,14 +302,7 @@ class AnonymousQueueService {
         );
       }
     } catch (e) {
-      // Update local data even if API call fails
-      if (name != null || email != null) {
-        await _userService.updateProfile(
-          name: name,
-          email: email,
-        );
-      }
-      rethrow;
+      throw Exception('Failed to update contact info: ${e.toString()}');
     }
   }
 
@@ -345,4 +362,5 @@ class AnonymousQueueService {
       userService: AnonymousUserService(),
     );
   }
+
 } 

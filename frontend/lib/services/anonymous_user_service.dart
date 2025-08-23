@@ -1,26 +1,31 @@
 import 'dart:convert';
-import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import '../models/anonymous_user.dart';
 
-/// Service for managing anonymous user data in browser localStorage
+/// Service for managing anonymous user data using SharedPreferences
 class AnonymousUserService {
   static const String _storageKey = 'eutonafila_anonymous_user';
   static const String _sessionKey = 'eutonafila_session_backup';
   static const Uuid _uuid = Uuid();
+  
+  SharedPreferences? _prefs;
 
-  /// Get the current anonymous user from localStorage/SharedPreferences
+  /// Initialize the service
+  Future<void> _initialize() async {
+    _prefs ??= await SharedPreferences.getInstance();
+  }
+
+  /// Get the current anonymous user from SharedPreferences
   Future<AnonymousUser?> getAnonymousUser() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final storedData = prefs.getString(_storageKey);
+      await _initialize();
+      final storedData = _prefs!.getString(_storageKey);
       if (storedData == null || storedData.isEmpty) {
-        print('📱 No stored anonymous user found');
         return null;
       }
 
       final json = jsonDecode(storedData);
-      print('📱 Retrieved stored anonymous user: ${json['id']}');
       return AnonymousUser.fromJson(json);
     } catch (e) {
       print('Error loading anonymous user: $e');
@@ -34,40 +39,29 @@ class AnonymousUserService {
     required String email,
     AnonymousUserPreferences? preferences,
   }) async {
-    try {
-      print('📱 Creating new anonymous user for: $name ($email)');
-      
-      final userId = _uuid.v4();
-      print('📱 Generated UUID: $userId');
-      
-      final user = AnonymousUser(
-        id: userId,
-        name: name,
-        email: email,
-        createdAt: DateTime.now(),
-        preferences: preferences ?? AnonymousUserPreferences.defaultPreferences(),
-        activeQueues: [],
-        queueHistory: [],
-      );
+    final user = AnonymousUser(
+      id: _uuid.v4(),
+      name: name,
+      email: email,
+      createdAt: DateTime.now(),
+      preferences: preferences ?? AnonymousUserPreferences.defaultPreferences(),
+      activeQueues: [],
+      queueHistory: [],
+    );
 
-      await saveAnonymousUser(user);
-      print('📱 Successfully created and saved anonymous user: $userId');
-      return user;
-    } catch (e) {
-      print('❌ Error creating anonymous user: $e');
-      rethrow;
-    }
+    await saveAnonymousUser(user);
+    return user;
   }
 
-  /// Save anonymous user to localStorage/SharedPreferences
+  /// Save anonymous user to SharedPreferences
   Future<void> saveAnonymousUser(AnonymousUser user) async {
     try {
+      await _initialize();
       final jsonString = jsonEncode(user.toJson());
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_storageKey, jsonString);
+      await _prefs!.setString(_storageKey, jsonString);
       
-      // Also save to sessionStorage as backup (secondary key)
-      await prefs.setString(_sessionKey, jsonString);
+      // Also save to session storage as backup
+      await _prefs!.setString(_sessionKey, jsonString);
     } catch (e) {
       print('Error saving anonymous user: $e');
       rethrow;
@@ -126,46 +120,28 @@ class AnonymousUserService {
     return updatedUser;
   }
 
-  /// Move a queue entry from active to history
-  Future<AnonymousUser> moveToHistory(String entryId) async {
-    final currentUser = await getAnonymousUser();
-    if (currentUser == null) {
-      throw Exception('No anonymous user found');
-    }
-
-    final entryToMove = currentUser.activeQueues.firstWhere(
-      (entry) => entry.id == entryId,
-      orElse: () => throw Exception('Queue entry not found'),
-    );
-
-    final updatedActiveQueues = currentUser.activeQueues
-        .where((entry) => entry.id != entryId)
-        .toList();
-
-    final updatedHistory = List<AnonymousQueueEntry>.from(currentUser.queueHistory)
-      ..add(entryToMove);
-
-    final updatedUser = currentUser.copyWith(
-      activeQueues: updatedActiveQueues,
-      queueHistory: updatedHistory,
-    );
-
-    await saveAnonymousUser(updatedUser);
-    return updatedUser;
-  }
-
-  /// Remove a queue entry completely
+  /// Remove a queue entry
   Future<AnonymousUser> removeQueueEntry(String entryId) async {
     final currentUser = await getAnonymousUser();
     if (currentUser == null) {
       throw Exception('No anonymous user found');
     }
 
+    final entryToRemove = currentUser.activeQueues
+        .firstWhere((entry) => entry.id == entryId);
+
     final updatedQueues = currentUser.activeQueues
         .where((entry) => entry.id != entryId)
         .toList();
 
-    final updatedUser = currentUser.copyWith(activeQueues: updatedQueues);
+    // Move to history
+    final updatedHistory = List<AnonymousQueueEntry>.from(currentUser.queueHistory)
+      ..add(entryToRemove);
+
+    final updatedUser = currentUser.copyWith(
+      activeQueues: updatedQueues,
+      queueHistory: updatedHistory,
+    );
     await saveAnonymousUser(updatedUser);
     return updatedUser;
   }
@@ -190,9 +166,9 @@ class AnonymousUserService {
 
   /// Clear all anonymous user data
   Future<void> clearAnonymousUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_storageKey);
-    await prefs.remove(_sessionKey);
+    await _initialize();
+    await _prefs!.remove(_storageKey);
+    await _prefs!.remove(_sessionKey);
   }
 
   /// Generate unique anonymous ID
@@ -221,13 +197,13 @@ class AnonymousUserService {
     }
   }
 
-  /// Check if localStorage is available
+  /// Check if storage is available
   Future<bool> get isStorageAvailable async {
     try {
+      await _initialize();
       const testKey = '__test_storage__';
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(testKey, 'test');
-      await prefs.remove(testKey);
+      await _prefs!.setString(testKey, 'test');
+      await _prefs!.remove(testKey);
       return true;
     } catch (e) {
       return false;
@@ -237,8 +213,8 @@ class AnonymousUserService {
   /// Get storage usage estimate (in bytes)
   Future<int> getStorageUsage() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final data = prefs.getString(_storageKey);
+      await _initialize();
+      final data = _prefs!.getString(_storageKey);
       return data?.length ?? 0;
     } catch (e) {
       return 0;

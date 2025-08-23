@@ -101,6 +101,25 @@ class ApiConfig {
   static const String organizationAnalyticsEndpoint = '$analyticsEndpoint/organization';
   static const String topOrganizationsEndpoint = '$analyticsEndpoint/top-organizations';
 
+  // Queue Analytics endpoints
+  static const String queueAnalyticsEndpoint = '/QueueAnalytics';
+  static const String waitTimeEndpoint = '$queueAnalyticsEndpoint/wait-time';
+  static const String performanceEndpoint = '$queueAnalyticsEndpoint/performance';
+  static const String trendsEndpoint = '$queueAnalyticsEndpoint/trends';
+  static const String satisfactionEndpoint = '$queueAnalyticsEndpoint/satisfaction';
+  static const String recommendationsEndpoint = '$queueAnalyticsEndpoint/recommendations';
+  static const String healthEndpoint = '$queueAnalyticsEndpoint/health';
+
+  // QR Code endpoints
+  static const String qrCodeEndpoint = '/QrCode';
+  static const String generateQrEndpoint = '$qrCodeEndpoint/generate';
+
+  // Queue Transfer endpoints
+  static const String queueTransferEndpoint = '/QueueTransfer';
+  static const String transferEndpoint = '$queueTransferEndpoint/transfer';
+  static const String transferSuggestionsEndpoint = '$queueTransferEndpoint/suggestions';
+  static const String transferEligibilityEndpoint = '$queueTransferEndpoint/eligibility';
+
   // Public endpoints (no authentication required)
   static const String publicEndpoint = '/Public';
   static const String publicSalonsEndpoint = '$publicEndpoint/salons';

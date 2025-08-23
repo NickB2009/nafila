@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/salon.dart';
+import '../../models/public_salon.dart';
 import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
@@ -7,8 +8,15 @@ import '../../models/salon_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
-import 'check_in_screen.dart';
+// import removed: anonymous flow not used in authenticated check-in
+import 'package:provider/provider.dart';
+import '../../controllers/app_controller.dart';
+import 'anonymous_join_queue_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'queue_status_screen.dart';
+import '../../models/queue_models.dart' as queue;
+import '../../models/anonymous_user.dart';
+import 'anonymous_queue_status_screen.dart';
 
 class SalonDetailsScreen extends StatefulWidget {
   final Salon salon;
@@ -17,6 +25,7 @@ class SalonDetailsScreen extends StatefulWidget {
   final List<SalonHours> businessHours;
   final List<SalonReview> reviews;
   final Map<String, dynamic> additionalInfo;
+  final PublicSalon? publicSalon;
 
   const SalonDetailsScreen({
     super.key,
@@ -26,6 +35,7 @@ class SalonDetailsScreen extends StatefulWidget {
     required this.businessHours,
     required this.reviews,
     this.additionalInfo = const {},
+    this.publicSalon,
   });
 
   @override
@@ -37,6 +47,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isFavorite = false;
+  final Set<String> _selectedServices = {};
 
   @override
   void initState() {
@@ -58,6 +69,23 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
     );
 
     _animationController.forward();
+  }
+
+  PublicSalon _mapSalonToPublic(Salon salon) {
+    return PublicSalon(
+      id: salon.name.toLowerCase().replaceAll(' ', '_'),
+      name: salon.name,
+      address: salon.address,
+      latitude: null,
+      longitude: null,
+      distanceKm: salon.distance,
+      isOpen: salon.isOpen,
+      currentWaitTimeMinutes: salon.waitTime,
+      queueLength: salon.queueLength,
+      services: widget.services.map((s) => s.name).toList(),
+      rating: null,
+      reviewCount: null,
+    );
   }
 
   @override
@@ -231,15 +259,16 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: CheckInState.isCheckedIn ? null : () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CheckInScreen(salon: widget.salon),
-                    ),
-                  );
+                onPressed: () async {
+                  final app = Provider.of<AppController>(context, listen: false);
+                  if (!app.auth.isAuthenticated) {
+                    await _showLoginOrGuest(context);
+                  } else {
+                    await _showServiceSelection(context);
+                  }
                 },
                 icon: Icon(Icons.check_circle, size: isSmallScreen ? 18 : 24),
-                label: Text('Check In', style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
+                label: Text('Check-in', style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: salonColors.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
@@ -284,6 +313,262 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showServiceSelection(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return StatefulBuilder(
+          builder: (BuildContext context, void Function(void Function()) setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+                left: 16,
+                right: 16,
+                top: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Selecione os serviços', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: widget.services.map((s) {
+                      final isSelected = _selectedServices.contains(s.id);
+                      return FilterChip(
+                        label: Text(s.name),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setSheetState(() {
+                            if (selected) {
+                              _selectedServices.add(s.id);
+                            } else {
+                              _selectedServices.remove(s.id);
+                            }
+                          });
+                        },
+                        selectedColor: theme.colorScheme.primary.withOpacity(0.15),
+                        checkmarkColor: theme.colorScheme.primary,
+                        side: BorderSide(
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outline.withOpacity(0.5),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _selectedServices.isEmpty
+                          ? null
+                          : () async {
+                              Navigator.of(ctx).pop();
+                              final app = Provider.of<AppController>(context, listen: false);
+                              final queueId = (widget.additionalInfo['queueId'] is String)
+                                  ? widget.additionalInfo['queueId'] as String
+                                  : null;
+                              final publicId = widget.publicSalon?.id;
+                              final resolvedQueueId = queueId ?? (publicId != null && _isValidGuid(publicId) ? publicId : null);
+
+                              // Try backend integration if queueId is available
+                              if (resolvedQueueId != null && app.auth.isAuthenticated) {
+                                final selectedNames = widget.services
+                                    .where((s) => _selectedServices.contains(s.id))
+                                    .map((s) => s.name)
+                                    .toList();
+                                final ok = await app.queue.joinQueue(
+                                  resolvedQueueId,
+                                  queue.JoinQueueRequest(
+                                    queueId: resolvedQueueId,
+                                    customerName: app.auth.currentUsername,
+                                    email: null,
+                                    isAnonymous: false,
+                                    notes: selectedNames.join(', '),
+                                    serviceTypeId: null,
+                                  ),
+                                );
+                                if (!mounted) return;
+                                if (ok) {
+                                  // Mark global check-in for authenticated flow
+                                  CheckInState.isCheckedIn = true;
+                                  CheckInState.checkedInSalon = widget.salon;
+                                  // Use the unified anonymous-style status screen for both flows
+                                  final entry = AnonymousQueueEntry(
+                                    id: 'entry',
+                                    anonymousUserId: 'auth',
+                                    salonId: widget.salon.name,
+                                    salonName: widget.salon.name,
+                                    position: 1,
+                                    estimatedWaitMinutes: widget.salon.waitTime,
+                                    joinedAt: DateTime.now(),
+                                    lastUpdated: DateTime.now(),
+                                    status: QueueEntryStatus.waiting,
+                                    serviceRequested: selectedNames.join(', '),
+                                  );
+                                  final publicEquivalent = PublicSalon(
+                                    id: widget.salon.name,
+                                    name: widget.salon.name,
+                                    address: widget.salon.address,
+                                    latitude: null,
+                                    longitude: null,
+                                    distanceKm: widget.salon.distance,
+                                    isOpen: widget.salon.isOpen,
+                                    currentWaitTimeMinutes: widget.salon.waitTime,
+                                    queueLength: widget.salon.queueLength,
+                                    services: widget.services.map((s) => s.name).toList(),
+                                    isFast: false,
+                                    isPopular: false,
+                                    rating: null,
+                                    reviewCount: null,
+                                  );
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (_) => AnonymousQueueStatusScreen(
+                                        queueEntry: entry,
+                                        salon: publicEquivalent,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(app.queue.error ?? 'Falha ao entrar na fila')),
+                                  );
+                                }
+                              } else {
+                                // Fallback: create local queue entry and show the anonymous status screen
+                                final selectedNames = widget.services
+                                    .where((s) => _selectedServices.contains(s.id))
+                                    .map((s) => s.name)
+                                    .toList();
+                                CheckInState.isCheckedIn = true;
+                                CheckInState.checkedInSalon = widget.salon;
+                                final entry = AnonymousQueueEntry(
+                                  id: 'local-${DateTime.now().millisecondsSinceEpoch}',
+                                  anonymousUserId: 'auth',
+                                  salonId: widget.salon.name,
+                                  salonName: widget.salon.name,
+                                  position: 1,
+                                  estimatedWaitMinutes: widget.salon.waitTime,
+                                  joinedAt: DateTime.now(),
+                                  lastUpdated: DateTime.now(),
+                                  status: QueueEntryStatus.waiting,
+                                  serviceRequested: selectedNames.join(', '),
+                                );
+                                final publicEquivalent = PublicSalon(
+                                  id: widget.salon.name,
+                                  name: widget.salon.name,
+                                  address: widget.salon.address,
+                                  latitude: null,
+                                  longitude: null,
+                                  distanceKm: widget.salon.distance,
+                                  isOpen: widget.salon.isOpen,
+                                  currentWaitTimeMinutes: widget.salon.waitTime,
+                                  queueLength: widget.salon.queueLength,
+                                  services: widget.services.map((s) => s.name).toList(),
+                                  isFast: false,
+                                  isPopular: false,
+                                  rating: null,
+                                  reviewCount: null,
+                                );
+                                if (mounted) {
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (_) => AnonymousQueueStatusScreen(
+                                        queueEntry: entry,
+                                        salon: publicEquivalent,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      child: const Text('Confirmar check-in'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  bool _isValidGuid(String value) {
+    final guidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12} ?$');
+    return guidRegex.hasMatch(value);
+  }
+
+  Future<void> _showLoginOrGuest(BuildContext context) async {
+    final ps = widget.publicSalon ?? _mapSalonToPublic(widget.salon);
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Como deseja continuar?', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text('Faça login para salvar histórico e favoritos ou entre como convidado para testar.'),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).pushNamed(
+                      '/login',
+                      arguments: {
+                        'fromCheckIn': true,
+                        'salon': ps,
+                      },
+                    );
+                      },
+                      icon: const Icon(Icons.login),
+                      label: const Text('Fazer login'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AnonymousJoinQueueScreen(salon: ps),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.person_outline),
+                      label: const Text('Entrar como convidado'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

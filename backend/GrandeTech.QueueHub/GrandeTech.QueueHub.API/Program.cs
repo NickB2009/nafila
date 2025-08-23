@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Grande.Fila.API.Application;
 using Grande.Fila.API.Application.Auth;
+
 using Grande.Fila.API.Application.Queues;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Infrastructure.Repositories.Bogus;
@@ -76,6 +77,8 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+
+// WebSocket support is built into ASP.NET Core
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -241,6 +244,21 @@ builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.Mock
 builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
 builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
 
+// Add enhanced logging and monitoring services
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Logging.EnhancedLoggingService>();
+
+// Add security and privacy services
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Middleware.RateLimitingOptions>(builder.Configuration.GetSection("RateLimiting"));
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Services.DataAnonymizationOptions>(builder.Configuration.GetSection("DataAnonymization"));
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Services.SecurityAuditOptions>(builder.Configuration.GetSection("SecurityAudit"));
+
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IDataAnonymizationService, Grande.Fila.API.Infrastructure.Services.DataAnonymizationService>();
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.ISecurityAuditService, Grande.Fila.API.Infrastructure.Services.SecurityAuditService>();
+
+// Add performance monitoring services
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Services.PerformanceMonitoringOptions>(builder.Configuration.GetSection("PerformanceMonitoring"));
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IPerformanceMonitoringService, Grande.Fila.API.Infrastructure.Services.PerformanceMonitoringService>();
+
 // Add database seeding service
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Data.DatabaseSeeder>();
 
@@ -374,6 +392,12 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
+// Add global exception handler middleware
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.GlobalExceptionHandler>();
+
+// Add rate limiting middleware
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.RateLimitingMiddleware>();
+
 // Add CORS middleware
 app.UseCors();
 
@@ -387,6 +411,41 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// WebSocket endpoint for queue updates
+app.Map("/queueHub", async context =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+        await HandleWebSocketConnection(webSocket);
+    }
+    else
+    {
+        context.Response.StatusCode = 400;
+    }
+});
+
+// WebSocket connection handler
+static async Task HandleWebSocketConnection(System.Net.WebSockets.WebSocket webSocket)
+{
+    var buffer = new byte[1024 * 4];
+    var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+    
+    while (!result.CloseStatus.HasValue)
+    {
+        // Echo back the message for now
+        await webSocket.SendAsync(
+            new ArraySegment<byte>(buffer, 0, result.Count),
+            result.MessageType,
+            result.EndOfMessage,
+            CancellationToken.None);
+        
+        result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+    }
+    
+    await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+}
 
 // Add a simple root endpoint for basic connectivity testing
 app.MapGet("/", () => new { 

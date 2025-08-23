@@ -1,16 +1,66 @@
 services:
-  sqlserver:
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: GrandeTech.QueueHub.API/Dockerfile
+    ports:
+      - "7126:80"
+      - "7127:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80;https://+:443
+      - Database__UseSqlDatabase=true
+      - Database__UseInMemoryDatabase=false
+      - Database__AutoMigrate=true
+      - Database__SeedData=true
+      - ConnectionStrings__AzureSqlConnection=Server=db;Database=QueueHubDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true
+      - RateLimiting__MaxRequestsPerWindow=20
+      - RateLimiting__WindowMinutes=1
+      - DataAnonymization__DataRetentionDays=90
+      - DataAnonymization__InactiveDataRetentionDays=30
+      - SecurityAudit__EnableAuditing=true
+      - SecurityAudit__LogSuccessfulOperations=true
+      - SecurityAudit__LogFailedOperations=true
+      - PerformanceMonitoring__MaxHistoryPoints=1000
+      - PerformanceMonitoring__CleanupIntervalMinutes=15
+      - PerformanceMonitoring__MetricRetentionHours=24
+    depends_on:
+      - db
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - queuehub-network
+
+  # SQL Server Database
+  db:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: queuehub-sqlserver
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=DevPassword123!
+      - SA_PASSWORD=YourStrong@Passw0rd
       - MSSQL_PID=Developer
     ports:
       - "1434:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
-      - ./GrandeTech.QueueHub.API/insert_test_data.sql:/docker-entrypoint-initdb.d/insert_test_data.sql
+      - ./scripts:/scripts
+    networks:
+      - queuehub-network
+    command: >
+      bash -c "
+        /opt/mssql/bin/sqlservr &
+        sleep 30
+        /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -i /scripts/init.sql
+        wait
+      "
+
+  # Redis Cache (for future use)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - queuehub-network
     healthcheck:
@@ -20,11 +70,9 @@ services:
       retries: 10
       start_period: 30s
 
-  queuehub-api:
-    build:
-      context: .
-      dockerfile: GrandeTech.QueueHub.API/Dockerfile
-    container_name: queuehub-api
+  # Application Insights Emulator (for local development)
+  appinsights:
+    image: mcr.microsoft.com/applicationinsights/applicationinsights:latest
     ports:
       - "8080:80"
       - "8081:8081"
@@ -32,16 +80,26 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;Encrypt=False;
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      - api
     networks:
       - queuehub-network
-    volumes:
-      - ./GrandeTech.QueueHub.API/appsettings.json:/app/appsettings.json:ro
+    command: >
+      sh -c "
+        echo 'Waiting for API to be ready...'
+        while ! curl -f http://api/health/ready; do
+          sleep 5
+        done
+        echo 'API is ready!'
+        while true; do
+          curl -s http://api/health > /dev/null
+          curl -s http://api/performance/summary > /dev/null
+          sleep 30
+        done
+      "
 
 volumes:
   sqlserver_data:
-    driver: local
+  redis_data:
 
 networks:
   queuehub-network:

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/brazilian_names_generator.dart';
-import 'package:flutter/services.dart';
 import '../widgets/bottom_nav_bar.dart';
-import '../../models/salon.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   final Map<String, String>? initialPreferences;

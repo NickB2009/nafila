@@ -8,6 +8,8 @@ import 'atendimento_screen.dart';
 import 'accessibility_notice_screen.dart';
 import 'legal_privacy_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/app_controller.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -110,6 +112,18 @@ class _AccountScreenState extends State<AccountScreen> {
       appBar: AppBar(
         backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         foregroundColor: colors?.background ?? theme.colorScheme.onPrimary,
+        actions: [
+          IconButton(
+            tooltip: 'Sair',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final app = Provider.of<AppController>(context, listen: false);
+              await app.auth.logout();
+              if (!mounted) return;
+              Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -332,13 +346,17 @@ class _AccountScreenState extends State<AccountScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Histórico de Cortes',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: titleFontSize * 0.9,
+              Flexible(
+                child: Text(
+                  'Histórico de Cortes',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: titleFontSize * 0.9,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).push(

@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dio/dio.dart';
-import '../../lib/services/api_client.dart';
-import '../../lib/config/api_config.dart';
+import 'package:eutonafila_frontend/services/api_client.dart';
+import 'package:eutonafila_frontend/config/api_config.dart';
 
 // Generate mocks
 @GenerateNiceMocks([MockSpec<Dio>(), MockSpec<BaseOptions>()])

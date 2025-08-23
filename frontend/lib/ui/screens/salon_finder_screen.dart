@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../utils/brazilian_names_generator.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/app_controller.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../../models/public_salon.dart';
+import '../../models/anonymous_user.dart';
 import '../../models/salon.dart';
 import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
-import '../../models/salon_hours.dart';
-import '../../models/salon_review.dart';
-import 'notifications_screen.dart';
+import '../../services/anonymous_queue_service.dart';
+import '../../services/anonymous_user_service.dart';
 import 'salon_map_screen.dart';
-import 'check_in_screen.dart';
 import 'salon_details_screen.dart';
-import '../theme/app_theme.dart';
+import 'anonymous_queue_status_screen.dart';
+import 'account_screen.dart';
+import 'qr_join_screen.dart';
 import 'dart:async';
 import 'dart:math' as math;
-import '../../utils/palette_utils.dart';
 
-/// Clean and efficient salon finder screen
+/// Enhanced salon finder screen with anonymous queue functionality
 class SalonFinderScreen extends StatefulWidget {
   const SalonFinderScreen({super.key});
 
@@ -32,16 +35,47 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
   Timer? _waitTimeTimer;
   Timer? _offerTimer;
   int _secondsRemaining = 300; // 5 minutes countdown
-  List<Salon> _dynamicSalons = [];
+  List<PublicSalon> _dynamicSalons = [];
   late final String greetingName;
+
+  // Anonymous queue services
+  late AnonymousQueueService _queueService;
+  late AnonymousUserService _userService;
+  AnonymousUser? _currentUser;
+  List<AnonymousQueueEntry> _activeQueues = [];
+  final bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     greetingName = BrazilianNamesGenerator.generateGreeting();
     _setupAnimations();
+    _setupServices();
     _startDynamicUpdates();
     _generateDynamicSalons();
+    _loadUserData();
+  }
+
+  void _setupServices() {
+    _userService = AnonymousUserService();
+    _queueService = AnonymousQueueService(userService: _userService);
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      print('🔍 Loading user data...');
+      _currentUser = await _userService.getAnonymousUser();
+      if (_currentUser != null) {
+        setState(() {
+          _activeQueues = _currentUser!.activeQueues.where((q) => q.isActive).toList();
+        });
+        print('✅ User loaded: ${_currentUser!.name}, Active queues: ${_activeQueues.length}');
+      } else {
+        print('ℹ️ No existing user found');
+      }
+    } catch (e) {
+      print('❌ Error loading user data: $e');
+    }
   }
 
   void _setupAnimations() {
@@ -90,6 +124,63 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     });
   }
 
+  void _updateSalonWaitTimes() {
+    final random = math.Random();
+    for (int i = 0; i < _dynamicSalons.length; i++) {
+      final currentWait = _dynamicSalons[i].currentWaitTimeMinutes ?? 15;
+      final change = random.nextInt(6) - 3; // -3 to +2 minutes
+      final newWaitTime = math.max(1, currentWait + change);
+      final newQueueLength = math.max(1, (_dynamicSalons[i].queueLength ?? 1) + (change > 0 ? 1 : -1));
+      
+      _dynamicSalons[i] = PublicSalon(
+        id: _dynamicSalons[i].id,
+        name: _dynamicSalons[i].name,
+        address: _dynamicSalons[i].address,
+        latitude: _dynamicSalons[i].latitude,
+        longitude: _dynamicSalons[i].longitude,
+        distanceKm: _dynamicSalons[i].distanceKm,
+        isOpen: _dynamicSalons[i].isOpen,
+        currentWaitTimeMinutes: newWaitTime,
+        queueLength: newQueueLength,
+        isFast: _dynamicSalons[i].isFast,
+        isPopular: _dynamicSalons[i].isPopular,
+        imageUrl: _dynamicSalons[i].imageUrl,
+        businessHours: _dynamicSalons[i].businessHours,
+        services: _dynamicSalons[i].services,
+        rating: _dynamicSalons[i].rating,
+        reviewCount: _dynamicSalons[i].reviewCount,
+      );
+    }
+  }
+
+  // Convert PublicSalon to Salon for compatibility with existing screens
+  Salon _convertToSalon(PublicSalon publicSalon) {
+    return Salon(
+      name: publicSalon.name,
+      address: publicSalon.address,
+      waitTime: publicSalon.currentWaitTimeMinutes ?? 15,
+      distance: publicSalon.distanceKm ?? 1.0,
+      isOpen: publicSalon.isOpen,
+      closingTime: '19:00', // Default closing time
+      isFavorite: _favoriteSalons.contains(publicSalon.name),
+      queueLength: publicSalon.queueLength ?? 0,
+      colors: _generateSalonColors(0), // Default colors
+    );
+  }
+
+  // Convert PublicSalon services to SalonService list
+  List<SalonService> _convertToSalonServices(PublicSalon publicSalon) {
+    final services = publicSalon.services ?? ['Haircut', 'Beard Trim'];
+    return services.map((service) => SalonService(
+      id: service.toLowerCase().replaceAll(' ', '_'),
+      name: service,
+      description: 'Professional $service service',
+      price: 25.0, // Default price
+      durationMinutes: 30, // Default duration in minutes
+    )).toList();
+  }
+
+  // Generate salon colors for compatibility
   SalonColors _generateSalonColors(int index) {
     final colors = [
       SalonColors(
@@ -114,63 +205,92 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     return colors[index % colors.length];
   }
 
-  void _updateSalonWaitTimes() {
-    final random = math.Random();
-    for (int i = 0; i < _dynamicSalons.length; i++) {
-      final currentWait = _dynamicSalons[i].waitTime;
-      final change = random.nextInt(6) - 3; // -3 to +2 minutes
-      _dynamicSalons[i] = _dynamicSalons[i].copyWith(
-        waitTime: math.max(1, currentWait + change),
-        queueLength: math.max(1, _dynamicSalons[i].queueLength + (change > 0 ? 1 : -1)),
-      );
-    }
-  }
-
   void _generateDynamicSalons() {
     final random = math.Random();
     _dynamicSalons = [
-      Salon(
+      PublicSalon(
+        id: 'barbearia_moderna',
         name: 'Barbearia Moderna',
         address: 'Rua das Flores, 123',
-        waitTime: 25,
-        distance: 0.8,
+        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
+        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
+        distanceKm: 0.8,
         isOpen: true,
-        closingTime: '19:00',
-        isFavorite: false,
+        currentWaitTimeMinutes: 25,
         queueLength: 3,
-        colors: _generateSalonColors(0),
+        isFast: true,
+        isPopular: false,
+        services: ['Haircut', 'Beard Trim', 'Hair Styling'],
+        rating: 4.5,
+        reviewCount: 120,
       ),
-      Salon(
+      PublicSalon(
+        id: 'studio_hair',
         name: 'Studio Hair',
         address: 'Av. Paulista, 456',
-        waitTime: 35,
-        distance: 1.2,
+        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
+        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
+        distanceKm: 1.2,
         isOpen: true,
-        closingTime: '20:00',
-        isFavorite: false,
+        currentWaitTimeMinutes: 35,
         queueLength: 2,
-        colors: _generateSalonColors(1),
+        isFast: false,
+        isPopular: true,
+        services: ['Haircut', 'Beard Trim', 'Hair Wash', 'Styling'],
+        rating: 4.8,
+        reviewCount: 89,
       ),
-      Salon(
+      PublicSalon(
+        id: 'barbearia_classica',
         name: 'Barbearia Clássica',
         address: 'Rua Augusta, 789',
-        waitTime: 20,
-        distance: 1.5,
+        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
+        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
+        distanceKm: 1.5,
         isOpen: true,
-        closingTime: '18:00',
-        isFavorite: false,
+        currentWaitTimeMinutes: 20,
         queueLength: 4,
-        colors: _generateSalonColors(2),
+        isFast: true,
+        isPopular: true,
+        services: ['Haircut', 'Beard Trim', 'Mustache Trim'],
+        rating: 4.2,
+        reviewCount: 67,
       ),
     ];
   }
+
+  // Check if user is in queue for a specific salon
+  bool _isInQueue(String salonName) {
+    return _activeQueues.any((queue) => queue.salonName == salonName && queue.isActive);
+  }
+
+  // Get queue entry for a specific salon
+  AnonymousQueueEntry? _getQueueEntry(String salonName) {
+    return _activeQueues.firstWhere(
+      (queue) => queue.salonName == salonName && queue.isActive,
+      orElse: () => AnonymousQueueEntry(
+        id: '',
+        anonymousUserId: '',
+        salonId: '',
+        salonName: '',
+        position: 0,
+        estimatedWaitMinutes: 0,
+        joinedAt: DateTime.now(),
+        lastUpdated: DateTime.now(),
+        status: QueueEntryStatus.waiting,
+        serviceRequested: '',
+      ),
+    );
+  }
+
+  // Join queue for a salon
+  // Anonymous join queue flow retained for mocks; not used in authenticated finder flow
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isDark = theme.brightness == Brightness.dark;
-    final mainGradient = isDark ? AppTheme.darkGradient : [Colors.white, Colors.grey.shade50];
+    final isAnonymous = Provider.of<AppController>(context).isAnonymousMode;
 
     return Scaffold(
       body: CustomScrollView(
@@ -183,43 +303,74 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             backgroundColor: Colors.transparent,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeroSection(context, theme, size, isDark),
+              background: _buildHeroSection(context, theme, size),
             ),
             leading: null,
             automaticallyImplyLeading: false,
             actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
+              if (isAnonymous) ...[
+                TextButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/login'),
+                  icon: const Icon(Icons.login, size: 18),
+                  label: const Text('Entrar'),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.person, color: theme.colorScheme.onSurface, size: 16),
-                    const SizedBox(width: 4),
-                    Text('1', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text('Q2', style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/register'),
+                  icon: const Icon(Icons.person_add_alt, size: 18),
+                  label: const Text('Criar conta'),
+                ),
+                const SizedBox(width: 8),
+              ],
+              if (!isAnonymous) ...[
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurface.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.person, color: theme.colorScheme.onSurface, size: 16),
+                      const SizedBox(width: 4),
+                      Text('Conta', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    if (value == 'logout') {
+                      final app = Provider.of<AppController>(context, listen: false);
+                      await app.auth.logout();
+                      if (!mounted) return;
+                      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                    } else if (value == 'account') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const AccountScreen()),
+                      );
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'account',
+                      child: Text('Conta'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'logout',
+                      child: Text('Sair'),
                     ),
                   ],
                 ),
-              ),
+              ],
             ],
           ),
           
           // Main content
           SliverToBoxAdapter(
             child: Container(
-              color: theme.colorScheme.background,
+              color: theme.colorScheme.surface,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -229,15 +380,31 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                     child: _buildStatsSection(context, theme, size),
                   ),
                   
-                  // Divider
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Divider(
-                      color: theme.colorScheme.outline.withOpacity(0.3),
-                      thickness: 1,
-                      height: 32,
+                  // Active queues section (if user has active queues)
+                  if (_activeQueues.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: _buildActiveQueuesSection(context, theme),
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Divider(
+                        color: theme.colorScheme.outline.withOpacity(0.3),
+                        thickness: 1,
+                        height: 32,
+                      ),
+                    ),
+                  ] else ...[
+                    // Divider
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Divider(
+                        color: theme.colorScheme.outline.withOpacity(0.3),
+                        thickness: 1,
+                        height: 32,
+                      ),
+                    ),
+                  ],
                   
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: size.width > 600 ? 32.0 : 20.0),
@@ -254,6 +421,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                         ..._buildDynamicSalonCards(context, theme),
                         
                         const SizedBox(height: 24),
+                        
+                        // QR Scanner card
+                        _buildQrScannerCard(context, theme),
+                        
+                        const SizedBox(height: 20),
                         
                         // Find salon card
                         _buildFindSalonCard(context, theme),
@@ -272,7 +444,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     );
   }
 
-  Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size, bool isDark) {
+  Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size) {
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -284,179 +456,76 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             position: _slideAnimation,
             child: FadeTransition(
               opacity: _fadeAnimation,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(height: size.width < 400 ? 12 : 16),
-                  
-                  // Greeting
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: size.width < 400 ? 14 : 16, 
-                      vertical: size.width < 400 ? 6 : 8
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.waving_hand, 
-                          color: theme.colorScheme.onPrimaryContainer, 
-                          size: size.width < 400 ? 18 : 20
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          greetingName,
-                          style: TextStyle(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                            fontSize: size.width < 400 ? 14 : 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  SizedBox(height: size.width < 400 ? 16 : 20),
-                  
-                  // Main heading
-                  Text(
-                    "Transforme seu\nvisual hoje mesmo",
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      height: 1.2,
-                      color: theme.colorScheme.onSurface,
-                      fontSize: size.width < 400 ? 22 : 28,
-                    ),
-                  ),
-                  
-                  SizedBox(height: size.width < 400 ? 8 : 12),
-                  
-                  // Simple subtitle
-                  Text(
-                    "Profissionais qualificados",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      fontSize: size.width < 400 ? 13 : 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSpecialOfferSection(BuildContext context, ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
-    final minutes = _secondsRemaining ~/ 60;
-    final seconds = _secondsRemaining % 60;
-    
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark ? [theme.colorScheme.primary, theme.colorScheme.secondary] : AppTheme.offerGradient,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.offerGradient[0].withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.local_fire_department, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                clipBehavior: Clip.hardEdge,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'OFERTA RELÂMPAGO',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
+                    SizedBox(height: size.width < 400 ? 8 : 12),
+                    
+                    // Greeting
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width < 400 ? 12 : 14, 
+                        vertical: size.width < 400 ? 4 : 6
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.waving_hand, 
+                            color: theme.colorScheme.onPrimaryContainer, 
+                            size: size.width < 400 ? 16 : 18
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            greetingName,
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                              fontSize: size.width < 400 ? 12 : 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    
+                    SizedBox(height: size.width < 400 ? 12 : 16),
+                    
+                    // Main heading
                     Text(
-                      '30% OFF no primeiro agendamento',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
+                      "Transforme seu\nvisual hoje mesmo",
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        height: 1.1,
+                        color: theme.colorScheme.onSurface,
+                        fontSize: size.width < 400 ? 20 : 24,
+                      ),
+                    ),
+                    
+                    SizedBox(height: size.width < 400 ? 6 : 8),
+                    
+                    // Simple subtitle
+                    Text(
+                      "Profissionais qualificados",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        fontSize: size.width < 400 ? 12 : 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-                  style: TextStyle(
-                    color: isDark ? theme.colorScheme.primary : AppTheme.offerGradient[0],
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () {
-                  // Navigate to booking with discount
-                },
-                child: Center(
-                  child: Text(
-                    'ENTRAR NA FILA',
-                    style: TextStyle(
-                      color: isDark ? theme.colorScheme.primary : AppTheme.offerGradient[0],
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -519,13 +588,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     return List.generate(
       _dynamicSalons.length,
       (index) => Padding(
-        padding: const EdgeInsets.only(bottom: 20), // Up from 16
+        padding: const EdgeInsets.only(bottom: 20),
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
           duration: Duration(milliseconds: 600 + (index * 200)),
           builder: (context, value, child) {
-            final theme = Theme.of(context);
-            final isDark = theme.brightness == Brightness.dark;
             return Transform.translate(
               offset: Offset(0, 20 * (1 - value)),
               child: Opacity(
@@ -534,17 +601,16 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
               ),
             );
           },
-          child: _buildBalancedSalonCard(context, theme, _dynamicSalons[index], index),
+          child: _buildSalonCard(context, theme, _dynamicSalons[index], index),
         ),
       ),
     );
   }
 
-  Widget _buildBalancedSalonCard(BuildContext context, ThemeData theme, Salon salon, int index) {
-    final isDark = theme.brightness == Brightness.dark;
+  Widget _buildSalonCard(BuildContext context, ThemeData theme, PublicSalon salon, int index) {
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
-    final isUrgent = salon.waitTime <= 10;
-    final isPopular = salon.queueLength >= 4;
+    final isUrgent = (salon.currentWaitTimeMinutes ?? 0) <= 10;
+    final isPopular = (salon.queueLength ?? 0) >= 4;
     final cardBackground = theme.colorScheme.surface;
     final cardBorder = theme.colorScheme.outline.withOpacity(0.2);
     final cardShadow = theme.shadowColor.withOpacity(0.08);
@@ -557,11 +623,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     final chipDistanceColor = theme.colorScheme.secondary;
     final ctaBg = theme.colorScheme.primaryContainer;
     final ctaText = theme.colorScheme.onPrimaryContainer;
-    final ctaSubText = theme.colorScheme.onSurfaceVariant;
     final buttonBg = theme.colorScheme.surface;
     final buttonText = theme.colorScheme.primary;
     final buttonShadow = theme.colorScheme.primary.withOpacity(0.1);
     final favColor = _favoriteSalons.contains(salon.name) ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant;
+    
     return Container(
       decoration: BoxDecoration(
         color: cardBackground,
@@ -577,22 +643,24 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => SalonDetailsScreen(
-                  salon: salon,
-                  services: [],
-                  contact: SalonContact(phone: '', email: ''),
-                  businessHours: [],
-                  reviews: [],
-                  additionalInfo: const {},
+                  child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () {
+              // For finder: allow navigating to details regardless of login
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SalonDetailsScreen(
+                    salon: _convertToSalon(salon),
+                    services: _convertToSalonServices(salon),
+                    contact: SalonContact(phone: '', email: ''),
+                    businessHours: [],
+                    reviews: [],
+                    additionalInfo: const {},
+                    publicSalon: salon,
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
           child: Padding(
             padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
             child: Column(
@@ -701,30 +769,30 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                   ],
                 ),
                 SizedBox(height: isSmallScreen ? 12 : 16),
-                // Info chips - make them wrap on small screens
+                // Info chips
                 if (isSmallScreen) ...[
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildBalancedInfoChip(
+                      _buildInfoChip(
                         context,
                         Icons.access_time,
-                        '${salon.waitTime} min',
+                        '${salon.currentWaitTimeMinutes ?? 0} min',
                         chipTimeColor,
                         isSmallScreen: true,
                       ),
-                      _buildBalancedInfoChip(
+                      _buildInfoChip(
                         context,
                         Icons.people_outline,
-                        '${salon.queueLength} fila',
+                        '${salon.queueLength ?? 0} fila',
                         chipQueueColor,
                         isSmallScreen: true,
                       ),
-                      _buildBalancedInfoChip(
+                      _buildInfoChip(
                         context,
                         Icons.location_on_outlined,
-                        '${salon.distance.toStringAsFixed(1)} km',
+                        '${(salon.distanceKm ?? 0).toStringAsFixed(1)} km',
                         chipDistanceColor,
                         isSmallScreen: true,
                       ),
@@ -734,28 +802,28 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                   Row(
                     children: [
                       Expanded(
-                        child: _buildBalancedInfoChip(
+                        child: _buildInfoChip(
                           context,
                           Icons.access_time,
-                          '${salon.waitTime} min',
+                          '${salon.currentWaitTimeMinutes ?? 0} min',
                           chipTimeColor,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _buildBalancedInfoChip(
+                        child: _buildInfoChip(
                           context,
                           Icons.people_outline,
-                          '${salon.queueLength} fila',
+                          '${salon.queueLength ?? 0} fila',
                           chipQueueColor,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _buildBalancedInfoChip(
+                        child: _buildInfoChip(
                           context,
                           Icons.location_on_outlined,
-                          '${salon.distance.toStringAsFixed(1)} km',
+                          '${(salon.distanceKm ?? 0).toStringAsFixed(1)} km',
                           chipDistanceColor,
                         ),
                       ),
@@ -777,7 +845,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isUrgent ? 'Check-in rápido!' : 'Fazer check-in',
+                              _isInQueue(salon.name) 
+                                ? 'Na fila!' 
+                                : (isUrgent ? 'Check-in rápido!' : 'Fazer check-in'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 color: ctaText,
                                 fontWeight: FontWeight.w600,
@@ -785,7 +855,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                               ),
                             ),
                             Text(
-                              isUrgent ? 'Sem espera' : 'Entre na fila',
+                              _isInQueue(salon.name)
+                                ? 'Posição ${_getQueueEntry(salon.name)?.position ?? 0}'
+                                : (isUrgent ? 'Sem espera' : 'Entre na fila'),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: ctaText.withOpacity(0.7),
                                 fontSize: isSmallScreen ? 11 : 12,
@@ -795,42 +867,63 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                           ],
                         ),
                       ),
-                      GestureDetector(
-                        onTap: CheckInState.isCheckedIn ? null : () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => CheckInScreen(salon: salon),
-                            ),
-                          );
+                       GestureDetector(
+                        onTap: _isLoading ? null : () async {
+                           Navigator.of(context).push(
+                             MaterialPageRoute(
+                               builder: (_) => SalonDetailsScreen(
+                                 salon: _convertToSalon(salon),
+                                 services: _convertToSalonServices(salon),
+                                 contact: SalonContact(phone: '', email: ''),
+                                 businessHours: [],
+                                 reviews: [],
+                                  additionalInfo: const {},
+                                  publicSalon: salon,
+                               ),
+                             ),
+                           );
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           decoration: BoxDecoration(
-                            color: buttonBg,
+                             color: buttonBg,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: buttonShadow,
+                                 color: buttonShadow,
                                 blurRadius: 12,
                                 offset: const Offset(0, 3),
                               ),
                             ],
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.login, color: buttonText, size: 18),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Check-in',
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  color: buttonText,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                          child: _isLoading 
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                   valueColor: AlwaysStoppedAnimation<Color>(buttonText),
                                 ),
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                     Icons.login, 
+                                     color: buttonText, 
+                                    size: 18
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                     'Check-in',
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                       color: buttonText,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
                         ),
                       ),
                     ],
@@ -844,7 +937,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     );
   }
 
-  Widget _buildBalancedInfoChip(BuildContext context, IconData icon, String label, Color color, {bool isSmallScreen = false}) {
+  Widget _buildInfoChip(BuildContext context, IconData icon, String label, Color color, {bool isSmallScreen = false}) {
     final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 10 : 12, vertical: isSmallScreen ? 8 : 10),
@@ -877,6 +970,82 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQrScannerCard(BuildContext context, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondary,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const QrJoinScreen()),
+        ),
+        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSecondary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Icon(
+                Icons.qr_code_scanner,
+                color: theme.colorScheme.onSecondary,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Entrar com QR Code',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.onSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        'Escaneie o código do salão',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSecondary.withOpacity(0.9),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: theme.colorScheme.onSecondary.withOpacity(0.9),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -958,8 +1127,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
 
   Widget _buildStatsSection(BuildContext context, ThemeData theme, Size size) {
     final int salonCount = _dynamicSalons.length;
-    final double avgQueue = salonCount > 0 ? _dynamicSalons.map((s) => s.queueLength).reduce((a, b) => a + b) / salonCount : 0;
-    final double avgWait = salonCount > 0 ? _dynamicSalons.map((s) => s.waitTime).reduce((a, b) => a + b) / salonCount : 0;
+    final double avgQueue = salonCount > 0 ? _dynamicSalons.map((s) => s.queueLength ?? 0).reduce((a, b) => a + b) / salonCount : 0;
+    final double avgWait = salonCount > 0 ? _dynamicSalons.map((s) => s.currentWaitTimeMinutes ?? 0).reduce((a, b) => a + b) / salonCount : 0;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
@@ -1007,60 +1176,93 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       ],
     );
   }
-}
 
-/// Custom painter for the salon decoration
-class SalonDecorationPainter extends CustomPainter {
-  final Color color;
-
-  SalonDecorationPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    // Draw a modern, abstract pattern representing hair styling
-    final path = Path();
-    
-    // Main curve
-    path.moveTo(size.width * 0.2, size.height * 0.5);
-    path.quadraticBezierTo(
-      size.width * 0.5,
-      size.height * 0.2,
-      size.width * 0.8,
-      size.height * 0.5,
+  Widget _buildActiveQueuesSection(BuildContext context, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.queue, color: Colors.green, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Suas Filas Ativas',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: Colors.green,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ..._activeQueues.map((queue) => _buildActiveQueueItem(context, theme, queue)),
+        ],
+      ),
     );
-
-    // Decorative elements
-    for (var i = 0; i < 3; i++) {
-      final offset = i * (size.width * 0.2);
-      path.moveTo(size.width * 0.3 + offset, size.height * 0.6);
-      path.quadraticBezierTo(
-        size.width * 0.4 + offset,
-        size.height * 0.4,
-        size.width * 0.5 + offset,
-        size.height * 0.6,
-      );
-    }
-
-    // Draw the path
-    canvas.drawPath(path, paint);
-
-    // Add some dots for visual interest
-    final dotPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    for (var i = 0; i < 5; i++) {
-      final x = size.width * (0.2 + (i * 0.15));
-      final y = size.height * (0.3 + (i % 2) * 0.2);
-      canvas.drawCircle(Offset(x, y), 2, dotPaint);
-    }
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget _buildActiveQueueItem(BuildContext context, ThemeData theme, AnonymousQueueEntry queue) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  queue.salonName,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  'Posição ${queue.position} • ${queue.estimatedWaitMinutes} min',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              // Find the corresponding salon
+              final salon = _dynamicSalons.firstWhere(
+                (s) => s.name == queue.salonName,
+                orElse: () => _dynamicSalons.first,
+              );
+              
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AnonymousQueueStatusScreen(
+                    queueEntry: queue,
+                    salon: salon,
+                    queueService: _queueService,
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.arrow_forward_ios, color: Colors.green, size: 16),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+        ],
+      ),
+    );
+  }
 }

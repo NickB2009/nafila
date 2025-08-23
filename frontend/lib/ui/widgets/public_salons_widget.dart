@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../controllers/anonymous_controller.dart';
 import '../../controllers/app_controller.dart';
 import '../../models/public_salon.dart';
 import '../screens/anonymous_join_queue_screen.dart';

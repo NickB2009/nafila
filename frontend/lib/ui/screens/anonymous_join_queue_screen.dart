@@ -159,7 +159,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
         ),
         Expanded(
           child: Text(
-            'Join Queue',
+            'Entrar na fila',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: isSmallScreen ? 18 : null,
@@ -207,7 +207,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                widget.salon.isOpen ? 'Open' : 'Closed',
+                widget.salon.isOpen ? 'Aberto' : 'Fechado',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: widget.salon.isOpen ? Colors.green : Colors.red,
                   fontWeight: FontWeight.bold,
@@ -221,7 +221,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                '${widget.salon.queueLength ?? 0} in queue',
+                 '${widget.salon.queueLength ?? 0} na fila',
                 style: theme.textTheme.bodyMedium,
               ),
               if (widget.salon.currentWaitTimeMinutes != null) ...[
@@ -233,7 +233,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '~${widget.salon.currentWaitTimeMinutes} min wait',
+                   '~${widget.salon.currentWaitTimeMinutes} min de espera',
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -268,7 +268,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Anonymous Queue Entry',
+                  'Entrada anônima na fila',
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: Colors.orange.shade800,
                     fontWeight: FontWeight.bold,
@@ -276,7 +276,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'You can join the queue without creating an account. Your information will be saved locally on your device.',
+                  'Você pode entrar na fila sem criar uma conta. Suas informações serão salvas localmente no seu dispositivo.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.orange.shade700,
                   ),
@@ -294,7 +294,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Your Information',
+          'Seus dados',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -303,16 +303,16 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
         TextFormField(
           controller: _nameController,
           decoration: const InputDecoration(
-            labelText: 'Your Name *',
-            hintText: 'Enter your full name',
+            labelText: 'Seu nome *',
+            hintText: 'Digite seu nome completo',
             prefixIcon: Icon(Icons.person),
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'Please enter your name';
+              return 'Por favor, informe seu nome';
             }
             if (value.trim().length < 2) {
-              return 'Name must be at least 2 characters';
+              return 'O nome deve ter pelo menos 2 caracteres';
             }
             return null;
           },
@@ -322,18 +322,18 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
         TextFormField(
           controller: _emailController,
           decoration: const InputDecoration(
-            labelText: 'Email Address *',
-            hintText: 'Enter your email',
+            labelText: 'E-mail *',
+            hintText: 'Digite seu e-mail',
             prefixIcon: Icon(Icons.email),
           ),
           keyboardType: TextInputType.emailAddress,
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'Please enter your email';
+              return 'Por favor, informe seu e-mail';
             }
             final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
             if (!emailRegex.hasMatch(value.trim())) {
-              return 'Please enter a valid email address';
+              return 'Por favor, informe um e-mail válido';
             }
             return null;
           },
@@ -350,15 +350,15 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Notification Preferences',
+          'Preferências de notificação',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 12),
         CheckboxListTile(
-          title: const Text('Email notifications'),
-          subtitle: const Text('Receive queue updates via email'),
+          title: const Text('Notificações por e-mail'),
+          subtitle: const Text('Receber atualizações da fila por e-mail'),
           value: _emailNotifications,
           onChanged: (value) {
             setState(() {
@@ -368,8 +368,8 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
           contentPadding: EdgeInsets.zero,
         ),
         CheckboxListTile(
-          title: const Text('Browser notifications'),
-          subtitle: const Text('Show notifications when this page is open'),
+          title: const Text('Notificações no navegador'),
+          subtitle: const Text('Exibir notificações enquanto esta página estiver aberta'),
           value: _browserNotifications,
           onChanged: (value) {
             setState(() {
@@ -404,7 +404,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
                 ),
               )
             : Text(
-                'Join Queue',
+                'Entrar na fila',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -468,7 +468,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
             const Icon(Icons.content_cut, size: 20),
             const SizedBox(width: 8),
             Text(
-              'Services Requested (Optional)',
+            'Serviços solicitados (opcional)',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -477,7 +477,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Select all services you need - you can choose multiple',
+          'Selecione todos os serviços desejados - você pode escolher múltiplos',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -530,7 +530,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selected Services:',
+                  'Serviços selecionados:',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: AppTheme.primaryColor,
                     fontWeight: FontWeight.bold,
@@ -554,7 +554,7 @@ class _AnonymousJoinQueueScreenState extends State<AnonymousJoinQueueScreen> {
 
   Widget _buildDisclaimer(ThemeData theme, bool isSmallScreen) {
     return Text(
-      'Your information is stored locally on your device. We only use your email to send queue updates if enabled.',
+      'Suas informações são armazenadas localmente no seu dispositivo. Seu e-mail será usado apenas para avisos da fila, se habilitado.',
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
         fontSize: isSmallScreen ? 12 : null,

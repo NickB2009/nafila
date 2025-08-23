@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../screens/salon_finder_screen.dart';
 import '../screens/salon_map_screen.dart';
 import '../screens/account_screen.dart';
-import '../screens/queue_status_screen.dart';
 import '../../models/salon.dart';
+import '../../controllers/app_controller.dart';
 
 /// TEMP: Global check-in state for demo (replace with Provider or real state management)
 class CheckInState {
@@ -22,6 +23,8 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appController = Provider.of<AppController>(context);
+    final isAnonymous = appController.isAnonymousMode;
     final brightness = theme.brightness;
     final salonColors = CheckInState.isCheckedIn && CheckInState.checkedInSalon != null
         ? CheckInState.checkedInSalon!.colors.forBrightness(brightness)
@@ -61,15 +64,9 @@ class BottomNavBar extends StatelessWidget {
               currentIndex == 0,
               'Início',
               () {
-                if (CheckInState.isCheckedIn && CheckInState.checkedInSalon != null) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => QueueStatusScreen(salon: CheckInState.checkedInSalon!)),
-                  );
-                } else {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const SalonFinderScreen()),
-                  );
-                }
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const SalonFinderScreen()),
+                );
               },
               salonColors: salonColors,
             ),
@@ -83,16 +80,17 @@ class BottomNavBar extends StatelessWidget {
               ),
               salonColors: salonColors,
             ),
-            _buildNavItem(
-              context,
-              Icons.person_outline,
-              currentIndex == 2,
-              'Conta',
-              () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AccountScreen()),
+            if (!isAnonymous)
+              _buildNavItem(
+                context,
+                Icons.person_outline,
+                currentIndex == 2,
+                'Conta',
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AccountScreen()),
+                ),
+                salonColors: salonColors,
               ),
-              salonColors: salonColors,
-            ),
           ],
         ),
       ),

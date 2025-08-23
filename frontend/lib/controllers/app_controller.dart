@@ -6,6 +6,9 @@ import '../services/organization_service.dart';
 import '../services/staff_service.dart';
 import '../services/services_service.dart';
 import '../services/public_salon_service.dart';
+import '../services/signalr_service.dart';
+import '../services/queue_analytics_service.dart';
+import '../services/queue_transfer_service.dart';
 import 'auth_controller.dart';
 import 'queue_controller.dart';
 import 'anonymous_controller.dart';
@@ -20,6 +23,9 @@ class AppController extends ChangeNotifier {
   late final StaffService _staffService;
   late final ServicesService _servicesService;
   late final PublicSalonService _publicSalonService;
+  late final SignalRService _signalRService;
+  late final QueueAnalyticsService _queueAnalyticsService;
+  late final QueueTransferService _queueTransferService;
 
   // Controllers
   late final AuthController _authController;
@@ -45,9 +51,19 @@ class AppController extends ChangeNotifier {
   StaffService get staffService => _staffService;
   ServicesService get servicesService => _servicesService;
   PublicSalonService get publicSalonService => _publicSalonService;
+  SignalRService get signalRService => _signalRService;
+  QueueAnalyticsService get queueAnalyticsService => _queueAnalyticsService;
+  QueueTransferService get queueTransferService => _queueTransferService;
 
   /// Initializes all services and controllers
   Future<void> initialize() async {
+    // Prevent multiple initializations
+    if (_isInitialized) {
+      print('🔄 AppController already initialized, skipping...');
+      return;
+    }
+    
+    print('🚀 Initializing AppController...');
     try {
       // Initialize services
       _authService = await AuthService.create();
@@ -57,6 +73,9 @@ class AppController extends ChangeNotifier {
       _staffService = await StaffService.create();
       _servicesService = await ServicesService.create();
       _publicSalonService = PublicSalonService.create();
+      _signalRService = SignalRService();
+      _queueAnalyticsService = await QueueAnalyticsService.create();
+      _queueTransferService = await QueueTransferService.create();
 
       // Initialize controllers
       _authController = AuthController(authService: _authService);
@@ -74,13 +93,25 @@ class AppController extends ChangeNotifier {
         _isAnonymousMode = false;
       }
 
-      // Load initial anonymous data
+      // Initialize SignalR service
+      try {
+        await _signalRService.initialize();
+        print('✅ SignalR service initialized');
+      } catch (e) {
+        print('⚠️ SignalR service initialization failed: $e');
+        // Don't block initialization if SignalR fails
+      }
+
+      // Load initial anonymous data (don't block init if it fails)
       if (_isAnonymousMode) {
-        await _anonymousController.loadPublicSalons();
+        try {
+          await _anonymousController.loadPublicSalons();
+        } catch (_) {}
       }
 
       _isInitialized = true;
       _error = null;
+      print('✅ AppController initialization complete');
       notifyListeners();
     } catch (e) {
       _error = 'Failed to initialize app: ${e.toString()}';
@@ -125,6 +156,17 @@ class AppController extends ChangeNotifier {
   Future<void> switchToAuthenticatedMode() async {
     _isAnonymousMode = false;
     _anonymousController.clear();
+
+    // Reconnect SignalR if needed
+    if (!_signalRService.isConnected) {
+      try {
+        await _signalRService.initialize();
+        print('✅ SignalR reconnected after authentication');
+      } catch (e) {
+        print('⚠️ SignalR reconnection failed: $e');
+      }
+    }
+
     notifyListeners();
   }
 
@@ -222,6 +264,14 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _authController.dispose();
     _queueController.dispose();
+    _anonymousController.dispose();
     super.dispose();
+  }
+
+  /// Resets the controller state for re-initialization
+  void reset() {
+    _isInitialized = false;
+    _error = null;
+    _isAnonymousMode = true;
   }
 }

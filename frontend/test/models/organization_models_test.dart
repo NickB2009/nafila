@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/models/organization_models.dart';
+import 'package:eutonafila_frontend/models/organization_models.dart';
 
 void main() {
   group('Organization Models Tests', () {
