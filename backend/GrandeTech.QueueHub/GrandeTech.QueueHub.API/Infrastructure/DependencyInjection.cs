@@ -238,6 +238,9 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<AnalyticsService>();
             services.AddScoped<IQueueAnalyticsService, QueueAnalyticsService>();
             
+            // Queue transfer services
+            services.AddScoped<IQueueTransferService, QueueTransferService>();
+            
             // Services offered
             services.AddScoped<AddServiceOfferedService>();
             

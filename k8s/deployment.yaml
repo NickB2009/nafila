@@ -1,0 +1,264 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queuehub-api
+  namespace: queuehub
+  labels:
+    app: queuehub-api
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: queuehub-api
+  template:
+    metadata:
+      labels:
+        app: queuehub-api
+        version: v1.0.0
+    spec:
+      containers:
+      - name: queuehub-api
+        image: queuehub-api:latest
+        ports:
+        - containerPort: 80
+          name: http
+        - containerPort: 443
+          name: https
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ASPNETCORE_URLS
+          value: "http://+:80;https://+:443"
+        - name: Database__UseSqlDatabase
+          value: "true"
+        - name: Database__UseInMemoryDatabase
+          value: "false"
+        - name: Database__AutoMigrate
+          value: "true"
+        - name: ConnectionStrings__AzureSqlConnection
+          valueFrom:
+            secretKeyRef:
+              name: queuehub-secrets
+              key: sql-connection-string
+        - name: RateLimiting__MaxRequestsPerWindow
+          value: "20"
+        - name: RateLimiting__WindowMinutes
+          value: "1"
+        - name: DataAnonymization__DataRetentionDays
+          value: "90"
+        - name: DataAnonymization__InactiveDataRetentionDays
+          value: "30"
+        - name: SecurityAudit__EnableAuditing
+          value: "true"
+        - name: SecurityAudit__LogSuccessfulOperations
+          value: "true"
+        - name: SecurityAudit__LogFailedOperations
+          value: "true"
+        - name: PerformanceMonitoring__MaxHistoryPoints
+          value: "1000"
+        - name: PerformanceMonitoring__CleanupIntervalMinutes
+          value: "15"
+        - name: PerformanceMonitoring__MetricRetentionHours
+          value: "24"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: config
+          mountPath: /app/config
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: queuehub-config
+      imagePullSecrets:
+      - name: acr-secret
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: queuehub-api-service
+  namespace: queuehub
+  labels:
+    app: queuehub-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: queuehub-api
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: queuehub-ingress
+  namespace: queuehub
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - api.queuehub.com
+    secretName: queuehub-tls
+  rules:
+  - host: api.queuehub.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: queuehub-api-service
+            port:
+              number: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: queuehub-api-hpa
+  namespace: queuehub
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: queuehub-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: queuehub-config
+  namespace: queuehub
+data:
+  appsettings.Production.json: |
+    {
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      },
+      "AllowedHosts": "*",
+      "RateLimiting": {
+        "MaxRequestsPerWindow": 20,
+        "WindowMinutes": 1
+      },
+      "DataAnonymization": {
+        "DataRetentionDays": 90,
+        "InactiveDataRetentionDays": 30,
+        "EnableAutomaticAnonymization": true
+      },
+      "SecurityAudit": {
+        "EnableAuditing": true,
+        "LogSuccessfulOperations": true,
+        "LogFailedOperations": true,
+        "AuditLogRetentionDays": 365
+      },
+      "PerformanceMonitoring": {
+        "MaxHistoryPoints": 1000,
+        "CleanupIntervalMinutes": 15,
+        "MetricRetentionHours": 24,
+        "EnableDetailedLogging": false
+      }
+    }
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: queuehub-secrets
+  namespace: queuehub
+type: Opaque
+data:
+  sql-connection-string: <base64-encoded-connection-string>
+  jwt-key: <base64-encoded-jwt-key>
+  jwt-issuer: <base64-encoded-jwt-issuer>
+  jwt-audience: <base64-encoded-jwt-audience>
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: queuehub
+  labels:
+    name: queuehub

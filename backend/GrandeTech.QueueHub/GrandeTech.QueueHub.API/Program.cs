@@ -243,6 +243,21 @@ builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.Mock
 builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
 builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
 
+// Add enhanced logging and monitoring services
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Logging.EnhancedLoggingService>();
+
+// Add security and privacy services
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Middleware.RateLimitingOptions>(builder.Configuration.GetSection("RateLimiting"));
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Services.DataAnonymizationOptions>(builder.Configuration.GetSection("DataAnonymization"));
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Services.SecurityAuditOptions>(builder.Configuration.GetSection("SecurityAudit"));
+
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IDataAnonymizationService, Grande.Fila.API.Infrastructure.Services.DataAnonymizationService>();
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.ISecurityAuditService, Grande.Fila.API.Infrastructure.Services.SecurityAuditService>();
+
+// Add performance monitoring services
+builder.Services.Configure<Grande.Fila.API.Infrastructure.Services.PerformanceMonitoringOptions>(builder.Configuration.GetSection("PerformanceMonitoring"));
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IPerformanceMonitoringService, Grande.Fila.API.Infrastructure.Services.PerformanceMonitoringService>();
+
 // Add database seeding service
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Data.DatabaseSeeder>();
 
@@ -360,6 +375,12 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "GrandeTech.QueueHub.API v1");
     options.RoutePrefix = "swagger";
 });
+
+// Add global exception handler middleware
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.GlobalExceptionHandler>();
+
+// Add rate limiting middleware
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.RateLimitingMiddleware>();
 
 // Add CORS middleware
 app.UseCors();

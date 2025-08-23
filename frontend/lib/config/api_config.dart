@@ -114,6 +114,12 @@ class ApiConfig {
   static const String qrCodeEndpoint = '/QrCode';
   static const String generateQrEndpoint = '$qrCodeEndpoint/generate';
 
+  // Queue Transfer endpoints
+  static const String queueTransferEndpoint = '/QueueTransfer';
+  static const String transferEndpoint = '$queueTransferEndpoint/transfer';
+  static const String transferSuggestionsEndpoint = '$queueTransferEndpoint/suggestions';
+  static const String transferEligibilityEndpoint = '$queueTransferEndpoint/eligibility';
+
   // Public endpoints (no authentication required)
   static const String publicEndpoint = '/Public';
   static const String publicSalonsEndpoint = '$publicEndpoint/salons';

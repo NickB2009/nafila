@@ -8,6 +8,7 @@ import '../services/services_service.dart';
 import '../services/public_salon_service.dart';
 import '../services/signalr_service.dart';
 import '../services/queue_analytics_service.dart';
+import '../services/queue_transfer_service.dart';
 import 'auth_controller.dart';
 import 'queue_controller.dart';
 import 'anonymous_controller.dart';
@@ -24,6 +25,7 @@ class AppController extends ChangeNotifier {
   late final PublicSalonService _publicSalonService;
   late final SignalRService _signalRService;
   late final QueueAnalyticsService _queueAnalyticsService;
+  late final QueueTransferService _queueTransferService;
 
   // Controllers
   late final AuthController _authController;
@@ -51,6 +53,7 @@ class AppController extends ChangeNotifier {
   PublicSalonService get publicSalonService => _publicSalonService;
   SignalRService get signalRService => _signalRService;
   QueueAnalyticsService get queueAnalyticsService => _queueAnalyticsService;
+  QueueTransferService get queueTransferService => _queueTransferService;
 
   /// Initializes all services and controllers
   Future<void> initialize() async {
@@ -72,6 +75,7 @@ class AppController extends ChangeNotifier {
       _publicSalonService = PublicSalonService.create();
       _signalRService = SignalRService();
       _queueAnalyticsService = await QueueAnalyticsService.create();
+      _queueTransferService = await QueueTransferService.create();
 
       // Initialize controllers
       _authController = AuthController(authService: _authService);

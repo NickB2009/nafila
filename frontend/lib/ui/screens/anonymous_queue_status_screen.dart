@@ -7,8 +7,10 @@ import '../../models/public_salon.dart';
 import '../../services/anonymous_queue_service.dart';
 import '../../services/signalr_service.dart';
 import '../../controllers/app_controller.dart';
+import '../../models/queue_transfer_models.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/analytics_card.dart';
+import '../widgets/queue_transfer_widgets.dart';
 
 /// Screen for displaying real-time anonymous queue status with backend data
 class AnonymousQueueStatusScreen extends StatefulWidget {
@@ -38,6 +40,10 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   bool _hasError = false;
   String? _errorMessage;
   bool _signalRConnected = false;
+  
+  // Transfer functionality
+  TransferSuggestionsResponse? _transferSuggestions;
+  bool _showTransferSuggestions = false;
 
   @override
   void initState() {
@@ -52,6 +58,7 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
     _setupSignalRCallbacks();
     _startPeriodicUpdates();
     _refreshQueueStatus();
+    _loadTransferSuggestions();
   }
 
   @override
@@ -221,6 +228,97 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
     }
   }
 
+  /// Load transfer suggestions for this queue entry
+  Future<void> _loadTransferSuggestions() async {
+    if (!_currentEntry.isActive) return;
+
+    // Loading state handled by the UI
+
+    try {
+      final appController = Provider.of<AppController>(context, listen: false);
+      final suggestions = await appController.queueTransferService.getSmartSuggestions(
+        queueEntryId: _currentEntry.id,
+        maxDistanceKm: 5.0,
+        prioritizeShorterWait: true,
+      );
+
+      if (mounted) {
+        setState(() {
+          _transferSuggestions = suggestions;
+          _showTransferSuggestions = suggestions.hasSuggestions;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        debugPrint('Failed to load transfer suggestions: $e');
+      }
+    }
+  }
+
+  /// Handle transfer suggestion tap
+  Future<void> _handleTransferSuggestion(QueueTransferSuggestion suggestion) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => TransferConfirmationDialog(
+        suggestion: suggestion,
+        currentSalonName: widget.salon.name,
+        currentPosition: _currentEntry.position,
+        currentWaitMinutes: _currentEntry.estimatedWaitMinutes,
+        onConfirm: (reason) => Navigator.of(context).pop(true),
+        onCancel: () => Navigator.of(context).pop(false),
+      ),
+    );
+
+    if (confirmed == true) {
+      await _performTransfer(suggestion, null);
+    }
+  }
+
+  /// Perform the actual transfer
+  Future<void> _performTransfer(QueueTransferSuggestion suggestion, String? reason) async {
+    try {
+      final appController = Provider.of<AppController>(context, listen: false);
+      final transferResponse = await appController.queueTransferService.quickTransferToSalon(
+        queueEntryId: _currentEntry.id,
+        targetSalonId: suggestion.targetSalonId,
+        reason: reason,
+      );
+
+      if (transferResponse.success && mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully transferred to ${transferResponse.newSalonName}!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        // Navigate back to salon finder to show new status
+        Navigator.of(context).pop();
+      } else if (mounted) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Transfer failed: ${transferResponse.errors.join(', ')}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Transfer failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -245,6 +343,10 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
                 SizedBox(height: isSmallScreen ? 16 : 20),
                 _buildSalonCard(theme, isSmallScreen),
                 SizedBox(height: isSmallScreen ? 16 : 20),
+                if (_showTransferSuggestions && _transferSuggestions != null)
+                  _buildTransferSuggestions(theme, isSmallScreen),
+                if (_showTransferSuggestions && _transferSuggestions != null)
+                  SizedBox(height: isSmallScreen ? 16 : 20),
                 if (_currentEntry.status == QueueEntryStatus.completed)
                   _buildSatisfactionFeedback(theme, isSmallScreen),
                 if (_currentEntry.status == QueueEntryStatus.completed)
@@ -792,6 +894,16 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTransferSuggestions(ThemeData theme, bool isSmallScreen) {
+    if (_transferSuggestions == null) return const SizedBox.shrink();
+    
+    return TransferSuggestionsCard(
+      suggestions: _transferSuggestions!,
+      onSuggestionTap: _handleTransferSuggestion,
+      onRefresh: _loadTransferSuggestions,
     );
   }
 

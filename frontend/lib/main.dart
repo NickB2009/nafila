@@ -9,6 +9,7 @@ import 'ui/screens/register_screen.dart';
 import 'ui/screens/salon_finder_screen.dart';
 import 'ui/screens/salon_tv_dashboard.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'ui/widgets/error_boundary.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,9 +24,11 @@ void main() {
   // ApiConfig.initialize(apiUrl: 'http://192.168.1.100:7126'); // Local network IP
   
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: const MyApp(),
+    ErrorBoundary(
+      child: ChangeNotifierProvider(
+        create: (_) => ThemeProvider(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
