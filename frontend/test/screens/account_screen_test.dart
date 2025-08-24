@@ -9,11 +9,15 @@ import 'package:eutonafila_frontend/ui/screens/accessibility_notice_screen.dart'
 import 'package:eutonafila_frontend/ui/screens/legal_privacy_screen.dart';
 import 'package:eutonafila_frontend/ui/widgets/bottom_nav_bar.dart';
 import 'package:eutonafila_frontend/theme/app_theme.dart';
+import 'package:eutonafila_frontend/controllers/app_controller.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Widget wrapWithProviders(Widget child) {
-  return ChangeNotifierProvider(
-    create: (_) => ThemeProvider(),
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      Provider<AppController>(create: (_) => MockAppController() as AppController),
+    ],
     child: MaterialApp(
       home: child,
       routes: {
@@ -30,6 +34,36 @@ Widget wrapWithProviders(Widget child) {
       ],
     ),
   );
+}
+
+/// Mock AppController for testing
+class MockAppController extends ChangeNotifier {
+  bool _isAnonymousMode = false;
+  bool _isInitialized = true;
+  String? _error;
+
+  bool get isAnonymousMode => _isAnonymousMode;
+  bool get isInitialized => _isInitialized;
+  String? get error => _error;
+
+  void setAnonymousMode(bool value) {
+    _isAnonymousMode = value;
+    notifyListeners();
+  }
+
+  void setInitialized(bool value) {
+    _isInitialized = value;
+    notifyListeners();
+  }
+
+  void setError(String? value) {
+    _error = value;
+    notifyListeners();
+  }
+
+  Future<void> initialize() async {
+    // Mock implementation - do nothing
+  }
 }
 
 void main() {

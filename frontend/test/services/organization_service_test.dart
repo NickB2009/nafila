@@ -378,7 +378,26 @@ void main() {
         final response = Response(
           requestOptions: RequestOptions(path: '/Organizations/org-123/live-activity'),
           statusCode: 200,
-          data: expectedResult.toJson(),
+          data: {
+            'success': true,
+            'liveActivity': {
+              'organizationId': 'org-123',
+              'organizationName': 'Barbearias Premium',
+              'lastUpdated': '2024-01-15T10:30:00.000',
+              'summary': {
+                'totalLocations': 3,
+                'totalActiveQueues': 2,
+                'totalCustomersWaiting': 15,
+                'totalStaffMembers': 8,
+                'totalAvailableStaff': 5,
+                'totalBusyStaff': 3,
+                'averageWaitTimeMinutes': 22.5,
+              },
+              'locations': [],
+            },
+            'errors': [],
+            'fieldErrors': {},
+          },
         );
 
         when(mockApiClient.get('/Organizations/org-123/live-activity'))
