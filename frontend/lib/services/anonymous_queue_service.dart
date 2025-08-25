@@ -61,9 +61,13 @@ class AnonymousQueueService {
     );
 
     try {
-      // Call backend API
+      // Primary endpoint - try the expected path
+      final primaryUrl = ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/join');
+      print('🔗 Attempting queue join at: $primaryUrl');
+      print('📦 Request data: ${request.toJson()}');
+      
       final response = await _dio.post(
-        ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/join'),
+        primaryUrl,
         data: request.toJson(),
         options: Options(
           headers: ApiConfig.defaultHeaders,
@@ -90,10 +94,91 @@ class AnonymousQueueService {
 
       return queueEntry;
     } catch (e) {
+      print('❌ Primary endpoint failed: $e');
+      
+      // If 404, try alternative endpoint paths
+      if (e is DioException && e.response?.statusCode == 404) {
+        print('🔄 Trying alternative endpoint paths...');
+        
+        // Alternative paths to try
+        final alternativeUrls = [
+          '${ApiConfig.currentBaseUrl}/Public/queue/join', // Without /api prefix
+          '${ApiConfig.currentBaseUrl}/api/Public/queue/join', // Direct path
+          '${ApiConfig.currentBaseUrl}/queue/join', // Simplified path
+        ];
+        
+        for (final altUrl in alternativeUrls) {
+          try {
+            print('🔗 Trying alternative: $altUrl');
+            final response = await _dio.post(
+              altUrl,
+              data: request.toJson(),
+              options: Options(
+                headers: ApiConfig.defaultHeaders,
+              ),
+            );
+            
+            print('✅ Success with alternative URL!');
+            
+            // Parse response and create queue entry
+            final queueData = response.data;
+            final queueEntry = AnonymousQueueEntry(
+              id: queueData['id'],
+              anonymousUserId: user.id,
+              salonId: salon.id,
+              salonName: salon.name,
+              position: queueData['position'],
+              estimatedWaitMinutes: queueData['estimatedWaitMinutes'],
+              joinedAt: DateTime.parse(queueData['joinedAt']),
+              lastUpdated: DateTime.now(),
+              status: QueueEntryStatus.waiting,
+              serviceRequested: serviceRequested,
+            );
+
+            // Save to local storage
+            await _userService.addQueueEntry(queueEntry);
+
+            return queueEntry;
+          } catch (altError) {
+            print('❌ Alternative URL failed: $altError');
+            continue; // Try next URL
+          }
+        }
+      }
+      
       // Handle API errors with specific messages
       if (e is DioException) {
+        print('🔍 DioException details:');
+        print('   Status: ${e.response?.statusCode}');
+        print('   Message: ${e.message}');
+        print('   Response: ${e.response?.data}');
+        print('   URL: ${e.requestOptions.uri}');
+        
+        // Check for CORS errors (common in web development)
+        if (e.type == DioExceptionType.connectionError || 
+            e.message?.toLowerCase().contains('cors') == true ||
+            e.message?.toLowerCase().contains('cross-origin') == true ||
+            e.message?.toLowerCase().contains('blocked') == true ||
+            e.message?.toLowerCase().contains('preflight') == true) {
+          throw Exception(
+            'CORS Error: Cannot connect to API from web browser.\n\n'
+            'Solutions:\n'
+            '1. Run Chrome with CORS disabled:\n'
+            '   chrome.exe --user-data-dir="C:/chrome-dev-session" --disable-web-security\n'
+            '2. Use Flutter mobile/desktop app instead\n'
+            '3. Wait for production deployment with proper CORS setup'
+          );
+        }
+        
         if (e.response?.statusCode == 404) {
-          throw Exception('Queue service is not available. Please try again later.');
+          throw Exception('Queue service endpoint not found. The API might be under maintenance. Please try again later.');
+        } else if (e.response?.statusCode == 400) {
+          final responseData = e.response?.data;
+          if (responseData is Map && responseData.containsKey('errors')) {
+            final errors = responseData['errors'];
+            throw Exception('Invalid request: $errors');
+          }
+          throw Exception('Invalid request data. Please check your information and try again.');
         } else if (e.response?.statusCode == 500) {
           throw Exception('Server error. There appears to be a backend configuration issue. Please try again later.');
         } else if (e.response?.statusCode == 400) {
@@ -114,7 +199,7 @@ class AnonymousQueueService {
           }
           throw Exception(message);
         } else {
-          throw Exception('Failed to join queue: ${e.message}');
+          throw Exception('Failed to join queue: ${e.message ?? 'Network error'}');
         }
       }
       throw Exception('Failed to join queue: ${e.toString()}');

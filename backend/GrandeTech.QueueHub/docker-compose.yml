@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # API Service
   api:
@@ -42,7 +40,7 @@ services:
       - SA_PASSWORD=YourStrong@Passw0rd
       - MSSQL_PID=Developer
     ports:
-      - "1433:1433"
+      - "1434:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
       - ./scripts:/scripts
@@ -65,21 +63,22 @@ services:
       - redis_data:/data
     networks:
       - queuehub-network
-    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P DevPassword123! -Q 'SELECT 1' -C || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
 
   # Application Insights Emulator (for local development)
   appinsights:
     image: mcr.microsoft.com/applicationinsights/applicationinsights:latest
     ports:
-      - "8080:8080"
+      - "8080:80"
+      - "8081:8081"
     environment:
-      - APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=http://localhost:8080
-    networks:
-      - queuehub-network
-
-  # Health Check Service
-  healthcheck:
-    image: curlimages/curl:latest
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;Encrypt=False;
     depends_on:
       - api
     networks:

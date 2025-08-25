@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
@@ -14,10 +15,41 @@ import 'ui/widgets/error_boundary.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 🔧 API Configuration - Using PRODUCTION API
+  // 🔧 API Configuration - DEVELOPMENT vs PRODUCTION
   // 
-  // Using production API instead of localhost
-  ApiConfig.initialize(apiUrl: 'https://api.eutonafila.com.br');
+  // For web development (localhost), we need to use a local API or proxy
+  // For production deployment, we use the production API
+  final bool isWebDevelopment = kIsWeb && kDebugMode;
+  
+  if (isWebDevelopment) {
+    // 🔧 DEVELOPMENT WORKAROUND for CORS issues
+    // 
+    // When running locally, browsers block cross-origin requests due to CORS.
+    // Solutions (choose one):
+    
+    // OPTION 1: Run Chrome with CORS disabled (RECOMMENDED for development)
+    // Close Chrome completely, then run: 
+    // chrome.exe --user-data-dir="C:/chrome-dev-session" --disable-web-security --disable-features=VizDisplayCompositor
+    
+    // OPTION 2: Use localhost API if you have the backend running locally
+    // ApiConfig.initialize(apiUrl: 'http://localhost:7126/api');
+    
+    // For now, we'll try the production API directly and show better error messages
+    ApiConfig.initialize(apiUrl: 'https://api.eutonafila.com.br/api');
+    
+    print('🔧 DEVELOPMENT MODE');
+    print('🚨 If you get CORS errors, run Chrome with --disable-web-security');
+    print('   or set up a local backend API');
+  } else {
+    // Production: Use direct API
+    ApiConfig.initialize(apiUrl: 'https://api.eutonafila.com.br/api');
+    print('🔧 PRODUCTION MODE: Using direct API');
+  }
+  
+  // Debug: Print API URLs to help with troubleshooting
+  print('🔗 API Base URL: ${ApiConfig.currentBaseUrl}');
+  print('🔗 Salons URL: ${ApiConfig.getUrl(ApiConfig.publicSalonsEndpoint)}');
+  print('🔗 Queue Join URL: ${ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/join')}');
   
   // ALTERNATIVE OPTIONS (commented out):
   // ApiConfig.initialize(); // Default localhost

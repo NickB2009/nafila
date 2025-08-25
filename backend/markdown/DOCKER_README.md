@@ -1,179 +1,100 @@
 # QueueHub Docker Setup
 
-This guide will help you set up the QueueHub application with SQL Server using Docker.
+This guide explains how to run QueueHub locally with Docker using SQL Server 2022. It reflects the current compose setup used in this repo.
 
 ## Prerequisites
 
-- Docker Desktop installed and running
-- PowerShell (for Windows users)
-- At least 4GB of available RAM for SQL Server
+- Docker Desktop running
+- PowerShell or a terminal
+- At least 4 GB RAM available (SQL Server needs memory)
 
 ## Quick Start
 
-1. **Navigate to the project directory:**
+1. From the backend root, change into the compose folder:
    ```powershell
    cd GrandeTech.QueueHub
    ```
-
-2. **Start the services:**
+2. Start services:
    ```powershell
-   .\docker-setup.ps1 up
+   docker-compose up -d --build
    ```
+3. Open the API:
+   - API base: http://localhost:8080
+   - Swagger: http://localhost:8080/swagger
+   - Ping: http://localhost:8080/ping
 
-3. **Access the application:**
-   - API: http://localhost:8080
-   - Swagger UI: http://localhost:8080/swagger
-
-## Docker Services
-
-The setup includes two main services:
+## Services
 
 ### SQL Server
-- **Image:** `mcr.microsoft.com/mssql/server:2022-latest`
-- **Port:** 1433 (mapped to localhost:1433)
-- **Database:** GrandeTechQueueHub
-- **Credentials:**
-  - Username: `sa`
+- Image: `mcr.microsoft.com/mssql/server:2022-latest`
+- Ports: host `1434` → container `1433`
+- DB Name: `GrandeTechQueueHub`
+- Credentials:
+  - User: `sa`
   - Password: `DevPassword123!`
-- **Data Persistence:** SQL Server data is stored in a Docker volume
+- Health check: uses `/opt/mssql-tools18/bin/sqlcmd` with `-C` to trust the self‑signed cert
+- Data volume: `grandetechqueuehub_sqlserver_data`
 
 ### QueueHub API
-- **Ports:** 8080 (HTTP), 8081 (HTTPS)
-- **Environment:** Development
-- **Database Connection:** Automatically connects to the SQL Server container
+- Internal port: `80`
+- Host mapping: `8080 -> 80`
+- Environment: `Development`
+- Connection string key: `ConnectionStrings:AzureSqlConnection`
 
-## Management Commands
-
-### Using the PowerShell Script
+## Useful Commands
 
 ```powershell
-# Start services
-.\docker-setup.ps1 up
-
-# Stop services
-.\docker-setup.ps1 down
-
-# Rebuild containers
-.\docker-setup.ps1 build
-
-# View logs
-.\docker-setup.ps1 logs
-
-# Clean up (removes volumes)
-.\docker-setup.ps1 clean
-
-# Reset everything (clean + start)
-.\docker-setup.ps1 reset
-```
-
-### Using Docker Compose Directly
-
-```bash
-# Start services
+# Start
 docker-compose up -d
 
-# Stop services
+# Stop
 docker-compose down
 
-# View logs
+# Rebuild API image
+docker-compose build queuehub-api
+
+# Follow logs
 docker-compose logs -f
 
-# Rebuild and start
-docker-compose up -d --build
+# Only SQL logs
+docker-compose logs -f sqlserver
 ```
 
-## Database Management
+## Database Access From Host
 
-### Connection Details
-- **Server:** localhost,1433
-- **Database:** GrandeTechQueueHub
-- **Username:** sa
-- **Password:** DevPassword123!
-- **Trust Server Certificate:** True
+- SSMS / Azure Data Studio
+  - Server: `localhost,1434`
+  - Auth: SQL Login
+  - User: `sa`
+  - Password: `DevPassword123!`
+  - Encrypt: optional; if enabled, trust server certificate
 
-### Using SQL Server Management Studio (SSMS)
-1. Connect to `localhost,1433`
-2. Use SQL Server Authentication
-3. Username: `sa`
-4. Password: `DevPassword123!`
-
-### Using Azure Data Studio
-1. Create a new connection
-2. Server: `localhost,1433`
-3. Authentication Type: SQL Login
-4. Username: `sa`
-5. Password: `DevPassword123!`
+- ADO/EF style connection string example (matches compose):
+  ```text
+  Server=sqlserver:1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+  ```
 
 ## Troubleshooting
 
-### SQL Server Won't Start
-1. Check if port 1433 is already in use:
-   ```powershell
-   netstat -an | findstr :1433
-   ```
-2. Stop any existing SQL Server instances
-3. Restart Docker Desktop
+- SQL container unhealthy
+  - Wait 30–60s; initial database setup takes time
+  - Check health logs:
+    ```powershell
+    docker inspect queuehub-sqlserver --format='{{json .State.Health}}'
+    ```
+  - Ensure healthcheck path uses `mssql-tools18` and `-C`
 
-### API Can't Connect to Database
-1. Ensure SQL Server container is healthy:
-   ```powershell
-   docker-compose ps
-   ```
-2. Check SQL Server logs:
-   ```powershell
-   docker-compose logs sqlserver
-   ```
-3. Wait for the health check to pass (can take 30-60 seconds)
+- API cannot connect to DB
+  - Confirm SQL is Healthy: `docker ps`
+  - Confirm network: both containers on `grandetechqueuehub_queuehub-network`
+  - Ensure env var key is `ConnectionStrings__AzureSqlConnection`
 
-### Performance Issues
-1. Increase Docker Desktop memory allocation (recommended: 8GB+)
-2. Ensure you have enough disk space
-3. Consider using SSD storage for better performance
+## Notes
 
-### Reset Everything
-If you encounter persistent issues:
-```powershell
-.\docker-setup.ps1 reset
-```
+- This setup is for local development only. It uses a weak dev password, self‑signed TLS, and exposed ports.
+- For production, use strong secrets, TLS with valid certificates, private networking, and Azure Key Vault for secrets. 
 
-## Development Workflow
+## See also
 
-1. **Start services:** `.\docker-setup.ps1 up`
-2. **Make code changes** in your IDE
-3. **Rebuild container:** `.\docker-setup.ps1 build`
-4. **Restart services:** `.\docker-setup.ps1 down` then `.\docker-setup.ps1 up`
-5. **View logs:** `.\docker-setup.ps1 logs`
-
-## Data Persistence
-
-- SQL Server data is stored in a Docker volume named `queuehub_sqlserver_data`
-- This data persists between container restarts
-- To completely reset the database, use `.\docker-setup.ps1 clean`
-
-## Environment Variables
-
-The following environment variables are configured:
-
-### SQL Server
-- `ACCEPT_EULA=Y` - Accepts the SQL Server EULA
-- `SA_PASSWORD=DevPassword123!` - Sets the SA password
-- `MSSQL_PID=Developer` - Uses the Developer edition
-
-### QueueHub API
-- `ASPNETCORE_ENVIRONMENT=Development`
-- `ConnectionStrings__DefaultConnection` - Points to the SQL Server container
-
-## Security Notes
-
-⚠️ **Important:** This setup is for development only. The configuration includes:
-- Weak passwords
-- Trusted server certificates
-- Developer edition of SQL Server
-- Exposed ports
-
-For production, ensure you:
-- Use strong passwords
-- Enable encryption
-- Use proper SSL certificates
-- Restrict network access
-- Use the appropriate SQL Server edition 
+- `markdown/SQL_DATABASE_IMPLEMENTATION_STRATEGY.md` – EF Core, connection strings, and DB strategy
+- `markdown/INSTRUCTIONS.md` – Core practices, environment, and implementation order 

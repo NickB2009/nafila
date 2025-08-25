@@ -6,13 +6,28 @@ Follow these guidelines whenever generating or modifying code, infrastructure, o
 
 ## 1  Azure‑Specific Coding Rules
 
-* **@azure · Use Azure Tools**  Use IntelliSense/CLI tools provided for Azure tasks.
-* **@azure · Code‑Generation Best Practices**  When producing Azure‑focused code or commands, call `azure_development-get_code_gen_best_practices`.
-* **@azure · Deployment Best Practices**  For deployment‑related work, call `azure_development-get_deployment_best_practices`.
-* **@azure · Functions Best Practices**  For Azure Functions code, call `azure_development-get_azure_function_code_gen_best_practices`.
-* **@azure · Static  Web  Apps Best Practices**  For Static  Web  Apps, call `azure_development-get_swa_best_practices`.
+*Replaced by core practices and local environment notes to reduce noise.*
 
-Only invoke these helpers when the context is clearly Azure‑related.
+## 1  Core Practices
+
+- **TDD First**   Write the failing test before implementation.
+- **DDD Layering**   Domain, Application, Infrastructure, API separation.
+- **Thin Controllers**   Validate → delegate → format response.
+- **Integration Tests**   `WebApplicationFactory<Program>` pattern.
+- **Observability Hooks**   Structured logs, metrics, correlation IDs.
+- **Security**   JWT for protected routes; authorization attributes.
+
+### Local environment
+
+- **Runtime**: .NET 8
+- **Local DB**: SQL Server 2022 in Docker (container `queuehub-sqlserver`)
+- **API**: http://localhost:8080 (container listens on 80; mapped to host 8080)
+- **Connection string key**: `ConnectionStrings:AzureSqlConnection`
+- **Compose quick start**:
+  ```powershell
+  cd GrandeTech.QueueHub
+  docker-compose up -d --build
+  ```
 
 ---
 

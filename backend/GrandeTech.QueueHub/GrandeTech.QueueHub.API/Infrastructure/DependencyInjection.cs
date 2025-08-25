@@ -88,34 +88,33 @@ namespace Grande.Fila.API.Infrastructure
 
             if (useSqlDatabase && !useInMemoryDatabase)
             {
-                // Validate connection string
+                // Validate / obtain connection string
                 var connectionString = configuration.GetConnectionString("AzureSqlConnection");
+                var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT") ?? "";
+
+                // Development fallback: use local Docker SQL container if Azure connection not supplied
+                if (string.IsNullOrWhiteSpace(connectionString) && environment == "Development")
+                {
+                    connectionString = "Server=localhost,1433;Database=GrandeTechQueueHub;User ID=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True";
+                }
+
                 if (string.IsNullOrEmpty(connectionString))
                 {
                     throw new InvalidOperationException(
-                        "AzureSqlConnection connection string is not configured. " +
-                        "Please set ConnectionStrings__AzureSqlConnection environment variable or configure it in Azure App Service.");
+                        "AzureSqlConnection connection string is not configured. Provide via User Secrets / environment variable or run local SQL Docker container.");
                 }
 
-                // Note: Using simplified retry logic built into Entity Framework instead of Polly for now
-
-                // Add Entity Framework DbContext for SQL Server with enhanced error handling
                 services.AddDbContext<QueueHubDbContext>(options =>
                 {
-                    var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT");
-                    
                     options.UseSqlServer(connectionString, sqlOptions =>
                     {
-                        // Enhanced retry configuration for Azure SQL Database
                         sqlOptions.EnableRetryOnFailure(
                             maxRetryCount: 3,
                             maxRetryDelay: TimeSpan.FromSeconds(15),
                             errorNumbersToAdd: new[] { 40613, 40501, 40540, 40197, 10928, 10929 });
-                        
-                        sqlOptions.CommandTimeout(30); // Connection timeout
+                        sqlOptions.CommandTimeout(30);
                     });
 
-                    // Configure additional options based on environment
                     if (environment == "Development")
                     {
                         options.EnableSensitiveDataLogging();
@@ -123,13 +122,11 @@ namespace Grande.Fila.API.Infrastructure
                     }
                 });
 
-                // Add health checks
                 services.AddHealthChecks()
                     .AddDbContextCheck<QueueHubDbContext>("database", tags: new[] { "ready", "live" });
             }
             else if (useInMemoryDatabase)
             {
-                // Add Entity Framework DbContext for In-Memory database (for testing)
                 services.AddDbContext<QueueHubDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("QueueHubTestDb");
@@ -137,7 +134,6 @@ namespace Grande.Fila.API.Infrastructure
                     options.EnableDetailedErrors();
                 });
 
-                // Add health checks for in-memory database
                 services.AddHealthChecks()
                     .AddDbContextCheck<QueueHubDbContext>("database", tags: new[] { "ready", "live" });
             }
