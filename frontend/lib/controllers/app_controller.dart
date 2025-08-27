@@ -34,11 +34,13 @@ class AppController extends ChangeNotifier {
 
   // State
   bool _isInitialized = false;
+  bool _isInitializing = false;
   String? _error;
   bool _isAnonymousMode = true; // Start in anonymous mode
 
   // Getters
   bool get isInitialized => _isInitialized;
+  bool get isInitializing => _isInitializing;
   String? get error => _error;
   bool get isAnonymousMode => _isAnonymousMode;
   AuthController get auth => _authController;
@@ -58,12 +60,14 @@ class AppController extends ChangeNotifier {
   /// Initializes all services and controllers
   Future<void> initialize() async {
     // Prevent multiple initializations
-    if (_isInitialized) {
-      print('🔄 AppController already initialized, skipping...');
+    if (_isInitialized || _isInitializing) {
+      print('🔄 AppController already initialized or initializing, skipping...');
       return;
     }
     
+    _isInitializing = true;
     print('🚀 Initializing AppController...');
+    
     try {
       // Initialize services
       _authService = await AuthService.create();
@@ -81,9 +85,6 @@ class AppController extends ChangeNotifier {
       _authController = AuthController(authService: _authService);
       _queueController = QueueController(queueService: _queueService);
       _anonymousController = AnonymousController(publicSalonService: _publicSalonService);
-
-      // Set up listeners
-      _setupListeners();
 
       // Load stored authentication
       await _authController.loadStoredAuth();
@@ -109,12 +110,19 @@ class AppController extends ChangeNotifier {
         } catch (_) {}
       }
 
+      // Set up listeners AFTER all initialization is complete
+      _setupListeners();
+
       _isInitialized = true;
+      _isInitializing = false;
       _error = null;
       print('✅ AppController initialization complete');
+      
+      // Only notify once at the end of initialization
       notifyListeners();
     } catch (e) {
       _error = 'Failed to initialize app: ${e.toString()}';
+      _isInitializing = false;
       notifyListeners();
       rethrow;
     }
@@ -124,6 +132,9 @@ class AppController extends ChangeNotifier {
   void _setupListeners() {
     // Listen to auth controller changes
     _authController.addListener(() {
+      // Skip notifications during initialization
+      if (_isInitializing) return;
+      
       // When auth state changes, update anonymous mode
       final wasAnonymous = _isAnonymousMode;
       _isAnonymousMode = !_authController.isAuthenticated;
@@ -143,11 +154,15 @@ class AppController extends ChangeNotifier {
 
     // Listen to queue controller changes
     _queueController.addListener(() {
+      // Skip notifications during initialization
+      if (_isInitializing) return;
       notifyListeners();
     });
 
     // Listen to anonymous controller changes
     _anonymousController.addListener(() {
+      // Skip notifications during initialization
+      if (_isInitializing) return;
       notifyListeners();
     });
   }

@@ -1,4 +1,5 @@
 /// Data models for QR code functionality
+library;
 
 /// QR code join data extracted from scanned QR codes
 class QrJoinData {

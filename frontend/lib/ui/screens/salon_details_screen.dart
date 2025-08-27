@@ -13,7 +13,6 @@ import 'package:provider/provider.dart';
 import '../../controllers/app_controller.dart';
 import 'anonymous_join_queue_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
-import 'queue_status_screen.dart';
 import '../../models/queue_models.dart' as queue;
 import '../../models/anonymous_user.dart';
 import 'anonymous_queue_status_screen.dart';

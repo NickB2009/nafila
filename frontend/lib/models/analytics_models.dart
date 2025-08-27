@@ -1,4 +1,5 @@
 /// Data models for queue analytics and metrics
+library;
 
 /// Wait time estimate for a queue entry
 class WaitTimeEstimate {
