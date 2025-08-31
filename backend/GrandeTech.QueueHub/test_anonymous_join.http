@@ -1,11 +1,11 @@
-### Test Anonymous Join Queue - Should not have concurrency errors now
+### Test Anonymous Join Queue
 POST http://localhost:5098/api/Public/queue/join
 Content-Type: application/json
 
 {
-    "salonId": "99999999-9999-9999-9999-999999999993",
-    "name": "Test User Fix Verification",
-    "email": "test.fix.verification@example.com",
+    "salonId": "550e8400-e29b-41d4-a716-446655440007",
+    "name": "Test User",
+    "email": "test@example.com",
     "serviceRequested": "Haircut",
     "anonymousUserId": "11111111-1111-1111-1111-111111111111"
 }
@@ -15,7 +15,7 @@ POST http://localhost:5098/api/Public/queue/join
 Content-Type: application/json
 
 {
-    "salonId": "99999999-9999-9999-9999-999999999993",
+    "salonId": "550e8400-e29b-41d4-a716-446655440007",
     "name": "Test User 1",
     "email": "test1@example.com",
     "serviceRequested": "Haircut",
@@ -27,7 +27,7 @@ POST http://localhost:5098/api/Public/queue/join
 Content-Type: application/json
 
 {
-    "salonId": "99999999-9999-9999-9999-999999999993",
+    "salonId": "550e8400-e29b-41d4-a716-446655440007",
     "name": "Test User 2",
     "email": "test2@example.com",
     "serviceRequested": "Beard Trim",
@@ -39,7 +39,7 @@ POST http://localhost:5098/api/Public/queue/join
 Content-Type: application/json
 
 {
-    "salonId": "99999999-9999-9999-9999-999999999993",
+    "salonId": "550e8400-e29b-41d4-a716-446655440007",
     "name": "Test User 3",
     "email": "test3@example.com",
     "serviceRequested": "Hair Wash",

@@ -52,9 +52,31 @@ namespace Grande.Fila.API.Application.Public
             var result = new AnonymousJoinResult();
 
             // Input validation
-            if (!Guid.TryParse(request.SalonId, out var salonId))
+            if (string.IsNullOrWhiteSpace(request.SalonId))
             {
-                result.FieldErrors["SalonId"] = "Invalid salon ID format.";
+                result.FieldErrors["SalonId"] = "Salon ID is required.";
+                return result;
+            }
+            
+            // Handle both GUID and slug-based salon IDs
+            Guid? salonId = null;
+            string? salonSlug = null;
+            
+            if (Guid.TryParse(request.SalonId, out var parsedGuid))
+            {
+                salonId = parsedGuid;
+            }
+            else
+            {
+                // If not a GUID, treat as slug (production API uses slug-based IDs)
+                salonSlug = request.SalonId.Trim().ToLowerInvariant();
+                
+                // Validate slug format (alphanumeric with hyphens)
+                if (!System.Text.RegularExpressions.Regex.IsMatch(salonSlug, @"^[a-z0-9-]+$"))
+                {
+                    result.FieldErrors["SalonId"] = "Invalid salon ID format. Expected GUID or valid slug format.";
+                    return result;
+                }
             }
 
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -92,7 +114,7 @@ namespace Grande.Fila.API.Application.Public
             {
                 try
                 {
-                    return await TryJoinQueueAsync(request, salonId, cancellationToken);
+                    return await TryJoinQueueAsync(request, salonId, salonSlug, cancellationToken);
                 }
                 catch (Exception ex) when (IsConcurrencyException(ex) && retryCount < maxRetries - 1)
                 {
@@ -112,12 +134,37 @@ namespace Grande.Fila.API.Application.Public
             return result;
         }
 
-        private async Task<AnonymousJoinResult> TryJoinQueueAsync(AnonymousJoinRequest request, Guid salonId, CancellationToken cancellationToken)
+        private async Task<AnonymousJoinResult> TryJoinQueueAsync(AnonymousJoinRequest request, Guid? salonId, string? salonSlug, CancellationToken cancellationToken)
         {
             var result = new AnonymousJoinResult();
 
+            // Determine which salon ID to use
+            Guid finalSalonId;
+            
+            if (salonId.HasValue)
+            {
+                // Use the provided GUID directly
+                finalSalonId = salonId.Value;
+            }
+            else if (!string.IsNullOrEmpty(salonSlug))
+            {
+                // Look up GUID by slug (production API uses slug-based IDs)
+                var locationBySlug = await _locationRepository.GetBySlugAsync(salonSlug, cancellationToken);
+                if (locationBySlug == null)
+                {
+                    result.Errors.Add($"Salon not found with slug: {salonSlug}");
+                    return result;
+                }
+                finalSalonId = locationBySlug.Id;
+            }
+            else
+            {
+                result.Errors.Add("Invalid salon ID: neither GUID nor slug provided");
+                return result;
+            }
+
             // Check if salon exists
-            var location = await _locationRepository.GetByIdAsync(salonId, cancellationToken);
+            var location = await _locationRepository.GetByIdAsync(finalSalonId, cancellationToken);
             if (location == null)
             {
                 result.Errors.Add("Salon not found");
@@ -125,7 +172,7 @@ namespace Grande.Fila.API.Application.Public
             }
 
             // Get active queue for the salon
-            var queue = await _queueRepository.GetActiveQueueByLocationIdAsync(salonId, cancellationToken);
+            var queue = await _queueRepository.GetActiveQueueByLocationIdAsync(finalSalonId, cancellationToken);
             if (queue == null)
             {
                 result.Errors.Add("Salon not found or not accepting customers");
@@ -174,13 +221,13 @@ namespace Grande.Fila.API.Application.Public
 
             // Calculate estimated wait time
             var averageTimeMinutes = location.AverageServiceTimeInMinutes;
-            if (_cache.TryGetAverage(salonId, out var cachedAverage))
+            if (_cache.TryGetAverage(finalSalonId, out var cachedAverage))
             {
                 averageTimeMinutes = cachedAverage;
             }
 
             // Get active staff count
-            var staffMembers = await _staffMemberRepository.GetByLocationAsync(salonId, cancellationToken);
+            var staffMembers = await _staffMemberRepository.GetByLocationAsync(finalSalonId, cancellationToken);
             var activeStaffCount = staffMembers.Count(s => s.IsActive && !s.IsOnBreak());
 
             var estimatedWaitTime = activeStaffCount > 0

@@ -121,23 +121,19 @@ class AppInitializer extends StatefulWidget {
 }
 
 class _AppInitializerState extends State<AppInitializer> {
-  bool _isInitializing = false;
-
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    // Use Future.microtask to avoid calling setState during build
+    Future.microtask(() => _initializeApp());
   }
 
   Future<void> _initializeApp() async {
-    if (_isInitializing) return;
-    
-    _isInitializing = true;
     try {
       final appController = Provider.of<AppController>(context, listen: false);
       await appController.initialize();
-    } finally {
-      _isInitializing = false;
+    } catch (e) {
+      print('❌ App initialization failed: $e');
     }
   }
 
@@ -145,7 +141,8 @@ class _AppInitializerState extends State<AppInitializer> {
   Widget build(BuildContext context) {
     return Consumer<AppController>(
       builder: (context, appController, child) {
-        if (!appController.isInitialized && appController.error == null) {
+        // Show loading screen while initializing
+        if (appController.isInitializing || (!appController.isInitialized && appController.error == null)) {
           return const Scaffold(
             body: Center(
               child: Column(
@@ -160,6 +157,7 @@ class _AppInitializerState extends State<AppInitializer> {
           );
         }
 
+        // Show error screen if initialization failed
         if (appController.error != null) {
           return Scaffold(
             body: Center(
@@ -180,6 +178,7 @@ class _AppInitializerState extends State<AppInitializer> {
           );
         }
 
+        // Show main app when initialized
         return const SalonFinderScreen();
       },
     );

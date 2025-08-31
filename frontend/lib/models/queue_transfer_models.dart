@@ -1,4 +1,5 @@
 /// Data models for queue transfer functionality
+library;
 
 /// Request to transfer a queue entry to another salon, service, or time slot
 class QueueTransferRequest {
@@ -76,7 +77,7 @@ class QueueTransferResponse {
 
   String get formattedWaitTime {
     if (estimatedWaitMinutes == 0) return 'No wait';
-    if (estimatedWaitMinutes < 60) return '${estimatedWaitMinutes} min';
+    if (estimatedWaitMinutes < 60) return '$estimatedWaitMinutes min';
     final hours = estimatedWaitMinutes ~/ 60;
     final minutes = estimatedWaitMinutes % 60;
     return '${hours}h ${minutes}m';
@@ -147,7 +148,7 @@ class QueueTransferSuggestion {
 
   String get formattedWaitTime {
     if (estimatedWaitMinutes == 0) return 'No wait';
-    if (estimatedWaitMinutes < 60) return '${estimatedWaitMinutes} min';
+    if (estimatedWaitMinutes < 60) return '$estimatedWaitMinutes min';
     final hours = estimatedWaitMinutes ~/ 60;
     final minutes = estimatedWaitMinutes % 60;
     return '${hours}h ${minutes}m';
@@ -168,9 +169,9 @@ class QueueTransferSuggestion {
 
   String get improvementText {
     if (timeImprovement > 0) {
-      return 'Save ${timeImprovement} min';
+      return 'Save $timeImprovement min';
     } else if (positionImprovement > 0) {
-      return '${positionImprovement} positions better';
+      return '$positionImprovement positions better';
     }
     return 'Alternative option';
   }
@@ -256,7 +257,7 @@ class TransferSuggestionsResponse {
 
   String get currentFormattedWaitTime {
     if (currentEstimatedWaitMinutes == 0) return 'No wait';
-    if (currentEstimatedWaitMinutes < 60) return '${currentEstimatedWaitMinutes} min';
+    if (currentEstimatedWaitMinutes < 60) return '$currentEstimatedWaitMinutes min';
     final hours = currentEstimatedWaitMinutes ~/ 60;
     final minutes = currentEstimatedWaitMinutes % 60;
     return '${hours}h ${minutes}m';
@@ -334,7 +335,7 @@ class TransferEligibilityResponse {
   String? get formattedNewWaitTime {
     if (estimatedNewWaitMinutes == null) return null;
     if (estimatedNewWaitMinutes == 0) return 'No wait';
-    if (estimatedNewWaitMinutes! < 60) return '${estimatedNewWaitMinutes} min';
+    if (estimatedNewWaitMinutes! < 60) return '$estimatedNewWaitMinutes min';
     final hours = estimatedNewWaitMinutes! ~/ 60;
     final minutes = estimatedNewWaitMinutes! % 60;
     return '${hours}h ${minutes}m';

@@ -171,11 +171,12 @@ void main() {
         when(mockApiClient.post('/Auth/login', data: loginRequest.toJson()))
             .thenThrow(dioError);
 
-        // Act & Assert
-        expect(
-          () async => await authService.login(loginRequest),
-          throwsA(isA<DioException>()),
-        );
+        // Act
+        final result = await authService.login(loginRequest);
+
+        // Assert
+        expect(result.success, isFalse);
+        expect(result.error, equals('Erro ao efetuar login'));
       });
     });
 
@@ -334,7 +335,7 @@ void main() {
           requestOptions: RequestOptions(path: '/Auth/verify-2fa'),
         );
 
-        when(mockApiClient.post('/Auth/verify-2fa', data: verifyRequest.toJson()))
+        when(mockApiClient.post('/Auth/verify-two-factor', data: verifyRequest.toJson()))
             .thenAnswer((_) async => mockResponse);
         when(mockSharedPreferences.setString('auth_token', 'jwt-token-456'))
             .thenAnswer((_) async => true);

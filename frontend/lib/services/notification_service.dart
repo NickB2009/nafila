@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -92,7 +93,7 @@ class NotificationService {
       
       await _localNotifications.initialize(
         initSettings,
-        onDidReceiveNotificationResponse: _onNotificationTapped,
+        onDidReceiveNotificationResponse: _handleNotificationResponse,
       );
       
       _localNotificationsEnabled = true;
@@ -248,7 +249,7 @@ class NotificationService {
   }
 
   /// Handle notification tap
-  void _onNotificationTapped(NotificationResponse response) {
+  void _handleNotificationResponse(NotificationResponse response) {
     debugPrint('👆 Notification tapped: ${response.payload}');
     
     if (_onNotificationTapped != null) {

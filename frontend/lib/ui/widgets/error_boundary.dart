@@ -46,9 +46,14 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
 
   void _handleError(Object error, StackTrace? stackTrace) {
     if (mounted) {
-      setState(() {
-        _error = error;
-        _stackTrace = stackTrace;
+      // Defer setState to avoid calling it during build phase
+      Future.microtask(() {
+        if (mounted) {
+          setState(() {
+            _error = error;
+            _stackTrace = stackTrace;
+          });
+        }
       });
 
       // Log the error
@@ -63,8 +68,13 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   Future<void> _retry() async {
     if (_isRetrying) return;
 
-    setState(() {
-      _isRetrying = true;
+    // Defer setState to avoid calling it during build phase
+    Future.microtask(() {
+      if (mounted) {
+        setState(() {
+          _isRetrying = true;
+        });
+      }
     });
 
     try {

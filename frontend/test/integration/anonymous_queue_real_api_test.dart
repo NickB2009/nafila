@@ -2,13 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:eutonafila_frontend/services/anonymous_queue_service.dart';
 import 'package:eutonafila_frontend/services/anonymous_user_service.dart';
 import 'package:eutonafila_frontend/models/anonymous_user.dart';
-import 'package:eutonafila_frontend/models/queue_entry.dart';
 import 'package:eutonafila_frontend/config/api_config.dart';
+import 'package:eutonafila_frontend/models/public_salon.dart';
+import 'package:eutonafila_frontend/services/public_salon_service.dart';
 
 void main() {
+  // Initialize Flutter binding for tests
+  TestWidgetsFlutterBinding.ensureInitialized();
+  
   group('Anonymous Queue Real API Tests', () {
     late AnonymousQueueService queueService;
     late AnonymousUserService userService;
+    late PublicSalonService publicSalonService;
 
     setUpAll(() async {
       // Configure for production API
@@ -16,6 +21,7 @@ void main() {
       
       userService = AnonymousUserService();
       queueService = AnonymousQueueService(userService: userService);
+      publicSalonService = PublicSalonService.create();
     });
 
     test('should successfully connect to production API for queue operations', () async {
@@ -41,11 +47,24 @@ void main() {
         // Test queue joining - this should connect to the real production API
         print('🔗 Testing queue join with production API: ${ApiConfig.currentBaseUrl}');
         
+        // Get real salons from production API instead of hardcoded test data
+        print('🏪 Fetching real salons from production API...');
+        final realSalons = await publicSalonService.getPublicSalons();
+        
+        if (realSalons.isEmpty) {
+          print('⚠️ No real salons found in production API - skipping queue join test');
+          return;
+        }
+        
+        // Use the first available real salon
+        final realSalon = realSalons.first;
+        print('✅ Using real salon: ${realSalon.name} (ID: ${realSalon.id})');
+        
         final queueEntry = await queueService.joinQueue(
-          'Test User',
-          'test@example.com',
-          '99999999-9999-9999-9999-999999999991', // Use a real salon ID from production
-          'Haircut',
+          salon: realSalon,
+          name: 'Test User',
+          email: 'test@example.com',
+          serviceRequested: 'Haircut',
           emailNotifications: true,
           browserNotifications: false,
         );
@@ -53,13 +72,13 @@ void main() {
         // Verify the queue entry was created
         expect(queueEntry, isNotNull);
         expect(queueEntry.id, isNotEmpty);
-        expect(queueEntry.salonId, equals('99999999-9999-9999-9999-999999999991'));
+        expect(queueEntry.salonId, equals(realSalon.id));
         expect(queueEntry.serviceRequested, equals('Haircut'));
-        expect(queueEntry.status, equals(QueueStatus.waiting));
+        expect(queueEntry.status, equals(QueueEntryStatus.waiting));
 
         print('✅ Queue entry created successfully: ${queueEntry.id}');
         print('Queue position: ${queueEntry.position}');
-        print('Estimated wait time: ${queueEntry.estimatedWaitTimeMinutes} minutes');
+        print('Estimated wait time: ${queueEntry.estimatedWaitMinutes} minutes');
 
         // Test queue status retrieval
         final status = await queueService.getQueueStatus(queueEntry.id);
@@ -100,6 +119,36 @@ void main() {
       expect(ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/join'), contains('/Public/queue/join'));
       
       print('✅ All API endpoints configured correctly');
+    });
+
+    test('should fetch real salons from production API', () async {
+      print('🏪 Testing real salon data retrieval...');
+      
+      try {
+        final salons = await publicSalonService.getPublicSalons();
+        
+        expect(salons, isNotNull);
+        expect(salons, isNotEmpty);
+        
+        print('✅ Successfully fetched ${salons.length} real salons from production API');
+        
+        // Verify salon data structure
+        for (final salon in salons.take(3)) { // Check first 3 salons
+          expect(salon.id, isNotEmpty);
+          expect(salon.name, isNotEmpty);
+          expect(salon.address, isNotEmpty);
+          
+          // Verify ID format - production API uses slug-based IDs, not GUIDs
+          // This is actually correct for the production system
+          expect(salon.id, matches(RegExp(r'^[a-z0-9-]+$')));
+          
+          print('  📍 ${salon.name} (${salon.id}) - ${salon.address}');
+        }
+        
+      } catch (e) {
+        print('❌ Failed to fetch real salons: $e');
+        rethrow;
+      }
     });
   });
 }

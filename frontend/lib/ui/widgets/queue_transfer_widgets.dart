@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/queue_transfer_models.dart';
-import '../../models/public_salon.dart';
 
 /// Widget for displaying transfer suggestions
 class TransferSuggestionsCard extends StatelessWidget {
@@ -76,7 +75,7 @@ class TransferSuggestionsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -447,7 +446,7 @@ class _TransferConfirmationDialogState extends State<TransferConfirmationDialog>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isHeader ? theme.colorScheme.surfaceVariant.withOpacity(0.5) : null,
+        color: isHeader ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.5) : null,
         border: Border(
           bottom: BorderSide(
             color: theme.colorScheme.outline.withOpacity(0.2),
