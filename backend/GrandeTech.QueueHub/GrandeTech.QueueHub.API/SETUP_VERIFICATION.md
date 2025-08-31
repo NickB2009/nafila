@@ -66,7 +66,7 @@ If you have SQL Server Management Studio or Azure Data Studio:
 
 **Connection Details:**
 - Server: `localhost,1433`
-- Database: `GrandeTechQueueHub`
+- Database: `QueueHubDb`
 - Username: `sa`
 - Password: `DevPassword123!`
 

@@ -9,7 +9,7 @@ A comprehensive barbershop queue management system built with .NET 8, Entity Fra
 The application is configured to use Azure SQL Database in production with the following connection string:
 
 ```
-Server=tcp:grande.database.windows.net,1433;Initial Catalog=GrandeTechQueueHub;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";
+Server=tcp:grande.database.windows.net,1433;Initial Catalog=barberqueue;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";
 ```
 
 ### Environment Configuration
@@ -39,7 +39,7 @@ docker run -d \
   -p 80:80 \
   -p 443:443 \
   -e ASPNETCORE_ENVIRONMENT=Production \
-  -e ConnectionStrings__DefaultConnection="Server=tcp:grande.database.windows.net,1433;Initial Catalog=GrandeTechQueueHub;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=\"Active Directory Default\";" \
+  -e ConnectionStrings__AzureSqlConnection="Server=tcp:grande.database.windows.net,1433;Initial Catalog=barberqueue;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=\"Active Directory Default\";" \
   grandetech-queuehub-api
 ```
 

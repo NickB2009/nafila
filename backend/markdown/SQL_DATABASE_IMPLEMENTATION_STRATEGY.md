@@ -67,7 +67,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+      - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=QueueHubDb;User Id=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
 ```
 
 ## 📊 Schema and Conventions

@@ -2,8 +2,8 @@
 # This script sets up logging and deploys the application
 
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$SubscriptionId,
+    [Parameter(Mandatory=$false)]
+    [string]$SubscriptionId = "160af2e4-319f-4384-b38f-71e23d140a0f",
     
     [Parameter(Mandatory=$false)]
     [string]$ResourceGroupName = "rg-p-queuehub-core-001",
@@ -16,6 +16,20 @@ param(
     
     [Parameter(Mandatory=$false)]
     [string]$AcrName = "acrqueuehubapi001",
+    
+    # Database connection parameters (now using managed identity)
+    [Parameter(Mandatory=$false)]
+    [string]$SqlServer = "grande.database.windows.net",
+    [Parameter(Mandatory=$false)]
+    [int]$SqlPort = 1433,
+    [Parameter(Mandatory=$false)]
+    [string]$SqlDatabase = "GrandeTechQueueHub",
+    [Parameter(Mandatory=$false)]
+    [string]$SqlUser = "CloudSA24b045fd",  # Kept for backward compatibility but not used
+
+    # Optionally run EF Core migrations before deployment
+    [Parameter(Mandatory=$false)]
+    [switch]$RunMigrations,
     
     [Parameter(Mandatory=$false)]
     [switch]$SkipLoggingSetup,
@@ -80,10 +94,56 @@ if (-not $SkipLoggingSetup) {
     az webapp log config --name $AppServiceName --resource-group $ResourceGroupName --web-server-logging filesystem
     az webapp log config --name $AppServiceName --resource-group $ResourceGroupName --detailed-error-messages true
     az webapp log config --name $AppServiceName --resource-group $ResourceGroupName --failed-request-tracing true
+
+    # Configure database connection string on App Service (using managed identity)
+    Write-Host "Setting Azure SQL connection string on App Service (using managed identity)..." -ForegroundColor Yellow
+    $conn = "Server=tcp:$SqlServer,$SqlPort;Initial Catalog=$SqlDatabase;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+    az webapp config appsettings set --name $AppServiceName --resource-group $ResourceGroupName --settings "ConnectionStrings__AzureSqlConnection=$conn"
+
+    # Ensure production toggles use SQL DB with managed identity
+    az webapp config appsettings set --name $AppServiceName --resource-group $ResourceGroupName --settings "Database__UseSqlDatabase=true"
+    az webapp config appsettings set --name $AppServiceName --resource-group $ResourceGroupName --settings "Database__UseInMemoryDatabase=false"
+    az webapp config appsettings set --name $AppServiceName --resource-group $ResourceGroupName --settings "Database__AutoMigrate=false"
+    az webapp config appsettings set --name $AppServiceName --resource-group $ResourceGroupName --settings "Database__SeedData=false"
     
     Write-Host "Azure logging setup completed successfully!" -ForegroundColor Green
 } else {
     Write-Host "Skipping Azure logging setup..." -ForegroundColor Yellow
+}
+
+# Optional: Run database migrations before deployment
+if ($RunMigrations) {
+    Write-Host "`n=== Step 1.5: Running EF Core Migrations ===" -ForegroundColor Cyan
+    try {
+        # Use managed identity connection string
+        $conn = "Server=tcp:$SqlServer,$SqlPort;Initial Catalog=$SqlDatabase;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+
+        # Set connection string for EF tools
+        $env:ConnectionStrings__AzureSqlConnection = $conn
+
+        # Navigate to API project
+        $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+        $repoRoot = Split-Path -Parent (Split-Path -Parent $scriptPath)
+        $projectPath = "backend/GrandeTech.QueueHub"
+        Set-Location "$repoRoot/$projectPath/GrandeTech.QueueHub.API"
+        Write-Host "Changed to: $(Get-Location)" -ForegroundColor Yellow
+
+        Write-Host "Executing: dotnet ef database update" -ForegroundColor Yellow
+        dotnet ef database update
+        if ($LASTEXITCODE -ne 0) {
+            throw "Database migration failed with exit code $LASTEXITCODE"
+        }
+        Write-Host "Database migrations completed successfully!" -ForegroundColor Green
+    } catch {
+        Write-Host "Error during database migration: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Stopping deployment. Fix migration issues or skip with -RunMigrations:\$false." -ForegroundColor Red
+        exit 1
+    } finally {
+        # Clear sensitive env var
+        Remove-Item Env:\ConnectionStrings__AzureSqlConnection -ErrorAction SilentlyContinue
+        # Return to repo root
+        if ($repoRoot) { Set-Location $repoRoot }
+    }
 }
 
 # Step 2: Deploy the application (if not skipped)

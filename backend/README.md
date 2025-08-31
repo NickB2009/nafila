@@ -105,6 +105,21 @@ Refer to [SECURITY_MODEL.md](./SECURITY_MODEL.md) for detailed security document
 - **Primary Region:** Brazil South
 - **Container Registry:** `acrqueuehubapi001.azurecr.io`
 
+### Managed Identity
+
+The application uses Azure Managed Identity for secure, credential-free access to Azure services:
+
+- **App Service Managed Identity**: `app-p-queuehub-api-001` has system-assigned managed identity enabled
+- **Permissions**: 
+  - **Azure Container Registry**: AcrPull role for pulling images
+  - **Key Vault**: Get and List permissions for configuration secrets
+  - **Application Insights**: Contributor role for telemetry data
+- **Benefits**: 
+  - No secrets to manage or rotate
+  - Automatic credential rotation
+  - Enhanced security posture
+  - Simplified CI/CD pipeline
+
 ### Production URLs
 
 - **Core API (Production):** `https://app-p-queuehub-api-001-e4g8b2e8dngffgc5.brazilsouth-01.azurewebsites.net`
@@ -207,7 +222,7 @@ The API includes comprehensive Swagger documentation available at:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=...;Database=GrandeTechQueueHub;..."
+    "DefaultConnection": "Server=...;Database=barberqueue;..."
   },
   "Jwt": {
     "Key": "your-super-secret-key-with-at-least-32-characters",
@@ -275,6 +290,7 @@ The CI/CD pipeline automatically deploys on merge to `main` branch. See [.github
 - **Role-based access**: Granular permissions based on user roles
 - **Input validation**: Comprehensive request validation
 - **HTTPS enforcement**: All production traffic encrypted
+- **Managed Identity**: Azure-managed authentication for secure service-to-service communication
 
 ## 🤝 Contributing
 

@@ -79,7 +79,7 @@ namespace Grande.Fila.API.Infrastructure.Data
             if (!optionsBuilder.IsConfigured)
             {
                 // Fallback configuration - should not be used in production
-                optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=GrandeTechQueueHub;Trusted_Connection=True;MultipleActiveResultSets=true");
+                optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=QueueHubDb;Trusted_Connection=True;MultipleActiveResultSets=true");
             }
 
             // Enable sensitive data logging and detailed errors only in development

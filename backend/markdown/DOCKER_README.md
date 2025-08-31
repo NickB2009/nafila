@@ -28,7 +28,7 @@ This guide explains how to run QueueHub locally with Docker using SQL Server 202
 ### SQL Server
 - Image: `mcr.microsoft.com/mssql/server:2022-latest`
 - Ports: host `1434` → container `1433`
-- DB Name: `GrandeTechQueueHub`
+- DB Name: `QueueHubDb`
 - Credentials:
   - User: `sa`
   - Password: `DevPassword123!`
@@ -71,7 +71,7 @@ docker-compose logs -f sqlserver
 
 - ADO/EF style connection string example (matches compose):
   ```text
-  Server=sqlserver:1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
+  Server=sqlserver:1433;Database=QueueHubDb;User Id=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;
   ```
 
 ## Troubleshooting

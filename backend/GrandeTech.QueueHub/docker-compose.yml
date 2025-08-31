@@ -78,7 +78,7 @@ services:
       - "8081:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=GrandeTechQueueHub;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;Encrypt=False;
+      - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=QueueHubDb;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;Encrypt=False;
     depends_on:
       - api
     networks:

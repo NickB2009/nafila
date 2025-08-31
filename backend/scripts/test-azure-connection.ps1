@@ -141,12 +141,12 @@ Write-Host "Found Resource Groups: $($foundResources -join ', ')" -ForegroundCol
 if ($foundResources.Count -gt 0) {
     Write-Host "`n=== NEXT STEPS ===" -ForegroundColor Yellow
     Write-Host "1. Run setup-azure-logging.ps1 with your subscription ID" -ForegroundColor White
-    Write-Host "2. Deploy your application with: deploy.ps1" -ForegroundColor White
+    Write-Host "2. Deploy your application with: deploy-with-logging.ps1" -ForegroundColor White
     Write-Host "3. Get logs with: get-azure-logs.ps1" -ForegroundColor White
     
     Write-Host "`nExample commands:" -ForegroundColor Yellow
     Write-Host ".\scripts\setup-azure-logging.ps1 -SubscriptionId '$($account.id)'" -ForegroundColor Gray
-    Write-Host ".\scripts\deploy.ps1" -ForegroundColor Gray
+    Write-Host ".\scripts\deploy-with-logging.ps1 -SubscriptionId '$($account.id)'" -ForegroundColor Gray
     Write-Host ".\scripts\get-azure-logs.ps1 -Hours 24" -ForegroundColor Gray
 } else {
     Write-Host "`n⚠️  No QueueHub resources found!" -ForegroundColor Red

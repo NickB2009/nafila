@@ -95,7 +95,7 @@ namespace Grande.Fila.API.Infrastructure
                 // Development fallback: use local Docker SQL container if Azure connection not supplied
                 if (string.IsNullOrWhiteSpace(connectionString) && environment == "Development")
                 {
-                    connectionString = "Server=localhost,1433;Database=GrandeTechQueueHub;User ID=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True";
+                    connectionString = "Server=localhost,1433;Database=QueueHubDb;User ID=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True";
                 }
 
                 if (string.IsNullOrEmpty(connectionString))

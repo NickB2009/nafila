@@ -12,11 +12,13 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj", "GrandeTech.QueueHub.API/"]
-COPY ["GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj", "GrandeTech.QueueHub.Tests/"]
-RUN dotnet restore "GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj"
+# Copy only the API project file for a cached restore layer
+COPY ["GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj", "GrandeTech.QueueHub/GrandeTech.QueueHub.API/"]
+RUN dotnet restore "GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj"
+
+# Copy the rest of the source
 COPY . .
-WORKDIR "/src/GrandeTech.QueueHub.API"
+WORKDIR "/src/GrandeTech.QueueHub/GrandeTech.QueueHub.API"
 RUN dotnet build "GrandeTech.QueueHub.API.csproj" -c Release -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
