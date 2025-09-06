@@ -23,7 +23,7 @@ param(
     [Parameter(Mandatory=$false)]
     [int]$SqlPort = 1433,
     [Parameter(Mandatory=$false)]
-    [string]$SqlDatabase = "GrandeTechQueueHub",
+    [string]$SqlDatabase = "barberqueue",
     [Parameter(Mandatory=$false)]
     [string]$SqlUser = "CloudSA24b045fd",  # Kept for backward compatibility but not used
 

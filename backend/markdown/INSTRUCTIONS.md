@@ -21,6 +21,7 @@ Follow these guidelines whenever generating or modifying code, infrastructure, o
 
 - **Runtime**: .NET 8
 - **Local DB**: SQL Server 2022 in Docker (container `queuehub-sqlserver`)
+- **Production DB**: Azure SQL Database (`barberqueue` on `grande.database.windows.net`) ✅
 - **API**: http://localhost:8080 (container listens on 80; mapped to host 8080)
 - **Connection string key**: `ConnectionStrings:AzureSqlConnection`
 - **Compose quick start**:

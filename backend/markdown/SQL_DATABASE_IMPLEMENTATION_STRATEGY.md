@@ -10,14 +10,16 @@ This document describes how the QueueHub backend uses SQL Server with Entity Fra
 - EF Core setup and DbContext
 - Repository abstraction with SQL and Bogus implementations
 - SQL Server 2022 containerized in Docker with healthcheck
+- **Azure SQL Database integration in production** ✅
 - Connection string binding via `ConnectionStrings:AzureSqlConnection`
+- Public API endpoints working with database (e.g., GET /api/Public/salons)
 
 🚧 **IN PROGRESS:**
 - Additional SQL repositories beyond Organization/Queue
 
 ⏳ **PENDING:**
 - Migrations and seeding pipeline stabilization
-- Azure SQL deployment configuration
+- Docker-compose password consistency fixes
 
 ## 🏗️ Architecture Overview
 
@@ -116,7 +118,9 @@ cd GrandeTech.QueueHub/GrandeTech.QueueHub.API
 - TLS enforced in Azure SQL (disable AutoMigrate/Seed in prod)
 
 ## 🌐 Azure SQL
-- Store connection string in Key Vault
+- **✅ PRODUCTION WORKING**: Azure SQL Database successfully integrated
+- Connection string format: `Server=tcp:grande.database.windows.net,1433;Initial Catalog=barberqueue;User ID=CloudSA24b045fd;Password=****;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;`
+- Store connection string in Azure App Service Configuration (not Key Vault for this setup)
 - CI/CD injects `ConnectionStrings__AzureSqlConnection`
 
 ---

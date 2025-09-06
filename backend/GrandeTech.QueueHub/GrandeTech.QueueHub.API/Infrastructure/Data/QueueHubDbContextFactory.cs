@@ -13,23 +13,8 @@ namespace Grande.Fila.API.Infrastructure.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<QueueHubDbContext>();
             
-            // Build configuration for design-time
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true)
-                .AddJsonFile("appsettings.Development.json", optional: true)
-                .AddEnvironmentVariables()
-                .Build();
-            
-            // Get connection string from configuration
-            var connectionString = configuration.GetConnectionString("AzureSqlConnection");
-            
-            // Fallback to local development connection if Azure connection not available
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                connectionString = "Data Source=(localdb)\\mssqllocaldb;Initial Catalog=QueueHubDb;Integrated Security=True";
-            }
-            
+            // Use Azure SQL Database connection string for design-time
+            var connectionString = "Server=tcp:grande.database.windows.net,1433;Initial Catalog=GrandeTechQueueHub;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=\"Active Directory Default\";";
             optionsBuilder.UseSqlServer(connectionString);
             
             return new QueueHubDbContext(optionsBuilder.Options);

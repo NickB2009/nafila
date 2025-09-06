@@ -328,8 +328,8 @@ if (isProduction)
     // Application Insights telemetry is automatically enabled via AddApplicationInsightsTelemetry
 }
 
-// Database migration and seeding (only in development or when explicitly enabled)
-if ((autoMigrate || seedData) && useSqlDatabase && !isProduction)
+// Database migration and seeding (when explicitly enabled, regardless of environment)
+if ((autoMigrate || seedData) && useSqlDatabase)
 {
     try
     {

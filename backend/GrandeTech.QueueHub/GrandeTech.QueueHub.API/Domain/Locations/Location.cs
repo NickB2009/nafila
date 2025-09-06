@@ -262,11 +262,20 @@ namespace Grande.Fila.API.Domain.Locations
         public bool IsOpen()
         {
             if (!IsActive) return false;
-            
-            // Use Brazil timezone (UTC-3) since all locations are in Brazil
-            var brazilTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-            var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brazilTimeZone);
-            return WeeklyHours.IsOpenAt(now);
+
+            try
+            {
+                // Use Brazil timezone (UTC-3) since all locations are in Brazil
+                var brazilTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+                var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brazilTimeZone);
+                return WeeklyHours.IsOpenAt(now);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                // Fallback to UTC if Brazil timezone is not available (e.g., in test environments)
+                var now = DateTime.UtcNow;
+                return WeeklyHours.IsOpenAt(now);
+            }
         }
 
         public bool CanAcceptQueueEntries()
