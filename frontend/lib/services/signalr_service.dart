@@ -27,10 +27,12 @@ class SignalRService {
       
       _isConnected = true;
       _connectionId = DateTime.now().millisecondsSinceEpoch.toString();
-      debugPrint('WebSocket connected to $_wsUrl');
+      debugPrint('✅ WebSocket connected to $_wsUrl');
     } catch (e) {
-      debugPrint('Failed to initialize WebSocket: $e');
-      rethrow;
+      debugPrint('⚠️ WebSocket connection failed: $e');
+      debugPrint('📡 Real-time updates will not be available');
+      _isConnected = false;
+      // Don't rethrow - let the app continue without real-time updates
     }
   }
 
@@ -43,11 +45,11 @@ class SignalRService {
         _handleMessage(message);
       },
       onError: (error) {
-        debugPrint('WebSocket error: $error');
+        debugPrint('⚠️ WebSocket error: $error');
         _isConnected = false;
       },
       onDone: () {
-        debugPrint('WebSocket connection closed');
+        debugPrint('📡 WebSocket connection closed');
         _isConnected = false;
       },
     );
@@ -130,7 +132,8 @@ class SignalRService {
   /// Unsubscribe from updates for a specific queue
   Future<void> unsubscribeFromQueue(String queueId) async {
     if (!isConnected || _channel == null) {
-      throw Exception('WebSocket not connected');
+      debugPrint('⚠️ Cannot unsubscribe from queue $queueId: WebSocket not connected');
+      return; // Don't throw, just log and return
     }
 
     try {
@@ -139,10 +142,10 @@ class SignalRService {
         'queueId': queueId,
       };
       _channel!.sink.add(_encodeMessage(message));
-      debugPrint('Unsubscribed from queue: $queueId');
+      debugPrint('✅ Unsubscribed from queue: $queueId');
     } catch (e) {
-      debugPrint('Failed to unsubscribe from queue $queueId: $e');
-      rethrow;
+      debugPrint('⚠️ Failed to unsubscribe from queue $queueId: $e');
+      // Don't rethrow - just log the error
     }
   }
 
@@ -168,7 +171,8 @@ class SignalRService {
   /// Unsubscribe from updates for a specific queue entry
   Future<void> unsubscribeFromQueueEntry(String entryId) async {
     if (!isConnected || _channel == null) {
-      throw Exception('WebSocket not connected');
+      debugPrint('⚠️ Cannot unsubscribe from queue entry $entryId: WebSocket not connected');
+      return; // Don't throw, just log and return
     }
 
     try {
@@ -177,10 +181,10 @@ class SignalRService {
         'entryId': entryId,
       };
       _channel!.sink.add(_encodeMessage(message));
-      debugPrint('Unsubscribed from queue entry $entryId');
+      debugPrint('✅ Unsubscribed from queue entry $entryId');
     } catch (e) {
-      debugPrint('Failed to unsubscribe from queue entry $entryId: $e');
-      rethrow;
+      debugPrint('⚠️ Failed to unsubscribe from queue entry $entryId: $e');
+      // Don't rethrow - just log the error
     }
   }
 

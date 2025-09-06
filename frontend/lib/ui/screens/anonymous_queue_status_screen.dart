@@ -232,8 +232,6 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
   Future<void> _loadTransferSuggestions() async {
     if (!_currentEntry.isActive) return;
 
-    // Loading state handled by the UI
-
     try {
       final appController = Provider.of<AppController>(context, listen: false);
       final suggestions = await appController.queueTransferService.getSmartSuggestions(
@@ -250,7 +248,11 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
       }
     } catch (e) {
       if (mounted) {
-        debugPrint('Failed to load transfer suggestions: $e');
+        debugPrint('⚠️ Failed to load transfer suggestions: $e');
+        // Don't show transfer suggestions if they fail to load
+        setState(() {
+          _showTransferSuggestions = false;
+        });
       }
     }
   }

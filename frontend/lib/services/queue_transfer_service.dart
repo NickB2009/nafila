@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
 import '../models/queue_transfer_models.dart';
 
@@ -47,15 +48,49 @@ class QueueTransferService {
       
       return TransferSuggestionsResponse.fromJson(response.data);
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // Endpoint not available - return empty response gracefully
+        debugPrint('⚠️ Transfer suggestions endpoint not available (404) - feature not implemented');
+        return TransferSuggestionsResponse(
+          success: false,
+          suggestions: [],
+          currentSalonId: '',
+          currentSalonName: '',
+          currentPosition: 0,
+          currentEstimatedWaitMinutes: 0,
+          generatedAt: DateTime.now(),
+          errors: ['Transfer suggestions feature is not yet available on the server'],
+        );
+      }
       if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
         if (errorData is Map<String, dynamic>) {
           return TransferSuggestionsResponse.fromJson(errorData);
         }
       }
-      throw Exception('Failed to get transfer suggestions: ${e.message}');
+      debugPrint('⚠️ Failed to get transfer suggestions: ${e.message}');
+      return TransferSuggestionsResponse(
+        success: false,
+        suggestions: [],
+        currentSalonId: '',
+        currentSalonName: '',
+        currentPosition: 0,
+        currentEstimatedWaitMinutes: 0,
+        generatedAt: DateTime.now(),
+        errors: ['Unable to load transfer suggestions at this time'],
+      );
     } catch (e) {
-      throw Exception('Failed to get transfer suggestions: $e');
+      debugPrint('⚠️ Failed to get transfer suggestions: $e');
+      return TransferSuggestionsResponse(
+        success: false,
+        suggestions: [],
+        currentSalonId: '',
+        currentSalonName: '',
+        currentPosition: 0,
+        currentEstimatedWaitMinutes: 0,
+        generatedAt: DateTime.now(),
+        errors: ['Unable to load transfer suggestions at this time'],
+      );
     }
   }
 

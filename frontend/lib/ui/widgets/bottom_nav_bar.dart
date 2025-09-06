@@ -64,6 +64,10 @@ class BottomNavBar extends StatelessWidget {
               currentIndex == 0,
               'Início',
               () {
+                if (CheckInState.isCheckedIn) {
+                  _showCheckInNavigationDialog(context);
+                  return;
+                }
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (_) => const SalonFinderScreen()),
                 );
@@ -75,9 +79,15 @@ class BottomNavBar extends StatelessWidget {
               Icons.search,
               currentIndex == 1,
               'Buscar',
-              () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SalonMapScreen()),
-              ),
+              () {
+                if (CheckInState.isCheckedIn) {
+                  _showCheckInNavigationDialog(context);
+                  return;
+                }
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SalonMapScreen()),
+                );
+              },
               salonColors: salonColors,
             ),
             if (!isAnonymous)
@@ -86,13 +96,66 @@ class BottomNavBar extends StatelessWidget {
                 Icons.person_outline,
                 currentIndex == 2,
                 'Conta',
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AccountScreen()),
-                ),
+                () {
+                  if (CheckInState.isCheckedIn) {
+                    _showCheckInNavigationDialog(context);
+                    return;
+                  }
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AccountScreen()),
+                  );
+                },
                 salonColors: salonColors,
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCheckInNavigationDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final brightness = Theme.of(context).brightness;
+    final salonColors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: salonColors?.background ?? theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: salonColors?.primary ?? theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Você está na fila',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: salonColors?.onSurface ?? theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Você está atualmente na fila de um salão. Para navegar para outras telas, primeiro cancele seu check-in.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: salonColors?.secondary ?? theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: salonColors?.primary ?? theme.colorScheme.primary,
+            ),
+            child: const Text('Entendi'),
+          ),
+        ],
       ),
     );
   }

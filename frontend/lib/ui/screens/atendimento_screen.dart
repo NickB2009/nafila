@@ -11,7 +11,12 @@ class AtendimentoScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final brightness = Theme.of(context).brightness;
     final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        // Only prevent going back if user is checked in
+        return !CheckInState.isCheckedIn;
+      },
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         elevation: 0,
@@ -119,6 +124,7 @@ class AtendimentoScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 
