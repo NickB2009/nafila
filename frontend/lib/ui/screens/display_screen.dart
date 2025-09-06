@@ -19,7 +19,12 @@ class _DisplayScreenState extends State<DisplayScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
     
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        // Only prevent going back if user is checked in
+        return !CheckInState.isCheckedIn;
+      },
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: colors?.primary ?? theme.colorScheme.primary,
         elevation: 0,
@@ -141,6 +146,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

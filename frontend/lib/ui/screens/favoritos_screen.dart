@@ -1,31 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../models/salon.dart';
 import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
 import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
+import '../../models/public_salon.dart';
 import 'salon_details_screen.dart';
 import 'check_in_screen.dart';
-import '../../utils/palette_utils.dart';
+import '../../controllers/app_controller.dart';
 
-SalonColors _randomSalonColors(int seed) {
-  final palettes = [
-    SalonColors(primary: Colors.redAccent, secondary: Colors.orange, background: Colors.red.shade50, onSurface: Colors.red.shade900),
-    SalonColors(primary: Colors.blueAccent, secondary: Colors.cyan, background: Colors.blue.shade50, onSurface: Colors.blue.shade900),
-    SalonColors(primary: Colors.green, secondary: Colors.teal, background: Colors.green.shade50, onSurface: Colors.green.shade900),
-    SalonColors(primary: Colors.purple, secondary: Colors.pinkAccent, background: Colors.purple.shade50, onSurface: Colors.purple.shade900),
-    SalonColors(primary: Colors.amber, secondary: Colors.deepOrange, background: Colors.amber.shade50, onSurface: Colors.amber.shade900),
-    SalonColors(primary: Colors.indigo, secondary: Colors.lime, background: Colors.indigo.shade50, onSurface: Colors.indigo.shade900),
+// Generate salon colors for compatibility with existing screens
+SalonColors _generateSalonColors(int index) {
+  final colors = [
+    SalonColors(
+      primary: const Color(0xFFD4AF37), // Gold
+      secondary: const Color(0xFF2C3E50), // Dark blue
+      background: const Color(0xFFF5F5F5), // Light gray
+      onSurface: const Color(0xFF2C3E50),
+    ),
+    SalonColors(
+      primary: const Color(0xFF6B73FF), // Blue
+      secondary: const Color(0xFF4CAF50), // Green
+      background: const Color(0xFFF8F9FA), // Very light gray
+      onSurface: const Color(0xFF2C3E50),
+    ),
+    SalonColors(
+      primary: const Color(0xFFFF9800), // Orange
+      secondary: const Color(0xFF1976D2), // Blue
+      background: const Color(0xFFFFF8E1), // Light orange
+      onSurface: const Color(0xFF2C3E50),
+    ),
+    SalonColors(
+      primary: const Color(0xFF9C27B0), // Purple
+      secondary: const Color(0xFFE91E63), // Pink
+      background: const Color(0xFFFCE4EC), // Light pink
+      onSurface: const Color(0xFF2C3E50),
+    ),
+    SalonColors(
+      primary: const Color(0xFF00BCD4), // Cyan
+      secondary: const Color(0xFF8BC34A), // Light green
+      background: const Color(0xFFE0F2F1), // Light cyan
+      onSurface: const Color(0xFF2C3E50),
+    ),
   ];
-  final light = palettes[seed % palettes.length];
-  return SalonColors(
-    primary: light.primary,
-    secondary: light.secondary,
-    background: light.background,
-    onSurface: light.onSurface,
-    dark: generateDarkPalette(light),
-  );
+  return colors[index % colors.length];
 }
 
 class FavoritosScreen extends StatefulWidget {
@@ -40,30 +60,25 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  final List<Salon> favoritos = [
-    Salon(
-      name: 'Market at Mirada',
-      address: '30921 Mirada Blvd, San Antonio, FL',
-      waitTime: 24,
-      distance: 10.9,
-      isOpen: true,
-      closingTime: '18:00',
-      isFavorite: true,
-      queueLength: 5,
-      colors: _randomSalonColors(0),
-    ),
-    Salon(
-      name: 'Cortez Commons',
-      address: '123 Cortez Ave, San Antonio, FL',
-      waitTime: 8,
-      distance: 5.2,
-      isOpen: true,
-      closingTime: '20:00',
-      isFavorite: true,
-      queueLength: 2,
-      colors: _randomSalonColors(1),
-    ),
-  ];
+  List<Salon> _favoritos = [];
+  bool _isLoading = false;
+  String? _error;
+
+  // Convert PublicSalon to Salon for compatibility with existing screens
+  Salon _convertToSalon(PublicSalon publicSalon, int colorIndex) {
+    return Salon(
+      name: publicSalon.name,
+      address: publicSalon.address,
+      waitTime: publicSalon.currentWaitTimeMinutes ?? 15,
+      distance: publicSalon.distanceKm ?? 1.0,
+      isOpen: publicSalon.isOpen,
+      closingTime: '19:00', // Default closing time
+      isFavorite: true, // All salons in favorites are favorites
+      queueLength: publicSalon.queueLength ?? 0,
+      colors: _generateSalonColors(colorIndex),
+    );
+  }
+
 
   @override
   void initState() {
@@ -85,6 +100,87 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
     );
 
     _animationController.forward();
+    
+    // Load favorites after the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadFavorites();
+    });
+  }
+
+  // Load favorites from the database
+  Future<void> _loadFavorites() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // Wait a bit to ensure the widget tree is ready
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (!mounted) return;
+      
+      final appController = Provider.of<AppController>(context, listen: false);
+      
+      // Load public salons from the database
+      await appController.anonymous.loadPublicSalons();
+      final publicSalons = appController.anonymous.nearbySalons;
+
+      // For now, we'll show the first few salons as "favorites"
+      // In a real app, this would be based on user's actual favorites
+      final favoriteSalons = publicSalons.take(3).toList();
+      
+      final convertedFavorites = favoriteSalons.asMap().entries.map((entry) {
+        final index = entry.key;
+        final publicSalon = entry.value;
+        return _convertToSalon(publicSalon, index);
+      }).toList();
+
+      if (!mounted) return;
+      
+      setState(() {
+        _favoritos = convertedFavorites;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      
+      // Fallback to mock data if database loading fails
+      final mockFavorites = [
+        _convertToSalon(
+          const PublicSalon(
+            id: 'mock_1',
+            name: 'Barbearia Central',
+            address: 'Rua Central, 123 - São Paulo',
+            isOpen: true,
+            currentWaitTimeMinutes: 15,
+            queueLength: 3,
+            isFast: true,
+          ),
+          0,
+        ),
+        _convertToSalon(
+          const PublicSalon(
+            id: 'mock_2',
+            name: 'Salão Moderno',
+            address: 'Av. Paulista, 456 - São Paulo',
+            isOpen: true,
+            currentWaitTimeMinutes: 25,
+            queueLength: 5,
+            isPopular: true,
+          ),
+          1,
+        ),
+      ];
+      
+      setState(() {
+        _favoritos = mockFavorites;
+        _isLoading = false;
+        _error = null; // Don't show error, just use mock data
+      });
+    }
   }
 
   @override
@@ -140,20 +236,85 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                   color: appPalette?.background ?? theme.colorScheme.surface,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                child: favoritos.isEmpty
-                    ? _buildEmptyState(theme, brightness, appPalette)
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(24),
-                        itemCount: favoritos.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 18),
-                        itemBuilder: (context, index) => _buildSalonCard(theme, favoritos[index], index, brightness),
-                      ),
+                child: _buildContent(theme, brightness, appPalette),
               ),
             ),
           ],
         ),
       ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 2),
+    );
+  }
+
+  Widget _buildContent(ThemeData theme, Brightness brightness, SalonColors? appPalette) {
+    if (_isLoading) {
+      return _buildLoadingState(theme, brightness, appPalette);
+    }
+    
+    if (_error != null) {
+      return _buildErrorState(theme, brightness, appPalette);
+    }
+    
+    if (_favoritos.isEmpty) {
+      return _buildEmptyState(theme, brightness, appPalette);
+    }
+    
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: ListView.separated(
+          padding: const EdgeInsets.all(24),
+          itemCount: _favoritos.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 18),
+          itemBuilder: (context, index) => _buildSalonCard(theme, _favoritos[index], index, brightness),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(ThemeData theme, Brightness brightness, SalonColors? appPalette) {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildErrorState(ThemeData theme, Brightness brightness, SalonColors? appPalette) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: theme.colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading favorites',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error ?? 'Unknown error',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadFavorites,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -213,10 +374,11 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
       },
       child: Builder(
         builder: (context) {
+          // Use individual salon colors for each favorite salon
           final colors = salon.colors.forBrightness(brightness);
           return Card(
             elevation: 2,
-            color: colors.background ?? theme.colorScheme.surface,
+            color: colors.background,
             shadowColor: colors.primary.withOpacity(0.08),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -315,7 +477,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                           ),
                           child: Icon(
                             Icons.store,
-                            color: colors.onSurface ?? theme.colorScheme.onPrimary,
+                            color: colors.onSurface,
                             size: 24,
                           ),
                         ),
@@ -335,7 +497,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                               Text(
                                 salon.address,
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colors.secondary ?? theme.colorScheme.onSurfaceVariant,
+                                  color: colors.secondary,
                                 ),
                               ),
                             ],
@@ -348,7 +510,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                           ),
                           onPressed: () {
                             setState(() {
-                              favoritos.removeAt(index);
+                              _favoritos.removeAt(index);
                             });
                           },
                         ),

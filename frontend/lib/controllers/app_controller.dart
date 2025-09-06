@@ -55,6 +55,9 @@ class AppController extends ChangeNotifier {
   PublicSalonService get publicSalonService => _publicSalonService;
   SignalRService get signalRService => _signalRService;
   QueueAnalyticsService get queueAnalyticsService => _queueAnalyticsService;
+
+  /// Check if real-time features are available
+  bool get isRealTimeAvailable => _signalRService.isConnected;
   QueueTransferService get queueTransferService => _queueTransferService;
 
   /// Initializes all services and controllers
@@ -100,6 +103,7 @@ class AppController extends ChangeNotifier {
         print('✅ SignalR service initialized');
       } catch (e) {
         print('⚠️ SignalR service initialization failed: $e');
+        print('📱 App will continue without real-time updates');
         // Don't block initialization if SignalR fails
       }
 

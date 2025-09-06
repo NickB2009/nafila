@@ -19,7 +19,12 @@ class QueueStatusScreen extends StatelessWidget {
     final colors = CheckInState.checkedInSalon?.colors.forBrightness(brightness);
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
     
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        // Only prevent going back if user is checked in
+        return !CheckInState.isCheckedIn;
+      },
+      child: Scaffold(
       backgroundColor: colors?.background ?? theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -76,6 +81,7 @@ class QueueStatusScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+    ),
     );
   }
 
