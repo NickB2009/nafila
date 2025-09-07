@@ -301,30 +301,130 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       child: Focus(
         autofocus: false,
         child: Scaffold(
-          body: Stack(
+          body: Column(
             children: [
-              // Debug name for screen identification
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 10,
-                right: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'SalonFinderScreen',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+              // Fixed authentication buttons bar for anonymous users
+              if (isAnonymous)
+                Container(
+                  width: double.infinity,
+                  color: theme.colorScheme.surface,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // Enter button
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.primary,
+                                  theme.colorScheme.primary.withOpacity(0.8),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.primary.withOpacity(0.4),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pushNamed(context, '/login'),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.login, 
+                                        size: 16, 
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Entrar',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Create account button
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.secondary,
+                                  theme.colorScheme.secondary.withOpacity(0.8),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.secondary.withOpacity(0.4),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pushNamed(context, '/register'),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.person_add_alt, 
+                                        size: 16, 
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Criar conta',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Main content
-              CustomScrollView(
+              
+              // Main scrollable content
+              Expanded(
+                child: CustomScrollView(
         slivers: [
           // Clean Hero App Bar
           SliverAppBar(
@@ -334,25 +434,11 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             backgroundColor: Colors.transparent,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeroSection(context, theme, size),
+              background: _buildHeroSection(context, theme, size, isAnonymous),
             ),
             leading: null,
             automaticallyImplyLeading: false,
             actions: [
-              if (isAnonymous) ...[
-                TextButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, '/login'),
-                  icon: const Icon(Icons.login, size: 18),
-                  label: const Text('Entrar'),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, '/register'),
-                  icon: const Icon(Icons.person_add_alt, size: 18),
-                  label: const Text('Criar conta'),
-                ),
-                const SizedBox(width: 8),
-              ],
               if (!isAnonymous) ...[
                 Container(
                   margin: const EdgeInsets.only(right: 8),
@@ -470,7 +556,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             ),
           ),
         ],
-      ),
+                ),
+              ),
             ],
           ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
@@ -479,7 +566,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     );
   }
 
-  Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size) {
+  Widget _buildHeroSection(BuildContext context, ThemeData theme, Size size, bool isAnonymous) {
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -500,38 +587,39 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                   children: [
                     SizedBox(height: size.width < 400 ? 8 : 12),
                     
-                    // Greeting
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: size.width < 400 ? 12 : 14, 
-                        vertical: size.width < 400 ? 4 : 6
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.waving_hand, 
-                            color: theme.colorScheme.onPrimaryContainer, 
-                            size: size.width < 400 ? 16 : 18
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            greetingName,
-                            style: TextStyle(
-                              color: theme.colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.bold,
-                              fontSize: size.width < 400 ? 12 : 14,
+                    // Greeting (only show when not in anonymous mode)
+                    if (!isAnonymous) ...[
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: size.width < 400 ? 12 : 14, 
+                          vertical: size.width < 400 ? 4 : 6
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.waving_hand, 
+                              color: theme.colorScheme.onPrimaryContainer, 
+                              size: size.width < 400 ? 16 : 18
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            Text(
+                              greetingName,
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                                fontSize: size.width < 400 ? 12 : 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    
-                    SizedBox(height: size.width < 400 ? 12 : 16),
+                      SizedBox(height: size.width < 400 ? 12 : 16),
+                    ],
                     
                     // Main heading
                     Text(
