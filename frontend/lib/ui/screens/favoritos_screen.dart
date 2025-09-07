@@ -147,38 +147,11 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
     } catch (e) {
       if (!mounted) return;
       
-      // Fallback to mock data if database loading fails
-      final mockFavorites = [
-        _convertToSalon(
-          const PublicSalon(
-            id: 'mock_1',
-            name: 'Barbearia Central',
-            address: 'Rua Central, 123 - São Paulo',
-            isOpen: true,
-            currentWaitTimeMinutes: 15,
-            queueLength: 3,
-            isFast: true,
-          ),
-          0,
-        ),
-        _convertToSalon(
-          const PublicSalon(
-            id: 'mock_2',
-            name: 'Salão Moderno',
-            address: 'Av. Paulista, 456 - São Paulo',
-            isOpen: true,
-            currentWaitTimeMinutes: 25,
-            queueLength: 5,
-            isPopular: true,
-          ),
-          1,
-        ),
-      ];
-      
+      // Show error instead of mock data - let user know there's an API issue
       setState(() {
-        _favoritos = mockFavorites;
+        _favoritos = [];
         _isLoading = false;
-        _error = null; // Don't show error, just use mock data
+        _error = 'Erro ao carregar favoritos: $e';
       });
     }
   }

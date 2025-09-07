@@ -292,8 +292,15 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     final size = MediaQuery.of(context).size;
     final isAnonymous = Provider.of<AppController>(context).isAnonymousMode;
 
-    return Scaffold(
-      body: CustomScrollView(
+    return WillPopScope(
+      onWillPop: () async {
+        // Handle back button press gracefully
+        return true;
+      },
+      child: Focus(
+        autofocus: false,
+        child: Scaffold(
+          body: CustomScrollView(
         slivers: [
           // Clean Hero App Bar
           SliverAppBar(
@@ -441,6 +448,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
         ],
       ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+    ),
+    ),
     );
   }
 

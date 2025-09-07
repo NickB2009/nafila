@@ -281,14 +281,23 @@ class QueueTransferService {
 
   /// Get transfer statistics for analytics
   Future<Map<String, dynamic>> getTransferStats() async {
-    // This would typically be called with user authentication
-    // For now, return mock data
-    return {
-      'totalTransfers': 0,
-      'successfulTransfers': 0,
-      'averageTimeSaved': 0,
-      'averagePositionsImproved': 0,
-      'mostPopularTargetSalons': <String>[],
-    };
+    try {
+      final response = await _dio.get(
+        ApiConfig.getUrl('${ApiConfig.queueTransferEndpoint}/stats'),
+        options: Options(headers: ApiConfig.defaultHeaders),
+      );
+      
+      return response.data;
+    } catch (e) {
+      // If endpoint doesn't exist or user not authenticated, return empty stats
+      debugPrint('⚠️ Transfer stats endpoint not available: $e');
+      return {
+        'totalTransfers': 0,
+        'successfulTransfers': 0,
+        'averageTimeSaved': 0,
+        'averagePositionsImproved': 0,
+        'mostPopularTargetSalons': <String>[],
+      };
+    }
   }
 }

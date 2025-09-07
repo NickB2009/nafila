@@ -126,6 +126,37 @@
       background: #f8f9fa;
       transform: translateY(-1px);
     }
+
+    /* Fix for Flutter web blue overlay issue */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Remove focus outlines that cause blue overlay */
+    *:focus {
+      outline: none !important;
+    }
+
+    /* Specific fix for Flutter web focus issues */
+    flt-glass-pane {
+      pointer-events: none !important;
+    }
+
+    /* Prevent blue overlay on buttons and interactive elements */
+    button:focus,
+    [role="button"]:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none !important;
+      box-shadow: none !important;
+    }
   </style>
 </head>
 <body>
