@@ -40,6 +40,8 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   firebase_core: ^3.15.2
   firebase_messaging: ^15.2.10
+  # Location services
+  geolocator: ^10.1.0
 
 dev_dependencies:
   flutter_test:

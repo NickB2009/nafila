@@ -19,6 +19,42 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _twoFactorController = TextEditingController();
   bool _obscure = true;
   String? _error;
+  bool _showSuccessMessage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Handle prefilled credentials from registration
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Check if widget is still mounted before accessing context
+      if (!mounted) return;
+      
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null) {
+        if (args['prefillUsername'] != null) {
+          _usernameController.text = args['prefillUsername'];
+        }
+        if (args['prefillPassword'] != null) {
+          _passwordController.text = args['prefillPassword'];
+        }
+        if (args['showSuccessMessage'] == true) {
+          if (mounted) {
+            setState(() {
+              _showSuccessMessage = true;
+            });
+            // Hide success message after 5 seconds
+            Future.delayed(const Duration(seconds: 5), () {
+              if (mounted) {
+                setState(() {
+                  _showSuccessMessage = false;
+                });
+              }
+            });
+          }
+        }
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -35,43 +71,96 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
-    final request = LoginRequest(
-      username: _usernameController.text.trim(),
-      password: _passwordController.text,
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    print('📝 Login attempt:');
+    print('   Username: $username');
+    print('   Password length: ${password.length}');
+
+    // Try login with username first
+    var request = LoginRequest(
+      username: username,
+      password: password,
     );
 
-    final success = await auth.login(request);
+    print('🚀 Calling auth.login() with username...');
+    var success = await auth.login(request);
 
     if (!mounted) return;
 
+    print('📊 Login result (username): $success');
+    print('🔍 Requires 2FA: ${auth.requiresTwoFactor}');
+
+    // If login failed and username looks like an email, try with email field
+    if (!success && !auth.requiresTwoFactor && username.contains('@')) {
+      print('🔄 Username login failed, trying as email...');
+      
+      // Clear previous error
+      auth.clearError();
+      
+      success = await auth.login(request); // Same request, backend should handle email
+      
+      if (!mounted) return;
+      print('📊 Login result (email): $success');
+    }
+
     if (auth.requiresTwoFactor) {
-      setState(() {});
+      print('🔐 Two-factor authentication required');
+      if (mounted) {
+        setState(() {});
+      }
       return;
     }
 
     if (success) {
-      // Optional sanity check: verify token by fetching profile
-      final okProfile = await auth.verifyProfile();
-      if (!mounted) return;
-      if (!okProfile) {
-        setState(() => _error = 'Sessão inválida. Tente novamente.');
+      print('✅ Login successful, switching to authenticated mode...');
+      
+      try {
+        // Optional sanity check: verify token by fetching profile
+        print('🔍 Verifying profile...');
+        final profile = await auth.getProfile();
+        print('✅ Profile verified: $profile');
+        
+        await app.switchToAuthenticatedMode();
+        if (!mounted) return;
+        print('✅ Navigating to home...');
+        Navigator.pushReplacementNamed(context, '/home');
+        return;
+      } catch (e) {
+        print('❌ Profile verification failed: $e');
+        if (mounted) {
+          setState(() => _error = 'Sessão inválida. Tente novamente.');
+        }
         return;
       }
-      await app.switchToAuthenticatedMode();
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
     } else {
-      setState(() => _error = auth.error ?? 'Falha no login');
+      print('❌ Login failed');
+      print('🔍 Auth error: ${auth.error}');
+      
+      // Provide helpful error message
+      String errorMessage = auth.error ?? 'Falha no login';
+      if (errorMessage.toLowerCase().contains('invalid username or password')) {
+        errorMessage = 'Usuário ou senha inválidos. Verifique suas credenciais e tente novamente.';
+      }
+      
+      if (mounted) {
+        setState(() => _error = errorMessage);
+      }
     }
   }
 
   Future<void> _handleVerify2FA(BuildContext context) async {
     final app = Provider.of<AppController>(context, listen: false);
     final auth = app.auth;
-    setState(() => _error = null);
+    if (mounted) {
+      setState(() => _error = null);
+    }
 
     if (_twoFactorController.text.trim().isEmpty) {
-      setState(() => _error = 'Informe o código de verificação');
+      if (mounted) {
+        setState(() => _error = 'Informe o código de verificação');
+      }
       return;
     }
 
@@ -83,7 +172,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/home');
     } else {
-      setState(() => _error = auth.error ?? 'Falha na verificação');
+      if (mounted) {
+        setState(() => _error = auth.error ?? 'Falha na verificação');
+      }
     }
   }
 
@@ -138,7 +229,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                   if (_error != null)
                     _buildErrorBanner(theme, _error!),
-                  const SizedBox(height: 8),
+                  if (_error != null)
+                    const SizedBox(height: 8),
+                  if (_showSuccessMessage)
+                    _buildSuccessBanner(theme, 'Conta criada com sucesso! Você pode fazer login agora.'),
+                  if (_showSuccessMessage)
+                    const SizedBox(height: 8),
                   Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
@@ -279,6 +375,30 @@ class _LoginScreenState extends State<LoginScreen> {
           style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
+    );
+  }
+
+  Widget _buildSuccessBanner(ThemeData theme, String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_outline, color: Colors.green),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green.shade700),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

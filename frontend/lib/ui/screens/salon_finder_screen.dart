@@ -38,6 +38,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
   int _secondsRemaining = 300; // 5 minutes countdown
   List<PublicSalon> _dynamicSalons = [];
   late final String greetingName;
+  bool _isLoadingSalons = false;
 
   // Anonymous queue services
   late AnonymousQueueService _queueService;
@@ -53,8 +54,12 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     _setupAnimations();
     _setupServices();
     _startDynamicUpdates();
-    _generateDynamicSalons();
     _loadUserData();
+    
+    // Defer dynamic salon loading until after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDynamicSalons();
+    });
   }
 
   void _setupServices() {
@@ -154,6 +159,125 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     }
   }
 
+  /// Load salons dynamically from the API
+  Future<void> _loadDynamicSalons() async {
+    if (_isLoadingSalons || !mounted) return;
+    
+    setState(() {
+      _isLoadingSalons = true;
+    });
+
+    try {
+      // Ensure context is available and widget is still mounted
+      if (!mounted) return;
+      
+      final appController = Provider.of<AppController>(context, listen: false);
+      
+      // Check if app controller is initialized
+      if (!appController.isInitialized) {
+        print('⚠️ AppController not yet initialized, using fallback data');
+        _generateFallbackSalons();
+        return;
+      }
+      
+      // Load public salons through the anonymous controller
+      await appController.anonymous.loadPublicSalons();
+      
+      // Get the loaded salons
+      final loadedSalons = appController.anonymous.nearbySalons;
+      
+      if (loadedSalons.isNotEmpty && mounted) {
+        setState(() {
+          _dynamicSalons = loadedSalons;
+        });
+        print('✅ Loaded ${loadedSalons.length} salons from API');
+      } else {
+        print('⚠️ No salons returned from API, using fallback');
+        _generateFallbackSalons();
+      }
+    } catch (e) {
+      print('❌ Error loading salons from API: $e');
+      // Show error to user but also provide fallback
+      _generateFallbackSalons();
+      
+      // Show snackbar with error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao carregar salões. Mostrando dados de exemplo.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingSalons = false;
+        });
+      }
+    }
+  }
+
+  /// Fallback method with mock data when API is unavailable
+  void _generateFallbackSalons() {
+    final random = math.Random();
+    _dynamicSalons = [
+      PublicSalon(
+        id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        name: 'Barbearia Moderna (Exemplo)',
+        address: 'Rua das Flores, 123',
+        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
+        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
+        distanceKm: 0.8,
+        isOpen: true,
+        currentWaitTimeMinutes: 25,
+        queueLength: 3,
+        isFast: true,
+        isPopular: false,
+        services: ['Haircut', 'Beard Trim', 'Hair Styling'],
+        rating: 4.5,
+        reviewCount: 120,
+      ),
+      PublicSalon(
+        id: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
+        name: 'Studio Hair (Exemplo)',
+        address: 'Av. Paulista, 456',
+        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
+        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
+        distanceKm: 1.2,
+        isOpen: true,
+        currentWaitTimeMinutes: 35,
+        queueLength: 2,
+        isFast: false,
+        isPopular: true,
+        services: ['Haircut', 'Beard Trim', 'Hair Wash', 'Styling'],
+        rating: 4.8,
+        reviewCount: 89,
+      ),
+      PublicSalon(
+        id: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
+        name: 'Barbearia Clássica (Exemplo)',
+        address: 'Rua Augusta, 789',
+        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
+        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
+        distanceKm: 1.5,
+        isOpen: true,
+        currentWaitTimeMinutes: 20,
+        queueLength: 4,
+        isFast: true,
+        isPopular: true,
+        services: ['Haircut', 'Beard Trim', 'Mustache Trim'],
+        rating: 4.2,
+        reviewCount: 67,
+      ),
+    ];
+    
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   // Convert PublicSalon to Salon for compatibility with existing screens
   Salon _convertToSalon(PublicSalon publicSalon) {
     return Salon(
@@ -206,60 +330,6 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     return colors[index % colors.length];
   }
 
-  void _generateDynamicSalons() {
-    final random = math.Random();
-    _dynamicSalons = [
-      PublicSalon(
-        id: 'barbearia_moderna',
-        name: 'Barbearia Moderna',
-        address: 'Rua das Flores, 123',
-        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
-        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
-        distanceKm: 0.8,
-        isOpen: true,
-        currentWaitTimeMinutes: 25,
-        queueLength: 3,
-        isFast: true,
-        isPopular: false,
-        services: ['Haircut', 'Beard Trim', 'Hair Styling'],
-        rating: 4.5,
-        reviewCount: 120,
-      ),
-      PublicSalon(
-        id: 'studio_hair',
-        name: 'Studio Hair',
-        address: 'Av. Paulista, 456',
-        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
-        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
-        distanceKm: 1.2,
-        isOpen: true,
-        currentWaitTimeMinutes: 35,
-        queueLength: 2,
-        isFast: false,
-        isPopular: true,
-        services: ['Haircut', 'Beard Trim', 'Hair Wash', 'Styling'],
-        rating: 4.8,
-        reviewCount: 89,
-      ),
-      PublicSalon(
-        id: 'barbearia_classica',
-        name: 'Barbearia Clássica',
-        address: 'Rua Augusta, 789',
-        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
-        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
-        distanceKm: 1.5,
-        isOpen: true,
-        currentWaitTimeMinutes: 20,
-        queueLength: 4,
-        isFast: true,
-        isPopular: true,
-        services: ['Haircut', 'Beard Trim', 'Mustache Trim'],
-        rating: 4.2,
-        reviewCount: 67,
-      ),
-    ];
-  }
-
   // Check if user is in queue for a specific salon
   bool _isInQueue(String salonName) {
     return _activeQueues.any((queue) => queue.salonName == salonName && queue.isActive);
@@ -267,157 +337,136 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
 
   // Get queue entry for a specific salon
   AnonymousQueueEntry? _getQueueEntry(String salonName) {
-    return _activeQueues.firstWhere(
-      (queue) => queue.salonName == salonName && queue.isActive,
-      orElse: () => AnonymousQueueEntry(
-        id: '',
-        anonymousUserId: '',
-        salonId: '',
-        salonName: '',
-        position: 0,
-        estimatedWaitMinutes: 0,
-        joinedAt: DateTime.now(),
-        lastUpdated: DateTime.now(),
-        status: QueueEntryStatus.waiting,
-        serviceRequested: '',
-      ),
-    );
+    try {
+      return _activeQueues.firstWhere(
+        (queue) => queue.salonName == salonName && queue.isActive,
+      );
+    } catch (e) {
+      return null;
+    }
   }
-
-  // Join queue for a salon
-  // Anonymous join queue flow retained for mocks; not used in authenticated finder flow
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isAnonymous = Provider.of<AppController>(context).isAnonymousMode;
+    
+    // Safely get the anonymous mode with fallback
+    bool isAnonymous = true;
+    try {
+      final appController = Provider.of<AppController>(context, listen: false);
+      isAnonymous = appController.isAnonymousMode;
+    } catch (e) {
+      print('⚠️ Could not access AppController, defaulting to anonymous mode');
+    }
 
     return WillPopScope(
-      onWillPop: () async {
-        // Handle back button press gracefully
-        return true;
-      },
-      child: Focus(
-        autofocus: false,
-        child: Scaffold(
+        onWillPop: () async {
+          // Handle back button press gracefully
+          return true;
+        },
+        child: Focus(
+          autofocus: false,
+          child: Scaffold(
           body: Column(
             children: [
               // Fixed authentication buttons bar for anonymous users
               if (isAnonymous)
-                Container(
-                  width: double.infinity,
-                  color: theme.colorScheme.surface,
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          // Enter button
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  theme.colorScheme.primary,
-                                  theme.colorScheme.primary.withOpacity(0.8),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.colorScheme.primary.withOpacity(0.4),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
+                SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // Enter button
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary,
+                                theme.colorScheme.primary.withOpacity(0.8),
                               ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => Navigator.pushNamed(context, '/login'),
-                                borderRadius: BorderRadius.circular(20),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.login, 
-                                        size: 16, 
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => Navigator.pushNamed(context, '/login'),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.login, 
+                                      size: 16, 
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Entrar',
+                                      style: TextStyle(
                                         color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'Entrar',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          // Create account button
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  theme.colorScheme.secondary,
-                                  theme.colorScheme.secondary.withOpacity(0.8),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.colorScheme.secondary.withOpacity(0.4),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Create account button
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.secondary,
+                                theme.colorScheme.secondary.withOpacity(0.8),
                               ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => Navigator.pushNamed(context, '/register'),
-                                borderRadius: BorderRadius.circular(20),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.person_add_alt, 
-                                        size: 16, 
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => Navigator.pushNamed(context, '/register'),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.person_add_alt, 
+                                      size: 16, 
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Criar conta',
+                                      style: TextStyle(
                                         color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'Criar conta',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -425,144 +474,147 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
               // Main scrollable content
               Expanded(
                 child: CustomScrollView(
-        slivers: [
-          // Clean Hero App Bar
-          SliverAppBar(
-            expandedHeight: size.height * 0.23,
-            floating: false,
-            pinned: true,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeroSection(context, theme, size, isAnonymous),
-            ),
-            leading: null,
-            automaticallyImplyLeading: false,
-            actions: [
-              if (!isAnonymous) ...[
-                Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.person, color: theme.colorScheme.onSurface, size: 16),
-                      const SizedBox(width: 4),
-                      Text('Conta', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) async {
-                    if (value == 'logout') {
-                      final app = Provider.of<AppController>(context, listen: false);
-                      await app.auth.logout();
-                      if (!mounted) return;
-                      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-                    } else if (value == 'account') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const AccountScreen()),
-                      );
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'account',
-                      child: Text('Conta'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'logout',
-                      child: Text('Sair'),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-          
-          // Main content
-          SliverToBoxAdapter(
-            child: Container(
-              color: theme.colorScheme.surface,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Stats section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: _buildStatsSection(context, theme, size),
-                  ),
-                  
-                  // Active queues section (if user has active queues)
-                  if (_activeQueues.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      child: _buildActiveQueuesSection(context, theme),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Divider(
-                        color: theme.colorScheme.outline.withOpacity(0.3),
-                        thickness: 1,
-                        height: 32,
+                  slivers: [
+                    // Clean Hero App Bar
+                    SliverAppBar(
+                      expandedHeight: size.height * 0.23,
+                      floating: false,
+                      pinned: true,
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: _buildHeroSection(context, theme, size, isAnonymous),
                       ),
-                    ),
-                  ] else ...[
-                    // Divider
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Divider(
-                        color: theme.colorScheme.outline.withOpacity(0.3),
-                        thickness: 1,
-                        height: 32,
-                      ),
-                    ),
-                  ],
-                  
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: size.width > 600 ? 32.0 : 20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 20),
-                        
-                        // Closest salons header
-                        _buildSectionHeader(context, theme, 'Salões mais próximos', 'Tempo real'),
-                        const SizedBox(height: 16),
-                        
-                        // Dynamic salon cards
-                        ..._buildDynamicSalonCards(context, theme),
-                        
-                        const SizedBox(height: 24),
-                        
-                        // QR Scanner card
-                        _buildQrScannerCard(context, theme),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Find salon card
-                        _buildFindSalonCard(context, theme),
-                        
-                        const SizedBox(height: 32),
+                      leading: null,
+                      automaticallyImplyLeading: false,
+                      actions: [
+                        if (!isAnonymous) ...[
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onSurface.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.person, color: theme.colorScheme.onSurface, size: 16),
+                                const SizedBox(width: 4),
+                                Text('Conta', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          PopupMenuButton<String>(
+                            onSelected: (value) async {
+                              if (value == 'logout') {
+                                final app = Provider.of<AppController>(context, listen: false);
+                                await app.auth.logout();
+                                if (!mounted) return;
+                                Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                              } else if (value == 'account') {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => const AccountScreen()),
+                                );
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'account',
+                                child: Text('Conta'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'logout',
+                                child: Text('Sair'),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+                    
+                    // Main content
+                    SliverToBoxAdapter(
+                      child: Container(
+                        color: theme.colorScheme.surface,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Stats section
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              child: _buildStatsSection(context, theme, size),
+                            ),
+                            
+                            // Active queues section (if user has active queues)
+                            if (_activeQueues.isNotEmpty) ...[
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                child: _buildActiveQueuesSection(context, theme),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: Divider(
+                                  color: theme.colorScheme.outline.withOpacity(0.3),
+                                  thickness: 1,
+                                  height: 32,
+                                ),
+                              ),
+                            ] else ...[
+                              // Divider
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: Divider(
+                                  color: theme.colorScheme.outline.withOpacity(0.3),
+                                  thickness: 1,
+                                  height: 32,
+                                ),
+                              ),
+                            ],
+                            
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: size.width > 600 ? 32.0 : 20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 20),
+                                  
+                                  // Closest salons header
+                                  _buildSectionHeader(context, theme, 'Salões mais próximos', 'Tempo real'),
+                                  const SizedBox(height: 16),
+                                  
+                                  // Dynamic salon cards with loading state
+                                  if (_isLoadingSalons) 
+                                    _buildLoadingIndicator(context, theme)
+                                  else
+                                    ..._buildDynamicSalonCards(context, theme),
+                                  
+                                  const SizedBox(height: 24),
+                                  
+                                  // QR Scanner card
+                                  _buildQrScannerCard(context, theme),
+                                  
+                                  const SizedBox(height: 20),
+                                  
+                                  // Find salon card
+                                  _buildFindSalonCard(context, theme),
+                                  
+                                  const SizedBox(height: 32),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
-    ),
-    ),
+          bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+        ),
+      ),
     );
   }
 
@@ -690,20 +742,51 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
             ],
           ),
         ),
-        TextButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SalonMapScreen()),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Ver mapa'),
-              const SizedBox(width: 4),
-              Icon(Icons.arrow_forward, size: 16),
-            ],
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: _isLoadingSalons ? null : _loadDynamicSalons,
+              icon: const Icon(Icons.refresh, size: 20),
+              tooltip: 'Atualizar salões',
+            ),
+            const SizedBox(width: 4),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SalonMapScreen()),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Ver mapa'),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 16),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildLoadingIndicator(BuildContext context, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Carregando salões...',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -734,31 +817,15 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
     final isUrgent = (salon.currentWaitTimeMinutes ?? 0) <= 10;
     final isPopular = (salon.queueLength ?? 0) >= 4;
-    final cardBackground = theme.colorScheme.surface;
-    final cardBorder = theme.colorScheme.outline.withOpacity(0.2);
-    final cardShadow = theme.shadowColor.withOpacity(0.08);
-    final textColor = theme.colorScheme.onSurface;
-    final subTextColor = theme.colorScheme.onSurfaceVariant;
-    final urgentColor = theme.colorScheme.tertiary;
-    final popularColor = theme.colorScheme.primary;
-    final chipTimeColor = isUrgent ? urgentColor : theme.colorScheme.primary;
-    final chipQueueColor = isPopular ? popularColor : theme.colorScheme.secondary;
-    final chipDistanceColor = theme.colorScheme.secondary;
-    final ctaBg = theme.colorScheme.primaryContainer;
-    final ctaText = theme.colorScheme.onPrimaryContainer;
-    final buttonBg = theme.colorScheme.surface;
-    final buttonText = theme.colorScheme.primary;
-    final buttonShadow = theme.colorScheme.primary.withOpacity(0.1);
-    final favColor = _favoriteSalons.contains(salon.name) ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant;
     
     return Container(
       decoration: BoxDecoration(
-        color: cardBackground,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: cardBorder),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
-            color: cardShadow,
+            color: theme.shadowColor.withOpacity(0.08),
             blurRadius: 14,
             offset: const Offset(0, 3),
           ),
@@ -766,24 +833,23 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       ),
       child: Material(
         color: Colors.transparent,
-                  child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () {
-              // For finder: allow navigating to details regardless of login
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => SalonDetailsScreen(
-                    salon: _convertToSalon(salon),
-                    services: _convertToSalonServices(salon),
-                    contact: SalonContact(phone: '', email: ''),
-                    businessHours: [],
-                    reviews: [],
-                    additionalInfo: const {},
-                    publicSalon: salon,
-                  ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SalonDetailsScreen(
+                  salon: _convertToSalon(salon),
+                  services: _convertToSalonServices(salon),
+                  contact: const SalonContact(phone: '', email: ''),
+                  businessHours: const [],
+                  reviews: const [],
+                  additionalInfo: const {},
+                  publicSalon: salon,
                 ),
-              );
-            },
+              ),
+            );
+          },
           child: Padding(
             padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
             child: Column(
@@ -802,7 +868,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                   salon.name,
                                   style: theme.textTheme.headlineSmall?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: textColor,
+                                    color: theme.colorScheme.onSurface,
                                     fontSize: isSmallScreen ? 18 : 20,
                                     letterSpacing: -0.2,
                                   ),
@@ -817,13 +883,13 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                     vertical: isSmallScreen ? 2 : 3
                                   ),
                                   decoration: BoxDecoration(
-                                    color: urgentColor.withOpacity(0.18),
+                                    color: theme.colorScheme.tertiary.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'RÁPIDO',
                                     style: TextStyle(
-                                      color: urgentColor,
+                                      color: theme.colorScheme.tertiary,
                                       fontSize: isSmallScreen ? 8 : 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -838,13 +904,13 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                     vertical: isSmallScreen ? 2 : 3
                                   ),
                                   decoration: BoxDecoration(
-                                    color: popularColor.withOpacity(0.18),
+                                    color: theme.colorScheme.primary.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'POPULAR',
                                     style: TextStyle(
-                                      color: popularColor,
+                                      color: theme.colorScheme.primary,
                                       fontSize: isSmallScreen ? 8 : 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -855,7 +921,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                               IconButton(
                                 icon: Icon(
                                   _favoriteSalons.contains(salon.name) ? Icons.favorite : Icons.favorite_border,
-                                  color: favColor,
+                                  color: _favoriteSalons.contains(salon.name) ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant,
                                   size: isSmallScreen ? 20 : 22,
                                 ),
                                 onPressed: () {
@@ -879,7 +945,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                           Text(
                             salon.address,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: subTextColor,
+                              color: theme.colorScheme.onSurfaceVariant,
                               fontSize: isSmallScreen ? 14 : 15,
                               fontWeight: FontWeight.w400,
                             ),
@@ -902,21 +968,21 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                         context,
                         Icons.access_time,
                         '${salon.currentWaitTimeMinutes ?? 0} min',
-                        chipTimeColor,
+                        isUrgent ? theme.colorScheme.tertiary : theme.colorScheme.primary,
                         isSmallScreen: true,
                       ),
                       _buildInfoChip(
                         context,
                         Icons.people_outline,
                         '${salon.queueLength ?? 0} fila',
-                        chipQueueColor,
+                        isPopular ? theme.colorScheme.primary : theme.colorScheme.secondary,
                         isSmallScreen: true,
                       ),
                       _buildInfoChip(
                         context,
                         Icons.location_on_outlined,
                         '${(salon.distanceKm ?? 0).toStringAsFixed(1)} km',
-                        chipDistanceColor,
+                        theme.colorScheme.secondary,
                         isSmallScreen: true,
                       ),
                     ],
@@ -929,7 +995,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                           context,
                           Icons.access_time,
                           '${salon.currentWaitTimeMinutes ?? 0} min',
-                          chipTimeColor,
+                          isUrgent ? theme.colorScheme.tertiary : theme.colorScheme.primary,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -938,7 +1004,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                           context,
                           Icons.people_outline,
                           '${salon.queueLength ?? 0} fila',
-                          chipQueueColor,
+                          isPopular ? theme.colorScheme.primary : theme.colorScheme.secondary,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -947,7 +1013,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                           context,
                           Icons.location_on_outlined,
                           '${(salon.distanceKm ?? 0).toStringAsFixed(1)} km',
-                          chipDistanceColor,
+                          theme.colorScheme.secondary,
                         ),
                       ),
                     ],
@@ -957,9 +1023,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                 Container(
                   padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                   decoration: BoxDecoration(
-                    color: ctaBg,
+                    color: theme.colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: ctaText.withOpacity(0.2)),
+                    border: Border.all(color: theme.colorScheme.onPrimaryContainer.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
@@ -972,7 +1038,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                 ? 'Na fila!' 
                                 : (isUrgent ? 'Check-in rápido!' : 'Fazer check-in'),
                               style: theme.textTheme.titleMedium?.copyWith(
-                                color: ctaText,
+                                color: theme.colorScheme.onPrimaryContainer,
                                 fontWeight: FontWeight.w600,
                                 fontSize: isSmallScreen ? 15 : 16,
                               ),
@@ -982,7 +1048,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                 ? 'Posição ${_getQueueEntry(salon.name)?.position ?? 0}'
                                 : (isUrgent ? 'Sem espera' : 'Entre na fila'),
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: ctaText.withOpacity(0.7),
+                                color: theme.colorScheme.onPrimaryContainer.withOpacity(0.7),
                                 fontSize: isSmallScreen ? 11 : 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -990,22 +1056,22 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                           ],
                         ),
                       ),
-                       GestureDetector(
+                      GestureDetector(
                         onTap: _isLoading ? null : () async {
-                           Navigator.of(context).push(
-                             MaterialPageRoute(
-                               builder: (_) => AnonymousJoinQueueScreen(salon: salon),
-                             ),
-                           );
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => AnonymousJoinQueueScreen(salon: salon),
+                            ),
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           decoration: BoxDecoration(
-                             color: buttonBg,
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                 color: buttonShadow,
+                                color: theme.colorScheme.primary.withOpacity(0.1),
                                 blurRadius: 12,
                                 offset: const Offset(0, 3),
                               ),
@@ -1017,22 +1083,22 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                                 height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                   valueColor: AlwaysStoppedAnimation<Color>(buttonText),
+                                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                                 ),
                               )
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                     Icons.login, 
-                                     color: buttonText, 
+                                    Icons.login, 
+                                    color: theme.colorScheme.primary, 
                                     size: 18
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                     'Check-in',
+                                    'Check-in',
                                     style: theme.textTheme.labelLarge?.copyWith(
-                                       color: buttonText,
+                                      color: theme.colorScheme.primary,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
                                     ),
@@ -1244,6 +1310,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     final int salonCount = _dynamicSalons.length;
     final double avgQueue = salonCount > 0 ? _dynamicSalons.map((s) => s.queueLength ?? 0).reduce((a, b) => a + b) / salonCount : 0;
     final double avgWait = salonCount > 0 ? _dynamicSalons.map((s) => s.currentWaitTimeMinutes ?? 0).reduce((a, b) => a + b) / salonCount : 0;
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
@@ -1305,7 +1372,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
         children: [
           Row(
             children: [
-              Icon(Icons.queue, color: Colors.green, size: 20),
+              const Icon(Icons.queue, color: Colors.green, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Suas Filas Ativas',
@@ -1372,7 +1439,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                 ),
               );
             },
-            icon: Icon(Icons.arrow_forward_ios, color: Colors.green, size: 16),
+            icon: const Icon(Icons.arrow_forward_ios, color: Colors.green, size: 16),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),

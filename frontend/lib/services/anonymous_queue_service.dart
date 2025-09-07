@@ -176,28 +176,27 @@ class AnonymousQueueService {
           final responseData = e.response?.data;
           if (responseData is Map && responseData.containsKey('errors')) {
             final errors = responseData['errors'];
-            throw Exception('Invalid request: $errors');
-          }
-          throw Exception('Invalid request data. Please check your information and try again.');
-        } else if (e.response?.statusCode == 500) {
-          throw Exception('Server error. There appears to be a backend configuration issue. Please try again later.');
-        } else if (e.response?.statusCode == 400) {
-          // Extract field errors if available
-          final data = e.response?.data;
-          String message = 'Não foi possível entrar na fila. Verifique os dados informados.';
-          if (data is Map && data['errors'] != null) {
-            final errors = data['errors'];
             if (errors is Map) {
-              final parts = <String>[];
-              errors.forEach((k, v) {
-                parts.add('$k: $v');
+              // Handle field-specific errors
+              final fieldErrors = <String>[];
+              errors.forEach((field, messages) {
+                if (messages is List) {
+                  for (final message in messages) {
+                    fieldErrors.add('$field: $message');
+                  }
+                } else {
+                  fieldErrors.add('$field: $messages');
+                }
               });
-              if (parts.isNotEmpty) {
-                message = parts.join(' | ');
+              if (fieldErrors.isNotEmpty) {
+                throw Exception('Erro de validação:\n${fieldErrors.join('\n')}');
               }
             }
+            throw Exception('Dados inválidos: $errors');
           }
-          throw Exception(message);
+          throw Exception('Dados da solicitação inválidos. Verifique suas informações e tente novamente.');
+        } else if (e.response?.statusCode == 500) {
+          throw Exception('Erro do servidor. Parece haver um problema de configuração no backend. Tente novamente mais tarde.');
         } else {
           throw Exception('Failed to join queue: ${e.message ?? 'Network error'}');
         }

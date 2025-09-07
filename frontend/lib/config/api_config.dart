@@ -25,8 +25,8 @@ class ApiConfig {
     if (_customApiUrl != null) return ApiEnvironment.custom;
     
     // You can add more sophisticated environment detection here
-    // For now, defaulting to development
-    return ApiEnvironment.development;
+    // For production deployment, use production environment
+    return ApiEnvironment.production;
   }
 
   // Environment detection and base URL

@@ -5,7 +5,16 @@ import '../config/api_config.dart';
 /// Service for managing real-time WebSocket communication with the backend
 class SignalRService {
   WebSocketChannel? _channel;
-  final String _wsUrl = '${ApiConfig.currentBaseUrl.replaceFirst('http', 'ws')}/queueHub';
+  
+  // Configuration
+  static bool enableWebSocket = true; // Set to false to disable WebSocket connections
+  
+  String get _wsUrl {
+    final baseUrl = ApiConfig.currentBaseUrl;
+    // Convert HTTP(S) to WS(S) for WebSocket connection
+    final wsBaseUrl = baseUrl.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://');
+    return '$wsBaseUrl/queueHub';
+  }
   
   // Connection state
   bool _isConnected = false;
@@ -19,8 +28,24 @@ class SignalRService {
 
   /// Initialize the WebSocket connection
   Future<void> initialize() async {
+    // Check if WebSocket is enabled
+    if (!enableWebSocket) {
+      debugPrint('🔌 WebSocket connections are disabled');
+      debugPrint('📡 Real-time updates will not be available');
+      _isConnected = false;
+      return;
+    }
+    
     try {
-      _channel = WebSocketChannel.connect(Uri.parse(_wsUrl));
+      debugPrint('🔌 Attempting WebSocket connection to $_wsUrl');
+      
+      // Check if the WebSocket URL is valid
+      final uri = Uri.parse(_wsUrl);
+      if (!uri.hasScheme || (!uri.scheme.startsWith('ws') && !uri.scheme.startsWith('http'))) {
+        throw Exception('Invalid WebSocket URL scheme: ${uri.scheme}');
+      }
+      
+      _channel = WebSocketChannel.connect(uri);
       
       // Set up event handlers
       _setupEventHandlers();
@@ -31,7 +56,10 @@ class SignalRService {
     } catch (e) {
       debugPrint('⚠️ WebSocket connection failed: $e');
       debugPrint('📡 Real-time updates will not be available');
+      debugPrint('🔧 This is normal if the backend doesn\'t support WebSocket connections');
+      debugPrint('💡 You can disable WebSocket attempts by setting SignalRService.enableWebSocket = false');
       _isConnected = false;
+      _channel = null;
       // Don't rethrow - let the app continue without real-time updates
     }
   }
@@ -46,12 +74,16 @@ class SignalRService {
       },
       onError: (error) {
         debugPrint('⚠️ WebSocket error: $error');
+        debugPrint('📡 Real-time updates will not be available');
         _isConnected = false;
+        _channel = null;
       },
       onDone: () {
         debugPrint('📡 WebSocket connection closed');
         _isConnected = false;
+        _channel = null;
       },
+      cancelOnError: false, // Don't cancel the stream on error
     );
   }
 

@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../models/salon.dart';
+import '../../models/public_salon.dart';
 import 'salon_details_screen.dart';
 import '../../models/salon_service.dart';
 import '../../models/salon_contact.dart';
-import '../../models/salon_hours.dart';
-import '../../models/salon_review.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../../utils/palette_utils.dart';
+import '../../controllers/app_controller.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 
 SalonColors _randomSalonColors(int seed) {
@@ -32,7 +34,6 @@ SalonColors _randomSalonColors(int seed) {
 }
 
 Color waitTimeToColor(int waitTime) {
-  // Clamp waitTime between 0 and 180
   final clamped = waitTime.clamp(0, 180);
   if (clamped <= 90) {
     // 0-90 min: green to yellow
@@ -54,72 +55,284 @@ class SalonMapScreen extends StatefulWidget {
 
 class _SalonMapScreenState extends State<SalonMapScreen> {
   final MapController _mapController = MapController();
-  Salon? _selectedSalon;
+  PublicSalon? _selectedSalon;
+  List<SalonLocation> _salonLocations = [];
+  bool _isLoading = false;
+  Position? _userPosition;
   
-  // Mock salon locations
-  final List<SalonLocation> _salonLocations = [
-    SalonLocation(
-      salon: Salon(
-        name: 'Market at Mirada',
-        address: '30921 Mirada Blvd, San Antonio, FL',
-        waitTime: 24,
-        distance: 10.9,
-        isOpen: true,
-        closingTime: '6 PM',
-        isFavorite: true,
-        queueLength: 5,
-        colors: _randomSalonColors(0),
-      ),
-      position: const LatLng(28.3372, -82.2637),
-    ),
-    SalonLocation(
-      salon: Salon(
-        name: 'Cortez Commons',
-        address: '123 Cortez Ave, San Antonio, FL',
-        waitTime: 8,
-        distance: 5.2,
-        isOpen: true,
-        closingTime: '8 PM',
-        isFavorite: true,
-        queueLength: 2,
-        colors: _randomSalonColors(1),
-      ),
-      position: const LatLng(28.3422, -82.2587),
-    ),
-    SalonLocation(
-      salon: Salon(
-        name: 'Westshore Plaza',
-        address: '456 Westshore Blvd, San Antonio, FL',
-        waitTime: 15,
-        distance: 7.8,
-        isOpen: true,
-        closingTime: '9 PM',
-        isFavorite: false,
-        queueLength: 3,
-        colors: _randomSalonColors(2),
-      ),
-      position: const LatLng(28.3322, -82.2687),
-    ),
-    SalonLocation(
-      salon: Salon(
-        name: 'Tampa Bay Center',
-        address: '789 Bay Center Dr, San Antonio, FL',
-        waitTime: 32,
-        distance: 12.1,
-        isOpen: false,
-        closingTime: '7 PM',
-        isFavorite: false,
-        queueLength: 8,
-        colors: _randomSalonColors(3),
-      ),
-      position: const LatLng(28.3272, -82.2737),
-    ),
-  ];
+  // Default location (São Paulo, Brazil)
+  static const LatLng _defaultCenter = LatLng(-23.5505, -46.6333);
 
   // Filter state
   bool _filterOpenNow = false;
   bool _filterShortLine = false;
   bool _filterShortWait = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSalons();
+      _getCurrentLocation();
+    });
+  }
+
+  /// Load salons from the backend API
+  Future<void> _loadSalons() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final appController = Provider.of<AppController>(context, listen: false);
+      
+      // Check if app controller is initialized
+      if (!appController.isInitialized) {
+        print('⚠️ AppController not yet initialized, using fallback data');
+        _generateFallbackSalons();
+        return;
+      }
+      
+      // Load public salons through the anonymous controller
+      await appController.anonymous.loadPublicSalons();
+      
+      // Get the loaded salons
+      final loadedSalons = appController.anonymous.nearbySalons;
+      
+      if (loadedSalons.isNotEmpty && mounted) {
+        final salonLocations = <SalonLocation>[];
+        
+        for (int i = 0; i < loadedSalons.length; i++) {
+          final salon = loadedSalons[i];
+          
+          // Use salon coordinates if available, otherwise use default locations around São Paulo
+          final position = _getSalonPosition(salon, i);
+          
+          salonLocations.add(SalonLocation(
+            publicSalon: salon,
+            salon: _convertToSalon(salon, i),
+            position: position,
+          ));
+        }
+        
+        setState(() {
+          _salonLocations = salonLocations;
+        });
+        print('✅ Loaded ${salonLocations.length} salons for map');
+      } else {
+        print('⚠️ No salons returned from API, using fallback');
+        _generateFallbackSalons();
+      }
+    } catch (e) {
+      print('❌ Error loading salons from API: $e');
+      _generateFallbackSalons();
+      
+      
+      // Show snackbar with error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao carregar salões. Mostrando dados de exemplo.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  /// Get salon position from coordinates or generate default position
+  LatLng _getSalonPosition(PublicSalon salon, int index) {
+    if (salon.latitude != null && salon.longitude != null) {
+      return LatLng(salon.latitude!, salon.longitude!);
+    }
+    
+    // Generate positions around São Paulo if coordinates are not available
+    final baseLatitude = -23.5505;
+    final baseLongitude = -46.6333;
+    final random = index * 0.01; // Use index for consistent positioning
+    
+    return LatLng(
+      baseLatitude + (random - 0.005),
+      baseLongitude + (random - 0.005),
+    );
+  }
+
+  /// Convert PublicSalon to Salon for compatibility
+  Salon _convertToSalon(PublicSalon publicSalon, int index) {
+    return Salon(
+      name: publicSalon.name,
+      address: publicSalon.address,
+      waitTime: publicSalon.currentWaitTimeMinutes ?? 15,
+      distance: publicSalon.distanceKm ?? 1.0,
+      isOpen: publicSalon.isOpen,
+      closingTime: '19:00', // Default closing time
+      isFavorite: false,
+      queueLength: publicSalon.queueLength ?? 0,
+      colors: _randomSalonColors(index),
+    );
+  }
+
+  /// Fallback method with mock data when API is unavailable
+  void _generateFallbackSalons() {
+    _salonLocations = [
+      SalonLocation(
+        publicSalon: PublicSalon(
+          id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          name: 'Barbearia Moderna (Exemplo)',
+          address: 'Rua das Flores, 123, São Paulo',
+          latitude: -23.5505,
+          longitude: -46.6333,
+          distanceKm: 0.8,
+          isOpen: true,
+          currentWaitTimeMinutes: 25,
+          queueLength: 3,
+          isFast: true,
+          isPopular: false,
+          services: ['Haircut', 'Beard Trim', 'Hair Styling'],
+          rating: 4.5,
+          reviewCount: 120,
+        ),
+        salon: Salon(
+          name: 'Barbearia Moderna (Exemplo)',
+          address: 'Rua das Flores, 123, São Paulo',
+          waitTime: 25,
+          distance: 0.8,
+          isOpen: true,
+          closingTime: '19:00',
+          isFavorite: false,
+          queueLength: 3,
+          colors: _randomSalonColors(0),
+        ),
+        position: const LatLng(-23.5505, -46.6333),
+      ),
+      SalonLocation(
+        publicSalon: PublicSalon(
+          id: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
+          name: 'Studio Hair (Exemplo)',
+          address: 'Av. Paulista, 456, São Paulo',
+          latitude: -23.5605,
+          longitude: -46.6433,
+          distanceKm: 1.2,
+          isOpen: true,
+          currentWaitTimeMinutes: 35,
+          queueLength: 2,
+          isFast: false,
+          isPopular: true,
+          services: ['Haircut', 'Beard Trim', 'Hair Wash', 'Styling'],
+          rating: 4.8,
+          reviewCount: 89,
+        ),
+        salon: Salon(
+          name: 'Studio Hair (Exemplo)',
+          address: 'Av. Paulista, 456, São Paulo',
+          waitTime: 35,
+          distance: 1.2,
+          isOpen: true,
+          closingTime: '19:00',
+          isFavorite: false,
+          queueLength: 2,
+          colors: _randomSalonColors(1),
+        ),
+        position: const LatLng(-23.5605, -46.6433),
+      ),
+      SalonLocation(
+        publicSalon: PublicSalon(
+          id: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
+          name: 'Barbearia Clássica (Exemplo)',
+          address: 'Rua Augusta, 789, São Paulo',
+          latitude: -23.5405,
+          longitude: -46.6233,
+          distanceKm: 1.5,
+          isOpen: false,
+          currentWaitTimeMinutes: 20,
+          queueLength: 4,
+          isFast: true,
+          isPopular: true,
+          services: ['Haircut', 'Beard Trim', 'Mustache Trim'],
+          rating: 4.2,
+          reviewCount: 67,
+        ),
+        salon: Salon(
+          name: 'Barbearia Clássica (Exemplo)',
+          address: 'Rua Augusta, 789, São Paulo',
+          waitTime: 20,
+          distance: 1.5,
+          isOpen: false,
+          closingTime: '19:00',
+          isFavorite: false,
+          queueLength: 4,
+          colors: _randomSalonColors(2),
+        ),
+        position: const LatLng(-23.5405, -46.6233),
+      ),
+    ];
+    
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  /// Get user's current location
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('⚠️ Location services are disabled');
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('⚠️ Location permissions are denied');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print('⚠️ Location permissions are permanently denied');
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _userPosition = position;
+      });
+      
+      print('✅ Got user location: ${position.latitude}, ${position.longitude}');
+    } catch (e) {
+      print('❌ Error getting location: $e');
+    }
+  }
+
+  /// Move map to user's location
+  void _goToUserLocation() {
+    if (_userPosition != null) {
+      _mapController.move(
+        LatLng(_userPosition!.latitude, _userPosition!.longitude),
+        15.0,
+      );
+    } else {
+      // Try to get location again
+      _getCurrentLocation();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Obtendo sua localização...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   List<SalonLocation> get _filteredSalons {
     return _salonLocations.where((location) {
@@ -275,6 +488,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final salonPalette = CheckInState.checkedInSalon?.colors;
+    
     // Platform detection for desktop/laptop
     final isDesktop =
         defaultTargetPlatform == TargetPlatform.macOS ||
@@ -287,60 +501,112 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
          Theme.of(context).platform == TargetPlatform.windows ||
          Theme.of(context).platform == TargetPlatform.linux) ||
         (MediaQuery.of(context).size.width > 900 && Theme.of(context).platform == TargetPlatform.android);
+    
     // For web, treat as desktop if width is large
     final isWebDesktop = MediaQuery.of(context).size.width > 900 && (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS);
     final showZoomButtons = isDesktop || isWebDesktop;
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Scaffold(
       backgroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
       body: Stack(
-          children: [
+        children: [
           FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-              initialCenter: const LatLng(28.3372, -82.2637),
-                  initialZoom: 12.0,
-                  minZoom: 2.0,
-                  maxZoom: 18.0,
-                  onTap: (_, __) {
-                    setState(() {
-                      _selectedSalon = null;
-                    });
-                  },
-                  interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.all,
-                  ),
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.eutonafila.frontend',
-                    tileProvider: CancellableNetworkTileProvider(),
-                  ),
-                  MarkerLayer(
-                    markers: _filteredSalons.map((location) {
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _defaultCenter,
+              initialZoom: 12.0,
+              minZoom: 2.0,
+              maxZoom: 18.0,
+              onTap: (_, __) {
+                setState(() {
+                  _selectedSalon = null;
+                });
+              },
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all,
+              ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.eutonafila.frontend',
+                tileProvider: CancellableNetworkTileProvider(),
+              ),
+              if (!_isLoading)
+                MarkerLayer(
+                  markers: [
+                    // Salon markers
+                    ..._filteredSalons.map((location) {
                       return Marker(
                         point: location.position,
-                    width: 60,
-                    height: 60,
-                    child: GestureDetector(
+                        width: 60,
+                        height: 60,
+                        child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              _selectedSalon = location.salon;
+                              _selectedSalon = location.publicSalon;
                             });
                           },
-                      child: _buildMarker(location.salon, theme),
+                          child: _buildMarker(location.salon, theme),
                         ),
                       );
-                    }).toList(),
-                  ),
-                ],
+                    }),
+                    // User location marker
+                    if (_userPosition != null)
+                      Marker(
+                        point: LatLng(_userPosition!.latitude, _userPosition!.longitude),
+                        width: 40,
+                        height: 40,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+          
+          // Loading indicator
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 16),
+                    Text(
+                      'Carregando salões...',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
               ),
+            ),
+          
           // Zoom buttons for desktop/laptop only
           if (showZoomButtons)
             Positioned(
-              top: 120, // move higher up
-              right: 24, // move to the extreme right
+              top: 120,
+              right: 24,
               child: Column(
                 children: [
                   FloatingActionButton(
@@ -371,6 +637,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 ],
               ),
             ),
+          
           // Minimal floating AppBar
           Positioned(
             top: isSmallScreen ? 16 : 32,
@@ -411,7 +678,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     SizedBox(width: isSmallScreen ? 6 : 8),
                     Expanded(
                       child: Text(
-                        'Salões',
+                        'Mapa de Salões',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: salonPalette?.primary ?? theme.colorScheme.primary,
@@ -420,11 +687,23 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    if (_isLoading)
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            salonPalette?.primary ?? theme.colorScheme.primary
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
           ),
+          
           // Simple bottom sheet for selected salon
           if (_selectedSalon != null)
             Align(
@@ -471,7 +750,29 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                     fontSize: isMobile ? 13 : null,
                                   ),
                                   overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
+                                  maxLines: 2,
+                                ),
+                                SizedBox(height: isMobile ? 8 : 12),
+                                Row(
+                                  children: [
+                                    _buildInfoChip(
+                                      _selectedSalon!.isOpen ? 'Aberto' : 'Fechado',
+                                      _selectedSalon!.isOpen ? Colors.green : Colors.red,
+                                      Icons.access_time,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildInfoChip(
+                                      '${_selectedSalon!.currentWaitTimeMinutes ?? 0} min',
+                                      theme.colorScheme.primary,
+                                      Icons.timer,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildInfoChip(
+                                      '${_selectedSalon!.queueLength ?? 0} fila',
+                                      theme.colorScheme.secondary,
+                                      Icons.people,
+                                    ),
+                                  ],
                                 ),
                                 SizedBox(height: isMobile ? 12 : 16),
                                 Row(
@@ -479,74 +780,17 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                                     Expanded(
                                       child: ElevatedButton(
                                         onPressed: () {
+                                          // Navigate to salon details with real data
                                           Navigator.of(context).push(
                                             MaterialPageRoute(
                                               builder: (_) => SalonDetailsScreen(
-                                                salon: _selectedSalon!,
-                                                services: [
-                                                  SalonService(
-                                                    id: '1',
-                                                    name: 'Corte Feminino',
-                                                    description: 'Corte e finalização',
-                                                    price: 80.0,
-                                                    durationMinutes: 60,
-                                                    categories: ['Corte'],
-                                                  ),
-                                                  SalonService(
-                                                    id: '2',
-                                                    name: 'Coloração',
-                                                    description: 'Coloração completa',
-                                                    price: 150.0,
-                                                    durationMinutes: 120,
-                                                    categories: ['Coloração'],
-                                                  ),
-                                                ],
-                                                contact: SalonContact(
-                                                  phone: '(555) 123-4567',
-                                                  email: 'contato@salon.com',
-                                                  website: 'www.salon.com',
-                                                  instagram: '@salon',
-                                                  facebook: 'Salon',
-                                                ),
-                                                businessHours: [
-                                                  SalonHours(
-                                                    day: 'Segunda - Sexta',
-                                                    isOpen: true,
-                                                    openTime: '9:00',
-                                                    closeTime: '18:00',
-                                                  ),
-                                                  SalonHours(
-                                                    day: 'Sábado',
-                                                    isOpen: true,
-                                                    openTime: '9:00',
-                                                    closeTime: '14:00',
-                                                  ),
-                                                  SalonHours(
-                                                    day: 'Domingo',
-                                                    isOpen: false,
-                                                  ),
-                                                ],
-                                                reviews: [
-                                                  SalonReview(
-                                                    id: '1',
-                                                    userName: 'Maria Silva',
-                                                    rating: 5,
-                                                    comment: 'Excelente atendimento!',
-                                                    date: '2024-03-15',
-                                                  ),
-                                                  SalonReview(
-                                                    id: '2',
-                                                    userName: 'João Santos',
-                                                    rating: 4,
-                                                    comment: 'Muito bom serviço',
-                                                    date: '2024-03-14',
-                                                  ),
-                                                ],
-                                                additionalInfo: {
-                                                  'Estacionamento': 'Gratuito',
-                                                  'Formas de Pagamento': 'Dinheiro, Cartão, PIX',
-                                                  'Acessibilidade': 'Rampa de acesso',
-                                                },
+                                                salon: _convertToSalon(_selectedSalon!, 0),
+                                                services: _convertToSalonServices(_selectedSalon!),
+                                                contact: const SalonContact(phone: '', email: ''),
+                                                businessHours: const [],
+                                                reviews: const [],
+                                                additionalInfo: const {},
+                                                publicSalon: _selectedSalon,
                                               ),
                                             ),
                                           );
@@ -591,6 +835,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                 },
               ),
             ),
+          
           // Floating action buttons (filter, list, location)
           Positioned(
             bottom: isSmallScreen ? 16 : 32,
@@ -624,7 +869,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                     final selected = await showModalBottomSheet<int>(
                       context: context,
                       isScrollControlled: true,
-                      shape: RoundedRectangleBorder(
+                      shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                       ),
                       builder: (context) {
@@ -634,9 +879,9 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                         );
                       },
                     );
-                    if (selected != null) {
+                    if (selected != null && selected < _salonLocations.length) {
                       setState(() {
-                        _selectedSalon = _salonLocations[selected].salon;
+                        _selectedSalon = _salonLocations[selected].publicSalon;
                       });
                       _mapController.move(
                         _salonLocations[selected].position,
@@ -655,9 +900,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
                   mini: isSmallScreen,
                   backgroundColor: salonPalette?.background ?? theme.colorScheme.surface,
                   foregroundColor: salonPalette?.primary ?? theme.colorScheme.primary,
-                  onPressed: () {
-                    // TODO: Implement location functionality
-                  },
+                  onPressed: _goToUserLocation,
                   child: Icon(
                     Icons.my_location,
                     size: isSmallScreen ? 20 : 24,
@@ -671,39 +914,79 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
+  Widget _buildInfoChip(String label, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMarker(Salon salon, ThemeData theme) {
     return Container(
       width: 50,
       height: 50,
-          decoration: BoxDecoration(
+      decoration: BoxDecoration(
         color: waitTimeToColor(salon.waitTime),
-            shape: BoxShape.circle,
+        shape: BoxShape.circle,
         border: Border.all(
           color: Colors.white, 
           width: 3
         ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          child: Icon(
-            Icons.content_cut,
-            color: Colors.white,
+        ],
+      ),
+      child: const Icon(
+        Icons.content_cut,
+        color: Colors.white,
         size: 24,
       ),
     );
   }
+
+  // Convert PublicSalon services to SalonService list
+  List<SalonService> _convertToSalonServices(PublicSalon publicSalon) {
+    final services = publicSalon.services ?? ['Haircut', 'Beard Trim'];
+    return services.map((service) => SalonService(
+      id: service.toLowerCase().replaceAll(' ', '_'),
+      name: service,
+      description: 'Professional $service service',
+      price: 25.0, // Default price
+      durationMinutes: 30, // Default duration in minutes
+    )).toList();
+  }
 }
 
 class SalonLocation {
+  final PublicSalon publicSalon;
   final Salon salon;
   final LatLng position;
 
   SalonLocation({
+    required this.publicSalon,
     required this.salon,
     required this.position,
   });
@@ -876,7 +1159,6 @@ class _SalonListModalState extends State<_SalonListModal> {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                           SizedBox(height: isSmallScreen ? 6 : 8),
-                                          // Always use Wrap to prevent overflow
                                           Wrap(
                                             spacing: isSmallScreen ? 4 : 6,
                                             runSpacing: isSmallScreen ? 4 : 6,
@@ -904,7 +1186,7 @@ class _SalonListModalState extends State<_SalonListModal> {
                                               ),
                                               _buildChip(
                                                 context,
-                                                '${salon.distance} km',
+                                                '${salon.distance.toStringAsFixed(1)} km',
                                                 widget.theme.colorScheme.primary,
                                                 icon: Icons.location_on,
                                                 isSmallScreen: isSmallScreen,
@@ -973,4 +1255,4 @@ class _SalonListModalState extends State<_SalonListModal> {
       ),
     );
   }
-} 
+}

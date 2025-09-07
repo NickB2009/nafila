@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'controllers/app_controller.dart';
 import 'config/api_config.dart';
+import 'services/signalr_service.dart';
 // import removed: HomeScreen deprecated in favor of SalonFinderScreen
 import 'ui/screens/login_screen.dart';
 import 'ui/screens/register_screen.dart';
@@ -14,6 +15,9 @@ import 'ui/widgets/error_boundary.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 🔧 Disable WebSocket connections until backend supports them
+  SignalRService.enableWebSocket = false;
   
   // 🔧 API Configuration - DEVELOPMENT vs PRODUCTION
   // 
@@ -48,6 +52,7 @@ void main() {
   
   // Debug: Print API URLs to help with troubleshooting
   print('🔗 API Base URL: ${ApiConfig.currentBaseUrl}');
+  print('🔌 WebSocket connections: ${SignalRService.enableWebSocket ? 'ENABLED' : 'DISABLED'}');
   print('🔗 Salons URL: ${ApiConfig.getUrl(ApiConfig.publicSalonsEndpoint)}');
   print('🔗 Queue Join URL: ${ApiConfig.getUrl('${ApiConfig.publicEndpoint}/queue/join')}');
   
@@ -77,9 +82,11 @@ class MyApp extends StatelessWidget {
         print('🏗️ Creating new AppController instance');
         return AppController();
       },
-      child: MaterialApp(
-        title: 'EutoNaFila',
-        debugShowCheckedModeBanner: false,
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: MaterialApp(
+          title: 'EutoNaFila',
+          debugShowCheckedModeBanner: false,
         theme: themeProvider.getTheme(false),
         darkTheme: themeProvider.getTheme(true),
         themeMode: themeProvider.themeMode,
@@ -108,6 +115,7 @@ class MyApp extends StatelessWidget {
           Locale('pt', 'BR'),
           Locale('en', 'US'),
         ],
+        ),
       ),
     );
   }
@@ -143,15 +151,18 @@ class _AppInitializerState extends State<AppInitializer> {
       builder: (context, appController, child) {
         // Show loading screen while initializing
         if (appController.isInitializing || (!appController.isInitialized && appController.error == null)) {
-          return const Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Carregando dados...'),
-                ],
+          return const Directionality(
+            textDirection: TextDirection.ltr,
+            child: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Carregando dados...'),
+                  ],
+                ),
               ),
             ),
           );
@@ -159,20 +170,23 @@ class _AppInitializerState extends State<AppInitializer> {
 
         // Show error screen if initialization failed
         if (appController.error != null) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text('Error: ${appController.error}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => _initializeApp(),
-                    child: const Text('Tentar novamente'),
-                  ),
-                ],
+          return Directionality(
+            textDirection: TextDirection.ltr,
+            child: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text('Error: ${appController.error}'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => _initializeApp(),
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

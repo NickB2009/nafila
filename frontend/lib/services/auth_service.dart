@@ -52,32 +52,53 @@ class AuthService {
   /// Authenticates user with username and password
   Future<LoginResult> login(LoginRequest request) async {
     try {
+      print('🔑 Attempting login for user: ${request.username}');
+      print('🔗 Login endpoint: ${ApiConfig.getUrl(ApiConfig.authLoginEndpoint)}');
+      
       final response = await _apiClient.post(
         ApiConfig.authLoginEndpoint,
         data: request.toJson(),
       );
 
+      print('✅ Login response status: ${response.statusCode}');
+      print('📝 Login response data: ${response.data}');
+
       final loginResult = LoginResult.fromJson(response.data);
 
       // Store authentication data if login was successful
       if (loginResult.success && loginResult.token != null) {
+        print('✅ Login successful, storing auth data');
         await _storeAuthData(
           token: loginResult.token!,
           username: loginResult.username,
           role: loginResult.role,
         );
+        print('✅ Auth data stored successfully');
+      } else {
+        print('❌ Login failed: ${loginResult.error}');
+        if (loginResult.requiresTwoFactor) {
+          print('🔐 Two-factor authentication required');
+        }
       }
 
       return loginResult;
     } catch (e) {
+      print('❌ Login exception: $e');
+      
       // Parse structured errors returned with 4xx
       if (e is DioException && e.response?.data != null) {
+        print('🔍 DioException details:');
+        print('   Status: ${e.response?.statusCode}');
+        print('   Response: ${e.response?.data}');
+        print('   URL: ${e.requestOptions.uri}');
+        
         try {
           final data = e.response!.data;
           final result = LoginResult.fromJson(data);
+          print('🔍 Parsed error result: success=${result.success}, error=${result.error}');
           return result;
-        } catch (_) {
-          // Fall through to generic error
+        } catch (parseError) {
+          print('❌ Failed to parse login error response: $parseError');
         }
       }
       return const LoginResult(success: false, error: 'Erro ao efetuar login');
@@ -87,17 +108,45 @@ class AuthService {
   /// Registers a new user account
   Future<RegisterResult> register(RegisterRequest request) async {
     try {
+      print('🔐 Attempting registration for user: ${request.username}');
+      print('🔗 Registration endpoint: ${ApiConfig.getUrl(ApiConfig.authRegisterEndpoint)}');
+      
       final response = await _apiClient.post(
         ApiConfig.authRegisterEndpoint,
         data: request.toJson(),
       );
 
-      return RegisterResult.fromJson(response.data);
+      print('✅ Registration response status: ${response.statusCode}');
+      print('📝 Registration response data: ${response.data}');
+      
+      final result = RegisterResult.fromJson(response.data);
+      
+      if (result.success) {
+        print('✅ Registration successful for user: ${request.username}');
+      } else {
+        print('❌ Registration failed: ${result.error}');
+        if (result.fieldErrors != null) {
+          print('🔍 Field errors: ${result.fieldErrors}');
+        }
+      }
+      
+      return result;
     } catch (e) {
+      print('❌ Registration exception: $e');
+      
       if (e is DioException && e.response?.data != null) {
+        print('🔍 DioException details:');
+        print('   Status: ${e.response?.statusCode}');
+        print('   Response: ${e.response?.data}');
+        print('   URL: ${e.requestOptions.uri}');
+        
         try {
-          return RegisterResult.fromJson(e.response!.data);
-        } catch (_) {}
+          final result = RegisterResult.fromJson(e.response!.data);
+          print('🔍 Parsed error result: success=${result.success}, error=${result.error}');
+          return result;
+        } catch (parseError) {
+          print('❌ Failed to parse error response: $parseError');
+        }
       }
       return const RegisterResult(success: false, error: 'Erro ao criar conta');
     }

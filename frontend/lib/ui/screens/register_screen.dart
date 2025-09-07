@@ -32,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) return 'Informe o e-mail';
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\u0000?$');
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value.trim())) return 'Informe um e-mail válido';
     return null;
   }
@@ -65,6 +65,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
+    print('📝 Registration attempt:');
+    print('   Username: $username');
+    print('   Email: $email');
+    print('   Password length: ${password.length}');
+
     final req = RegisterRequest(
       username: username,
       email: email,
@@ -72,29 +77,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
       confirmPassword: confirmPassword,
     );
 
+    print('🚀 Calling auth.register()...');
     final ok = await auth.register(req);
+    
     if (!mounted) return;
+    
+    print('📊 Registration result: $ok');
+    
     if (ok) {
-      final loggedIn = await auth.login(LoginRequest(username: username, password: password));
+      print('✅ Registration successful, attempting automatic login...');
+      
+      // Wait a moment for the account to be fully activated on the backend
+      print('⏳ Waiting 2 seconds for account activation...');
+      await Future.delayed(const Duration(seconds: 2));
+      
       if (!mounted) return;
+      
+      // Try login with original credentials
+      var loggedIn = await auth.login(LoginRequest(username: username, password: password));
+      
+      if (!mounted) return;
+      
+      print('📊 Auto-login result (attempt 1): $loggedIn');
+      
+      // If first attempt failed, try with email instead of username
+      if (!loggedIn && username != email) {
+        print('🔄 First login attempt failed, trying with email instead of username...');
+        loggedIn = await auth.login(LoginRequest(username: email, password: password));
+        
+        if (!mounted) return;
+        print('📊 Auto-login result (attempt 2 with email): $loggedIn');
+      }
+      
       if (loggedIn) {
+        print('✅ Auto-login successful, switching to authenticated mode...');
         await app.switchToAuthenticatedMode();
         if (!mounted) return;
+        print('✅ Navigating to home...');
         Navigator.pushReplacementNamed(context, '/home');
         return;
+      } else {
+        print('⚠️ Auto-login failed after multiple attempts, redirecting to login screen...');
+        print('💡 User can try logging in manually with either username or email');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Conta criada com sucesso! Faça login para continuar.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pushReplacementNamed(
+          context,
+          '/login',
+          arguments: {
+            'prefillUsername': username,
+            'prefillPassword': password,
+            'showSuccessMessage': true,
+          },
+        );
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Conta criada. Faça login para continuar.')),
-      );
-      Navigator.pushReplacementNamed(
-        context,
-        '/login',
-        arguments: {
-          'prefillUsername': username,
-          'prefillPassword': password,
-        },
-      );
     } else {
+      print('❌ Registration failed');
+      print('🔍 Auth error: ${auth.error}');
+      print('🔍 Field errors: ${auth.fieldErrors}');
+      
       setState(() {
         _error = auth.error ?? 'Falha ao criar conta';
       });

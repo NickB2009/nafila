@@ -141,7 +141,9 @@ StackTrace: $_stackTrace
   Widget _buildDefaultErrorWidget(BuildContext context) {
     final theme = Theme.of(context);
     
-    return Scaffold(
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: theme.colorScheme.errorContainer,
       body: SafeArea(
         child: Padding(
@@ -331,6 +333,7 @@ StackTrace: $_stackTrace
           ),
         ),
       ),
+    ),
     );
   }
 }
