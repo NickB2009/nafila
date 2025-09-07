@@ -8,7 +8,7 @@ import '../../models/salon_hours.dart';
 import '../../models/salon_review.dart';
 import '../../models/public_salon.dart';
 import 'salon_details_screen.dart';
-import 'check_in_screen.dart';
+import 'anonymous_join_queue_screen.dart';
 import '../../controllers/app_controller.dart';
 
 // Generate salon colors for compatibility with existing screens
@@ -76,6 +76,20 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
       isFavorite: true, // All salons in favorites are favorites
       queueLength: publicSalon.queueLength ?? 0,
       colors: _generateSalonColors(colorIndex),
+    );
+  }
+
+  // Convert Salon to PublicSalon for AnonymousJoinQueueScreen
+  PublicSalon _convertToPublicSalon(Salon salon) {
+    return PublicSalon(
+      id: salon.name.toLowerCase().replaceAll(' ', '_'),
+      name: salon.name,
+      address: salon.address,
+      isOpen: salon.isOpen,
+      currentWaitTimeMinutes: salon.waitTime,
+      queueLength: salon.queueLength,
+      distanceKm: salon.distance,
+      services: ['Haircut', 'Beard Trim', 'Hair Styling', 'Hair Wash'],
     );
   }
 
@@ -172,7 +186,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Header with debug name
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -192,11 +206,29 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 16),
-                  Text(
-                    'Favoritos',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: appPalette?.onSurface ?? theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      'Favoritos',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: appPalette?.onSurface ?? theme.colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  // Debug name
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'FavoritosScreen',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -581,7 +613,9 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
                             onPressed: (salon.isOpen && !CheckInState.isCheckedIn) ? () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => CheckInScreen(salon: salon),
+                                  builder: (_) => AnonymousJoinQueueScreen(
+                                    salon: _convertToPublicSalon(salon),
+                                  ),
                                 ),
                               );
                             } : null,

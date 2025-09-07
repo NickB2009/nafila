@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../models/salon.dart';
+import '../../models/salon_service.dart';
 import 'check_in_success_screen.dart';
 
 class CheckInScreen extends StatefulWidget {
   final Salon salon;
-  const CheckInScreen({super.key, required this.salon});
+  final List<SalonService> services;
+  const CheckInScreen({super.key, required this.salon, required this.services});
 
   @override
   State<CheckInScreen> createState() => _CheckInScreenState();
@@ -17,6 +19,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   bool smsOptIn = true;
+  
+  // Service selection state
+  final Set<String> _selectedServices = <String>{};
 
   @override
   void dispose() {
@@ -53,8 +58,24 @@ class _CheckInScreenState extends State<CheckInScreen> {
                     children: [
                       // Top bar with close button
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          // Debug name
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'CheckInScreen',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                           IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () => Navigator.of(context).pop(),
@@ -171,6 +192,11 @@ class _CheckInScreenState extends State<CheckInScreen> {
                         ],
                       ),
                       SizedBox(height: fieldSpacing),
+                      // Service Selection Section
+                      Text("Serviços desejados", style: theme.textTheme.labelMedium?.copyWith(fontSize: labelFontSize, color: colors.primary)),
+                      SizedBox(height: 8),
+                      ...widget.services.map((service) => _buildServiceCard(service, theme, colors, isSmallScreen)).toList(),
+                      SizedBox(height: fieldSpacing),
                       // SMS Opt-In Section
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,6 +280,106 @@ class _CheckInScreenState extends State<CheckInScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(SalonService service, ThemeData theme, dynamic colors, bool isSmallScreen) {
+    final isSelected = _selectedServices.contains(service.id);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Card(
+        elevation: isSelected ? 4 : 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: isSelected ? colors.primary : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedServices.remove(service.id);
+              } else {
+                _selectedServices.add(service.id);
+              }
+            });
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      if (value == true) {
+                        _selectedServices.add(service.id);
+                      } else {
+                        _selectedServices.remove(service.id);
+                      }
+                    });
+                  },
+                  activeColor: colors.primary,
+                  checkColor: colors.background,
+                  fillColor: WidgetStateProperty.all(colors.primary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                ),
+                SizedBox(width: isSmallScreen ? 8 : 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? colors.primary : colors.onSurface,
+                          fontSize: isSmallScreen ? 14 : 16,
+                        ),
+                      ),
+                      if (service.description.isNotEmpty) ...[
+                        SizedBox(height: 4),
+                        Text(
+                          service.description,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.secondary,
+                            fontSize: isSmallScreen ? 11 : 13,
+                          ),
+                        ),
+                      ],
+                      SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'R\$ ${service.price.toStringAsFixed(2)}',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colors.primary,
+                              fontSize: isSmallScreen ? 13 : 15,
+                            ),
+                          ),
+                          Text(
+                            '${service.durationMinutes} min',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.secondary,
+                              fontSize: isSmallScreen ? 11 : 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

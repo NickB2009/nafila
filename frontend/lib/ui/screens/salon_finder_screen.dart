@@ -12,6 +12,7 @@ import '../../services/anonymous_queue_service.dart';
 import '../../services/anonymous_user_service.dart';
 import 'salon_map_screen.dart';
 import 'salon_details_screen.dart';
+import 'anonymous_join_queue_screen.dart';
 import 'anonymous_queue_status_screen.dart';
 import 'account_screen.dart';
 import 'qr_join_screen.dart';
@@ -300,7 +301,30 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       child: Focus(
         autofocus: false,
         child: Scaffold(
-          body: CustomScrollView(
+          body: Stack(
+            children: [
+              // Debug name for screen identification
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'SalonFinderScreen',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              // Main content
+              CustomScrollView(
         slivers: [
           // Clean Hero App Bar
           SliverAppBar(
@@ -447,6 +471,8 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
           ),
         ],
       ),
+            ],
+          ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     ),
     ),
@@ -880,15 +906,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
                         onTap: _isLoading ? null : () async {
                            Navigator.of(context).push(
                              MaterialPageRoute(
-                               builder: (_) => SalonDetailsScreen(
-                                 salon: _convertToSalon(salon),
-                                 services: _convertToSalonServices(salon),
-                                 contact: SalonContact(phone: '', email: ''),
-                                 businessHours: [],
-                                 reviews: [],
-                                  additionalInfo: const {},
-                                  publicSalon: salon,
-                               ),
+                               builder: (_) => AnonymousJoinQueueScreen(salon: salon),
                              ),
                            );
                         },

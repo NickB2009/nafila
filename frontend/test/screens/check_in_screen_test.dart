@@ -1,131 +1,128 @@
-import 'package:eutonafila_frontend/ui/screens/check_in_screen.dart';
-import 'package:eutonafila_frontend/ui/screens/check_in_success_screen.dart';
-import 'package:eutonafila_frontend/models/salon.dart';
+import 'package:eutonafila_frontend/ui/screens/anonymous_join_queue_screen.dart';
+import 'package:eutonafila_frontend/models/public_salon.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final dummySalon = Salon(
+  final dummyPublicSalon = PublicSalon(
+    id: 'barbearia_teste',
     name: 'Barbearia Teste',
     address: 'Rua Exemplo, 123',
-    waitTime: 10,
-    distance: 1.2,
     isOpen: true,
-    closingTime: '18:00',
-    isFavorite: false,
+    currentWaitTimeMinutes: 10,
     queueLength: 3,
-    colors: SalonColors(
-      primary: Colors.blue,
-      secondary: Colors.blueAccent,
-      background: Colors.white,
-      onSurface: Colors.black,
-    ),
+    distanceKm: 1.2,
+    services: ['Haircut', 'Beard Trim', 'Hair Styling'],
   );
 
   Widget buildTestable({Widget? child}) {
     return MaterialApp(
-      home: child ?? CheckInScreen(salon: dummySalon),
+      home: child ?? AnonymousJoinQueueScreen(salon: dummyPublicSalon),
     );
   }
 
-  group('CheckInScreen', () {
+  group('AnonymousJoinQueueScreen', () {
     testWidgets('renders all main sections and widgets', (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200)); // Larger surface
       await tester.pumpWidget(buildTestable());
       
-      // Title (only 1 "Check-in" text - just the title, button says "Confirmar Check-in")
-      expect(find.text('Check-in'), findsOneWidget);
+      // Title
+      expect(find.text('Entrar na fila'), findsOneWidget);
       
       // Salon info
       expect(find.text('Barbearia Teste'), findsOneWidget);
       expect(find.text('Rua Exemplo, 123'), findsOneWidget);
       
       // User info fields
-      expect(find.text('Nome completo'), findsOneWidget);
+      expect(find.text('Seus dados'), findsOneWidget);
       expect(find.byType(TextField), findsNWidgets(2));
-      expect(find.text('Digite seu nome'), findsOneWidget);
-      expect(find.text('Digite seu telefone'), findsOneWidget);
+      expect(find.text('Seu nome *'), findsOneWidget);
+      expect(find.text('E-mail *'), findsOneWidget);
       
-      // Dropdown
-      expect(find.text('Número de pessoas cortando o cabelo'), findsOneWidget);
-      expect(find.text('1 pessoa'), findsOneWidget);
+      // Service selection
+      expect(find.text('Serviços solicitados (opcional)'), findsOneWidget);
+      expect(find.text('Haircut'), findsOneWidget);
+      expect(find.text('Beard Trim'), findsOneWidget);
+      expect(find.text('Hair Styling'), findsOneWidget);
       
-      // Checkbox
-      expect(find.byType(Checkbox), findsOneWidget);
-      expect(find.textContaining('Receba uma mensagem avisando'), findsOneWidget);
+      // Notification preferences
+      expect(find.text('Preferências de notificação'), findsOneWidget);
+      expect(find.text('Notificações por e-mail'), findsOneWidget);
+      expect(find.text('Notificações no navegador'), findsOneWidget);
       
       // Button
-      expect(find.widgetWithText(ElevatedButton, 'Confirmar Check-in'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Entrar na fila'), findsOneWidget);
     });
 
-    testWidgets('close button pops the screen', (WidgetTester tester) async {
+    testWidgets('back button pops the screen', (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       await tester.pumpWidget(buildTestable());
-      await tester.tap(find.byIcon(Icons.close));
+      await tester.tap(find.byIcon(Icons.arrow_back));
       await tester.pumpAndSettle();
-      // Close button should work without throwing
-      expect(find.byIcon(Icons.close), findsNothing);
+      // Back button should work without throwing
+      expect(find.byIcon(Icons.arrow_back), findsNothing);
     });
 
-    testWidgets('dropdown changes value', (WidgetTester tester) async {
+    testWidgets('service selection toggles', (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       await tester.pumpWidget(buildTestable());
-      await tester.tap(find.text('1 pessoa'));
+      
+      // Haircut should be selected by default
+      expect(find.text('Haircut'), findsOneWidget);
+      
+      // Tap on Beard Trim to select it
+      await tester.tap(find.text('Beard Trim'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('2 pessoas').last);
-      await tester.pumpAndSettle();
-      expect(find.text('2 pessoas'), findsOneWidget);
+      
+      // Both services should now be selected
+      expect(find.text('Haircut'), findsOneWidget);
+      expect(find.text('Beard Trim'), findsOneWidget);
     });
 
-    testWidgets('checkbox toggles', (WidgetTester tester) async {
+    testWidgets('notification checkboxes toggle', (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       await tester.pumpWidget(buildTestable());
-      final checkbox = find.byType(Checkbox);
-      expect(tester.widget<Checkbox>(checkbox).value, isTrue);
-      await tester.tap(checkbox);
+      
+      final checkboxes = find.byType(Checkbox);
+      expect(checkboxes, findsNWidgets(2));
+      
+      // Both should be checked by default
+      expect(tester.widget<Checkbox>(checkboxes.at(0)).value, isTrue);
+      expect(tester.widget<Checkbox>(checkboxes.at(1)).value, isTrue);
+      
+      // Toggle first checkbox
+      await tester.tap(checkboxes.at(0));
       await tester.pumpAndSettle();
-      expect(tester.widget<Checkbox>(checkbox).value, isFalse);
+      expect(tester.widget<Checkbox>(checkboxes.at(0)).value, isFalse);
     });
 
     testWidgets('text fields accept input', (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       await tester.pumpWidget(buildTestable());
-      final nameField = find.widgetWithText(TextField, 'Digite seu nome');
-      final phoneField = find.widgetWithText(TextField, 'Digite seu telefone');
+      
+      final nameField = find.widgetWithText(TextField, 'Seu nome *');
+      final emailField = find.widgetWithText(TextField, 'E-mail *');
+      
       await tester.enterText(nameField, 'João Teste');
-      await tester.enterText(phoneField, '11999999999');
+      await tester.enterText(emailField, 'joao@teste.com');
+      
       expect(find.text('João Teste'), findsOneWidget);
-      expect(find.text('11999999999'), findsOneWidget);
+      expect(find.text('joao@teste.com'), findsOneWidget);
     });
 
-    testWidgets('Check-in button navigates to CheckInSuccessScreen', (WidgetTester tester) async {
+    testWidgets('all labels and sections are present', (WidgetTester tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       await tester.pumpWidget(buildTestable());
       
-      // The button should be visible with the larger surface
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Confirmar Check-in'));
-      await tester.pumpAndSettle();
-      await tester.pump(const Duration(seconds: 3)); // Let timer finish
-      expect(find.byType(CheckInSuccessScreen), findsOneWidget);
-    });
-
-    testWidgets('all labels and hints are present', (WidgetTester tester) async {
-      await tester.binding.setSurfaceSize(const Size(800, 1200));
-      await tester.pumpWidget(buildTestable());
-      
-      expect(find.text('Nome completo'), findsOneWidget);
-      expect(find.text('Digite seu nome'), findsOneWidget);
-      expect(find.text('Número de pessoas cortando o cabelo'), findsOneWidget);
-      expect(find.text('Telefone'), findsOneWidget);
-      expect(find.text('Digite seu telefone'), findsOneWidget);
-      expect(find.textContaining('Receba uma mensagem avisando'), findsOneWidget);
-      expect(
-        find.byWidgetPredicate(
-          (widget) => widget is RichText && widget.text.toPlainText().contains('Política de Privacidade'),
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('Entrar na fila'), findsOneWidget);
+      expect(find.text('Seus dados'), findsOneWidget);
+      expect(find.text('Seu nome *'), findsOneWidget);
+      expect(find.text('E-mail *'), findsOneWidget);
+      expect(find.text('Serviços solicitados (opcional)'), findsOneWidget);
+      expect(find.text('Preferências de notificação'), findsOneWidget);
+      expect(find.text('Notificações por e-mail'), findsOneWidget);
+      expect(find.text('Notificações no navegador'), findsOneWidget);
     });
   });
 } 
