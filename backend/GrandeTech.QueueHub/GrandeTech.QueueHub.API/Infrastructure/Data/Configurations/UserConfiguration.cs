@@ -13,13 +13,17 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.HasKey(u => u.Id);
 
             // Configure only known properties
-            builder.Property(u => u.Username)
+            builder.Property(u => u.FullName)
                 .IsRequired()
                 .HasMaxLength(100);
 
             builder.Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(255);
+
+            builder.Property(u => u.PhoneNumber)
+                .IsRequired()
+                .HasMaxLength(20);
 
             builder.Property(u => u.PasswordHash)
                 .IsRequired()
@@ -37,13 +41,13 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.Ignore("Permissions");
 
             // Basic indexes on known properties
-            builder.HasIndex(u => u.Username)
-                .IsUnique()
-                .HasDatabaseName("IX_Users_Username");
-
             builder.HasIndex(u => u.Email)
                 .IsUnique()
                 .HasDatabaseName("IX_Users_Email");
+
+            builder.HasIndex(u => u.PhoneNumber)
+                .IsUnique()
+                .HasDatabaseName("IX_Users_PhoneNumber");
         }
     }
 } 

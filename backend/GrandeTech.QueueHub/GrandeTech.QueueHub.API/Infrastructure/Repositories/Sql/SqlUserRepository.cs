@@ -29,8 +29,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
                 throw new ArgumentException("Username cannot be null or whitespace", nameof(username));
 
             return await _dbSet
-                .FirstOrDefaultAsync(u => u.Username == username, cancellationToken);
+                .FirstOrDefaultAsync(u => u.FullName == username, cancellationToken); // Map username to FullName
         }
+
 
         public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
@@ -41,13 +42,23 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
                 .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
         }
 
+        public async Task<User?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                throw new ArgumentException("Phone number cannot be null or whitespace", nameof(phoneNumber));
+
+            return await _dbSet
+                .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber, cancellationToken);
+        }
+
+
         public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(username))
                 return false;
 
             return await _dbSet
-                .AnyAsync(u => u.Username == username, cancellationToken);
+                .AnyAsync(u => u.FullName == username, cancellationToken); // Map username to FullName
         }
 
         public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
@@ -57,6 +68,15 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
 
             return await _dbSet
                 .AnyAsync(u => u.Email == email, cancellationToken);
+        }
+
+        public async Task<bool> ExistsByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                return false;
+
+            return await _dbSet
+                .AnyAsync(u => u.PhoneNumber == phoneNumber, cancellationToken);
         }
 
         public async Task AddAsync(User user, CancellationToken cancellationToken = default)

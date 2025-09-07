@@ -8,13 +8,17 @@ namespace Grande.Fila.API.Domain.Users
     public class User : BaseEntity, IAggregateRoot
     {
         [Required]
-        [StringLength(50)]
-        public string Username { get; private set; } = string.Empty;
+        [StringLength(100)]
+        public string FullName { get; private set; } = string.Empty;
 
         [Required]
         [EmailAddress]
         [StringLength(100)]
         public string Email { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string PhoneNumber { get; private set; } = string.Empty;
 
         [Required]
         public string PasswordHash { get; set; }
@@ -30,10 +34,11 @@ namespace Grande.Fila.API.Domain.Users
         public List<string> Permissions { get; private set; } = new List<string>();
 
         // For EF Core and Bogus
-        private User() 
+        private User()
         {
-            Username = string.Empty;
+            FullName = string.Empty;
             Email = string.Empty;
+            PhoneNumber = string.Empty;
             PasswordHash = string.Empty;
             Role = string.Empty;
             IsActive = true;
@@ -41,11 +46,12 @@ namespace Grande.Fila.API.Domain.Users
             RequiresTwoFactor = false;
         }
 
-        public User(string username, string email, string passwordHash, string role)
+        public User(string fullName, string email, string phoneNumber, string passwordHash, string role)
         {
             Id = Guid.NewGuid();
-            Username = username;
+            FullName = fullName;
             Email = email;
+            PhoneNumber = phoneNumber;
             PasswordHash = passwordHash;
             Role = role;
             IsActive = true;

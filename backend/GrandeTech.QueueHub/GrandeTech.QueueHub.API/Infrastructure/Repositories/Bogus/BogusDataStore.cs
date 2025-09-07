@@ -17,28 +17,33 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         private static bool _isInitialized = false;
         
         // Test user constants for each role
-        private static readonly string TestPlatformAdminUsername = "platformadmin_test";
+        private static readonly string TestPlatformAdminFullName = "Platform Admin Test";
         private static readonly string TestPlatformAdminEmail = "platformadmin@test.com";
         private static readonly string TestPlatformAdminPassword = "PlatformAdminPass123!";
+        private static readonly string TestPlatformAdminPhone = "+1555123456";
         private static readonly string TestPlatformAdminRole = UserRoles.PlatformAdmin;
-        
-        private static readonly string TestOwnerUsername = "owner_test";
+
+        private static readonly string TestOwnerFullName = "Owner Test";
         private static readonly string TestOwnerEmail = "owner@test.com";
+        private static readonly string TestOwnerPhone = "+1555123457";
         private static readonly string TestOwnerPassword = "OwnerPass123!";
         private static readonly string TestOwnerRole = UserRoles.Owner;
         
-        private static readonly string TestStaffUsername = "staff_test";
+        private static readonly string TestStaffFullName = "Staff Test";
         private static readonly string TestStaffEmail = "staff@test.com";
+        private static readonly string TestStaffPhone = "+1555123458";
         private static readonly string TestStaffPassword = "StaffPass123!";
         private static readonly string TestStaffRole = UserRoles.Staff;
-        
-        private static readonly string TestCustomerUsername = "customer_test";
+
+        private static readonly string TestCustomerFullName = "Customer Test";
         private static readonly string TestCustomerEmail = "customer@test.com";
+        private static readonly string TestCustomerPhone = "+1555123459";
         private static readonly string TestCustomerPassword = "CustomerPass123!";
         private static readonly string TestCustomerRole = UserRoles.Customer;
-        
-        private static readonly string TestServiceAccountUsername = "service_test";
+
+        private static readonly string TestServiceAccountFullName = "Service Account Test";
         private static readonly string TestServiceAccountEmail = "service@test.com";
+        private static readonly string TestServiceAccountPhone = "+1555123460";
         private static readonly string TestServiceAccountPassword = "ServicePass123!";
         private static readonly string TestServiceAccountRole = UserRoles.ServiceAccount;
 
@@ -167,8 +172,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             // Generate initial users
             var userFaker = new global::Bogus.Faker<User>()
                 .CustomInstantiator(f => new User(
-                    f.Internet.UserName(),
+                    f.Name.FullName(),
                     f.Internet.Email(),
+                    f.Phone.PhoneNumber("##########"),
                     BCrypt.Net.BCrypt.HashPassword(f.Internet.Password()),
                     f.PickRandom(UserRoles.AllRoles.AsEnumerable())
                 ));
@@ -204,12 +210,13 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         {
             Initialize();
             var users = _dataStore[typeof(User)];
-            var platformAdminUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestPlatformAdminUsername);
+            var platformAdminUser = users.Values.Cast<User>().FirstOrDefault(u => u.Role == TestPlatformAdminRole);
             if (platformAdminUser == null)
             {
                 platformAdminUser = new User(
-                    TestPlatformAdminUsername,
+                    TestPlatformAdminFullName,
                     TestPlatformAdminEmail,
+                    TestPlatformAdminPhone,
                     BCrypt.Net.BCrypt.HashPassword(TestPlatformAdminPassword),
                     TestPlatformAdminRole
                 );
@@ -231,12 +238,13 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         {
             Initialize();
             var users = _dataStore[typeof(User)];
-            var ownerUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestOwnerUsername);
+            var ownerUser = users.Values.Cast<User>().FirstOrDefault(u => u.Role == TestOwnerRole);
             if (ownerUser == null)
             {
                 ownerUser = new User(
-                    TestOwnerUsername,
+                    TestOwnerFullName,
                     TestOwnerEmail,
+                    TestOwnerPhone,
                     BCrypt.Net.BCrypt.HashPassword(TestOwnerPassword),
                     TestOwnerRole
                 );
@@ -262,12 +270,13 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         {
             Initialize();
             var users = _dataStore[typeof(User)];
-            var staffUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestStaffUsername);
+            var staffUser = users.Values.Cast<User>().FirstOrDefault(u => u.Role == TestStaffRole);
             if (staffUser == null)
             {
                 staffUser = new User(
-                    TestStaffUsername,
+                    TestStaffFullName,
                     TestStaffEmail,
+                    TestStaffPhone,
                     BCrypt.Net.BCrypt.HashPassword(TestStaffPassword),
                     TestStaffRole
                 );
@@ -289,12 +298,13 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         {
             Initialize();
             var users = _dataStore[typeof(User)];
-            var customerUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestCustomerUsername);
+            var customerUser = users.Values.Cast<User>().FirstOrDefault(u => u.Role == TestCustomerRole);
             if (customerUser == null)
             {
                 customerUser = new User(
-                    TestCustomerUsername,
+                    TestCustomerFullName,
                     TestCustomerEmail,
+                    TestCustomerPhone,
                     BCrypt.Net.BCrypt.HashPassword(TestCustomerPassword),
                     TestCustomerRole
                 );
@@ -316,12 +326,13 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         {
             Initialize();
             var users = _dataStore[typeof(User)];
-            var serviceUser = users.Values.Cast<User>().FirstOrDefault(u => u.Username == TestServiceAccountUsername);
+            var serviceUser = users.Values.Cast<User>().FirstOrDefault(u => u.Role == TestServiceAccountRole);
             if (serviceUser == null)
             {
                 serviceUser = new User(
-                    TestServiceAccountUsername,
+                    TestServiceAccountFullName,
                     TestServiceAccountEmail,
+                    TestServiceAccountPhone,
                     BCrypt.Net.BCrypt.HashPassword(TestServiceAccountPassword),
                     TestServiceAccountRole
                 );

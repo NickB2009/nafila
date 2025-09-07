@@ -30,29 +30,19 @@ namespace Grande.Fila.API.Application.Auth
         {
             var result = new LoginResult { Success = false };
 
-            // Normalize identifier
-            var identifier = request.Username?.Trim();
-            if (string.IsNullOrWhiteSpace(identifier))
+            // Normalize phone number
+            var phoneNumber = request.PhoneNumber?.Trim();
+            if (string.IsNullOrWhiteSpace(phoneNumber))
             {
-                result.Error = "Invalid username or password.";
+                result.Error = "Invalid phone number or password.";
                 return result;
             }
 
-            // Support email-or-username login
-            User? user;
-            if (identifier.Contains("@"))
-            {
-                var emailNorm = identifier.ToLowerInvariant();
-                user = await _userRepo.GetByEmailAsync(emailNorm, cancellationToken);
-            }
-            else
-            {
-                var usernameNorm = identifier; // keep original casing for username, DB collation may be CI
-                user = await _userRepo.GetByUsernameAsync(usernameNorm, cancellationToken);
-            }
+            // Get user by phone number
+            var user = await _userRepo.GetByPhoneNumberAsync(phoneNumber, cancellationToken);
             if (user == null)
             {
-                result.Error = "Invalid username or password.";
+                result.Error = "Invalid phone number or password.";
                 return result;
             }
 
@@ -94,7 +84,7 @@ namespace Grande.Fila.API.Application.Auth
 
             result.Success = true;
             result.Token = token;
-            result.Username = user.Username;
+            result.Username = user.FullName; // Using FullName since Username no longer exists
             result.Role = user.Role;
             result.Permissions = GetUserPermissions(user.Role);
 
@@ -103,36 +93,34 @@ namespace Grande.Fila.API.Application.Auth
 
         public async Task<RegisterResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
         {
-            var result = new RegisterResult 
-            { 
+            var result = new RegisterResult
+            {
                 Success = false,
                 FieldErrors = new Dictionary<string, string>()
             };
 
             // Validation
-            if (string.IsNullOrWhiteSpace(request.Username))
-                result.FieldErrors["Username"] = "Username is required.";
+            if (string.IsNullOrWhiteSpace(request.FullName))
+                result.FieldErrors["FullName"] = "Full name is required.";
             if (string.IsNullOrWhiteSpace(request.Email))
                 result.FieldErrors["Email"] = "Email is required.";
-            if (string.IsNullOrWhiteSpace(request.Password))
-                result.FieldErrors["Password"] = "Password is required.";
-            if (request.Password != request.ConfirmPassword)
-                result.FieldErrors["ConfirmPassword"] = "Passwords do not match.";
+            if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+                result.FieldErrors["PhoneNumber"] = "Phone number is required.";
+
+            // Password strength validation
+            var (passwordValid, passwordError) = ValidatePasswordStrength(request.Password);
+            if (!passwordValid)
+                result.FieldErrors["Password"] = passwordError;
 
             if (result.FieldErrors.Count > 0)
                 return result;
 
-            // Check uniqueness
-            var normalizedUsername = request.Username?.Trim();
+            // Normalize inputs
+            var normalizedFullName = request.FullName?.Trim();
             var normalizedEmail = request.Email?.Trim().ToLowerInvariant();
+            var normalizedPhoneNumber = request.PhoneNumber?.Trim();
 
-            var usernameExists = await _userRepo.ExistsByUsernameAsync(normalizedUsername!, cancellationToken);
-            if (usernameExists)
-            {
-                result.FieldErrors["Username"] = "Username is already taken.";
-                return result;
-            }
-
+            // Check uniqueness
             var emailExists = await _userRepo.ExistsByEmailAsync(normalizedEmail!, cancellationToken);
             if (emailExists)
             {
@@ -140,9 +128,16 @@ namespace Grande.Fila.API.Application.Auth
                 return result;
             }
 
+            var phoneExists = await _userRepo.ExistsByPhoneNumberAsync(normalizedPhoneNumber!, cancellationToken);
+            if (phoneExists)
+            {
+                result.FieldErrors["PhoneNumber"] = "Phone number is already registered.";
+                return result;
+            }
+
             // Create user
             var passwordHash = HashPassword(request.Password);
-            var user = new User(normalizedUsername!, normalizedEmail!, passwordHash, "User"); // Default role is "User"
+            var user = new User(normalizedFullName!, normalizedEmail!, normalizedPhoneNumber!, passwordHash, "Customer");
 
             try
             {
@@ -169,8 +164,9 @@ namespace Grande.Fila.API.Application.Auth
             var claims = new List<Claim>
             {
                 new Claim(TenantClaims.UserId, user.Id.ToString()),
-                new Claim(TenantClaims.Username, user.Username),
+                new Claim(TenantClaims.Username, user.FullName), // Using FullName since Username no longer exists
                 new Claim(TenantClaims.Email, user.Email),
+                new Claim("PhoneNumber", user.PhoneNumber), // Add phone number to JWT claims
                 new Claim(TenantClaims.Role, mappedRole)
             };
 
@@ -242,6 +238,26 @@ namespace Grande.Fila.API.Application.Auth
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
 
+        private (bool IsValid, string ErrorMessage) ValidatePasswordStrength(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+                return (false, "Password is required.");
+
+            if (password.Length < 8)
+                return (false, "Password must be at least 8 characters long.");
+
+            if (!password.Any(char.IsUpper))
+                return (false, "Password must contain at least one uppercase letter.");
+
+            if (!password.Any(char.IsLower))
+                return (false, "Password must contain at least one lowercase letter.");
+
+            if (!password.Any(char.IsDigit))
+                return (false, "Password must contain at least one number.");
+
+            return (true, string.Empty);
+        }
+
         private string[] GetUserPermissions(string role)
         {
             return role switch
@@ -295,10 +311,10 @@ namespace Grande.Fila.API.Application.Auth
         {
             var result = new AdminVerificationResult { Success = false };
 
-            var user = await _userRepo.GetByUsernameAsync(request.Username, cancellationToken);
+            var user = await _userRepo.GetByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
             if (user == null)
             {
-                result.Error = "Invalid username.";
+                result.Error = "Invalid phone number.";
                 return result;
             }
 
@@ -338,10 +354,10 @@ namespace Grande.Fila.API.Application.Auth
         {
             var result = new LoginResult { Success = false };
 
-            var user = await _userRepo.GetByUsernameAsync(request.Username, cancellationToken);
+            var user = await _userRepo.GetByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
             if (user == null)
             {
-                result.Error = "Invalid username.";
+                result.Error = "Invalid phone number.";
                 return result;
             }
 
@@ -366,7 +382,7 @@ namespace Grande.Fila.API.Application.Auth
 
             result.Success = true;
             result.Token = token;
-            result.Username = user.Username;
+            result.Username = user.FullName; // Using FullName since Username no longer exists
             result.Role = user.Role;
             result.Permissions = GetUserPermissions(user.Role);
 

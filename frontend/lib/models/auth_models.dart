@@ -5,18 +5,21 @@ part 'auth_models.g.dart';
 /// Request model for user login
 @JsonSerializable()
 class LoginRequest {
-  final String username;
+  final String phoneNumber;
   final String password;
 
   const LoginRequest({
-    required this.username,
+    required this.phoneNumber,
     required this.password,
   });
 
   factory LoginRequest.fromJson(Map<String, dynamic> json) =>
       _$LoginRequestFromJson(json);
 
-  Map<String, dynamic> toJson() => _$LoginRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+    'PhoneNumber': phoneNumber,
+    'Password': password,
+  };
 }
 
 /// Response model for login results
@@ -25,7 +28,9 @@ class LoginResult {
   final bool success;
   final String? token;
   final String? error;
-  final String? username;
+  final String? fullName;
+  final String? phoneNumber;
+  final String? email;
   final String? role;
   final List<String>? permissions;
   final bool requiresTwoFactor;
@@ -35,7 +40,9 @@ class LoginResult {
     required this.success,
     this.token,
     this.error,
-    this.username,
+    this.fullName,
+    this.phoneNumber,
+    this.email,
     this.role,
     this.permissions,
     this.requiresTwoFactor = false,
@@ -51,22 +58,27 @@ class LoginResult {
 /// Request model for user registration
 @JsonSerializable()
 class RegisterRequest {
-  final String username;
+  final String fullName;
   final String email;
+  final String phoneNumber;
   final String password;
-  final String confirmPassword;
 
   const RegisterRequest({
-    required this.username,
+    required this.fullName,
     required this.email,
+    required this.phoneNumber,
     required this.password,
-    required this.confirmPassword,
   });
 
   factory RegisterRequest.fromJson(Map<String, dynamic> json) =>
       _$RegisterRequestFromJson(json);
 
-  Map<String, dynamic> toJson() => _$RegisterRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+    'FullName': fullName,
+    'Email': email,
+    'PhoneNumber': phoneNumber,
+    'Password': password,
+  };
 }
 
 /// Response model for registration results
@@ -91,12 +103,12 @@ class RegisterResult {
 /// Request model for two-factor authentication verification
 @JsonSerializable()
 class VerifyTwoFactorRequest {
-  final String username;
+  final String phoneNumber;
   final String twoFactorCode;
   final String twoFactorToken;
 
   const VerifyTwoFactorRequest({
-    required this.username,
+    required this.phoneNumber,
     required this.twoFactorCode,
     required this.twoFactorToken,
   });
@@ -110,12 +122,12 @@ class VerifyTwoFactorRequest {
 /// Request model for admin verification
 @JsonSerializable()
 class AdminVerificationRequest {
-  final String username;
+  final String phoneNumber;
   final String twoFactorCode;
   final String twoFactorToken;
 
   const AdminVerificationRequest({
-    required this.username,
+    required this.phoneNumber,
     required this.twoFactorCode,
     required this.twoFactorToken,
   });
@@ -145,4 +157,37 @@ class AdminVerificationResult {
       _$AdminVerificationResultFromJson(json);
 
   Map<String, dynamic> toJson() => _$AdminVerificationResultToJson(this);
+}
+
+/// User model for profile information
+@JsonSerializable()
+class User {
+  final String id;
+  final String fullName;
+  final String email;
+  final String phoneNumber;
+  final String role;
+  final List<String> permissions;
+
+  const User({
+    required this.id,
+    required this.fullName,
+    required this.email,
+    required this.phoneNumber,
+    required this.role,
+    required this.permissions,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['UserId'] ?? json['id'] ?? '',
+      fullName: json['FullName'] ?? json['fullName'] ?? '',
+      email: json['Email'] ?? json['email'] ?? '',
+      phoneNumber: json['PhoneNumber'] ?? json['phoneNumber'] ?? '',
+      role: json['Role'] ?? json['role'] ?? '',
+      permissions: List<String>.from(json['Permissions'] ?? json['permissions'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toJson() => _$UserToJson(this);
 }

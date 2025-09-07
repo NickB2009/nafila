@@ -74,8 +74,9 @@ namespace Grande.Fila.API.Controllers
         public ActionResult<object> GetProfile()
         {
             var userId = User.FindFirst(TenantClaims.UserId)?.Value;
-            var username = User.FindFirst(TenantClaims.Username)?.Value;
+            var fullName = User.FindFirst(TenantClaims.Username)?.Value; // Username claim now contains FullName
             var email = User.FindFirst(TenantClaims.Email)?.Value;
+            var phoneNumber = User.FindFirst("PhoneNumber")?.Value;
             var role = User.FindFirst(TenantClaims.Role)?.Value;
             var permissions = User.FindFirst(TenantClaims.Permissions)?.Value;
 
@@ -98,8 +99,9 @@ namespace Grande.Fila.API.Controllers
             return Ok(new
             {
                 UserId = userId,
-                Username = username,
+                FullName = fullName,
                 Email = email,
+                PhoneNumber = phoneNumber,
                 Role = role,
                 Permissions = deserializedPermissions
             });

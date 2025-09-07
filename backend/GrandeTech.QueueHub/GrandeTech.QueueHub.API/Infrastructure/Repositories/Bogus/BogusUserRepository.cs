@@ -19,8 +19,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             var users = BogusDataStore.GetAll<User>();
-            return Task.FromResult(users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)));
+            return Task.FromResult(users.FirstOrDefault(u => u.FullName.Equals(username, StringComparison.OrdinalIgnoreCase))); // Map username to FullName
         }
+
 
         public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
@@ -28,16 +29,29 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             return Task.FromResult(users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)));
         }
 
+        public Task<User?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+        {
+            var users = BogusDataStore.GetAll<User>();
+            return Task.FromResult(users.FirstOrDefault(u => u.PhoneNumber.Equals(phoneNumber, StringComparison.OrdinalIgnoreCase)));
+        }
+
+
         public Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             var users = BogusDataStore.GetAll<User>();
-            return Task.FromResult(users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)));
+            return Task.FromResult(users.Any(u => u.FullName.Equals(username, StringComparison.OrdinalIgnoreCase))); // Map username to FullName
         }
 
         public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
             var users = BogusDataStore.GetAll<User>();
             return Task.FromResult(users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        public Task<bool> ExistsByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+        {
+            var users = BogusDataStore.GetAll<User>();
+            return Task.FromResult(users.Any(u => u.PhoneNumber.Equals(phoneNumber, StringComparison.OrdinalIgnoreCase)));
         }
 
         public Task AddAsync(User user, CancellationToken cancellationToken = default)

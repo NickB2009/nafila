@@ -15,7 +15,7 @@ namespace Grande.Fila.API.Controllers
             var users = BogusDataStore.GetAll<User>();
             return Ok(new { 
                 Count = users.Count, 
-                Users = users.Select(u => new { u.Id, u.Username, u.Email, u.Role }) 
+                Users = users.Select(u => new { u.Id, u.FullName, u.Email, u.Role }) 
             });
         }
 
