@@ -128,85 +128,30 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
           CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: isSmallScreen ? 200 : 250,
+            expandedHeight: 80, // Much smaller header
             floating: false,
             pinned: true,
-            stretch: true,
-            backgroundColor: salonColors.primary,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Salon Image
-                  Container(
-                    decoration: BoxDecoration(
-                      color: salonColors.primary.withOpacity(0.1),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.store,
-                        size: isSmallScreen ? 48 : 64,
-                        color: salonColors.primary.withOpacity(0.3),
-                      ),
-                    ),
-                  ),
-                  // Gradient Overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          salonColors.primary.withOpacity(0.8),
-                          salonColors.background,
-                        ],
-                        stops: const [0.4, 0.8, 1.0],
-                      ),
-                    ),
-                  ),
-                  // Decorative Elements - only show on larger screens
-                  if (!isSmallScreen) Positioned(
-                    top: 0,
-                    right: 0,
-                    child: CustomPaint(
-                      size: const Size(200, 200),
-                      painter: SalonDecorationPainter(
-                        color: salonColors.primary.withOpacity(0.1),
-                      ),
-                    ),
-                  ),
-                ],
+            backgroundColor: salonColors.background,
+            elevation: 0,
+            title: Text(
+              widget.salon.name,
+              style: TextStyle(
+                color: salonColors.primary,
+                fontWeight: FontWeight.bold,
               ),
             ),
             leading: IconButton(
-              icon: Container(
-                padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
-                decoration: BoxDecoration(
-                  color: salonColors.primary.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: isSmallScreen ? 20 : 24,
-                ),
+              icon: Icon(
+                Icons.arrow_back,
+                color: salonColors.primary,
               ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
               IconButton(
-                icon: Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
-                  decoration: BoxDecoration(
-                    color: salonColors.primary.withOpacity(0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.white,
-                    size: isSmallScreen ? 20 : 24,
-                  ),
+                icon: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: salonColors.primary,
                 ),
                 onPressed: () {
                   setState(() {
@@ -215,17 +160,9 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 },
               ),
               IconButton(
-                icon: Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
-                  decoration: BoxDecoration(
-                    color: salonColors.primary.withOpacity(0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.share,
-                    color: Colors.white,
-                    size: isSmallScreen ? 20 : 24,
-                  ),
+                icon: Icon(
+                  Icons.share,
+                  color: salonColors.primary,
                 ),
                 onPressed: () async {
                   final shareText = '${widget.salon.name}\n${widget.salon.address}';
@@ -239,23 +176,23 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
             child: Container(
               color: salonColors.background,
               child: Padding(
-                padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
+                padding: EdgeInsets.all(isSmallScreen ? 8.0 : 12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(context, salonColors),
-                    SizedBox(height: isSmallScreen ? 16 : 24),
+                    SizedBox(height: isSmallScreen ? 8 : 12),
                     _buildInfoSection(context, salonColors),
-                    SizedBox(height: isSmallScreen ? 16 : 24),
+                    SizedBox(height: isSmallScreen ? 8 : 12),
                     _buildServicesSection(context, salonColors),
-                    SizedBox(height: isSmallScreen ? 16 : 24),
+                    SizedBox(height: isSmallScreen ? 8 : 12),
                     _buildBusinessHoursSection(context, salonColors),
-                    SizedBox(height: isSmallScreen ? 16 : 24),
+                    SizedBox(height: isSmallScreen ? 8 : 12),
                     _buildContactSection(context, salonColors),
-                    SizedBox(height: isSmallScreen ? 16 : 24),
+                    SizedBox(height: isSmallScreen ? 8 : 12),
                     _buildReviewsSection(context, salonColors),
                     if (widget.additionalInfo.isNotEmpty) ...[
-                      SizedBox(height: isSmallScreen ? 16 : 24),
+                      SizedBox(height: isSmallScreen ? 8 : 12),
                       _buildAdditionalInfoSection(context, salonColors),
                     ],
                   ],
@@ -956,26 +893,94 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                 ),
               ),
               const SizedBox(height: 16),
-              _buildContactItem(
-                context,
-                Icons.phone,
-                widget.contact.phone,
-                () {
-                  // TODO: Implement phone call
-                },
-                copiable: true,
-                colors: colors,
-              ),
-              const SizedBox(height: 12),
-              _buildContactItem(
-                context,
-                Icons.email,
-                widget.contact.email,
-                () {
-                  // TODO: Implement email
-                },
-                copiable: true,
-                colors: colors,
+              // Compact contact row with phone and WhatsApp
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withOpacity(0.1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Phone number display
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: colors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.phone,
+                              size: 18,
+                              color: colors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              widget.contact.phone,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // WhatsApp button
+                    InkWell(
+                      onTap: () async {
+                        final phoneNumber = widget.contact.phone.replaceAll(RegExp(r'[^\d+]'), '');
+                        final whatsappUrl = Uri.parse('https://wa.me/$phoneNumber');
+                        if (await canLaunchUrl(whatsappUrl)) {
+                          await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Não foi possível abrir o WhatsApp')),
+                            );
+                          }
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF25D366).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFF25D366).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.chat,
+                              size: 18,
+                              color: const Color(0xFF25D366),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'WhatsApp',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: const Color(0xFF25D366),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               if (widget.contact.website != null) ...[
                 const SizedBox(height: 12),
@@ -983,8 +988,17 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                   context,
                   Icons.language,
                   widget.contact.website!,
-                  () {
-                    // TODO: Implement website
+                  () async {
+                    final url = Uri.parse(widget.contact.website!);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Não foi possível abrir o website')),
+                        );
+                      }
+                    }
                   },
                   colors: colors,
                 ),

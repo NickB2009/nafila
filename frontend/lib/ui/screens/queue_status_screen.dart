@@ -50,17 +50,14 @@ class QueueStatusScreen extends StatelessWidget {
               
               // Progress Steps
               Container(
-                padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colors?.primary ?? theme.colorScheme.primary,
-                      (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.8),
-                    ],
+                  color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: (colors?.primary ?? theme.colorScheme.primary).withOpacity(0.3),
+                    width: 1,
                   ),
-                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: _buildProgressSteps(theme, colors, context),
               ),

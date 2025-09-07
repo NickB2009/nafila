@@ -431,17 +431,14 @@ class AnonymousQueueStatusScreenState extends State<AnonymousQueueStatusScreen> 
     final isCompleted = _currentEntry.status == QueueEntryStatus.completed;
 
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            cs.primary,
-            cs.primary.withOpacity(0.8),
-          ],
+        color: cs.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: cs.primary.withOpacity(0.3),
+          width: 1,
         ),
-        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [

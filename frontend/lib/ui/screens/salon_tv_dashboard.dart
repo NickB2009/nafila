@@ -133,19 +133,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                         right: adWidth + 24, // 24px gap between left and ad
                         child: Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [theme.colorScheme.surface, theme.colorScheme.primary.withOpacity(0.04)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              width: 1,
                             ),
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.06),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
                           ),
                           padding: const EdgeInsets.all(24.0),
                           child: showCompactLeft
@@ -611,22 +604,12 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
                 width: adWidth0,
                 height: adHeight0,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      (ad["backgroundColor"] as Color).withOpacity(0.95),
-                      (ad["backgroundColor"] as Color).withOpacity(0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  color: (ad["backgroundColor"] as Color).withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: (ad["backgroundColor"] as Color).withOpacity(0.3),
+                    width: 1,
                   ),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.13),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
                 ),
                 child: Row(
                   children: [
