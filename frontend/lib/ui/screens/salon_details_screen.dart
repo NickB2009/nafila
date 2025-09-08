@@ -353,7 +353,7 @@ class _SalonDetailsScreenState extends State<SalonDetailsScreen> with SingleTick
                                   resolvedQueueId,
                                   queue.JoinQueueRequest(
                                     queueId: resolvedQueueId,
-                                    customerName: app.auth.currentUsername,
+                                    customerName: app.auth.currentUser?.fullName ?? app.auth.currentPhoneNumber,
                                     email: null,
                                     isAnonymous: false,
                                     notes: selectedNames.join(', '),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/app_controller.dart';
 import '../../models/auth_models.dart';
+import '../../utils/phone_formatter.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,21 +13,21 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  bool _obscure1 = true;
-  bool _obscure2 = true;
+  bool _obscure = true;
   bool _acceptTerms = false;
   String? _error;
+  bool _isPasswordStrong = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _fullNameController.dispose();
     _emailController.dispose();
+    _phoneNumberController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -38,9 +39,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Informe a senha';
-    if (value.length < 6) return 'A senha deve ter ao menos 6 caracteres';
+    if (value == null || value.isEmpty) {
+      return 'Senha é obrigatória';
+    }
+    
+    if (value.length < 8) {
+      return 'A senha deve ter ao menos 8 caracteres';
+    }
+    
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return 'A senha deve conter ao menos uma letra maiúscula';
+    }
+    
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return 'A senha deve conter ao menos uma letra minúscula';
+    }
+    
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return 'A senha deve conter ao menos um número';
+    }
+    
     return null;
+  }
+  
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Número de telefone é obrigatório';
+    }
+    
+    // Remove all non-digit characters
+    final digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
+    
+    // Brazilian phone number should have 10 or 11 digits (with area code)
+    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+      return 'Número de telefone inválido';
+    }
+    
+    return null;
+  }
+  
+  String? _validateFullName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Nome completo é obrigatório';
+    }
+    
+    if (value.trim().split(' ').length < 2) {
+      return 'Informe seu nome completo';
+    }
+    
+    return null;
+  }
+  
+  void _checkPasswordStrength(String password) {
+    setState(() {
+      _isPasswordStrong = _validatePassword(password) == null;
+    });
   }
 
   Future<void> _handleRegister(BuildContext context) async {
@@ -55,26 +108,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _error = 'Você precisa aceitar os termos para continuar');
       return;
     }
-    if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() => _error = 'As senhas não conferem');
-      return;
-    }
 
-    final username = _usernameController.text.trim();
+    final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
+    final phoneNumber = PhoneFormatter.unformat(_phoneNumberController.text.trim());
     final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
 
     print('📝 Registration attempt:');
-    print('   Username: $username');
+    print('   Full Name: $fullName');
     print('   Email: $email');
+    print('   Phone: $phoneNumber');
     print('   Password length: ${password.length}');
 
     final req = RegisterRequest(
-      username: username,
+      fullName: fullName,
       email: email,
+      phoneNumber: phoneNumber,
       password: password,
-      confirmPassword: confirmPassword,
     );
 
     print('🚀 Calling auth.register()...');
@@ -93,21 +143,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       
       if (!mounted) return;
       
-      // Try login with original credentials
-      var loggedIn = await auth.login(LoginRequest(username: username, password: password));
+      // Try login with phone number
+      var loggedIn = await auth.login(LoginRequest(phoneNumber: phoneNumber, password: password));
       
       if (!mounted) return;
       
-      print('📊 Auto-login result (attempt 1): $loggedIn');
-      
-      // If first attempt failed, try with email instead of username
-      if (!loggedIn && username != email) {
-        print('🔄 First login attempt failed, trying with email instead of username...');
-        loggedIn = await auth.login(LoginRequest(username: email, password: password));
-        
-        if (!mounted) return;
-        print('📊 Auto-login result (attempt 2 with email): $loggedIn');
-      }
+      print('📊 Auto-login result: $loggedIn');
       
       if (loggedIn) {
         print('✅ Auto-login successful, switching to authenticated mode...');
@@ -129,7 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           context,
           '/login',
           arguments: {
-            'prefillUsername': username,
+            'prefillPhoneNumber': phoneNumber,
             'prefillPassword': password,
             'showSuccessMessage': true,
           },
@@ -153,9 +194,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final app = Provider.of<AppController>(context);
     final auth = app.auth;
 
-    final usernameFieldError = auth.fieldErrors?['username'];
-    final emailFieldError = auth.fieldErrors?['email'];
-    final passwordFieldError = auth.fieldErrors?['password'];
+    final fullNameFieldError = auth.fieldErrors?['fullName'] ?? auth.fieldErrors?['FullName'];
+    final emailFieldError = auth.fieldErrors?['email'] ?? auth.fieldErrors?['Email'];
+    final phoneFieldError = auth.fieldErrors?['phoneNumber'] ?? auth.fieldErrors?['PhoneNumber'];
+    final passwordFieldError = auth.fieldErrors?['password'] ?? auth.fieldErrors?['Password'];
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -192,14 +234,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Column(
                           children: [
                             TextFormField(
-                              controller: _usernameController,
+                              controller: _fullNameController,
                               decoration: InputDecoration(
-                                labelText: 'Usuário',
+                                labelText: 'Nome Completo',
                                 prefixIcon: const Icon(Icons.person_outline),
-                                errorText: usernameFieldError,
+                                errorText: fullNameFieldError,
                               ),
-                              validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o usuário' : null,
+                              validator: _validateFullName,
                               textInputAction: TextInputAction.next,
+                              textCapitalization: TextCapitalization.words,
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
@@ -215,35 +258,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
+                              controller: _phoneNumberController,
+                              decoration: InputDecoration(
+                                labelText: 'Número de Telefone',
+                                prefixIcon: const Icon(Icons.phone_outlined),
+                                errorText: phoneFieldError,
+                                hintText: '(11) 99999-9999',
+                              ),
+                              validator: _validatePhoneNumber,
+                              keyboardType: TextInputType.phone,
+                              textInputAction: TextInputAction.next,
+                              inputFormatters: [BrazilianPhoneInputFormatter()],
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
                               controller: _passwordController,
                               decoration: InputDecoration(
                                 labelText: 'Senha',
                                 prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  onPressed: () => setState(() => _obscure1 = !_obscure1),
-                                  icon: Icon(_obscure1 ? Icons.visibility : Icons.visibility_off),
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _isPasswordStrong ? Icons.check_circle : Icons.error,
+                                      color: _isPasswordStrong ? Colors.green : Colors.red,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      onPressed: () => setState(() => _obscure = !_obscure),
+                                      icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                                    ),
+                                  ],
                                 ),
                                 errorText: passwordFieldError,
+                                helperText: 'Mín. 8 caracteres, 1 maiúscula, 1 minúscula, 1 número',
+                                helperMaxLines: 2,
                               ),
                               validator: _validatePassword,
-                              obscureText: _obscure1,
-                              textInputAction: TextInputAction.next,
+                              obscureText: _obscure,
+                              textInputAction: TextInputAction.done,
+                              onChanged: _checkPasswordStrength,
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _confirmPasswordController,
-                              decoration: InputDecoration(
-                                labelText: 'Confirmar senha',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  onPressed: () => setState(() => _obscure2 = !_obscure2),
-                                  icon: Icon(_obscure2 ? Icons.visibility : Icons.visibility_off),
-                                ),
-                              ),
-                              validator: _validatePassword,
-                              obscureText: _obscure2,
-                            ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             CheckboxListTile(
                               value: _acceptTerms,
                               onChanged: (v) => setState(() => _acceptTerms = v ?? false),

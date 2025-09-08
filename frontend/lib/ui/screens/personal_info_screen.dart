@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../utils/brazilian_names_generator.dart';
+import '../../controllers/app_controller.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
@@ -98,11 +100,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
     final salon = CheckInState.checkedInSalon;
     final colors = salon?.colors.forBrightness(brightness);
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
-    // Mock user data
-    final String name = BrazilianNamesGenerator.generateNameWithInitial();
-    const String phone = '(11) 91234-5678';
+    // Get real user data from auth controller
+    final app = Provider.of<AppController>(context);
+    final user = app.auth.currentUser;
+    
+    final String name = user?.fullName ?? BrazilianNamesGenerator.generateNameWithInitial();
+    final String phone = user?.phoneNumber ?? '(11) 91234-5678';
     const String city = 'São Paulo';
-    final String email = BrazilianNamesGenerator.generateEmail();
+    final String email = user?.email ?? BrazilianNamesGenerator.generateEmail();
+    final String role = user?.role ?? 'Cliente';
 
     return Scaffold(
       backgroundColor: colors?.background ?? theme.colorScheme.surface,
@@ -252,8 +258,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> with TickerProv
                               [
                                 _buildInfoRow(theme, Icons.person_outline, 'Nome completo', name),
                                 _buildInfoRow(theme, Icons.phone, 'Telefone', phone),
+                                _buildInfoRow(theme, Icons.email_outlined, 'E-mail', email),
+                                _buildInfoRow(theme, Icons.badge_outlined, 'Perfil', role),
                                 _buildInfoRow(theme, Icons.location_on_outlined, 'Cidade', city),
-                                _buildInfoRow(theme, Icons.email_outlined, 'Email', email),
                               ],
                             ),
                             SizedBox(height: isSmallScreen ? 16 : 20),

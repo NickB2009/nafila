@@ -24,8 +24,7 @@ class ApiConfig {
   static ApiEnvironment get currentEnvironment {
     if (_customApiUrl != null) return ApiEnvironment.custom;
     
-    // You can add more sophisticated environment detection here
-    // For production deployment, use production environment
+    // Force production environment to use remote API
     return ApiEnvironment.production;
   }
 

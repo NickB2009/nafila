@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Domain.Common;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json;
 
@@ -18,12 +20,14 @@ namespace Grande.Fila.API.Application.Auth
         private readonly IUserRepository _userRepo;
         private readonly IConfiguration _config;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IUserRepository userRepo, IConfiguration config, IUnitOfWork unitOfWork)
+        public AuthService(IUserRepository userRepo, IConfiguration config, IUnitOfWork unitOfWork, ILogger<AuthService> logger)
         {
             _userRepo = userRepo;
             _config = config;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<LoginResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -93,60 +97,99 @@ namespace Grande.Fila.API.Application.Auth
 
         public async Task<RegisterResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
         {
+            _logger.LogInformation("Starting user registration for email: {Email}, phone: {PhoneNumber}", 
+                request.Email, request.PhoneNumber);
+
             var result = new RegisterResult
             {
                 Success = false,
                 FieldErrors = new Dictionary<string, string>()
             };
 
-            // Validation
-            if (string.IsNullOrWhiteSpace(request.FullName))
-                result.FieldErrors["FullName"] = "Full name is required.";
-            if (string.IsNullOrWhiteSpace(request.Email))
-                result.FieldErrors["Email"] = "Email is required.";
-            if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-                result.FieldErrors["PhoneNumber"] = "Phone number is required.";
-
-            // Password strength validation
-            var (passwordValid, passwordError) = ValidatePasswordStrength(request.Password);
-            if (!passwordValid)
-                result.FieldErrors["Password"] = passwordError;
-
-            if (result.FieldErrors.Count > 0)
-                return result;
-
-            // Normalize inputs
-            var normalizedFullName = request.FullName?.Trim();
-            var normalizedEmail = request.Email?.Trim().ToLowerInvariant();
-            var normalizedPhoneNumber = request.PhoneNumber?.Trim();
-
-            // Check uniqueness
-            var emailExists = await _userRepo.ExistsByEmailAsync(normalizedEmail!, cancellationToken);
-            if (emailExists)
-            {
-                result.FieldErrors["Email"] = "Email is already registered.";
-                return result;
-            }
-
-            var phoneExists = await _userRepo.ExistsByPhoneNumberAsync(normalizedPhoneNumber!, cancellationToken);
-            if (phoneExists)
-            {
-                result.FieldErrors["PhoneNumber"] = "Phone number is already registered.";
-                return result;
-            }
-
-            // Create user
-            var passwordHash = HashPassword(request.Password);
-            var user = new User(normalizedFullName!, normalizedEmail!, normalizedPhoneNumber!, passwordHash, "Customer");
-
             try
             {
+                // Validation
+                _logger.LogDebug("Validating registration request fields");
+                if (string.IsNullOrWhiteSpace(request.FullName))
+                {
+                    result.FieldErrors["FullName"] = "Full name is required.";
+                    _logger.LogWarning("Registration failed: Full name is empty");
+                }
+                if (string.IsNullOrWhiteSpace(request.Email))
+                {
+                    result.FieldErrors["Email"] = "Email is required.";
+                    _logger.LogWarning("Registration failed: Email is empty");
+                }
+                if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+                {
+                    result.FieldErrors["PhoneNumber"] = "Phone number is required.";
+                    _logger.LogWarning("Registration failed: Phone number is empty");
+                }
+
+                // Password strength validation
+                _logger.LogDebug("Validating password strength");
+                var (passwordValid, passwordError) = ValidatePasswordStrength(request.Password);
+                if (!passwordValid)
+                {
+                    result.FieldErrors["Password"] = passwordError;
+                    _logger.LogWarning("Registration failed: Password validation error - {Error}", passwordError);
+                }
+
+                if (result.FieldErrors.Count > 0)
+                {
+                    _logger.LogWarning("Registration failed validation with {ErrorCount} errors", result.FieldErrors.Count);
+                    return result;
+                }
+
+                // Normalize inputs
+                _logger.LogDebug("Normalizing input fields");
+                var normalizedFullName = request.FullName?.Trim();
+                var normalizedEmail = request.Email?.Trim().ToLowerInvariant();
+                var normalizedPhoneNumber = request.PhoneNumber?.Trim();
+
+                _logger.LogDebug("Normalized values - Name: {Name}, Email: {Email}, Phone: {Phone}", 
+                    normalizedFullName, normalizedEmail, normalizedPhoneNumber);
+
+                // Check uniqueness
+                _logger.LogDebug("Checking email uniqueness");
+                var emailExists = await _userRepo.ExistsByEmailAsync(normalizedEmail!, cancellationToken);
+                if (emailExists)
+                {
+                    result.FieldErrors["Email"] = "Email is already registered.";
+                    _logger.LogWarning("Registration failed: Email {Email} already exists", normalizedEmail);
+                    return result;
+                }
+
+                _logger.LogDebug("Checking phone number uniqueness");
+                var phoneExists = await _userRepo.ExistsByPhoneNumberAsync(normalizedPhoneNumber!, cancellationToken);
+                if (phoneExists)
+                {
+                    result.FieldErrors["PhoneNumber"] = "Phone number is already registered.";
+                    _logger.LogWarning("Registration failed: Phone number {PhoneNumber} already exists", normalizedPhoneNumber);
+                    return result;
+                }
+
+                // Create user
+                _logger.LogDebug("Hashing password");
+                var passwordHash = HashPassword(request.Password);
+                
+                _logger.LogDebug("Creating user entity");
+                var user = new User(normalizedFullName!, normalizedEmail!, normalizedPhoneNumber!, passwordHash, "Customer");
+
+                _logger.LogDebug("Adding user to repository with ID: {UserId}", user.Id);
                 await _userRepo.AddAsync(user, cancellationToken);
+                
+                _logger.LogDebug("Saving changes to database");
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+                
                 result.Success = true;
+                _logger.LogInformation("User registration successful for email: {Email}, assigned ID: {UserId}", 
+                    normalizedEmail, user.Id);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Registration failed with exception for email: {Email}, phone: {PhoneNumber}", 
+                    request.Email, request.PhoneNumber);
                 result.Error = "Failed to create account. Please try again.";
             }
 

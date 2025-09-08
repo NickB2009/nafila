@@ -1,9 +1,6 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'auth_models.g.dart';
+// Manual JSON serialization - no code generation needed
 
 /// Request model for user login
-@JsonSerializable()
 class LoginRequest {
   final String phoneNumber;
   final String password;
@@ -13,8 +10,12 @@ class LoginRequest {
     required this.password,
   });
 
-  factory LoginRequest.fromJson(Map<String, dynamic> json) =>
-      _$LoginRequestFromJson(json);
+  factory LoginRequest.fromJson(Map<String, dynamic> json) {
+    return LoginRequest(
+      phoneNumber: json['phoneNumber'] ?? json['PhoneNumber'] ?? '',
+      password: json['password'] ?? json['Password'] ?? '',
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'PhoneNumber': phoneNumber,
@@ -23,7 +24,6 @@ class LoginRequest {
 }
 
 /// Response model for login results
-@JsonSerializable()
 class LoginResult {
   final bool success;
   final String? token;
@@ -49,14 +49,38 @@ class LoginResult {
     this.twoFactorToken,
   });
 
-  factory LoginResult.fromJson(Map<String, dynamic> json) =>
-      _$LoginResultFromJson(json);
+  factory LoginResult.fromJson(Map<String, dynamic> json) {
+    return LoginResult(
+      success: json['success'] ?? false,
+      token: json['token'],
+      error: json['error'],
+      fullName: json['fullName'],
+      phoneNumber: json['phoneNumber'],
+      email: json['email'],
+      role: json['role'],
+      permissions: json['permissions'] != null 
+          ? List<String>.from(json['permissions']) 
+          : null,
+      requiresTwoFactor: json['requiresTwoFactor'] ?? false,
+      twoFactorToken: json['twoFactorToken'],
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$LoginResultToJson(this);
+  Map<String, dynamic> toJson() => {
+    'success': success,
+    'token': token,
+    'error': error,
+    'fullName': fullName,
+    'phoneNumber': phoneNumber,
+    'email': email,
+    'role': role,
+    'permissions': permissions,
+    'requiresTwoFactor': requiresTwoFactor,
+    'twoFactorToken': twoFactorToken,
+  };
 }
 
 /// Request model for user registration
-@JsonSerializable()
 class RegisterRequest {
   final String fullName;
   final String email;
@@ -70,8 +94,14 @@ class RegisterRequest {
     required this.password,
   });
 
-  factory RegisterRequest.fromJson(Map<String, dynamic> json) =>
-      _$RegisterRequestFromJson(json);
+  factory RegisterRequest.fromJson(Map<String, dynamic> json) {
+    return RegisterRequest(
+      fullName: json['fullName'] ?? json['FullName'] ?? '',
+      email: json['email'] ?? json['Email'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? json['PhoneNumber'] ?? '',
+      password: json['password'] ?? json['Password'] ?? '',
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'FullName': fullName,
@@ -82,7 +112,6 @@ class RegisterRequest {
 }
 
 /// Response model for registration results
-@JsonSerializable()
 class RegisterResult {
   final bool success;
   final String? error;
@@ -94,14 +123,24 @@ class RegisterResult {
     this.fieldErrors,
   });
 
-  factory RegisterResult.fromJson(Map<String, dynamic> json) =>
-      _$RegisterResultFromJson(json);
+  factory RegisterResult.fromJson(Map<String, dynamic> json) {
+    return RegisterResult(
+      success: json['success'] ?? false,
+      error: json['error'],
+      fieldErrors: json['fieldErrors'] != null 
+          ? Map<String, String>.from(json['fieldErrors']) 
+          : null,
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$RegisterResultToJson(this);
+  Map<String, dynamic> toJson() => {
+    'success': success,
+    'error': error,
+    'fieldErrors': fieldErrors,
+  };
 }
 
 /// Request model for two-factor authentication verification
-@JsonSerializable()
 class VerifyTwoFactorRequest {
   final String phoneNumber;
   final String twoFactorCode;
@@ -113,14 +152,22 @@ class VerifyTwoFactorRequest {
     required this.twoFactorToken,
   });
 
-  factory VerifyTwoFactorRequest.fromJson(Map<String, dynamic> json) =>
-      _$VerifyTwoFactorRequestFromJson(json);
+  factory VerifyTwoFactorRequest.fromJson(Map<String, dynamic> json) {
+    return VerifyTwoFactorRequest(
+      phoneNumber: json['phoneNumber'] ?? json['PhoneNumber'] ?? '',
+      twoFactorCode: json['twoFactorCode'] ?? json['TwoFactorCode'] ?? '',
+      twoFactorToken: json['twoFactorToken'] ?? json['TwoFactorToken'] ?? '',
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$VerifyTwoFactorRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+    'PhoneNumber': phoneNumber,
+    'TwoFactorCode': twoFactorCode,
+    'TwoFactorToken': twoFactorToken,
+  };
 }
 
 /// Request model for admin verification
-@JsonSerializable()
 class AdminVerificationRequest {
   final String phoneNumber;
   final String twoFactorCode;
@@ -132,14 +179,22 @@ class AdminVerificationRequest {
     required this.twoFactorToken,
   });
 
-  factory AdminVerificationRequest.fromJson(Map<String, dynamic> json) =>
-      _$AdminVerificationRequestFromJson(json);
+  factory AdminVerificationRequest.fromJson(Map<String, dynamic> json) {
+    return AdminVerificationRequest(
+      phoneNumber: json['phoneNumber'] ?? json['PhoneNumber'] ?? '',
+      twoFactorCode: json['twoFactorCode'] ?? json['TwoFactorCode'] ?? '',
+      twoFactorToken: json['twoFactorToken'] ?? json['TwoFactorToken'] ?? '',
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$AdminVerificationRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+    'PhoneNumber': phoneNumber,
+    'TwoFactorCode': twoFactorCode,
+    'TwoFactorToken': twoFactorToken,
+  };
 }
 
 /// Response model for admin verification results
-@JsonSerializable()
 class AdminVerificationResult {
   final bool success;
   final String? error;
@@ -153,14 +208,26 @@ class AdminVerificationResult {
     this.permissions,
   });
 
-  factory AdminVerificationResult.fromJson(Map<String, dynamic> json) =>
-      _$AdminVerificationResultFromJson(json);
+  factory AdminVerificationResult.fromJson(Map<String, dynamic> json) {
+    return AdminVerificationResult(
+      success: json['success'] ?? false,
+      error: json['error'],
+      token: json['token'],
+      permissions: json['permissions'] != null 
+          ? List<String>.from(json['permissions']) 
+          : null,
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$AdminVerificationResultToJson(this);
+  Map<String, dynamic> toJson() => {
+    'success': success,
+    'error': error,
+    'token': token,
+    'permissions': permissions,
+  };
 }
 
 /// User model for profile information
-@JsonSerializable()
 class User {
   final String id;
   final String fullName;
@@ -189,5 +256,12 @@ class User {
     );
   }
 
-  Map<String, dynamic> toJson() => _$UserToJson(this);
+  Map<String, dynamic> toJson() => {
+    'UserId': id,
+    'FullName': fullName,
+    'Email': email,
+    'PhoneNumber': phoneNumber,
+    'Role': role,
+    'Permissions': permissions,
+  };
 }

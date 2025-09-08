@@ -11,8 +11,9 @@ class AuthService {
 
   // Authentication state
   String? _currentToken;
-  String? _currentUsername;
+  String? _currentPhoneNumber;
   String? _currentRole;
+  User? _currentUser;
 
   AuthService({
     required dynamic apiClient,
@@ -35,24 +36,33 @@ class AuthService {
   // Getters for authentication state
   bool get isAuthenticated => _currentToken != null;
   String? get currentToken => _currentToken;
-  String? get currentUsername => _currentUsername;
+  String? get currentPhoneNumber => _currentPhoneNumber;
   String? get currentRole => _currentRole;
+  User? get currentUser => _currentUser;
 
   /// Loads stored authentication data from SharedPreferences
   Future<void> loadStoredAuth() async {
     _currentToken = _sharedPreferences.getString('auth_token');
-    _currentUsername = _sharedPreferences.getString('username');
+    _currentPhoneNumber = _sharedPreferences.getString('phone_number');
     _currentRole = _sharedPreferences.getString('user_role');
 
     if (_currentToken != null) {
       _apiClient.setAuthToken(_currentToken!);
+      // Try to load user profile if token exists
+      try {
+        _currentUser = await getProfile();
+      } catch (e) {
+        // If profile loading fails, token might be expired
+        print('Failed to load user profile: $e');
+        await logout(); // Clear invalid auth data
+      }
     }
   }
 
   /// Authenticates user with username and password
   Future<LoginResult> login(LoginRequest request) async {
     try {
-      print('🔑 Attempting login for user: ${request.username}');
+      print('🔑 Attempting login for phone: ${request.phoneNumber}');
       print('🔗 Login endpoint: ${ApiConfig.getUrl(ApiConfig.authLoginEndpoint)}');
       
       final response = await _apiClient.post(
@@ -70,9 +80,16 @@ class AuthService {
         print('✅ Login successful, storing auth data');
         await _storeAuthData(
           token: loginResult.token!,
-          username: loginResult.username,
+          phoneNumber: loginResult.phoneNumber,
           role: loginResult.role,
         );
+        
+        // Get full user profile after successful login
+        try {
+          _currentUser = await getProfile();
+        } catch (e) {
+          print('Failed to load user profile after login: $e');
+        }
         print('✅ Auth data stored successfully');
       } else {
         print('❌ Login failed: ${loginResult.error}');
@@ -108,12 +125,15 @@ class AuthService {
   /// Registers a new user account
   Future<RegisterResult> register(RegisterRequest request) async {
     try {
-      print('🔐 Attempting registration for user: ${request.username}');
+      print('🔐 Attempting registration for user: ${request.fullName}');
       print('🔗 Registration endpoint: ${ApiConfig.getUrl(ApiConfig.authRegisterEndpoint)}');
+      
+      final requestData = request.toJson();
+      print('📤 Request data being sent: $requestData');
       
       final response = await _apiClient.post(
         ApiConfig.authRegisterEndpoint,
-        data: request.toJson(),
+        data: requestData,
       );
 
       print('✅ Registration response status: ${response.statusCode}');
@@ -122,7 +142,7 @@ class AuthService {
       final result = RegisterResult.fromJson(response.data);
       
       if (result.success) {
-        print('✅ Registration successful for user: ${request.username}');
+        print('✅ Registration successful for user: ${request.fullName}');
       } else {
         print('❌ Registration failed: ${result.error}');
         if (result.fieldErrors != null) {
@@ -141,11 +161,33 @@ class AuthService {
         print('   URL: ${e.requestOptions.uri}');
         
         try {
-          final result = RegisterResult.fromJson(e.response!.data);
-          print('🔍 Parsed error result: success=${result.success}, error=${result.error}');
-          return result;
+          final responseData = e.response!.data;
+          
+          // Handle the new backend error format
+          if (responseData is Map && responseData.containsKey('error')) {
+            final result = RegisterResult(
+              success: false,
+              error: responseData['message'] ?? responseData['error'] ?? 'Registration failed',
+              fieldErrors: responseData['details'] is List 
+                ? {'general': (responseData['details'] as List).join(', ')}
+                : null,
+            );
+            print('🔍 Parsed server error: ${result.error}');
+            return result;
+          } else {
+            // Try to parse as RegisterResult for backward compatibility
+            final result = RegisterResult.fromJson(responseData);
+            print('🔍 Parsed error result: success=${result.success}, error=${result.error}');
+            return result;
+          }
         } catch (parseError) {
           print('❌ Failed to parse error response: $parseError');
+          
+          // Return a generic error with the HTTP status
+          return RegisterResult(
+            success: false,
+            error: 'Server error (${e.response?.statusCode}): ${e.response?.statusMessage ?? 'Unknown error'}',
+          );
         }
       }
       return const RegisterResult(success: false, error: 'Erro ao criar conta');
@@ -166,9 +208,16 @@ class AuthService {
       if (loginResult.success && loginResult.token != null) {
         await _storeAuthData(
           token: loginResult.token!,
-          username: loginResult.username,
+          phoneNumber: loginResult.phoneNumber,
           role: loginResult.role,
         );
+        
+        // Get full user profile after successful 2FA verification
+        try {
+          _currentUser = await getProfile();
+        } catch (e) {
+          print('Failed to load user profile after 2FA: $e');
+        }
       }
 
       return loginResult;
@@ -178,14 +227,16 @@ class AuthService {
   }
 
   /// Gets user profile information
-  Future<Map<String, dynamic>> getProfile() async {
+  Future<User> getProfile() async {
     if (!isAuthenticated) {
       throw Exception('User not authenticated');
     }
 
     try {
       final response = await _apiClient.get(ApiConfig.authProfileEndpoint);
-      return response.data;
+      final user = User.fromJson(response.data);
+      _currentUser = user;
+      return user;
     } catch (e) {
       rethrow;
     }
@@ -195,33 +246,45 @@ class AuthService {
   Future<void> logout() async {
     // Clear local state
     _currentToken = null;
-    _currentUsername = null;
+    _currentPhoneNumber = null;
     _currentRole = null;
+    _currentUser = null;
 
     // Clear stored data
     await _sharedPreferences.remove('auth_token');
-    await _sharedPreferences.remove('username');
+    await _sharedPreferences.remove('phone_number');
     await _sharedPreferences.remove('user_role');
 
     // Clear API client token
     _apiClient.clearAuthToken();
   }
 
+  /// Clears all cached user data including test/demo data
+  Future<void> clearAllCachedData() async {
+    // Clear all authentication-related data
+    await logout();
+    
+    // Clear any additional cached data that might contain test users
+    await _sharedPreferences.clear();
+    
+    print('🧹 All cached data cleared');
+  }
+
   /// Stores authentication data locally and updates API client
   Future<void> _storeAuthData({
     required String token,
-    String? username,
+    String? phoneNumber,
     String? role,
   }) async {
     // Update local state
     _currentToken = token;
-    _currentUsername = username;
+    _currentPhoneNumber = phoneNumber;
     _currentRole = role;
 
     // Store in SharedPreferences
     await _sharedPreferences.setString('auth_token', token);
-    if (username != null) {
-      await _sharedPreferences.setString('username', username);
+    if (phoneNumber != null) {
+      await _sharedPreferences.setString('phone_number', phoneNumber);
     }
     if (role != null) {
       await _sharedPreferences.setString('user_role', role);
@@ -255,9 +318,19 @@ class AuthService {
   }
 
   /// Demo-only login (local token without hitting the server)
-  Future<void> demoLogin({String username = 'demo', String role = 'Customer'}) async {
+  Future<void> demoLogin({String phoneNumber = '+5511999999999', String role = 'Customer'}) async {
     // Generate a pseudo token and store
     final token = 'demo-token-${DateTime.now().millisecondsSinceEpoch}';
-    await _storeAuthData(token: token, username: username, role: role);
+    await _storeAuthData(token: token, phoneNumber: phoneNumber, role: role);
+    
+    // Create a demo user
+    _currentUser = User(
+      id: 'demo-user-id',
+      fullName: 'Usuário Demo',
+      email: 'demo@example.com',
+      phoneNumber: phoneNumber,
+      role: role,
+      permissions: ['read'],
+    );
   }
 }

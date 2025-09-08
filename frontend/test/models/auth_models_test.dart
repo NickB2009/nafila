@@ -6,35 +6,35 @@ void main() {
     group('LoginRequest', () {
       test('should create LoginRequest with required fields', () {
         const loginRequest = LoginRequest(
-          username: 'testuser',
+          phoneNumber: '+5511999999999',
           password: 'testpass123',
         );
 
-        expect(loginRequest.username, equals('testuser'));
+        expect(loginRequest.phoneNumber, equals('+5511999999999'));
         expect(loginRequest.password, equals('testpass123'));
       });
 
       test('should serialize to JSON correctly', () {
         const loginRequest = LoginRequest(
-          username: 'testuser',
+          phoneNumber: '+5511999999999',
           password: 'testpass123',
         );
 
         final json = loginRequest.toJson();
 
-        expect(json['username'], equals('testuser'));
-        expect(json['password'], equals('testpass123'));
+        expect(json['PhoneNumber'], equals('+5511999999999'));
+        expect(json['Password'], equals('testpass123'));
       });
 
       test('should deserialize from JSON correctly', () {
         final json = {
-          'username': 'testuser',
+          'phoneNumber': '+5511999999999',
           'password': 'testpass123',
         };
 
         final loginRequest = LoginRequest.fromJson(json);
 
-        expect(loginRequest.username, equals('testuser'));
+        expect(loginRequest.phoneNumber, equals('+5511999999999'));
         expect(loginRequest.password, equals('testpass123'));
       });
     });
@@ -44,7 +44,9 @@ void main() {
         const loginResult = LoginResult(
           success: true,
           token: 'jwt-token-123',
-          username: 'testuser',
+          fullName: 'Test User',
+          phoneNumber: '+5511999999999',
+          email: 'test@example.com',
           role: 'Client',
           permissions: ['read'],
           requiresTwoFactor: false,
@@ -52,7 +54,9 @@ void main() {
 
         expect(loginResult.success, isTrue);
         expect(loginResult.token, equals('jwt-token-123'));
-        expect(loginResult.username, equals('testuser'));
+        expect(loginResult.fullName, equals('Test User'));
+        expect(loginResult.phoneNumber, equals('+5511999999999'));
+        expect(loginResult.email, equals('test@example.com'));
         expect(loginResult.role, equals('Client'));
         expect(loginResult.permissions, equals(['read']));
         expect(loginResult.requiresTwoFactor, isFalse);
@@ -75,20 +79,22 @@ void main() {
           success: false,
           requiresTwoFactor: true,
           twoFactorToken: '2fa-token-123',
-          username: 'testuser',
+          phoneNumber: '+5511999999999',
         );
 
         expect(loginResult.success, isFalse);
         expect(loginResult.requiresTwoFactor, isTrue);
         expect(loginResult.twoFactorToken, equals('2fa-token-123'));
-        expect(loginResult.username, equals('testuser'));
+        expect(loginResult.phoneNumber, equals('+5511999999999'));
       });
 
       test('should serialize to JSON correctly', () {
         const loginResult = LoginResult(
           success: true,
           token: 'jwt-token-123',
-          username: 'testuser',
+          fullName: 'Test User',
+          phoneNumber: '+5511999999999',
+          email: 'test@example.com',
           role: 'Client',
           permissions: ['read', 'write'],
           requiresTwoFactor: false,
@@ -98,7 +104,9 @@ void main() {
 
         expect(json['success'], isTrue);
         expect(json['token'], equals('jwt-token-123'));
-        expect(json['username'], equals('testuser'));
+        expect(json['fullName'], equals('Test User'));
+        expect(json['phoneNumber'], equals('+5511999999999'));
+        expect(json['email'], equals('test@example.com'));
         expect(json['role'], equals('Client'));
         expect(json['permissions'], equals(['read', 'write']));
         expect(json['requiresTwoFactor'], isFalse);
@@ -108,7 +116,9 @@ void main() {
         final json = {
           'success': true,
           'token': 'jwt-token-123',
-          'username': 'testuser',
+          'fullName': 'Test User',
+          'phoneNumber': '+5511999999999',
+          'email': 'test@example.com',
           'role': 'Client',
           'permissions': ['read', 'write'],
           'requiresTwoFactor': false,
@@ -118,7 +128,9 @@ void main() {
 
         expect(loginResult.success, isTrue);
         expect(loginResult.token, equals('jwt-token-123'));
-        expect(loginResult.username, equals('testuser'));
+        expect(loginResult.fullName, equals('Test User'));
+        expect(loginResult.phoneNumber, equals('+5511999999999'));
+        expect(loginResult.email, equals('test@example.com'));
         expect(loginResult.role, equals('Client'));
         expect(loginResult.permissions, equals(['read', 'write']));
         expect(loginResult.requiresTwoFactor, isFalse);
@@ -128,48 +140,48 @@ void main() {
     group('RegisterRequest', () {
       test('should create RegisterRequest with all fields', () {
         const registerRequest = RegisterRequest(
-          username: 'newuser',
+          fullName: 'New User',
           email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          phoneNumber: '+5511999999999',
+          password: 'Password123!',
         );
 
-        expect(registerRequest.username, equals('newuser'));
+        expect(registerRequest.fullName, equals('New User'));
         expect(registerRequest.email, equals('test@example.com'));
-        expect(registerRequest.password, equals('password123'));
-        expect(registerRequest.confirmPassword, equals('password123'));
+        expect(registerRequest.phoneNumber, equals('+5511999999999'));
+        expect(registerRequest.password, equals('Password123!'));
       });
 
       test('should serialize to JSON correctly', () {
         const registerRequest = RegisterRequest(
-          username: 'newuser',
+          fullName: 'New User',
           email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          phoneNumber: '+5511999999999',
+          password: 'Password123!',
         );
 
         final json = registerRequest.toJson();
 
-        expect(json['username'], equals('newuser'));
-        expect(json['email'], equals('test@example.com'));
-        expect(json['password'], equals('password123'));
-        expect(json['confirmPassword'], equals('password123'));
+        expect(json['FullName'], equals('New User'));
+        expect(json['Email'], equals('test@example.com'));
+        expect(json['PhoneNumber'], equals('+5511999999999'));
+        expect(json['Password'], equals('Password123!'));
       });
 
       test('should deserialize from JSON correctly', () {
         final json = {
-          'username': 'newuser',
+          'fullName': 'New User',
           'email': 'test@example.com',
-          'password': 'password123',
-          'confirmPassword': 'password123',
+          'phoneNumber': '+5511999999999',
+          'password': 'Password123!',
         };
 
         final registerRequest = RegisterRequest.fromJson(json);
 
-        expect(registerRequest.username, equals('newuser'));
+        expect(registerRequest.fullName, equals('New User'));
         expect(registerRequest.email, equals('test@example.com'));
-        expect(registerRequest.password, equals('password123'));
-        expect(registerRequest.confirmPassword, equals('password123'));
+        expect(registerRequest.phoneNumber, equals('+5511999999999'));
+        expect(registerRequest.password, equals('Password123!'));
       });
     });
 
@@ -208,6 +220,86 @@ void main() {
         expect(json['success'], isFalse);
         expect(json['error'], equals('Registration failed'));
         expect(json['fieldErrors'], equals({'email': 'Email already exists'}));
+      });
+    });
+
+    group('User', () {
+      test('should create User with all fields', () {
+        const user = User(
+          id: 'user-123',
+          fullName: 'Test User',
+          email: 'test@example.com',
+          phoneNumber: '+5511999999999',
+          role: 'Customer',
+          permissions: ['read'],
+        );
+
+        expect(user.id, equals('user-123'));
+        expect(user.fullName, equals('Test User'));
+        expect(user.email, equals('test@example.com'));
+        expect(user.phoneNumber, equals('+5511999999999'));
+        expect(user.role, equals('Customer'));
+        expect(user.permissions, equals(['read']));
+      });
+
+      test('should serialize to JSON correctly', () {
+        const user = User(
+          id: 'user-123',
+          fullName: 'Test User',
+          email: 'test@example.com',
+          phoneNumber: '+5511999999999',
+          role: 'Customer',
+          permissions: ['read', 'write'],
+        );
+
+        final json = user.toJson();
+
+        expect(json['UserId'], equals('user-123'));
+        expect(json['FullName'], equals('Test User'));
+        expect(json['Email'], equals('test@example.com'));
+        expect(json['PhoneNumber'], equals('+5511999999999'));
+        expect(json['Role'], equals('Customer'));
+        expect(json['Permissions'], equals(['read', 'write']));
+      });
+
+      test('should deserialize from JSON correctly', () {
+        final json = {
+          'UserId': 'user-123',
+          'FullName': 'Test User',
+          'Email': 'test@example.com',
+          'PhoneNumber': '+5511999999999',
+          'Role': 'Customer',
+          'Permissions': ['read', 'write'],
+        };
+
+        final user = User.fromJson(json);
+
+        expect(user.id, equals('user-123'));
+        expect(user.fullName, equals('Test User'));
+        expect(user.email, equals('test@example.com'));
+        expect(user.phoneNumber, equals('+5511999999999'));
+        expect(user.role, equals('Customer'));
+        expect(user.permissions, equals(['read', 'write']));
+      });
+
+      test('should handle alternative JSON field names', () {
+        final json = {
+          'id': 'user-123',
+          'fullName': 'Test User',
+          'email': 'test@example.com',
+          'phoneNumber': '+5511999999999',
+          'role': 'Customer',
+          'permissions': ['read'],
+        };
+
+        final user = User.fromJson(json);
+
+        expect(user.id, equals('user-123'));
+        expect(user.fullName, equals('Test User'));
+        expect(user.email, equals('test@example.com'));
+        expect(user.phoneNumber, equals('+5511999999999'));
+        expect(user.role, equals('Customer'));
+        expect(user.permissions, equals(['read']));
       });
     });
   });

@@ -7,7 +7,7 @@ class SignalRService {
   WebSocketChannel? _channel;
   
   // Configuration
-  static bool enableWebSocket = true; // Set to false to disable WebSocket connections
+  static bool enableWebSocket = true; // WebSocket connections enabled for remote API
   
   String get _wsUrl {
     final baseUrl = ApiConfig.currentBaseUrl;

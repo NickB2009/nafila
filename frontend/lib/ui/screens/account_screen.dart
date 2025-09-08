@@ -260,13 +260,18 @@ class _AccountScreenState extends State<AccountScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: isSmallScreen ? 2 : 4),
-                Text(
-                  BrazilianNamesGenerator.generateNameWithInitial(),
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: colors?.primary ?? theme.colorScheme.onPrimary.withOpacity(0.9),
-                    fontSize: subtitleFontSize,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                Consumer<AppController>(
+                  builder: (context, app, child) {
+                    final user = app.auth.currentUser;
+                    return Text(
+                      user?.fullName ?? BrazilianNamesGenerator.generateNameWithInitial(),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: colors?.primary ?? theme.colorScheme.onPrimary.withOpacity(0.9),
+                        fontSize: subtitleFontSize,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  },
                 ),
               ],
             ),

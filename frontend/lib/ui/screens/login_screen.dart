@@ -4,6 +4,7 @@ import '../../controllers/app_controller.dart';
 import '../../models/public_salon.dart';
 import 'anonymous_join_queue_screen.dart';
 import '../../models/auth_models.dart';
+import '../../utils/phone_formatter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _twoFactorController = TextEditingController();
   bool _obscure = true;
@@ -31,8 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
       
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
-        if (args['prefillUsername'] != null) {
-          _usernameController.text = args['prefillUsername'];
+        if (args['prefillPhoneNumber'] != null) {
+          _phoneNumberController.text = args['prefillPhoneNumber'];
         }
         if (args['prefillPassword'] != null) {
           _passwordController.text = args['prefillPassword'];
@@ -58,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _phoneNumberController.dispose();
     _passwordController.dispose();
     _twoFactorController.dispose();
     super.dispose();
@@ -71,39 +72,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
-    final username = _usernameController.text.trim();
+    final phoneNumber = PhoneFormatter.unformat(_phoneNumberController.text.trim());
     final password = _passwordController.text;
 
     print('📝 Login attempt:');
-    print('   Username: $username');
+    print('   Phone Number: $phoneNumber');
     print('   Password length: ${password.length}');
 
-    // Try login with username first
+    // Try login with phone number
     var request = LoginRequest(
-      username: username,
+      phoneNumber: phoneNumber,
       password: password,
     );
 
-    print('🚀 Calling auth.login() with username...');
+    print('🚀 Calling auth.login() with phone number...');
     var success = await auth.login(request);
 
     if (!mounted) return;
 
-    print('📊 Login result (username): $success');
+    print('📊 Login result: $success');
     print('🔍 Requires 2FA: ${auth.requiresTwoFactor}');
-
-    // If login failed and username looks like an email, try with email field
-    if (!success && !auth.requiresTwoFactor && username.contains('@')) {
-      print('🔄 Username login failed, trying as email...');
-      
-      // Clear previous error
-      auth.clearError();
-      
-      success = await auth.login(request); // Same request, backend should handle email
-      
-      if (!mounted) return;
-      print('📊 Login result (email): $success');
-    }
 
     if (auth.requiresTwoFactor) {
       print('🔐 Two-factor authentication required');
@@ -191,10 +179,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (args is Map) {
       if (args['salon'] is PublicSalon) targetSalon = args['salon'] as PublicSalon;
       if (args['fromCheckIn'] is bool) fromCheckIn = args['fromCheckIn'] as bool;
-      final prefillUsername = args['prefillUsername'] as String?;
+      final prefillPhoneNumber = args['prefillPhoneNumber'] as String?;
       final prefillPassword = args['prefillPassword'] as String?;
-      if (prefillUsername != null && _usernameController.text.isEmpty) {
-        _usernameController.text = prefillUsername;
+      if (prefillPhoneNumber != null && _phoneNumberController.text.isEmpty) {
+        _phoneNumberController.text = prefillPhoneNumber;
       }
       if (prefillPassword != null && _passwordController.text.isEmpty) {
         _passwordController.text = prefillPassword;
@@ -246,13 +234,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           children: [
                             TextFormField(
-                              controller: _usernameController,
+                              controller: _phoneNumberController,
                               decoration: const InputDecoration(
-                                labelText: 'Usuário',
-                                prefixIcon: Icon(Icons.person_outline),
+                                labelText: 'Número de Telefone',
+                                prefixIcon: Icon(Icons.phone_outlined),
+                                hintText: '(11) 99999-9999',
                               ),
                               textInputAction: TextInputAction.next,
-                              validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o usuário' : null,
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: [BrazilianPhoneInputFormatter()],
+                              validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o número de telefone' : null,
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
@@ -287,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: auth.isLoading
                       ? null
                       : () async {
-                          await app.auth.demoLogin(username: _usernameController.text.trim().isEmpty ? 'demo' : _usernameController.text.trim());
+                          await app.auth.demoLogin(phoneNumber: _phoneNumberController.text.trim().isEmpty ? '+5511999999999' : _phoneNumberController.text.trim());
                           if (!mounted) return;
                           Navigator.pushReplacementNamed(context, '/home');
                         },

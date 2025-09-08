@@ -20,7 +20,8 @@ class AuthController extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _authService.isAuthenticated;
   String? get currentToken => _authService.currentToken;
-  String? get currentUsername => _authService.currentUsername;
+  String? get currentPhoneNumber => _authService.currentPhoneNumber;
+  User? get currentUser => _authService.currentUser;
   String? get currentRole => _authService.currentRole;
   bool get requiresTwoFactor => _requiresTwoFactor;
   String? get twoFactorToken => _twoFactorToken;
@@ -107,7 +108,7 @@ class AuthController extends ChangeNotifier {
 
   /// Verifies two-factor authentication
   Future<bool> verifyTwoFactor(String twoFactorCode) async {
-    if (!_requiresTwoFactor || _twoFactorToken == null || currentUsername == null) {
+    if (!_requiresTwoFactor || _twoFactorToken == null || currentPhoneNumber == null) {
       _setError('Two-factor verification not available');
       return false;
     }
@@ -117,7 +118,7 @@ class AuthController extends ChangeNotifier {
       _setError(null);
 
       final request = VerifyTwoFactorRequest(
-        username: currentUsername!,
+        phoneNumber: currentPhoneNumber!,
         twoFactorCode: twoFactorCode,
         twoFactorToken: _twoFactorToken!,
       );
@@ -140,7 +141,7 @@ class AuthController extends ChangeNotifier {
   }
 
   /// Gets user profile information
-  Future<Map<String, dynamic>?> getProfile() async {
+  Future<User?> getProfile() async {
     if (!isAuthenticated) {
       _setError('User not authenticated');
       return null;
@@ -170,6 +171,22 @@ class AuthController extends ChangeNotifier {
       _setTwoFactorState(false, null);
     } catch (e) {
       _setError('Error during logout: ${e.toString()}');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Clears all cached data including test/demo users
+  Future<void> clearAllCachedData() async {
+    try {
+      _setLoading(true);
+      _setError(null);
+
+      await _authService.clearAllCachedData();
+      _setTwoFactorState(false, null);
+      notifyListeners(); // Force UI refresh
+    } catch (e) {
+      _setError('Error clearing cached data: ${e.toString()}');
     } finally {
       _setLoading(false);
     }
@@ -205,8 +222,8 @@ class AuthController extends ChangeNotifier {
   }
 
   /// Demo login (local token without backend) for development
-  Future<void> demoLogin({String username = 'demo', String role = 'Customer'}) async {
-    await _authService.demoLogin(username: username, role: role);
+  Future<void> demoLogin({String phoneNumber = '+5511999999999', String role = 'Customer'}) async {
+    await _authService.demoLogin(phoneNumber: phoneNumber, role: role);
     notifyListeners();
   }
 
@@ -214,7 +231,7 @@ class AuthController extends ChangeNotifier {
   Future<bool> verifyProfile() async {
     try {
       final profile = await _authService.getProfile();
-      return profile.isNotEmpty;
+      return profile.id.isNotEmpty;
     } catch (_) {
       return false;
     }

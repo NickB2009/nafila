@@ -159,8 +159,8 @@ if (-not $SkipDeployment) {
     # Configuration
     $imageName = "queuehub-api"
     $imageTag = "latest"
-    $projectPath = "backend/GrandeTech.QueueHub"
-    $dockerfilePath = "$projectPath/GrandeTech.QueueHub.API/Dockerfile"
+    $projectPath = "backend/GrandeTech.QueueHub/GrandeTech.QueueHub.API"
+    $dockerfilePath = "$projectPath/Dockerfile"
     $fullImageName = "${AcrName}.azurecr.io/${imageName}:${imageTag}"
     
     # Login to Azure Container Registry
@@ -178,9 +178,10 @@ if (-not $SkipDeployment) {
     # Build the Docker image
     Write-Host "Building Docker image..." -ForegroundColor Yellow
     Write-Host "Dockerfile path: $dockerfilePath" -ForegroundColor Yellow
-    Write-Host "Build context: $(Get-Location)" -ForegroundColor Yellow
+    Write-Host "Build context: $projectPath" -ForegroundColor Yellow
     try {
-        docker build -t $fullImageName -f $dockerfilePath .
+        # Build from the project directory
+        docker build -t $fullImageName -f $dockerfilePath $projectPath
         if ($LASTEXITCODE -ne 0) {
             throw "Failed to build Docker image"
         }
