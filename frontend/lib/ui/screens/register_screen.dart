@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/app_controller.dart';
 import '../../models/auth_models.dart';
+import '../widgets/phone_number_input.dart';
 import '../../utils/phone_formatter.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -111,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
-    final phoneNumber = PhoneFormatter.unformat(_phoneNumberController.text.trim());
+    final phoneNumber = getCleanPhoneNumber(_phoneNumberController);
     final password = _passwordController.text;
 
     print('📝 Registration attempt:');
@@ -257,18 +258,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               textInputAction: TextInputAction.next,
                             ),
                             const SizedBox(height: 12),
-                            TextFormField(
+                            PhoneNumberInput(
                               controller: _phoneNumberController,
-                              decoration: InputDecoration(
-                                labelText: 'Número de Telefone',
-                                prefixIcon: const Icon(Icons.phone_outlined),
-                                errorText: phoneFieldError,
-                                hintText: '(11) 99999-9999',
-                              ),
-                              validator: _validatePhoneNumber,
-                              keyboardType: TextInputType.phone,
                               textInputAction: TextInputAction.next,
-                              inputFormatters: [BrazilianPhoneInputFormatter()],
+                              errorText: phoneFieldError,
                             ),
                             const SizedBox(height: 12),
                             TextFormField(

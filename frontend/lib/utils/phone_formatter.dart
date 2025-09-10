@@ -1,88 +1,146 @@
 import 'package:flutter/services.dart';
 
-/// Utility class for formatting Brazilian phone numbers
-class PhoneFormatter {
-  /// Formats a Brazilian phone number to (XX) XXXXX-XXXX format
-  static String format(String phoneNumber) {
-    // Remove all non-digit characters
-    final digitsOnly = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
-    
-    if (digitsOnly.isEmpty) return '';
-    
-    // Format based on length
-    if (digitsOnly.length <= 2) {
-      return '($digitsOnly';
-    } else if (digitsOnly.length <= 7) {
-      return '(${digitsOnly.substring(0, 2)}) ${digitsOnly.substring(2)}';
-    } else if (digitsOnly.length <= 11) {
-      final areaCode = digitsOnly.substring(0, 2);
-      final firstPart = digitsOnly.substring(2, digitsOnly.length > 7 ? 7 : digitsOnly.length);
-      final secondPart = digitsOnly.length > 7 ? digitsOnly.substring(7) : '';
-      
-      if (secondPart.isNotEmpty) {
-        return '($areaCode) $firstPart-$secondPart';
-      } else {
-        return '($areaCode) $firstPart';
-      }
-    } else {
-      // Limit to 11 digits for Brazilian phone numbers
-      final truncated = digitsOnly.substring(0, 11);
-      return format(truncated);
-    }
-  }
-  
-  /// Removes formatting from phone number, keeping only digits
-  static String unformat(String formattedPhone) {
-    return formattedPhone.replaceAll(RegExp(r'[^0-9]'), '');
-  }
-  
-  /// Validates if the phone number has the correct format for Brazil
-  static bool isValid(String phoneNumber) {
-    final digitsOnly = unformat(phoneNumber);
-    return digitsOnly.length >= 10 && digitsOnly.length <= 11;
-  }
-}
+/// Phone number formatter that handles international formats
+class PhoneNumberFormatter extends TextInputFormatter {
+  static const Map<String, String> _countryCodes = {
+    'BR': '+55',
+    'US': '+1',
+    'UK': '+44',
+    'DE': '+49',
+    'FR': '+33',
+    'IT': '+39',
+    'ES': '+34',
+    'PT': '+351',
+    'AR': '+54',
+    'MX': '+52',
+  };
 
-/// Text input formatter for Brazilian phone numbers
-class BrazilianPhoneInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    // Only allow digits
-    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final text = newValue.text;
     
-    // Limit to 11 digits
-    final limitedDigits = digitsOnly.length > 11 ? digitsOnly.substring(0, 11) : digitsOnly;
+    // Don't format if user is deleting
+    if (text.length < oldValue.text.length) {
+      return newValue;
+    }
     
-    // Format the phone number
-    final formattedText = PhoneFormatter.format(limitedDigits);
+    // Remove all non-digit characters except +
+    String cleaned = text.replaceAll(RegExp(r'[^\d+]'), '');
     
-    // Calculate new cursor position
-    int newCursorPosition = formattedText.length;
+    // If it doesn't start with +, add +55 (Brazil default)
+    if (!cleaned.startsWith('+')) {
+      cleaned = '+55$cleaned';
+    }
     
-    // Try to maintain cursor position relative to digits
-    if (oldValue.selection.baseOffset <= oldValue.text.length) {
-      final oldDigitsBeforeCursor = oldValue.text
-          .substring(0, oldValue.selection.baseOffset)
-          .replaceAll(RegExp(r'[^0-9]'), '');
-      
-      int digitCount = 0;
-      for (int i = 0; i < formattedText.length; i++) {
-        if (RegExp(r'[0-9]').hasMatch(formattedText[i])) {
-          digitCount++;
-          if (digitCount == oldDigitsBeforeCursor.length) {
-            newCursorPosition = i + 1;
-            break;
+    // Format based on country code
+    String formatted = _formatByCountryCode(cleaned);
+    
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  String _formatByCountryCode(String phone) {
+    if (phone.startsWith('+55')) {
+      // Brazilian format: +55 (11) 99999-9999
+      final digits = phone.substring(3);
+      if (digits.length >= 2) {
+        String formatted = '+55';
+        if (digits.length >= 2) {
+          formatted += ' (${digits.substring(0, 2)}';
+          if (digits.length > 2) {
+            formatted += ')';
+            if (digits.length >= 7) {
+              formatted += ' ${digits.substring(2, 7)}';
+              if (digits.length > 7) {
+                formatted += '-${digits.substring(7, digits.length > 11 ? 11 : digits.length)}';
+              }
+            } else {
+              formatted += ' ${digits.substring(2)}';
+            }
           }
         }
+        return formatted;
+      }
+    } else if (phone.startsWith('+1')) {
+      // US format: +1 (555) 123-4567
+      final digits = phone.substring(2);
+      if (digits.length >= 3) {
+        String formatted = '+1';
+        if (digits.length >= 3) {
+          formatted += ' (${digits.substring(0, 3)}';
+          if (digits.length > 3) {
+            formatted += ')';
+            if (digits.length >= 6) {
+              formatted += ' ${digits.substring(3, 6)}';
+              if (digits.length > 6) {
+                formatted += '-${digits.substring(6, digits.length > 10 ? 10 : digits.length)}';
+              }
+            } else {
+              formatted += ' ${digits.substring(3)}';
+            }
+          }
+        }
+        return formatted;
       }
     }
     
-    return TextEditingValue(
-      text: formattedText,
-      selection: TextSelection.collapsed(offset: newCursorPosition),
-    );
+    // Default: just return with country code
+    return phone;
   }
+
+  /// Extract clean phone number for API calls
+  static String getCleanPhoneNumber(String formattedPhone) {
+    return formattedPhone.replaceAll(RegExp(r'[^\d+]'), '');
+  }
+
+  /// Get display format for phone number
+  static String getDisplayFormat(String cleanPhone) {
+    final formatter = PhoneNumberFormatter();
+    return formatter._formatByCountryCode(cleanPhone);
+  }
+
+  /// Check if phone number is valid
+  static bool isValidPhoneNumber(String phone) {
+    final clean = getCleanPhoneNumber(phone);
+    
+    // Must start with + and have at least 7 digits after country code
+    if (!clean.startsWith('+')) return false;
+    
+    // Brazilian numbers: +55 + 2 digit area code + 8-9 digits
+    if (clean.startsWith('+55')) {
+      final digits = clean.substring(3);
+      return digits.length >= 10 && digits.length <= 11;
+    }
+    
+    // US numbers: +1 + 3 digit area code + 7 digits  
+    if (clean.startsWith('+1')) {
+      final digits = clean.substring(2);
+      return digits.length == 10;
+    }
+    
+    // Other international numbers: at least 7 digits after country code
+    final countryCodeMatch = RegExp(r'^\+(\d{1,4})').firstMatch(clean);
+    if (countryCodeMatch != null) {
+      final countryCode = countryCodeMatch.group(1)!;
+      final digits = clean.substring(countryCode.length + 1);
+      return digits.length >= 7 && digits.length <= 15;
+    }
+    
+    return false;
+  }
+
+  /// Get country code from phone number
+  static String? getCountryCode(String phone) {
+    final clean = getCleanPhoneNumber(phone);
+    final match = RegExp(r'^\+(\d{1,4})').firstMatch(clean);
+    return match?.group(1);
+  }
+
+  /// Get supported country codes
+  static Map<String, String> get supportedCountries => _countryCodes;
 }

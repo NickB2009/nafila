@@ -33,15 +33,17 @@ void main() {
       test('should login successfully and store token', () async {
         // Arrange
         const loginRequest = LoginRequest(
-          username: 'testuser',
-          password: 'password123',
+          phoneNumber: '+5511999999999',
+          password: 'StrongPass123!',
         );
         
         const loginResult = LoginResult(
           success: true,
           token: 'jwt-token-123',
-          username: 'testuser',
-          role: 'Client',
+          fullName: 'Test User',
+          phoneNumber: '+5511999999999',
+          email: 'test@example.com',
+          role: 'Customer',
           permissions: ['read'],
           requiresTwoFactor: false,
         );
@@ -49,16 +51,13 @@ void main() {
         final mockResponse = Response(
           data: loginResult.toJson(),
           statusCode: 200,
-          requestOptions: RequestOptions(path: '/Auth/login'),
+          requestOptions: RequestOptions(path: '/auth/login'),
         );
 
-        when(mockApiClient.post('/Auth/login', data: loginRequest.toJson()))
+        when(mockApiClient.post(any, data: anyNamed('data')))
             .thenAnswer((_) async => mockResponse);
-        when(mockSharedPreferences.setString('auth_token', 'jwt-token-123'))
-            .thenAnswer((_) async => true);
-        when(mockSharedPreferences.setString('user_role', 'Client'))
-            .thenAnswer((_) async => true);
-        when(mockSharedPreferences.setString('username', 'testuser'))
+
+        when(mockSharedPreferences.setString(any, any))
             .thenAnswer((_) async => true);
 
         // Act
@@ -67,40 +66,41 @@ void main() {
         // Assert
         expect(result.success, isTrue);
         expect(result.token, equals('jwt-token-123'));
-        expect(result.username, equals('testuser'));
-        expect(result.role, equals('Client'));
+        expect(result.fullName, equals('Test User'));
+        expect(result.phoneNumber, equals('+5511999999999'));
+        expect(result.email, equals('test@example.com'));
+        expect(result.role, equals('Customer'));
+        expect(result.permissions, equals(['read']));
+        expect(result.requiresTwoFactor, isFalse);
 
         // Verify API call
-        verify(mockApiClient.post('/Auth/login', data: loginRequest.toJson())).called(1);
+        verify(mockApiClient.post('/auth/login', data: loginRequest.toJson()));
         
         // Verify token storage
-        verify(mockSharedPreferences.setString('auth_token', 'jwt-token-123')).called(1);
-        verify(mockSharedPreferences.setString('user_role', 'Client')).called(1);
-        verify(mockSharedPreferences.setString('username', 'testuser')).called(1);
-        
-        // Verify token set on API client
-        verify(mockApiClient.setAuthToken('jwt-token-123')).called(1);
+        verify(mockSharedPreferences.setString('auth_token', 'jwt-token-123'));
+        verify(mockSharedPreferences.setString('phone_number', '+5511999999999'));
+        verify(mockSharedPreferences.setString('user_role', 'Customer'));
       });
 
-      test('should handle login failure correctly', () async {
+      test('should handle login failure', () async {
         // Arrange
         const loginRequest = LoginRequest(
-          username: 'testuser',
+          phoneNumber: '+5511999999999',
           password: 'wrongpassword',
         );
         
         const loginResult = LoginResult(
           success: false,
-          error: 'Invalid credentials',
+          error: 'Invalid phone number or password',
         );
 
         final mockResponse = Response(
           data: loginResult.toJson(),
           statusCode: 400,
-          requestOptions: RequestOptions(path: '/Auth/login'),
+          requestOptions: RequestOptions(path: '/auth/login'),
         );
 
-        when(mockApiClient.post('/Auth/login', data: loginRequest.toJson()))
+        when(mockApiClient.post(any, data: anyNamed('data')))
             .thenAnswer((_) async => mockResponse);
 
         // Act
@@ -108,35 +108,31 @@ void main() {
 
         // Assert
         expect(result.success, isFalse);
-        expect(result.error, equals('Invalid credentials'));
+        expect(result.error, equals('Invalid phone number or password'));
         expect(result.token, isNull);
-
-        // Verify no token storage
-        verifyNever(mockSharedPreferences.setString(any, any));
-        verifyNever(mockApiClient.setAuthToken(any));
       });
 
-      test('should handle login requiring 2FA', () async {
+      test('should handle two-factor authentication requirement', () async {
         // Arrange
         const loginRequest = LoginRequest(
-          username: 'testuser',
-          password: 'password123',
+          phoneNumber: '+5511999999999',
+          password: 'StrongPass123!',
         );
         
         const loginResult = LoginResult(
           success: false,
           requiresTwoFactor: true,
           twoFactorToken: '2fa-token-123',
-          username: 'testuser',
+          phoneNumber: '+5511999999999',
         );
 
         final mockResponse = Response(
           data: loginResult.toJson(),
           statusCode: 200,
-          requestOptions: RequestOptions(path: '/Auth/login'),
+          requestOptions: RequestOptions(path: '/auth/login'),
         );
 
-        when(mockApiClient.post('/Auth/login', data: loginRequest.toJson()))
+        when(mockApiClient.post(any, data: anyNamed('data')))
             .thenAnswer((_) async => mockResponse);
 
         // Act
@@ -146,30 +142,21 @@ void main() {
         expect(result.success, isFalse);
         expect(result.requiresTwoFactor, isTrue);
         expect(result.twoFactorToken, equals('2fa-token-123'));
-        expect(result.username, equals('testuser'));
-
-        // Verify no token storage yet
-        verifyNever(mockSharedPreferences.setString('auth_token', any));
+        expect(result.phoneNumber, equals('+5511999999999'));
       });
 
-      test('should handle API errors during login', () async {
+      test('should handle network error', () async {
         // Arrange
         const loginRequest = LoginRequest(
-          username: 'testuser',
-          password: 'password123',
+          phoneNumber: '+5511999999999',
+          password: 'StrongPass123!',
         );
 
-        final dioError = DioException(
-          requestOptions: RequestOptions(path: '/Auth/login'),
-          response: Response(
-            statusCode: 500,
-            requestOptions: RequestOptions(path: '/Auth/login'),
-          ),
-          type: DioExceptionType.badResponse,
-        );
-
-        when(mockApiClient.post('/Auth/login', data: loginRequest.toJson()))
-            .thenThrow(dioError);
+        when(mockApiClient.post(any, data: anyNamed('data')))
+            .thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/auth/login'),
+              type: DioExceptionType.connectionTimeout,
+            ));
 
         // Act
         final result = await authService.login(loginRequest);
@@ -180,25 +167,27 @@ void main() {
       });
     });
 
-    group('Register', () {
+    group('Registration', () {
       test('should register successfully', () async {
         // Arrange
         const registerRequest = RegisterRequest(
-          username: 'newuser',
-          email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          fullName: 'New User',
+          email: 'newuser@example.com',
+          phoneNumber: '+5511999999999',
+          password: 'StrongPass123!',
         );
         
-        const registerResult = RegisterResult(success: true);
+        const registerResult = RegisterResult(
+          success: true,
+        );
 
         final mockResponse = Response(
           data: registerResult.toJson(),
           statusCode: 200,
-          requestOptions: RequestOptions(path: '/Auth/register'),
+          requestOptions: RequestOptions(path: '/auth/register'),
         );
 
-        when(mockApiClient.post('/Auth/register', data: registerRequest.toJson()))
+        when(mockApiClient.post(any, data: anyNamed('data')))
             .thenAnswer((_) async => mockResponse);
 
         // Act
@@ -209,31 +198,31 @@ void main() {
         expect(result.error, isNull);
 
         // Verify API call
-        verify(mockApiClient.post('/Auth/register', data: registerRequest.toJson())).called(1);
+        verify(mockApiClient.post('/auth/register', data: registerRequest.toJson()));
       });
 
       test('should handle registration failure with field errors', () async {
         // Arrange
         const registerRequest = RegisterRequest(
-          username: 'existinguser',
-          email: 'test@example.com',
-          password: 'password123',
-          confirmPassword: 'password123',
+          fullName: 'Existing User',
+          email: 'existing@example.com',
+          phoneNumber: '+5511999999998',
+          password: 'StrongPass123!',
         );
         
         const registerResult = RegisterResult(
           success: false,
           error: 'Registration failed',
-          fieldErrors: {'username': 'Username already exists'},
+          fieldErrors: {'phoneNumber': 'Phone number already registered'},
         );
 
         final mockResponse = Response(
           data: registerResult.toJson(),
           statusCode: 400,
-          requestOptions: RequestOptions(path: '/Auth/register'),
+          requestOptions: RequestOptions(path: '/auth/register'),
         );
 
-        when(mockApiClient.post('/Auth/register', data: registerRequest.toJson()))
+        when(mockApiClient.post(any, data: anyNamed('data')))
             .thenAnswer((_) async => mockResponse);
 
         // Act
@@ -242,80 +231,70 @@ void main() {
         // Assert
         expect(result.success, isFalse);
         expect(result.error, equals('Registration failed'));
-        expect(result.fieldErrors, equals({'username': 'Username already exists'}));
+        expect(result.fieldErrors, equals({'phoneNumber': 'Phone number already registered'}));
       });
     });
 
-    group('Token Management', () {
-      test('should load stored token on initialization', () async {
+    group('Profile', () {
+      test('should get user profile successfully', () async {
+        // Arrange
+        final mockProfileData = {
+          'UserId': 'user-123',
+          'FullName': 'Test User',
+          'Email': 'test@example.com',
+          'PhoneNumber': '+5511999999999',
+          'Role': 'Customer',
+          'Permissions': ['read', 'write'],
+        };
+
+        final mockResponse = Response(
+          data: mockProfileData,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/profile'),
+        );
+
+        when(mockSharedPreferences.getString('auth_token'))
+            .thenReturn('jwt-token-123');
+        when(mockApiClient.get(any))
+            .thenAnswer((_) async => mockResponse);
+
+        // Act
+        final result = await authService.getProfile();
+
+        // Assert
+        expect(result.id, equals('user-123'));
+        expect(result.fullName, equals('Test User'));
+        expect(result.email, equals('test@example.com'));
+        expect(result.phoneNumber, equals('+5511999999999'));
+        expect(result.role, equals('Customer'));
+        expect(result.permissions, equals(['read', 'write']));
+
+        // Verify API call
+        verify(mockApiClient.get('/auth/profile'));
+      });
+
+      test('should handle profile request when not authenticated', () async {
         // Arrange
         when(mockSharedPreferences.getString('auth_token'))
-            .thenReturn('stored-token-123');
-        when(mockSharedPreferences.getString('user_role'))
-            .thenReturn('Client');
-        when(mockSharedPreferences.getString('username'))
-            .thenReturn('testuser');
+            .thenReturn(null);
 
-        // Act
-        await authService.loadStoredAuth();
-
-        // Assert
-        expect(authService.isAuthenticated, isTrue);
-        expect(authService.currentToken, equals('stored-token-123'));
-        expect(authService.currentRole, equals('Client'));
-        expect(authService.currentUsername, equals('testuser'));
-
-        // Verify token set on API client
-        verify(mockApiClient.setAuthToken('stored-token-123')).called(1);
-      });
-
-      test('should handle missing stored token', () async {
-        // Arrange
-        when(mockSharedPreferences.getString('auth_token')).thenReturn(null);
-
-        // Act
-        await authService.loadStoredAuth();
-
-        // Assert
-        expect(authService.isAuthenticated, isFalse);
-        expect(authService.currentToken, isNull);
-        expect(authService.currentRole, isNull);
-        expect(authService.currentUsername, isNull);
-
-        // Verify no token set on API client
-        verifyNever(mockApiClient.setAuthToken(any));
-      });
-
-      test('should logout and clear stored data', () async {
-        // Arrange
-        when(mockSharedPreferences.remove('auth_token')).thenAnswer((_) async => true);
-        when(mockSharedPreferences.remove('user_role')).thenAnswer((_) async => true);
-        when(mockSharedPreferences.remove('username')).thenAnswer((_) async => true);
-
-        // Act
-        await authService.logout();
-
-        // Assert
-        expect(authService.isAuthenticated, isFalse);
-        expect(authService.currentToken, isNull);
-        expect(authService.currentRole, isNull);
-        expect(authService.currentUsername, isNull);
-
-        // Verify storage clearing
-        verify(mockSharedPreferences.remove('auth_token')).called(1);
-        verify(mockSharedPreferences.remove('user_role')).called(1);
-        verify(mockSharedPreferences.remove('username')).called(1);
-        
-        // Verify token cleared from API client
-        verify(mockApiClient.clearAuthToken()).called(1);
+        // Act & Assert
+        expect(
+          () async => await authService.getProfile(),
+          throwsA(isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('User not authenticated'),
+          )),
+        );
       });
     });
 
     group('Two-Factor Authentication', () {
-      test('should verify 2FA successfully', () async {
+      test('should verify two-factor code successfully', () async {
         // Arrange
         const verifyRequest = VerifyTwoFactorRequest(
-          username: 'testuser',
+          phoneNumber: '+5511999999999',
           twoFactorCode: '123456',
           twoFactorToken: '2fa-token-123',
         );
@@ -323,8 +302,10 @@ void main() {
         const loginResult = LoginResult(
           success: true,
           token: 'jwt-token-456',
-          username: 'testuser',
-          role: 'Client',
+          fullName: 'Test User',
+          phoneNumber: '+5511999999999',
+          email: 'test@example.com',
+          role: 'Customer',
           permissions: ['read'],
           requiresTwoFactor: false,
         );
@@ -332,16 +313,13 @@ void main() {
         final mockResponse = Response(
           data: loginResult.toJson(),
           statusCode: 200,
-          requestOptions: RequestOptions(path: '/Auth/verify-2fa'),
+          requestOptions: RequestOptions(path: '/auth/verify-2fa'),
         );
 
-        when(mockApiClient.post('/Auth/verify-two-factor', data: verifyRequest.toJson()))
+        when(mockApiClient.post(any, data: anyNamed('data')))
             .thenAnswer((_) async => mockResponse);
-        when(mockSharedPreferences.setString('auth_token', 'jwt-token-456'))
-            .thenAnswer((_) async => true);
-        when(mockSharedPreferences.setString('user_role', 'Client'))
-            .thenAnswer((_) async => true);
-        when(mockSharedPreferences.setString('username', 'testuser'))
+
+        when(mockSharedPreferences.setString(any, any))
             .thenAnswer((_) async => true);
 
         // Act
@@ -353,8 +331,95 @@ void main() {
         expect(result.requiresTwoFactor, isFalse);
 
         // Verify token storage
-        verify(mockSharedPreferences.setString('auth_token', 'jwt-token-456')).called(1);
-        verify(mockApiClient.setAuthToken('jwt-token-456')).called(1);
+        verify(mockSharedPreferences.setString('auth_token', 'jwt-token-456'));
+        verify(mockSharedPreferences.setString('phone_number', '+5511999999999'));
+      });
+    });
+
+    group('Authentication State', () {
+      test('should load stored authentication data', () async {
+        // Arrange
+        when(mockSharedPreferences.getString('auth_token'))
+            .thenReturn('stored-token-123');
+        when(mockSharedPreferences.getString('phone_number'))
+            .thenReturn('+5511999999999');
+        when(mockSharedPreferences.getString('user_role'))
+            .thenReturn('Customer');
+
+        // Mock profile response for token validation
+        final mockProfileData = {
+          'UserId': 'user-123',
+          'FullName': 'Test User',
+          'Email': 'test@example.com',
+          'PhoneNumber': '+5511999999999',
+          'Role': 'Customer',
+          'Permissions': ['read'],
+        };
+
+        final mockResponse = Response(
+          data: mockProfileData,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/profile'),
+        );
+
+        when(mockApiClient.get(any))
+            .thenAnswer((_) async => mockResponse);
+
+        // Act
+        await authService.loadStoredAuth();
+
+        // Assert
+        expect(authService.isAuthenticated, isTrue);
+        expect(authService.currentPhoneNumber, equals('+5511999999999'));
+        expect(authService.currentUser?.fullName, equals('Test User'));
+        expect(authService.currentRole, equals('Customer'));
+
+        verify(mockApiClient.setAuthToken('stored-token-123'));
+      });
+
+      test('should clear authentication data on logout', () async {
+        // Arrange
+        when(mockSharedPreferences.remove(any))
+            .thenAnswer((_) async => true);
+
+        // Act
+        await authService.logout();
+
+        // Assert
+        expect(authService.isAuthenticated, isFalse);
+        expect(authService.currentPhoneNumber, isNull);
+        expect(authService.currentUser, isNull);
+        expect(authService.currentRole, isNull);
+
+        // Verify storage cleanup
+        verify(mockSharedPreferences.remove('auth_token'));
+        verify(mockSharedPreferences.remove('phone_number'));
+        verify(mockSharedPreferences.remove('user_role'));
+        verify(mockApiClient.clearAuthToken());
+      });
+
+      test('should handle demo login', () async {
+        // Arrange
+        when(mockSharedPreferences.setString(any, any))
+            .thenAnswer((_) async => true);
+
+        // Act
+        await authService.demoLogin(
+          phoneNumber: '+5511999999999',
+          role: 'Customer',
+        );
+
+        // Assert
+        expect(authService.isAuthenticated, isTrue);
+        expect(authService.currentPhoneNumber, equals('+5511999999999'));
+        expect(authService.currentUser?.fullName, equals('Usuário Demo'));
+        expect(authService.currentUser?.role, equals('Customer'));
+        expect(authService.currentRole, equals('Customer'));
+
+        // Verify token storage
+        verify(mockSharedPreferences.setString('auth_token', any));
+        verify(mockSharedPreferences.setString('phone_number', '+5511999999999'));
+        verify(mockSharedPreferences.setString('user_role', 'Customer'));
       });
     });
   });

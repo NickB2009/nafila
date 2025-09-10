@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../controllers/app_controller.dart';
 import '../../models/public_salon.dart';
 import 'anonymous_join_queue_screen.dart';
 import '../../models/auth_models.dart';
+import '../widgets/phone_number_input.dart';
 import '../../utils/phone_formatter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -72,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
-    final phoneNumber = PhoneFormatter.unformat(_phoneNumberController.text.trim());
+    final phoneNumber = getCleanPhoneNumber(_phoneNumberController);
     final password = _passwordController.text;
 
     print('📝 Login attempt:');
@@ -233,17 +236,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         key: _formKey,
                         child: Column(
                           children: [
-                            TextFormField(
+                            PhoneNumberInput(
                               controller: _phoneNumberController,
-                              decoration: const InputDecoration(
-                                labelText: 'Número de Telefone',
-                                prefixIcon: Icon(Icons.phone_outlined),
-                                hintText: '(11) 99999-9999',
-                              ),
                               textInputAction: TextInputAction.next,
-                              keyboardType: TextInputType.phone,
-                              inputFormatters: [BrazilianPhoneInputFormatter()],
-                              validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o número de telefone' : null,
+                              onChanged: (value) {
+                                // Optional: Add any additional logic here
+                              },
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
