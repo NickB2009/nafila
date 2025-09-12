@@ -45,7 +45,7 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
 
             builder.Property(l => l.LastAverageTimeReset)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
 
             // Value objects are now configured in QueueHubDbContext.ConfigureValueObjects()
             // No need to ignore them anymore

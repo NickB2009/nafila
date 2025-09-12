@@ -13,9 +13,9 @@ namespace Grande.Fila.API.Infrastructure.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<QueueHubDbContext>();
             
-            // Use Azure SQL Database connection string for design-time
-            var connectionString = "Server=tcp:grande.database.windows.net,1433;Initial Catalog=GrandeTechQueueHub;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=\"Active Directory Default\";";
-            optionsBuilder.UseSqlServer(connectionString);
+            // Use MySQL Database connection string for design-time
+            var connectionString = "Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;";
+            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
             
             return new QueueHubDbContext(optionsBuilder.Options);
         }

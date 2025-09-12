@@ -30,7 +30,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Data.SqlClient; // Added for SqlException specific handling
+using MySqlConnector; // Added for MySqlException specific handling
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -354,20 +354,20 @@ if ((autoMigrate || seedData) && useSqlDatabase)
             }
         }
     }
-    catch (SqlException ex) when (ex.Number == 40615) // Azure SQL firewall block
+    catch (MySqlException ex) when (ex.Number == 1045) // MySQL access denied
     {
         using var scope = app.Services.CreateScope();
         var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
-        logger?.LogError(ex, "Azure SQL firewall blocked the connection (Error 40615). Public IP is not whitelisted. Add your current public IP to the SQL Server firewall rules. Message: {Message}", ex.Message);
-        logger?.LogWarning("Skipping migration/seeding due to firewall block. Application will continue without database updates.");
+        logger?.LogError(ex, "MySQL access denied (Error 1045). Check username/password in connection string. Message: {Message}", ex.Message);
+        logger?.LogWarning("Skipping migration/seeding due to authentication failure. Application will continue without database updates.");
     }
-    catch (SqlException ex)
+    catch (MySqlException ex)
     {
         using var scope = app.Services.CreateScope();
         var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
-        logger?.LogError(ex, "SQL error during migration/seeding. Number={Number} State={State} Class={Class}. Message: {Message}", ex.Number, ex.State, ex.Class, ex.Message);
+        logger?.LogError(ex, "MySQL error during migration/seeding. Number={Number} Message: {Message}", ex.Number, ex.Message);
         logger?.LogWarning("Application will continue without applying migrations/seeding.");
-        Console.WriteLine($"Warning: SQL migration/seeding failed (#{ex.Number}): {ex.Message}");
+        Console.WriteLine($"Warning: MySQL migration/seeding failed (#{ex.Number}): {ex.Message}");
     }
     catch (Exception ex)
     {
@@ -533,9 +533,9 @@ app.MapGet("/diagnostics/config", (IConfiguration config) =>
     {
         try
         {
-            var connectionStringBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
-            serverName = connectionStringBuilder.DataSource;
-            databaseName = connectionStringBuilder.InitialCatalog;
+            var connectionStringBuilder = new MySqlConnectionStringBuilder(connectionString);
+            serverName = connectionStringBuilder.Server;
+            databaseName = connectionStringBuilder.Database;
         }
         catch (Exception)
         {

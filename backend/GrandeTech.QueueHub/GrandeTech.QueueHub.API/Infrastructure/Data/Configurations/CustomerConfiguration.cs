@@ -52,9 +52,10 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.HasIndex("PhoneNumber")
                 .HasDatabaseName("IX_Customers_PhoneNumber");
 
-            // Configure concurrency token
+            // Configure concurrency token for MySQL
             builder.Property(c => c.RowVersion)
-                .IsRowVersion()
+                .HasColumnType("TIMESTAMP")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
                 .IsConcurrencyToken();
         }
     }

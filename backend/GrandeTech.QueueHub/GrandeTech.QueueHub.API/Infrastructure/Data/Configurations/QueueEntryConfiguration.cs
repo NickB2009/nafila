@@ -40,7 +40,7 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
 
             builder.Property(qe => qe.EnteredAt)
                 .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
 
             builder.Property(qe => qe.CalledAt);
             builder.Property(qe => qe.CheckedInAt);
@@ -96,9 +96,10 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.HasIndex(qe => qe.ServiceTypeId)
                 .HasDatabaseName("IX_QueueEntries_ServiceTypeId");
 
-            // Configure concurrency token
+            // Configure concurrency token for MySQL
             builder.Property(qe => qe.RowVersion)
-                .IsRowVersion()
+                .HasColumnType("TIMESTAMP")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
                 .IsConcurrencyToken();
         }
     }

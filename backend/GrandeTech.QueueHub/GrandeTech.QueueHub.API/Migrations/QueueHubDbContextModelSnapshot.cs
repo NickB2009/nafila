@@ -20,7 +20,7 @@ namespace Grande.Fila.API.Migrations
                 .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            // SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder); // Commented out for MySQL migration
 
             modelBuilder.Entity("Grande.Fila.API.Domain.Customers.Customer", b =>
                 {

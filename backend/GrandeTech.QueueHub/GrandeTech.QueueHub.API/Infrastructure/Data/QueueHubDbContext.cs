@@ -79,7 +79,7 @@ namespace Grande.Fila.API.Infrastructure.Data
             if (!optionsBuilder.IsConfigured)
             {
                 // Fallback configuration - should not be used in production
-                optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=QueueHubDb;Trusted_Connection=True;MultipleActiveResultSets=true");
+                optionsBuilder.UseMySql("Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;", ServerVersion.AutoDetect("Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;"));
             }
 
             // Enable sensitive data logging and detailed errors only in development
@@ -100,7 +100,7 @@ namespace Grande.Fila.API.Infrastructure.Data
                     // Configure common properties
                     modelBuilder.Entity(entityType.ClrType)
                         .Property<DateTime>("CreatedAt")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
 
                     modelBuilder.Entity(entityType.ClrType)
                         .Property<DateTime?>("LastModifiedAt");
@@ -172,12 +172,13 @@ namespace Grande.Fila.API.Infrastructure.Data
                         .HasMaxLength(100);
                 });
 
-            // Configure LocationIds collection as JSON
+            // Configure LocationIds collection as JSON (MySQL native JSON type)
             modelBuilder.Entity<Organization>()
                 .Property(e => e.LocationIds)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .HasColumnType("json")
                 .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -282,14 +283,15 @@ namespace Grande.Fila.API.Infrastructure.Data
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<WeeklyBusinessHours>(v, (System.Text.Json.JsonSerializerOptions?)null)!)
                 .HasColumnName("WeeklyBusinessHours")
-                .HasColumnType("nvarchar(max)");
+                .HasColumnType("LONGTEXT");
 
-            // Configure collections as JSON
+            // Configure collections as JSON (MySQL native JSON type)
             modelBuilder.Entity<Location>()
                 .Property(e => e.StaffMemberIds)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .HasColumnType("json")
                 .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -300,6 +302,7 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .HasColumnType("json")
                 .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -310,6 +313,7 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .HasColumnType("json")
                 .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -353,12 +357,13 @@ namespace Grande.Fila.API.Infrastructure.Data
                     history.Property(h => h.Feedback).HasMaxLength(2000);
                 });
 
-            // Configure FavoriteLocationIds as JSON
+            // Configure FavoriteLocationIds as JSON (MySQL native JSON type)
             modelBuilder.Entity<Customer>()
                 .Property(e => e.FavoriteLocationIds)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .HasColumnType("json")
                 .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -386,13 +391,14 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("PhoneNumber")
                 .HasMaxLength(50);
 
-            // Configure SpecialtyServiceTypeIds as JSON
+            // Configure SpecialtyServiceTypeIds as JSON (MySQL native JSON type)
             var staffSpecialtyProperty = modelBuilder.Entity<StaffMember>()
                 .Property(e => e.SpecialtyServiceTypeIds)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
                     v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
-                .HasColumnName("SpecialtyServiceTypeIds");
+                .HasColumnName("SpecialtyServiceTypeIds")
+                .HasColumnType("json");
             
             staffSpecialtyProperty.Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
                 (c1, c2) => c1!.SequenceEqual(c2!),

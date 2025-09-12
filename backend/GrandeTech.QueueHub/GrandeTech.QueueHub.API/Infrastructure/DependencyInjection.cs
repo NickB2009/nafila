@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Data.SqlClient;
+using MySqlConnector;
 using Grande.Fila.API.Domain.Common;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Domain.Organizations;
@@ -89,30 +89,32 @@ namespace Grande.Fila.API.Infrastructure
             if (useSqlDatabase && !useInMemoryDatabase)
             {
                 // Validate / obtain connection string
-                var connectionString = configuration.GetConnectionString("AzureSqlConnection");
+                var connectionString = configuration.GetConnectionString("MySqlConnection");
                 var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT") ?? "";
 
-                // Development fallback: use local Docker SQL container if Azure connection not supplied
+                // Development fallback: use local Docker MySQL container if connection not supplied
                 if (string.IsNullOrWhiteSpace(connectionString) && environment == "Development")
                 {
-                    connectionString = "Server=localhost,1433;Database=QueueHubDb;User ID=sa;Password=DevPassword123!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True";
+                    connectionString = "Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;";
                 }
 
                 if (string.IsNullOrEmpty(connectionString))
                 {
                     throw new InvalidOperationException(
-                        "AzureSqlConnection connection string is not configured. Provide via User Secrets / environment variable or run local SQL Docker container.");
+                        "MySqlConnection connection string is not configured. Provide via User Secrets / environment variable or run local MySQL Docker container.");
                 }
 
                 services.AddDbContext<QueueHubDbContext>(options =>
                 {
-                    options.UseSqlServer(connectionString, sqlOptions =>
+                    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mySqlOptions =>
                     {
-                        sqlOptions.EnableRetryOnFailure(
+                        mySqlOptions.EnableRetryOnFailure(
                             maxRetryCount: 3,
                             maxRetryDelay: TimeSpan.FromSeconds(15),
-                            errorNumbersToAdd: new[] { 40613, 40501, 40540, 40197, 10928, 10929 });
-                        sqlOptions.CommandTimeout(30);
+                            errorNumbersToAdd: new[] { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
+                        mySqlOptions.CommandTimeout(30);
+                        mySqlOptions.MaxBatchSize(1000);
+                        mySqlOptions.EnableStringComparisonTranslations();
                     });
 
                     if (environment == "Development")
