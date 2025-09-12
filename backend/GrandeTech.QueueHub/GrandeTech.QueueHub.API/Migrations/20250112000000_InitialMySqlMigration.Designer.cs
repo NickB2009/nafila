@@ -12,9 +12,10 @@ namespace Grande.Fila.API.Migrations
 {
     [DbContext(typeof(QueueHubDbContext))]
     [Migration("20250112000000_InitialMySqlMigration")]
-    partial class QueueHubDbContextModelSnapshot : ModelSnapshot
+    partial class InitialMySqlMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
