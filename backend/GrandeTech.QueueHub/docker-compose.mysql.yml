@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: queuehub-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: DevPassword123!
+      MYSQL_DATABASE: QueueHubDb
+      MYSQL_USER: queuehub
+      MYSQL_PASSWORD: DevPassword123!
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./scripts/migrate-json-data.sql:/docker-entrypoint-initdb.d/02-json-migration.sql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pDevPassword123!"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - queuehub-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: queuehub-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: DevPassword123!
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - queuehub-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  queuehub-network:
+    driver: bridge
