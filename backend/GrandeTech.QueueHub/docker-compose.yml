@@ -14,7 +14,7 @@ services:
       - Database__UseInMemoryDatabase=false
       - Database__AutoMigrate=true
       - Database__SeedData=true
-      - ConnectionStrings__AzureSqlConnection=Server=db;Database=QueueHubDb;User Id=sa;Password=DevPassword123!;TrustServerCertificate=true
+      - ConnectionStrings__MySqlConnection=Server=mysql;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;
       - RateLimiting__MaxRequestsPerWindow=20
       - RateLimiting__WindowMinutes=1
       - DataAnonymization__DataRetentionDays=90
@@ -26,33 +26,34 @@ services:
       - PerformanceMonitoring__CleanupIntervalMinutes=15
       - PerformanceMonitoring__MetricRetentionHours=24
     depends_on:
-      - db
+      mysql:
+        condition: service_healthy
     volumes:
       - ./logs:/app/logs
     networks:
       - queuehub-network
 
-  # SQL Server Database
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=DevPassword123!
-      - MSSQL_PID=Developer
+      - MYSQL_ROOT_PASSWORD=DevPassword123!
+      - MYSQL_DATABASE=QueueHubDb
+      - MYSQL_USER=queuehub
+      - MYSQL_PASSWORD=DevPassword123!
     ports:
-      - "1434:1433"
+      - "3306:3306"
     volumes:
-      - sqlserver_data:/var/opt/mssql
-      - ./scripts:/scripts
+      - mysql_data:/var/lib/mysql
+      - ./mysql-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./scripts/migrate-json-data.sql:/docker-entrypoint-initdb.d/02-json-migration.sql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pDevPassword123!"]
+      timeout: 20s
+      retries: 10
     networks:
       - queuehub-network
-    command: >
-      bash -c "
-        /opt/mssql/bin/sqlservr &
-        sleep 30
-        /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P DevPassword123! -i /scripts/init.sql
-        wait
-      "
 
   # Redis Cache (for future use)
   redis:
@@ -64,11 +65,11 @@ services:
     networks:
       - queuehub-network
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P DevPassword123! -Q 'SELECT 1' -C || exit 1"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
-      retries: 10
-      start_period: 30s
+      retries: 5
+      start_period: 10s
 
   # Application Insights Emulator (for local development)
   appinsights:
@@ -78,7 +79,7 @@ services:
       - "8081:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__AzureSqlConnection=Server=sqlserver:1433;Database=QueueHubDb;User Id=sa;Password=DevPassword123!;TrustServerCertificate=True;MultipleActiveResultSets=true;Connection Timeout=30;Encrypt=False;
+      - ConnectionStrings__MySqlConnection=Server=mysql;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;
     depends_on:
       - api
     networks:
@@ -98,7 +99,7 @@ services:
       "
 
 volumes:
-  sqlserver_data:
+  mysql_data:
   redis_data:
 
 networks:

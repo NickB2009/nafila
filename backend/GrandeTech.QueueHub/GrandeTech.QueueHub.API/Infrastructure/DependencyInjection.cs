@@ -106,20 +106,43 @@ namespace Grande.Fila.API.Infrastructure
 
                 services.AddDbContext<QueueHubDbContext>(options =>
                 {
-                    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mySqlOptions =>
+                    // Get MySQL configuration from appsettings
+                    var mySqlConfig = configuration.GetSection("MySql");
+                    var serverVersion = mySqlConfig.GetValue<string>("ServerVersion") ?? "8.0.0";
+                    var enableRetryOnFailure = mySqlConfig.GetValue<bool>("EnableRetryOnFailure", true);
+                    var maxRetryCount = mySqlConfig.GetValue<int>("MaxRetryCount", 3);
+                    var maxRetryDelay = mySqlConfig.GetValue<int>("MaxRetryDelay", 15);
+                    var commandTimeout = mySqlConfig.GetValue<int>("CommandTimeout", 30);
+                    var maxBatchSize = mySqlConfig.GetValue<int>("MaxBatchSize", 1000);
+                    var enableStringComparisonTranslations = mySqlConfig.GetValue<bool>("EnableStringComparisonTranslations", true);
+                    var enableSensitiveDataLogging = mySqlConfig.GetValue<bool>("EnableSensitiveDataLogging", false);
+                    var enableDetailedErrors = mySqlConfig.GetValue<bool>("EnableDetailedErrors", true);
+
+                    options.UseMySql(connectionString, ServerVersion.Parse(serverVersion), mySqlOptions =>
                     {
-                        mySqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 3,
-                            maxRetryDelay: TimeSpan.FromSeconds(15),
-                            errorNumbersToAdd: new[] { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
-                        mySqlOptions.CommandTimeout(30);
-                        mySqlOptions.MaxBatchSize(1000);
-                        mySqlOptions.EnableStringComparisonTranslations();
+                        if (enableRetryOnFailure)
+                        {
+                            mySqlOptions.EnableRetryOnFailure(
+                                maxRetryCount: maxRetryCount,
+                                maxRetryDelay: TimeSpan.FromSeconds(maxRetryDelay),
+                                errorNumbersToAdd: new[] { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
+                        }
+                        mySqlOptions.CommandTimeout(commandTimeout);
+                        mySqlOptions.MaxBatchSize(maxBatchSize);
+                        
+                        if (enableStringComparisonTranslations)
+                        {
+                            mySqlOptions.EnableStringComparisonTranslations();
+                        }
                     });
 
-                    if (environment == "Development")
+                    if (enableSensitiveDataLogging || environment == "Development")
                     {
                         options.EnableSensitiveDataLogging();
+                    }
+                    
+                    if (enableDetailedErrors || environment == "Development")
+                    {
                         options.EnableDetailedErrors();
                     }
                 });
