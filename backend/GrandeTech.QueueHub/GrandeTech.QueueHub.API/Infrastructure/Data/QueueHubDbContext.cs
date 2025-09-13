@@ -172,12 +172,9 @@ namespace Grande.Fila.API.Infrastructure.Data
                         .HasMaxLength(100);
                 });
 
-            // Configure LocationIds collection as simple string storage
+            // Configure LocationIds as shadow property (temporary fix)
             modelBuilder.Entity<Organization>()
-                .Property<List<Guid>>("_LocationIds")
-                .HasConversion(
-                    v => string.Join(",", v),
-                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .Property<string>("LocationIds")
                 .HasColumnName("LocationIds")
                 .HasColumnType("TEXT");
 
@@ -282,28 +279,19 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("WeeklyBusinessHours")
                 .HasColumnType("LONGTEXT");
 
-            // Configure collections as simple string storage
+            // Configure collections as shadow properties (temporary fix)
             modelBuilder.Entity<Location>()
-                .Property<List<Guid>>("_staffMemberIds")
-                .HasConversion(
-                    v => string.Join(",", v),
-                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .Property<string>("StaffMemberIds")
                 .HasColumnName("StaffMemberIds")
                 .HasColumnType("TEXT");
 
             modelBuilder.Entity<Location>()
-                .Property<List<Guid>>("_serviceTypeIds")
-                .HasConversion(
-                    v => string.Join(",", v),
-                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .Property<string>("ServiceTypeIds")
                 .HasColumnName("ServiceTypeIds")
                 .HasColumnType("TEXT");
 
             modelBuilder.Entity<Location>()
-                .Property<List<Guid>>("_advertisementIds")
-                .HasConversion(
-                    v => string.Join(",", v),
-                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .Property<string>("AdvertisementIds")
                 .HasColumnName("AdvertisementIds")
                 .HasColumnType("TEXT");
 
@@ -345,12 +333,9 @@ namespace Grande.Fila.API.Infrastructure.Data
                     history.Property(h => h.Feedback).HasMaxLength(2000);
                 });
 
-            // Configure FavoriteLocationIds as simple string storage
+            // Configure FavoriteLocationIds as shadow property (temporary fix)
             modelBuilder.Entity<Customer>()
-                .Property<List<Guid>>("_favoriteLocationIds")
-                .HasConversion(
-                    v => string.Join(",", v),
-                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .Property<string>("FavoriteLocationIds")
                 .HasColumnName("FavoriteLocationIds")
                 .HasColumnType("TEXT");
 
@@ -376,12 +361,9 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("PhoneNumber")
                 .HasMaxLength(50);
 
-            // Configure SpecialtyServiceTypeIds as simple string storage
+            // Configure SpecialtyServiceTypeIds as shadow property (temporary fix)
             modelBuilder.Entity<StaffMember>()
-                .Property<List<Guid>>("_specialtyServiceTypeIds")
-                .HasConversion(
-                    v => string.Join(",", v),
-                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .Property<string>("SpecialtyServiceTypeIds")
                 .HasColumnName("SpecialtyServiceTypeIds")
                 .HasColumnType("TEXT");
 
