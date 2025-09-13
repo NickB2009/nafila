@@ -4,10 +4,10 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: GrandeTech.QueueHub.API/Dockerfile
+      context: ./GrandeTech.QueueHub.API
+      dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8080:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Staging
       - ConnectionStrings__MySqlConnection=Server=mysql;Database=QueueHubDb;User=queuehub_user;Password=${MYSQL_PASSWORD};Port=3306;CharSet=utf8mb4;SslMode=None;Pooling=true;MinimumPoolSize=5;MaximumPoolSize=50;
