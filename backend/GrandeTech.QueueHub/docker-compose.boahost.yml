@@ -1,0 +1,72 @@
+# Docker Compose for BoaHost Production Environment
+# Phase 9: Production deployment on BoaHost
+
+services:
+  api:
+    build:
+      context: ./GrandeTech.QueueHub.API
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__MySqlConnection=Server=${MYSQL_HOST};Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};Port=${MYSQL_PORT};CharSet=utf8mb4;SslMode=Required;Pooling=true;MinimumPoolSize=10;MaximumPoolSize=100;
+      - JWT__SecretKey=${JWT_SECRET_KEY}
+      - JWT__Issuer=${JWT_ISSUER}
+      - JWT__Audience=${JWT_AUDIENCE}
+      - JWT__ExpirationMinutes=${JWT_EXPIRATION_MINUTES}
+      - RateLimiting__RequestsPerMinute=${RATE_LIMIT_REQUESTS_PER_MINUTE}
+      - DataAnonymization__Salt=${DATA_ANONYMIZATION_SALT}
+      - ApplicationInsights__ConnectionString=${APPLICATION_INSIGHTS_CONNECTION_STRING}
+      - Logging__LogLevel__Default=${LOG_LEVEL}
+      - Logging__LogLevel__Microsoft.AspNetCore=${LOG_LEVEL}
+      - Logging__LogLevel__Microsoft.EntityFrameworkCore=${LOG_LEVEL}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - queuehub-network
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - queuehub-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/production.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    restart: unless-stopped
+    depends_on:
+      - api
+    networks:
+      - queuehub-network
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  queuehub-network:
+    driver: bridge
