@@ -95,7 +95,7 @@ namespace Grande.Fila.API.Infrastructure
                 // Development fallback: use local Docker MySQL container if connection not supplied
                 if (string.IsNullOrWhiteSpace(connectionString) && environment == "Development")
                 {
-                    connectionString = "Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;";
+                    connectionString = "Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;";
                 }
 
                 if (string.IsNullOrEmpty(connectionString))
@@ -127,7 +127,6 @@ namespace Grande.Fila.API.Infrastructure
                                 maxRetryDelay: TimeSpan.FromSeconds(maxRetryDelay),
                                 errorNumbersToAdd: new[] { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
                         }
-                        mySqlOptions.CommandTimeout(commandTimeout);
                         mySqlOptions.MaxBatchSize(maxBatchSize);
                         
                         if (enableStringComparisonTranslations)

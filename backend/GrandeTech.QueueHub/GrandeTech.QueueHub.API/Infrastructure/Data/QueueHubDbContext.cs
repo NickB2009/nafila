@@ -79,7 +79,7 @@ namespace Grande.Fila.API.Infrastructure.Data
             if (!optionsBuilder.IsConfigured)
             {
                 // Fallback configuration - should not be used in production
-                optionsBuilder.UseMySql("Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;", ServerVersion.AutoDetect("Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;"));
+                optionsBuilder.UseMySql("Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;", ServerVersion.AutoDetect("Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;"));
             }
 
             // Enable sensitive data logging and detailed errors only in development
@@ -172,17 +172,14 @@ namespace Grande.Fila.API.Infrastructure.Data
                         .HasMaxLength(100);
                 });
 
-            // Configure LocationIds collection as JSON (MySQL native JSON type)
+            // Configure LocationIds collection as simple string storage
             modelBuilder.Entity<Organization>()
-                .Property(e => e.LocationIds)
+                .Property<List<Guid>>("_LocationIds")
                 .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
-                .HasColumnType("json")
-                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
-                    (c1, c2) => c1!.SequenceEqual(c2!),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()));
+                    v => string.Join(",", v),
+                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .HasColumnName("LocationIds")
+                .HasColumnType("TEXT");
 
             // ================================
             // LOCATION VALUE OBJECTS
@@ -276,48 +273,39 @@ namespace Grande.Fila.API.Infrastructure.Data
                         .HasMaxLength(100);
                 });
 
-            // Configure WeeklyBusinessHours as JSON column
+            // Configure WeeklyBusinessHours as simple string storage (temporary fix)
             modelBuilder.Entity<Location>()
                 .Property(e => e.WeeklyHours)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<WeeklyBusinessHours>(v, (System.Text.Json.JsonSerializerOptions?)null)!)
+                    v => !string.IsNullOrEmpty(v) ? System.Text.Json.JsonSerializer.Deserialize<WeeklyBusinessHours>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? WeeklyBusinessHours.CreateUniform(TimeSpan.FromHours(9), TimeSpan.FromHours(17)) : WeeklyBusinessHours.CreateUniform(TimeSpan.FromHours(9), TimeSpan.FromHours(17)))
                 .HasColumnName("WeeklyBusinessHours")
                 .HasColumnType("LONGTEXT");
 
-            // Configure collections as JSON (MySQL native JSON type)
+            // Configure collections as simple string storage
             modelBuilder.Entity<Location>()
-                .Property(e => e.StaffMemberIds)
+                .Property<List<Guid>>("_staffMemberIds")
                 .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
-                .HasColumnType("json")
-                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
-                    (c1, c2) => c1!.SequenceEqual(c2!),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()));
+                    v => string.Join(",", v),
+                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .HasColumnName("StaffMemberIds")
+                .HasColumnType("TEXT");
 
             modelBuilder.Entity<Location>()
-                .Property(e => e.ServiceTypeIds)
+                .Property<List<Guid>>("_serviceTypeIds")
                 .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
-                .HasColumnType("json")
-                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
-                    (c1, c2) => c1!.SequenceEqual(c2!),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()));
+                    v => string.Join(",", v),
+                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .HasColumnName("ServiceTypeIds")
+                .HasColumnType("TEXT");
 
             modelBuilder.Entity<Location>()
-                .Property(e => e.AdvertisementIds)
+                .Property<List<Guid>>("_advertisementIds")
                 .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
-                .HasColumnType("json")
-                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
-                    (c1, c2) => c1!.SequenceEqual(c2!),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()));
+                    v => string.Join(",", v),
+                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .HasColumnName("AdvertisementIds")
+                .HasColumnType("TEXT");
 
             // ================================
             // CUSTOMER VALUE OBJECTS
@@ -357,17 +345,14 @@ namespace Grande.Fila.API.Infrastructure.Data
                     history.Property(h => h.Feedback).HasMaxLength(2000);
                 });
 
-            // Configure FavoriteLocationIds as JSON (MySQL native JSON type)
+            // Configure FavoriteLocationIds as simple string storage
             modelBuilder.Entity<Customer>()
-                .Property(e => e.FavoriteLocationIds)
+                .Property<List<Guid>>("_favoriteLocationIds")
                 .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
-                .HasColumnType("json")
-                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
-                    (c1, c2) => c1!.SequenceEqual(c2!),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()));
+                    v => string.Join(",", v),
+                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
+                .HasColumnName("FavoriteLocationIds")
+                .HasColumnType("TEXT");
 
             // ================================
             // STAFFMEMBER VALUE OBJECTS
@@ -391,19 +376,14 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("PhoneNumber")
                 .HasMaxLength(50);
 
-            // Configure SpecialtyServiceTypeIds as JSON (MySQL native JSON type)
-            var staffSpecialtyProperty = modelBuilder.Entity<StaffMember>()
-                .Property(e => e.SpecialtyServiceTypeIds)
+            // Configure SpecialtyServiceTypeIds as simple string storage
+            modelBuilder.Entity<StaffMember>()
+                .Property<List<Guid>>("_specialtyServiceTypeIds")
                 .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                    v => string.Join(",", v),
+                    v => string.IsNullOrEmpty(v) ? new List<Guid>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList())
                 .HasColumnName("SpecialtyServiceTypeIds")
-                .HasColumnType("json");
-            
-            staffSpecialtyProperty.Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyCollection<Guid>>(
-                (c1, c2) => c1!.SequenceEqual(c2!),
-                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                c => c.ToList()));
+                .HasColumnType("TEXT");
 
             // ================================
             // SUBSCRIPTIONPLAN VALUE OBJECTS

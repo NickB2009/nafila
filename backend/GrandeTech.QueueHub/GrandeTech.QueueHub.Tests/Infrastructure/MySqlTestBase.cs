@@ -28,12 +28,11 @@ public abstract class MySqlTestBase : IDisposable
         // Add MySQL DbContext with test configuration
         services.AddDbContext<QueueHubDbContext>(options =>
         {
-            var connectionString = $"Server=localhost;Database={_databaseName};User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;";
+            var connectionString = $"Server=localhost;Database={_databaseName};User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;";
             
             options.UseMySql(connectionString, ServerVersion.Create(8, 0, 0, ServerType.MySql), mySqlOptions =>
             {
-                mySqlOptions.EnableRetryOnFailure(maxRetryCount: 1);
-                mySqlOptions.CommandTimeout(30);
+                mySqlOptions.EnableRetryOnFailure(maxRetryCount: 1, maxRetryDelay: TimeSpan.FromSeconds(5));
                 mySqlOptions.EnableStringComparisonTranslations();
             });
 
