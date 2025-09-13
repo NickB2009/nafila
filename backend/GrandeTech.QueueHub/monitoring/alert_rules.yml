@@ -1,0 +1,173 @@
+# Prometheus Alert Rules
+# Phase 9: Alerting configuration for production monitoring
+
+groups:
+  - name: queuehub.rules
+    rules:
+      # API Health Alerts
+      - alert: APIHealthCheckFailed
+        expr: up{job="queuehub-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "QueueHub API is down"
+          description: "The QueueHub API has been down for more than 1 minute."
+
+      - alert: APIHighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in QueueHub API"
+          description: "The error rate is {{ $value }} errors per second."
+
+      - alert: APIHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time in QueueHub API"
+          description: "95th percentile response time is {{ $value }} seconds."
+
+      # Database Alerts
+      - alert: MySQLDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL database is down"
+          description: "MySQL database has been down for more than 1 minute."
+
+      - alert: MySQLHighConnections
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL high connection usage"
+          description: "MySQL connection usage is {{ $value | humanizePercentage }}."
+
+      - alert: MySQLSlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL slow queries detected"
+          description: "MySQL is processing {{ $value }} slow queries per second."
+
+      - alert: MySQLInnoDBBufferPoolHitRate
+        expr: (mysql_global_status_innodb_buffer_pool_read_requests - mysql_global_status_innodb_buffer_pool_reads) / mysql_global_status_innodb_buffer_pool_read_requests < 0.95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MySQL InnoDB buffer pool hit rate is low"
+          description: "InnoDB buffer pool hit rate is {{ $value | humanizePercentage }}."
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache has been down for more than 1 minute."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_config_maxmemory > 0.9
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}."
+
+      - alert: RedisHighKeyEviction
+        expr: rate(redis_evicted_keys_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis key eviction detected"
+          description: "Redis is evicting {{ $value }} keys per second."
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}%."
+
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value }}% on {{ $labels.instance }}."
+
+      # Application Specific Alerts
+      - alert: QueueHubHighQueueLength
+        expr: queuehub_queue_length > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High queue length detected"
+          description: "Queue length is {{ $value }} customers."
+
+      - alert: QueueHubLongWaitTime
+        expr: queuehub_estimated_wait_time_seconds > 3600
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Long wait time detected"
+          description: "Estimated wait time is {{ $value | humanizeDuration }}."
+
+      - alert: QueueHubLowStaffAvailability
+        expr: queuehub_available_staff_count < 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low staff availability"
+          description: "Only {{ $value }} staff members are available."
+
+      # Migration Specific Alerts
+      - alert: MigrationDataIntegrityIssue
+        expr: queuehub_data_integrity_errors_total > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Data integrity issue detected"
+          description: "{{ $value }} data integrity errors detected after migration."
+
+      - alert: MigrationPerformanceDegradation
+        expr: queuehub_migration_performance_score < 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Migration performance degradation"
+          description: "Migration performance score is {{ $value }}."
