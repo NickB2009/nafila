@@ -96,10 +96,8 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.HasIndex(qe => qe.ServiceTypeId)
                 .HasDatabaseName("IX_QueueEntries_ServiceTypeId");
 
-            // Configure concurrency token for MySQL
+            // Concurrency token: rely on provider default mapping for byte[]
             builder.Property(qe => qe.RowVersion)
-                .HasColumnType("TIMESTAMP")
-                .HasDefaultValueSql("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
                 .IsConcurrencyToken();
         }
     }

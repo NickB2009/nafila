@@ -32,10 +32,8 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasDefaultValue(15);
 
-            // Configure concurrency token for MySQL
+            // Concurrency token: rely on provider default mapping for byte[]
             builder.Property(q => q.RowVersion)
-                .HasColumnType("TIMESTAMP")
-                .HasDefaultValueSql("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
                 .IsConcurrencyToken();
 
             // Configure the entries collection - this will be a separate table

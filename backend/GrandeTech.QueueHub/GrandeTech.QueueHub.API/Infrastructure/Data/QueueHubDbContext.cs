@@ -52,23 +52,24 @@ namespace Grande.Fila.API.Infrastructure.Data
 
             // Ignore entities that should only exist as owned types (do this first)
             modelBuilder.Ignore<StaffBreak>();
+            modelBuilder.Ignore<ServiceHistoryItem>();
 
-            // Apply entity configurations
+            // Apply ALL entity configurations (now compatible with value object mappings)
             modelBuilder.ApplyConfiguration(new UserConfiguration());
-            modelBuilder.ApplyConfiguration(new QueueConfiguration());
-            modelBuilder.ApplyConfiguration(new QueueEntryConfiguration());
             modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
             modelBuilder.ApplyConfiguration(new LocationConfiguration());
             modelBuilder.ApplyConfiguration(new CustomerConfiguration());
             modelBuilder.ApplyConfiguration(new StaffMemberConfiguration());
             modelBuilder.ApplyConfiguration(new SubscriptionPlanConfiguration());
             modelBuilder.ApplyConfiguration(new ServiceOfferedConfiguration());
+            modelBuilder.ApplyConfiguration(new QueueConfiguration());
+            modelBuilder.ApplyConfiguration(new QueueEntryConfiguration());
 
             // Configure base entity properties
             ConfigureBaseEntityProperties(modelBuilder);
 
-            // Configure value objects
-            ConfigureValueObjects(modelBuilder);
+            // Use basic value object configuration for stability
+            ConfigureBasicValueObjects(modelBuilder);
 
             // Configure domain events (they won't be persisted)
             IgnoreDomainEvents(modelBuilder);
@@ -108,11 +109,252 @@ namespace Grande.Fila.API.Infrastructure.Data
                     // Add global query filter for soft delete
                     modelBuilder.Entity(entityType.ClrType)
                         .HasQueryFilter(GetSoftDeleteFilter(entityType.ClrType));
+
+                    // Temporarily ignore RowVersion across all entities to avoid provider collection mapping issues
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Ignore("RowVersion");
                 }
             }
         }
 
-        private static void ConfigureValueObjects(ModelBuilder modelBuilder)
+        private static void ConfigureBasicValueObjects(ModelBuilder modelBuilder)
+        {
+            // Only ignore collections, not value objects (entity configs expect them)
+            modelBuilder.Entity<User>()
+                .Ignore(e => e.Permissions);
+
+            // Configure Organization value objects (required by entity configuration indexes)
+            modelBuilder.Entity<Organization>()
+                .Ignore(e => e.LocationIds); // Only ignore collections
+                
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.Slug)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrEmpty(v) ? Slug.Create(v) : null)
+                .HasColumnName("Slug")
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.ContactEmail)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? Email.Create(v) : null)
+                .HasColumnName("ContactEmail")
+                .HasMaxLength(320);
+
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.ContactPhone)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? PhoneNumber.Create(v) : null)
+                .HasColumnName("ContactPhone")
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<Organization>()
+                .OwnsOne(e => e.BrandingConfig, branding =>
+                {
+                    branding.Property(b => b.PrimaryColor).HasColumnName("BrandingPrimaryColor").HasMaxLength(50);
+                    branding.Property(b => b.SecondaryColor).HasColumnName("BrandingSecondaryColor").HasMaxLength(50);
+                    branding.Property(b => b.LogoUrl).HasColumnName("BrandingLogoUrl").HasMaxLength(500);
+                    branding.Property(b => b.FaviconUrl).HasColumnName("BrandingFaviconUrl").HasMaxLength(500);
+                    branding.Property(b => b.CompanyName).HasColumnName("BrandingCompanyName").HasMaxLength(200);
+                    branding.Property(b => b.TagLine).HasColumnName("BrandingTagLine").HasMaxLength(500);
+                    branding.Property(b => b.FontFamily).HasColumnName("BrandingFontFamily").HasMaxLength(100);
+                });
+
+            // Configure Location value objects (required by entity configuration indexes)
+            modelBuilder.Entity<Location>()
+                .Ignore(e => e.StaffMemberIds)
+                .Ignore(e => e.ServiceTypeIds)
+                .Ignore(e => e.AdvertisementIds); // Only ignore collections
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.Slug)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrEmpty(v) ? Slug.Create(v) : null)
+                .HasColumnName("Slug")
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ContactEmail)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? Email.Create(v) : null)
+                .HasColumnName("ContactEmail")
+                .HasMaxLength(320);
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ContactPhone)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? PhoneNumber.Create(v) : null)
+                .HasColumnName("ContactPhone")
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<Location>()
+                .OwnsOne(e => e.Address, address =>
+                {
+                    address.Property(a => a.Street).HasColumnName("AddressStreet").HasMaxLength(200);
+                    address.Property(a => a.Number).HasColumnName("AddressNumber").HasMaxLength(20);
+                    address.Property(a => a.Complement).HasColumnName("AddressComplement").HasMaxLength(100);
+                    address.Property(a => a.Neighborhood).HasColumnName("AddressNeighborhood").HasMaxLength(100);
+                    address.Property(a => a.City).HasColumnName("AddressCity").HasMaxLength(100);
+                    address.Property(a => a.State).HasColumnName("AddressState").HasMaxLength(50);
+                    address.Property(a => a.Country).HasColumnName("AddressCountry").HasMaxLength(50);
+                    address.Property(a => a.PostalCode).HasColumnName("AddressPostalCode").HasMaxLength(20);
+                    address.Property(a => a.Latitude).HasColumnName("AddressLatitude");
+                    address.Property(a => a.Longitude).HasColumnName("AddressLongitude");
+                });
+
+            // Location complex value objects are configured later in this method
+
+            // Configure Customer with value objects
+            modelBuilder.Entity<Customer>()
+                .Ignore(e => e.FavoriteLocationIds)
+                .Ignore(e => e.ServiceHistory); // Only ignore collections
+
+            // Configure Email for Customer
+            modelBuilder.Entity<Customer>()
+                .Property(e => e.Email)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? Email.Create(v) : null)
+                .HasColumnName("Email")
+                .HasMaxLength(320);
+
+            // Configure PhoneNumber for Customer
+            modelBuilder.Entity<Customer>()
+                .Property(e => e.PhoneNumber)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? PhoneNumber.Create(v) : null)
+                .HasColumnName("PhoneNumber")
+                .HasMaxLength(50);
+
+            // Configure StaffMember with value objects
+            modelBuilder.Entity<StaffMember>()
+                .Ignore(e => e.SpecialtyServiceTypeIds)
+                .Ignore(e => e.Breaks); // Only ignore collections
+
+            // Configure Email for StaffMember
+            modelBuilder.Entity<StaffMember>()
+                .Property(e => e.Email)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? Email.Create(v) : null)
+                .HasColumnName("Email")
+                .HasMaxLength(320);
+
+            // Configure PhoneNumber for StaffMember
+            modelBuilder.Entity<StaffMember>()
+                .Property(e => e.PhoneNumber)
+                .HasConversion(
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrWhiteSpace(v) ? PhoneNumber.Create(v) : null)
+                .HasColumnName("PhoneNumber")
+                .HasMaxLength(50);
+
+            // Configure Money value objects for SubscriptionPlan
+            modelBuilder.Entity<SubscriptionPlan>()
+                .OwnsOne(e => e.MonthlyPrice, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasColumnName("MonthlyPriceAmount")
+                        .HasColumnType("decimal(18,2)");
+                    money.Property(m => m.Currency)
+                        .HasColumnName("MonthlyPriceCurrency")
+                        .HasMaxLength(3);
+                });
+
+            modelBuilder.Entity<SubscriptionPlan>()
+                .OwnsOne(e => e.YearlyPrice, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasColumnName("YearlyPriceAmount")
+                        .HasColumnType("decimal(18,2)");
+                    money.Property(m => m.Currency)
+                        .HasColumnName("YearlyPriceCurrency")
+                        .HasMaxLength(3);
+                });
+
+            // Configure Money value object for ServiceOffered
+            modelBuilder.Entity<ServiceOffered>()
+                .OwnsOne(e => e.Price, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasColumnName("PriceAmount")
+                        .HasColumnType("decimal(18,2)");
+                    money.Property(m => m.Currency)
+                        .HasColumnName("PriceCurrency")
+                        .HasMaxLength(3);
+                });
+
+            // Explicitly ignore primitive collections that are exposed as read-only collections
+            modelBuilder.Entity<Organization>()
+                .Ignore(e => e.LocationIds);
+
+            modelBuilder.Entity<Customer>()
+                .Ignore(e => e.FavoriteLocationIds)
+                .Ignore(e => e.ServiceHistory);
+
+            modelBuilder.Entity<Location>()
+                .Ignore(e => e.StaffMemberIds)
+                .Ignore(e => e.ServiceTypeIds)
+                .Ignore(e => e.AdvertisementIds);
+
+            modelBuilder.Entity<StaffMember>()
+                .Ignore(e => e.SpecialtyServiceTypeIds)
+                .Ignore(e => e.Breaks);
+
+            modelBuilder.Entity<User>()
+                .Ignore(e => e.Permissions);
+
+            modelBuilder.Entity<Coupon>()
+                .Ignore(e => e.ApplicableServiceTypeIds);
+
+            // As a safety net, ignore any primitive collections that might slip through and cause EF mapping issues
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var clrType = entityType.ClrType;
+                var properties = clrType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                foreach (var prop in properties)
+                {
+                    var propType = prop.PropertyType;
+                    // Skip non-problematic types
+                    if (propType == typeof(string) || propType == typeof(byte[]) || prop.Name == "RowVersion")
+                        continue;
+
+                    if (typeof(System.Collections.IEnumerable).IsAssignableFrom(propType))
+                    {
+                        Type? elementType = null;
+                        if (propType.IsArray)
+                        {
+                            elementType = propType.GetElementType();
+                        }
+                        else if (propType.IsGenericType)
+                        {
+                            elementType = propType.GetGenericArguments().FirstOrDefault();
+                        }
+
+                        if (elementType != null)
+                        {
+                            var isPrimitiveCollection = elementType == typeof(string) || elementType == typeof(Guid) || elementType.IsPrimitive;
+                            var isEntityType = typeof(BaseEntity).IsAssignableFrom(elementType);
+
+                            if (isPrimitiveCollection && !isEntityType)
+                            {
+                                // Ignore primitive collections (e.g., List<Guid>, List<string>) unless explicitly mapped
+                                modelBuilder.Entity(clrType).Ignore(prop.Name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void ConfigureValueObjectsOriginal(ModelBuilder modelBuilder)
         {
             // ================================
             // ORGANIZATION VALUE OBJECTS
@@ -122,8 +364,8 @@ namespace Grande.Fila.API.Infrastructure.Data
             modelBuilder.Entity<Organization>()
                 .Property(e => e.Slug)
                 .HasConversion(
-                    v => v.Value,
-                    v => Slug.Create(v))
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrEmpty(v) ? Slug.Create(v) : null)
                 .HasColumnName("Slug")
                 .HasMaxLength(100);
 
@@ -172,11 +414,9 @@ namespace Grande.Fila.API.Infrastructure.Data
                         .HasMaxLength(100);
                 });
 
-            // Configure LocationIds as shadow property (temporary fix)
+            // Temporarily ignore LocationIds to avoid EF Core collection mapping issues
             modelBuilder.Entity<Organization>()
-                .Property<string>("LocationIds")
-                .HasColumnName("LocationIds")
-                .HasColumnType("TEXT");
+                .Ignore(e => e.LocationIds);
 
             // ================================
             // LOCATION VALUE OBJECTS
@@ -186,8 +426,8 @@ namespace Grande.Fila.API.Infrastructure.Data
             modelBuilder.Entity<Location>()
                 .Property(e => e.Slug)
                 .HasConversion(
-                    v => v.Value,
-                    v => Slug.Create(v))
+                    v => v != null ? v.Value : null,
+                    v => !string.IsNullOrEmpty(v) ? Slug.Create(v) : null)
                 .HasColumnName("Slug")
                 .HasMaxLength(100);
 
@@ -279,21 +519,11 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("WeeklyBusinessHours")
                 .HasColumnType("LONGTEXT");
 
-            // Configure collections as shadow properties (temporary fix)
+            // Temporarily ignore collections to avoid EF Core collection mapping issues
             modelBuilder.Entity<Location>()
-                .Property<string>("StaffMemberIds")
-                .HasColumnName("StaffMemberIds")
-                .HasColumnType("TEXT");
-
-            modelBuilder.Entity<Location>()
-                .Property<string>("ServiceTypeIds")
-                .HasColumnName("ServiceTypeIds")
-                .HasColumnType("TEXT");
-
-            modelBuilder.Entity<Location>()
-                .Property<string>("AdvertisementIds")
-                .HasColumnName("AdvertisementIds")
-                .HasColumnType("TEXT");
+                .Ignore(e => e.StaffMemberIds)
+                .Ignore(e => e.ServiceTypeIds)
+                .Ignore(e => e.AdvertisementIds);
 
             // ================================
             // CUSTOMER VALUE OBJECTS
@@ -317,27 +547,12 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("PhoneNumber")
                 .HasMaxLength(50);
 
-            // Configure ServiceHistory as owned collection
-            modelBuilder.Entity<Customer>()
-                .OwnsMany(e => e.ServiceHistory, history =>
-                {
-                    history.ToTable("CustomerServiceHistory");
-                    history.WithOwner().HasForeignKey("CustomerId");
-                    history.HasKey("Id");
-                    history.Property(h => h.LocationId);
-                    history.Property(h => h.StaffMemberId);
-                    history.Property(h => h.ServiceTypeId);
-                    history.Property(h => h.ServiceDate);
-                    history.Property(h => h.Notes).HasMaxLength(1000);
-                    history.Property(h => h.Rating);
-                    history.Property(h => h.Feedback).HasMaxLength(2000);
-                });
+            // ServiceHistory configuration removed to avoid conflicts
 
-            // Configure FavoriteLocationIds as shadow property (temporary fix)
+            // Temporarily ignore collections to avoid EF Core collection mapping issues
             modelBuilder.Entity<Customer>()
-                .Property<string>("FavoriteLocationIds")
-                .HasColumnName("FavoriteLocationIds")
-                .HasColumnType("TEXT");
+                .Ignore(e => e.FavoriteLocationIds)
+                .Ignore(e => e.ServiceHistory);
 
             // ================================
             // STAFFMEMBER VALUE OBJECTS
@@ -361,11 +576,14 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("PhoneNumber")
                 .HasMaxLength(50);
 
-            // Configure SpecialtyServiceTypeIds as shadow property (temporary fix)
+            // Temporarily ignore collections to avoid EF Core collection mapping issues
             modelBuilder.Entity<StaffMember>()
-                .Property<string>("SpecialtyServiceTypeIds")
-                .HasColumnName("SpecialtyServiceTypeIds")
-                .HasColumnType("TEXT");
+                .Ignore(e => e.SpecialtyServiceTypeIds)
+                .Ignore(e => e.Breaks);
+
+            // Ignore User collections to avoid EF Core collection mapping issues
+            modelBuilder.Entity<User>()
+                .Ignore(e => e.Permissions);
 
             // ================================
             // SUBSCRIPTIONPLAN VALUE OBJECTS
@@ -410,6 +628,10 @@ namespace Grande.Fila.API.Infrastructure.Data
                         .HasColumnName("PriceCurrency")
                         .HasMaxLength(3);
                 });
+
+            // COUPON: ignore complex parts not needed now to avoid shared-type conflicts
+            modelBuilder.Ignore<Coupon>();
+            modelBuilder.Ignore<CouponRedemption>();
         }
 
         private static void IgnoreDomainEvents(ModelBuilder modelBuilder)

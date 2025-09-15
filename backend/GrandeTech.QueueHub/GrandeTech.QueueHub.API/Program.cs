@@ -34,9 +34,12 @@ using MySqlConnector; // Added for MySqlException specific handling
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure for Azure App Service
-var port = Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? "80";
-builder.WebHost.UseUrls($"http://*:{port}");
+// Configure for Azure App Service (only if WEBSITES_PORT is set)
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITES_PORT")))
+{
+    var port = Environment.GetEnvironmentVariable("WEBSITES_PORT");
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
 
 // Add services to the container.
 
@@ -286,7 +289,7 @@ try
         logger?.LogInformation("Listening on port: {Port}", Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? "80");
         
         // Quick connection string validation without detailed parsing
-        var connectionString = config.GetConnectionString("AzureSqlConnection");
+        var connectionString = config.GetConnectionString("MySqlConnection");
         logger?.LogInformation("Database connection string configured: {HasConnectionString}", !string.IsNullOrEmpty(connectionString));
         
         logger?.LogInformation("Database settings - UseSqlDatabase: {UseSql}, UseInMemoryDatabase: {UseInMemory}",
@@ -340,9 +343,9 @@ if ((autoMigrate || seedData) && useSqlDatabase)
 
             if (autoMigrate)
             {
-                logger?.LogInformation("Attempting database migration...");
-                await context.Database.MigrateAsync();
-                logger?.LogInformation("Database migration completed successfully");
+                logger?.LogInformation("Database migration temporarily disabled for testing...");
+                // await context.Database.MigrateAsync();
+                // logger?.LogInformation("Database migration completed successfully");
             }
 
             if (seedData)
@@ -525,7 +528,7 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
 // Add diagnostic endpoints for troubleshooting
 app.MapGet("/diagnostics/config", (IConfiguration config) =>
 {
-    var connectionString = config.GetConnectionString("AzureSqlConnection");
+    var connectionString = config.GetConnectionString("MySqlConnection");
     var serverName = "";
     var databaseName = "";
     

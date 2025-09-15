@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `SubscriptionPlans` (
     `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0,
     `DeletedAt` DATETIME(6) NULL,
     `DeletedBy` LONGTEXT NULL,
-    `RowVersion` LONGBLOB NOT NULL DEFAULT 0x0000000000000000,
+    `RowVersion` LONGBLOB NOT NULL,
     PRIMARY KEY (`Id`),
     UNIQUE KEY `IX_SubscriptionPlans_Name` (`Name`),
     KEY `IX_SubscriptionPlans_IsActive` (`IsActive`),
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `Organizations` (
     `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0,
     `DeletedAt` DATETIME(6) NULL,
     `DeletedBy` LONGTEXT NULL,
-    `RowVersion` LONGBLOB NOT NULL DEFAULT 0x0000000000000000,
+    `RowVersion` LONGBLOB NOT NULL,
     PRIMARY KEY (`Id`),
     UNIQUE KEY `IX_Organizations_Slug` (`Slug`),
     KEY `IX_Organizations_ContactEmail` (`ContactEmail`),
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS `Locations` (
     `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0,
     `DeletedAt` DATETIME(6) NULL,
     `DeletedBy` LONGTEXT NULL,
-    `RowVersion` LONGBLOB NOT NULL DEFAULT 0x0000000000000000,
+    `RowVersion` LONGBLOB NOT NULL,
     PRIMARY KEY (`Id`),
     UNIQUE KEY `IX_Locations_Slug` (`Slug`),
     KEY `IX_Locations_ContactEmail` (`ContactEmail`),
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS `Users` (
     `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0,
     `DeletedAt` DATETIME(6) NULL,
     `DeletedBy` LONGTEXT NULL,
-    `RowVersion` LONGBLOB NOT NULL DEFAULT 0x0000000000000000,
+    `RowVersion` LONGBLOB NOT NULL,
     PRIMARY KEY (`Id`),
     UNIQUE KEY `IX_Users_Email` (`Email`),
     KEY `IX_Users_IsActive` (`IsActive`),
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS `ServicesOffered` (
     `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0,
     `DeletedAt` DATETIME(6) NULL,
     `DeletedBy` LONGTEXT NULL,
-    `RowVersion` LONGBLOB NOT NULL DEFAULT 0x0000000000000000,
+    `RowVersion` LONGBLOB NOT NULL,
     PRIMARY KEY (`Id`),
     KEY `IX_ServicesOffered_EstimatedDuration` (`EstimatedDurationMinutes`),
     KEY `IX_ServicesOffered_IsActive` (`IsActive`),
@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS `StaffMembers` (
     `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0,
     `DeletedAt` DATETIME(6) NULL,
     `DeletedBy` LONGTEXT NULL,
-    `RowVersion` LONGBLOB NOT NULL DEFAULT 0x0000000000000000,
+    `RowVersion` LONGBLOB NOT NULL,
     PRIMARY KEY (`Id`),
     UNIQUE KEY `IX_StaffMembers_EmployeeCode` (`EmployeeCode`),
     UNIQUE KEY `IX_StaffMembers_Username` (`Username`),
@@ -390,12 +390,8 @@ ALTER TABLE `CustomerServiceHistory`
 ADD CONSTRAINT `FK_CustomerServiceHistory_Customers_CustomerId` 
 FOREIGN KEY (`CustomerId`) REFERENCES `Customers` (`Id`) ON DELETE RESTRICT;
 
--- Add composite indexes for better performance
-CREATE INDEX `IX_QueueEntries_Status_Position` ON `QueueEntries`(`Status`, `Position`);
-CREATE INDEX `IX_QueueEntries_EnteredAt` ON `QueueEntries`(`EnteredAt`);
-CREATE INDEX `IX_Customers_Email_Phone` ON `Customers`(`Email`, `PhoneNumber`);
-CREATE INDEX `IX_StaffMembers_Location_Active` ON `StaffMembers`(`LocationId`, `IsActive`);
-CREATE INDEX `IX_ServicesOffered_Location_Active` ON `ServicesOffered`(`LocationId`, `IsActive`);
+-- Note: All indexes already created in table definitions above
+-- No additional indexes needed - avoiding duplicates
 
 -- Add JSON indexes for better performance (MySQL 8.0+)
 -- Note: These will be created when the JSON columns contain data

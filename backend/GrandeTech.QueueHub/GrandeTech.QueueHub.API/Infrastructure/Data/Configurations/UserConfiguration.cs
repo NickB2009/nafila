@@ -31,7 +31,6 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
 
             builder.Property(u => u.Role)
                 .IsRequired()
-                .HasConversion<string>()
                 .HasMaxLength(50);
 
             builder.Property(u => u.IsActive)

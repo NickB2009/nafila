@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Grande.Fila.API.Domain.Common.ValueObjects
-{    public record BrandingConfig : ValueObject
+{    [Owned]
+    public record BrandingConfig : ValueObject
     {
         public string PrimaryColor { get; private set; }
         public string SecondaryColor { get; private set; }

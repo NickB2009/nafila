@@ -275,6 +275,12 @@ namespace Grande.Fila.API.Infrastructure
             
             // Kiosk services
             services.AddScoped<KioskDisplayService>();
+
+            // Public API services
+            services.AddScoped<Grande.Fila.API.Application.Public.GetPublicSalonsService>();
+            services.AddScoped<Grande.Fila.API.Application.Public.GetPublicSalonDetailService>();
+            services.AddScoped<Grande.Fila.API.Application.Public.GetPublicQueueStatusService>();
+            services.AddScoped<Grande.Fila.API.Application.Public.AnonymousJoinService>();
         }
     }
 }
