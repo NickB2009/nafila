@@ -281,4 +281,493 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 
 ---
 
+## 8  MySQL-Optimized Flattening Plan
+
+### 8.1  Goals and Principles
+
+**Primary Goal**: Eliminate complex value object mappings that cause EF Core runtime exceptions with MySQL, replacing them with simple, flat column mappings for better stability and performance.
+
+**Core Principles**:
+- **Simplicity First**: Replace complex owned types and JSON conversions with direct column mappings
+- **MySQL Compatibility**: Use native MySQL data types and avoid EF Core features that don't work well with MySQL
+- **Zero Downtime**: Implement changes without requiring immediate database schema migrations
+- **Backward Compatibility**: Maintain existing API contracts and DTOs
+- **Performance**: Improve query performance by eliminating complex materialization
+
+### 8.2  Scope and Phased Rollout
+
+**Phase 1 (Immediate - High Priority)**:
+- `Location` entity: Flatten `CustomBranding` and `WeeklyHours`
+- `ServiceOffered` entity: Flatten `Price` value object
+- `SubscriptionPlan` entity: Flatten `Price` value object
+
+**Phase 2 (Next - Medium Priority)**:
+- `Organization` entity: Flatten `CustomBranding`
+- `User` entity: Flatten `Email` and `PhoneNumber` value objects
+- `Customer` entity: Flatten `Email` and `PhoneNumber` value objects
+
+**Phase 3 (Future - Low Priority)**:
+- `Coupon` entity: Flatten `FixedDiscountAmount` (currently ignored)
+- `Advertisement` entity: Flatten any complex value objects
+- `Notification` entity: Flatten any complex value objects
+
+### 8.3  Entity-by-Entity Changes
+
+#### 8.3.1  Location Entity
+
+**Current Value Objects**:
+- `CustomBranding` (BrandingConfig)
+- `WeeklyHours` (WeeklyBusinessHours)
+
+**Flattened Columns**:
+```sql
+-- Branding fields
+CustomBranding_PrimaryColor VARCHAR(7) NULL,
+CustomBranding_SecondaryColor VARCHAR(7) NULL,
+CustomBranding_LogoUrl VARCHAR(500) NULL,
+CustomBranding_FontFamily VARCHAR(100) NULL,
+
+-- Weekly hours fields (JSON stored as TEXT for simplicity)
+WeeklyHours_Monday_OpenTime TIME NULL,
+WeeklyHours_Monday_CloseTime TIME NULL,
+WeeklyHours_Monday_IsClosed BIT NULL,
+-- ... repeat for each day of the week
+```
+
+**Domain Model Changes**:
+```csharp
+public class Location : Entity
+{
+    // Replace CustomBranding property with individual properties
+    public string? PrimaryColor { get; set; }
+    public string? SecondaryColor { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? FontFamily { get; set; }
+    
+    // Replace WeeklyHours with individual day properties
+    public TimeSpan? MondayOpenTime { get; set; }
+    public TimeSpan? MondayCloseTime { get; set; }
+    public bool MondayIsClosed { get; set; }
+    // ... repeat for each day
+    
+    // Helper methods to maintain domain logic
+    public BrandingConfig GetBrandingConfig() => new(PrimaryColor, SecondaryColor, LogoUrl, FontFamily);
+    public WeeklyBusinessHours GetWeeklyHours() => new(/* construct from individual properties */);
+}
+```
+
+#### 8.3.2  ServiceOffered Entity
+
+**Current Value Objects**:
+- `Price` (Money)
+
+**Flattened Columns**:
+```sql
+Price_Amount DECIMAL(10,2) NOT NULL,
+Price_Currency VARCHAR(3) NOT NULL DEFAULT 'BRL'
+```
+
+**Domain Model Changes**:
+```csharp
+public class ServiceOffered : Entity
+{
+    // Replace Price property with individual properties
+    public decimal PriceAmount { get; set; }
+    public string PriceCurrency { get; set; } = "BRL";
+    
+    // Helper method to maintain domain logic
+    public Money GetPrice() => new(PriceAmount, PriceCurrency);
+}
+```
+
+#### 8.3.3  SubscriptionPlan Entity
+
+**Current Value Objects**:
+- `Price` (Money)
+
+**Flattened Columns**:
+```sql
+Price_Amount DECIMAL(10,2) NOT NULL,
+Price_Currency VARCHAR(3) NOT NULL DEFAULT 'BRL'
+```
+
+**Domain Model Changes**:
+```csharp
+public class SubscriptionPlan : Entity
+{
+    // Replace Price property with individual properties
+    public decimal PriceAmount { get; set; }
+    public string PriceCurrency { get; set; } = "BRL";
+    
+    // Helper method to maintain domain logic
+    public Money GetPrice() => new(PriceAmount, PriceCurrency);
+}
+```
+
+#### 8.3.4  Organization Entity
+
+**Current Value Objects**:
+- `CustomBranding` (BrandingConfig)
+
+**Flattened Columns**:
+```sql
+CustomBranding_PrimaryColor VARCHAR(7) NULL,
+CustomBranding_SecondaryColor VARCHAR(7) NULL,
+CustomBranding_LogoUrl VARCHAR(500) NULL,
+CustomBranding_FontFamily VARCHAR(100) NULL
+```
+
+**Domain Model Changes**:
+```csharp
+public class Organization : Entity
+{
+    // Replace CustomBranding property with individual properties
+    public string? PrimaryColor { get; set; }
+    public string? SecondaryColor { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? FontFamily { get; set; }
+    
+    // Helper method to maintain domain logic
+    public BrandingConfig GetCustomBranding() => new(PrimaryColor, SecondaryColor, LogoUrl, FontFamily);
+}
+```
+
+#### 8.3.5  User Entity
+
+**Current Value Objects**:
+- `Email` (Email)
+- `PhoneNumber` (PhoneNumber)
+
+**Flattened Columns**:
+```sql
+Email_Value VARCHAR(255) NOT NULL,
+PhoneNumber_Value VARCHAR(20) NULL
+```
+
+**Domain Model Changes**:
+```csharp
+public class User : Entity
+{
+    // Replace Email property with direct string
+    public string Email { get; set; } = string.Empty;
+    
+    // Replace PhoneNumber property with direct string
+    public string? PhoneNumber { get; set; }
+    
+    // Helper methods to maintain domain logic
+    public Email GetEmailValue() => new(Email);
+    public PhoneNumber? GetPhoneNumberValue() => PhoneNumber != null ? new PhoneNumber(PhoneNumber) : null;
+}
+```
+
+#### 8.3.6  Customer Entity
+
+**Current Value Objects**:
+- `Email` (Email)
+- `PhoneNumber` (PhoneNumber)
+
+**Flattened Columns**:
+```sql
+Email_Value VARCHAR(255) NULL,
+PhoneNumber_Value VARCHAR(20) NULL
+```
+
+**Domain Model Changes**:
+```csharp
+public class Customer : Entity
+{
+    // Replace Email property with direct string
+    public string? Email { get; set; }
+    
+    // Replace PhoneNumber property with direct string
+    public string? PhoneNumber { get; set; }
+    
+    // Helper methods to maintain domain logic
+    public Email? GetEmailValue() => Email != null ? new Email(Email) : null;
+    public PhoneNumber? GetPhoneNumberValue() => PhoneNumber != null ? new PhoneNumber(PhoneNumber) : null;
+}
+```
+
+### 8.4  EF Core Mapping Updates
+
+#### 8.4.1  Remove Owned Type Mappings
+
+**Current Configuration** (to be removed):
+```csharp
+modelBuilder.Entity<Location>()
+    .OwnsOne(e => e.CustomBranding, branding =>
+    {
+        branding.Property(b => b.PrimaryColor).HasColumnName("CustomBranding_PrimaryColor");
+        branding.Property(b => b.SecondaryColor).HasColumnName("CustomBranding_SecondaryColor");
+        branding.Property(b => b.LogoUrl).HasColumnName("CustomBranding_LogoUrl");
+        branding.Property(b => b.FontFamily).HasColumnName("CustomBranding_FontFamily");
+    });
+```
+
+**New Configuration**:
+```csharp
+modelBuilder.Entity<Location>()
+    .Property(e => e.PrimaryColor)
+        .HasColumnName("CustomBranding_PrimaryColor")
+        .HasMaxLength(7);
+    
+    modelBuilder.Entity<Location>()
+    .Property(e => e.SecondaryColor)
+        .HasColumnName("CustomBranding_SecondaryColor")
+        .HasMaxLength(7);
+    
+    modelBuilder.Entity<Location>()
+    .Property(e => e.LogoUrl)
+        .HasColumnName("CustomBranding_LogoUrl")
+        .HasMaxLength(500);
+    
+    modelBuilder.Entity<Location>()
+    .Property(e => e.FontFamily)
+        .HasColumnName("CustomBranding_FontFamily")
+        .HasMaxLength(100);
+```
+
+#### 8.4.2  Remove JSON Conversions
+
+**Current Configuration** (to be removed):
+```csharp
+modelBuilder.Entity<Location>()
+    .Property(e => e.WeeklyHours)
+    .HasConversion(
+        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+        v => !string.IsNullOrEmpty(v) ? System.Text.Json.JsonSerializer.Deserialize<WeeklyBusinessHours>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? WeeklyBusinessHours.CreateUniform(TimeSpan.FromHours(9), TimeSpan.FromHours(17)) : WeeklyBusinessHours.CreateUniform(TimeSpan.FromHours(9), TimeSpan.FromHours(17)))
+    .HasColumnName("WeeklyBusinessHours")
+    .HasColumnType("LONGTEXT");
+```
+
+**New Configuration**:
+```csharp
+// Monday
+modelBuilder.Entity<Location>()
+    .Property(e => e.MondayOpenTime)
+        .HasColumnName("WeeklyHours_Monday_OpenTime")
+        .HasColumnType("TIME");
+    
+modelBuilder.Entity<Location>()
+    .Property(e => e.MondayCloseTime)
+        .HasColumnName("WeeklyHours_Monday_CloseTime")
+        .HasColumnType("TIME");
+    
+modelBuilder.Entity<Location>()
+    .Property(e => e.MondayIsClosed)
+        .HasColumnName("WeeklyHours_Monday_IsClosed")
+        .HasColumnType("BIT");
+    
+// ... repeat for each day of the week
+```
+
+#### 8.4.3  Remove Value Object Ignore Rules
+
+**Current Configuration** (to be removed):
+```csharp
+modelBuilder.Entity<Location>().Ignore(e => e.CustomBranding);
+modelBuilder.Entity<Location>().Ignore(e => e.WeeklyHours);
+```
+
+**New Configuration**: No ignore rules needed - properties are now directly mapped.
+
+### 8.5  Migration and Data Considerations
+
+#### 8.5.1  Database Schema Changes
+
+**No Immediate Schema Changes Required**:
+- Current database schema already has the flattened columns
+- EF Core will map to existing columns
+- No data migration needed initially
+
+**Future Schema Optimization** (Phase 4):
+- Add proper indexes on frequently queried columns
+- Optimize column types for MySQL
+- Add constraints for data validation
+
+#### 8.5.2  Data Validation
+
+**Application-Level Validation**:
+- Add validation attributes to flattened properties
+- Implement business rule validation in domain methods
+- Use helper methods to maintain value object behavior
+
+**Database-Level Validation**:
+- Add CHECK constraints for data integrity
+- Use appropriate MySQL data types
+- Add foreign key constraints where needed
+
+### 8.6  Refactoring Checklist
+
+#### 8.6.1  Phase 1 Implementation Steps
+
+1. **Update Domain Models**:
+   - [ ] Replace value object properties with primitive properties in `Location`
+   - [ ] Replace value object properties with primitive properties in `ServiceOffered`
+   - [ ] Replace value object properties with primitive properties in `SubscriptionPlan`
+   - [ ] Add helper methods to maintain domain logic
+
+2. **Update EF Core Mappings**:
+   - [ ] Remove owned type configurations for `Location.CustomBranding`
+   - [ ] Remove JSON conversion for `Location.WeeklyHours`
+   - [ ] Add direct column mappings for all flattened properties
+   - [ ] Remove ignore rules for value objects
+
+3. **Update Application Services**:
+   - [ ] Update mapping logic in DTOs to use flattened properties
+   - [ ] Update validation logic to work with primitive properties
+   - [ ] Update business logic to use helper methods
+
+4. **Update Tests**:
+   - [ ] Update unit tests to work with flattened properties
+   - [ ] Update integration tests to verify EF Core mappings
+   - [ ] Update API tests to verify DTO mapping
+
+#### 8.6.2  Phase 2 Implementation Steps
+
+1. **Update Domain Models**:
+   - [ ] Flatten `Organization.CustomBranding`
+   - [ ] Flatten `User.Email` and `User.PhoneNumber`
+   - [ ] Flatten `Customer.Email` and `Customer.PhoneNumber`
+
+2. **Update EF Core Mappings**:
+   - [ ] Add direct column mappings for flattened properties
+   - [ ] Remove owned type configurations
+
+3. **Update Application Services**:
+   - [ ] Update mapping and validation logic
+   - [ ] Update business logic to use helper methods
+
+4. **Update Tests**:
+   - [ ] Update all affected tests
+   - [ ] Verify end-to-end functionality
+
+### 8.7  Testing Strategy
+
+#### 8.7.1  Unit Tests
+
+**Domain Model Tests**:
+- Test helper methods return correct value objects
+- Test business logic works with flattened properties
+- Test validation rules are maintained
+
+**Application Service Tests**:
+- Test mapping between domain models and DTOs
+- Test business logic with flattened properties
+- Test error handling and validation
+
+#### 8.7.2  Integration Tests
+
+**EF Core Mapping Tests**:
+- Test that entities can be saved and retrieved
+- Test that queries work correctly
+- Test that relationships are maintained
+
+**API Tests**:
+- Test that endpoints return correct data
+- Test that DTOs are properly mapped
+- Test that validation works end-to-end
+
+#### 8.7.3  Performance Tests
+
+**Query Performance**:
+- Test query performance with flattened properties
+- Compare performance before and after changes
+- Test with realistic data volumes
+
+**Memory Usage**:
+- Test memory usage with flattened properties
+- Verify no memory leaks in EF Core materialization
+- Test with large result sets
+
+### 8.8  Rollback Strategy
+
+#### 8.8.1  Code Rollback
+
+**Git Branching**:
+- Create feature branch for each phase
+- Implement changes incrementally
+- Keep original value object code in separate branch
+
+**Deployment Strategy**:
+- Deploy changes to staging environment first
+- Test thoroughly before production deployment
+- Have rollback plan ready
+
+#### 8.8.2  Database Rollback
+
+**Schema Compatibility**:
+- Ensure new code works with existing database schema
+- No immediate schema changes required
+- Can rollback code without database changes
+
+**Data Integrity**:
+- Verify data integrity after rollback
+- Test that existing data still works
+- Ensure no data loss during rollback
+
+### 8.9  Acceptance Criteria
+
+#### 8.9.1  Functional Requirements
+
+**API Functionality**:
+- [ ] All existing API endpoints work correctly
+- [ ] All DTOs return expected data
+- [ ] All validation rules are maintained
+- [ ] All business logic works as expected
+
+**Database Operations**:
+- [ ] Entities can be saved and retrieved
+- [ ] Queries work correctly
+- [ ] Relationships are maintained
+- [ ] No EF Core runtime exceptions
+
+#### 8.9.2  Non-Functional Requirements
+
+**Performance**:
+- [ ] Query performance is maintained or improved
+- [ ] Memory usage is stable
+- [ ] No memory leaks in EF Core materialization
+- [ ] Application startup time is not significantly impacted
+
+**Reliability**:
+- [ ] No runtime exceptions during entity materialization
+- [ ] All existing tests pass
+- [ ] Health checks pass
+- [ ] Application is stable under load
+
+**Maintainability**:
+- [ ] Code is easier to understand and maintain
+- [ ] EF Core mappings are simpler
+- [ ] Debugging is easier
+- [ ] Future changes are easier to implement
+
+### 8.10  Success Metrics
+
+#### 8.10.1  Technical Metrics
+
+**Error Reduction**:
+- Zero EF Core runtime exceptions related to value object materialization
+- Zero database health check failures
+- Reduced complexity in EF Core mappings
+
+**Performance Metrics**:
+- Query performance maintained or improved
+- Memory usage stable or reduced
+- Application startup time maintained
+
+#### 8.10.2  Business Metrics
+
+**Stability**:
+- Increased application uptime
+- Reduced support tickets related to database issues
+- Improved developer productivity
+
+**Maintainability**:
+- Reduced time to implement new features
+- Easier debugging and troubleshooting
+- Improved code quality
+
+---
+
 *Last updated: 2025-01-28*
