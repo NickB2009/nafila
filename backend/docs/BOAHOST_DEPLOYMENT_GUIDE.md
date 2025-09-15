@@ -70,12 +70,123 @@ Run migrations automatically on startup (`Database:AutoMigrate=true`) or execute
 
 ### 🔧 **Step 7: Production Monitoring**
 
-1. **Check logs**: Use Plesk application logs and server logs.
+#### 7.1 Provider-Agnostic Monitoring Setup
 
-2. **Monitor performance**:
+The application supports multiple monitoring providers through environment configuration:
+
+**Monitoring Providers:**
+- **Azure Application Insights** (existing)
+- **BoaHost Native Logging** (recommended for BoaHost)
+- **None** (disabled monitoring)
+
+#### 7.2 BoaHost Monitoring Configuration
+
+1. **Set monitoring provider** in Plesk environment variables:
+   ```bash
+   MONITORING_PROVIDER=BoaHost
+   BOAHOST_LOG_LEVEL=Information
+   BOAHOST_ENABLE_FILE_LOGGING=true
+   BOAHOST_LOG_PATH=/var/log/queuehub
+   ```
+
+2. **Configure BoaHost logging**:
+   - **Log Level**: Information, Warning, Error
+   - **File Logging**: Enabled for persistent logs
+   - **Log Path**: `/var/log/queuehub/` (accessible via Plesk)
+   - **Log Rotation**: Automatic via Plesk
+
+3. **Monitor performance**:
    - Check BoaHost control panel for resource usage
-   - Monitor MySQL performance
-   - Set up alerts for critical issues
+   - Monitor MySQL performance via Plesk
+   - Review application logs in Plesk file manager
+   - Set up Plesk alerts for critical issues
+
+#### 7.3 Monitoring Features
+
+**BoaHost Native Monitoring:**
+- ✅ **Application Logs**: Structured logging to files
+- ✅ **Performance Metrics**: CPU, Memory, Disk usage
+- ✅ **Database Health**: MySQL connection monitoring
+- ✅ **Error Tracking**: Exception logging and alerting
+- ✅ **Request Logging**: API request/response tracking
+
+**Azure Application Insights** (if needed):
+- Keep existing Azure monitoring by setting `MONITORING_PROVIDER=Azure`
+- Requires `APPLICATION_INSIGHTS_CONNECTION_STRING` environment variable
+
+#### 7.4 Environment Configuration Examples
+
+**BoaHost Production (Recommended):**
+```bash
+# boahost.env
+MONITORING_PROVIDER=BoaHost
+BOAHOST_LOG_LEVEL=Information
+BOAHOST_ENABLE_FILE_LOGGING=true
+BOAHOST_LOG_PATH=/var/log/queuehub
+BOAHOST_ENABLE_PERFORMANCE_METRICS=true
+BOAHOST_ENABLE_ERROR_TRACKING=true
+```
+
+**Azure Production (Alternative):**
+```bash
+# production.env
+MONITORING_PROVIDER=Azure
+APPLICATION_INSIGHTS_CONNECTION_STRING=InstrumentationKey=your-key;IngestionEndpoint=https://your-region.in.applicationinsights.azure.com/
+```
+
+**Development/Testing:**
+```bash
+# development.env
+MONITORING_PROVIDER=None
+# No monitoring for local development
+```
+
+#### 7.5 Monitoring Implementation
+
+The application uses a simple provider-agnostic interface:
+
+```csharp
+public interface IMonitoringProvider
+{
+    void TrackEvent(string eventName, Dictionary<string, string> properties = null);
+    void TrackMetric(string metricName, double value);
+    void TrackException(Exception exception);
+    void TrackDependency(string dependencyName, string commandName, DateTime startTime, TimeSpan duration, bool success);
+}
+```
+
+**Provider Selection in Program.cs:**
+```csharp
+var monitoringProvider = builder.Configuration["Monitoring:Provider"];
+
+switch (monitoringProvider)
+{
+    case "Azure":
+        builder.Services.AddApplicationInsightsTelemetry(/* existing config */);
+        break;
+    case "BoaHost":
+        builder.Services.AddBoaHostLogging(/* file logging config */);
+        break;
+    case "None":
+        // No monitoring
+        break;
+}
+```
+
+#### 7.6 Benefits of Provider-Agnostic Monitoring
+
+**Why This Approach:**
+- ✅ **No Vendor Lock-in**: Easy to switch between Azure and BoaHost
+- ✅ **Simple Configuration**: One environment variable controls everything
+- ✅ **Backward Compatible**: Existing Azure monitoring still works
+- ✅ **Future-Proof**: Easy to add more monitoring providers
+- ✅ **Cost Effective**: Use BoaHost native logging (free) instead of Azure costs
+- ✅ **Better Performance**: File logging is faster than cloud telemetry
+
+**Migration Path:**
+1. **Phase 1**: Deploy with `MONITORING_PROVIDER=Azure` (existing setup)
+2. **Phase 2**: Switch to `MONITORING_PROVIDER=BoaHost` (BoaHost native)
+3. **Phase 3**: Add custom monitoring providers as needed
 
 ### 🚨 **Troubleshooting**
 
@@ -96,6 +207,12 @@ Run migrations automatically on startup (`Database:AutoMigrate=true`) or execute
    - Check user permissions
    - Verify connection string format
 
+4. **Monitoring Issues**:
+   - Verify `MONITORING_PROVIDER` environment variable is set
+   - Check log file permissions in `/var/log/queuehub/`
+   - Ensure BoaHost file logging is enabled in Plesk
+   - Verify monitoring configuration in appsettings
+
 ### 📊 **Production Checklist**
 
 - [ ] BoaHost MySQL credentials configured
@@ -106,7 +223,10 @@ Run migrations automatically on startup (`Database:AutoMigrate=true`) or execute
 - [ ] Swagger documentation accessible
 - [ ] SSL certificates configured (if using HTTPS)
 - [ ] Domain pointing to BoaHost server
-- [ ] Monitoring and logging set up
+- [ ] **Monitoring provider configured** (`MONITORING_PROVIDER=BoaHost`)
+- [ ] **BoaHost logging enabled** and log path accessible
+- [ ] **Performance metrics** collection verified
+- [ ] **Error tracking** and alerting configured
 
 ### 🎉 **Success!**
 
