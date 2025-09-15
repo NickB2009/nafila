@@ -188,6 +188,117 @@ switch (monitoringProvider)
 2. **Phase 2**: Switch to `MONITORING_PROVIDER=BoaHost` (BoaHost native)
 3. **Phase 3**: Add custom monitoring providers as needed
 
+### 🔧 **Step 8: Azure Dependencies Cleanup**
+
+#### 8.1 Current Azure Dependencies Status
+
+**❌ Still Present (Need Cleanup):**
+- Application Insights packages in `GrandeTech.QueueHub.API.csproj`
+- Azure App Service detection code in `Program.cs`
+- Application Insights setup code in `Program.cs`
+- Azure-specific environment variables in all env files
+- Azure-specific scripts in `scripts/` directory
+- Application Insights references in docker-compose files
+
+**✅ Already BoaHost-Ready:**
+- Database migrated to MySQL
+- BoaHost-specific environment files
+- BoaHost deployment process documented
+
+#### 8.2 Cleanup Implementation Plan
+
+**Phase 1: Update Program.cs**
+```csharp
+// BEFORE (Azure-specific)
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITES_PORT"))) {
+    var port = Environment.GetEnvironmentVariable("WEBSITES_PORT");
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
+
+// AFTER (Provider-agnostic)
+var port = Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? 
+           Environment.GetEnvironmentVariable("BOAHOST_PORT") ?? 
+           "80";
+builder.WebHost.UseUrls($"http://*:{port}");
+```
+
+**Phase 2: Replace Application Insights Setup**
+```csharp
+// BEFORE (Azure-specific)
+builder.Services.AddApplicationInsightsTelemetry(options => {
+    options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+});
+
+// AFTER (Provider-agnostic)
+var monitoringProvider = builder.Configuration["Monitoring:Provider"];
+switch (monitoringProvider)
+{
+    case "Azure":
+        builder.Services.AddApplicationInsightsTelemetry(/* existing config */);
+        break;
+    case "BoaHost":
+        builder.Services.AddBoaHostLogging(/* file logging config */);
+        break;
+    case "None":
+        // No monitoring
+        break;
+}
+```
+
+**Phase 3: Update Environment Files**
+```bash
+# boahost.env - Remove Azure, Add BoaHost
+# REMOVE: APPLICATION_INSIGHTS_CONNECTION_STRING=...
+# ADD:
+MONITORING_PROVIDER=BoaHost
+BOAHOST_LOG_LEVEL=Information
+BOAHOST_ENABLE_FILE_LOGGING=true
+BOAHOST_LOG_PATH=/var/log/queuehub
+```
+
+**Phase 4: Update Docker Compose Files**
+```yaml
+# BEFORE (Azure-specific)
+environment:
+  - APPLICATION_INSIGHTS_CONNECTION_STRING=${APPLICATION_INSIGHTS_CONNECTION_STRING}
+
+# AFTER (Provider-agnostic)
+environment:
+  - MONITORING_PROVIDER=${MONITORING_PROVIDER:-BoaHost}
+  - BOAHOST_LOG_LEVEL=${BOAHOST_LOG_LEVEL:-Information}
+  - BOAHOST_ENABLE_FILE_LOGGING=${BOAHOST_ENABLE_FILE_LOGGING:-true}
+```
+
+**Phase 5: Archive Azure Scripts**
+```bash
+# Move Azure-specific scripts to archive
+mkdir scripts/archive/azure
+mv scripts/setup-azure-logging.ps1 scripts/archive/azure/
+mv scripts/test-azure-connection.ps1 scripts/archive/azure/
+mv scripts/reset-azure-credentials.ps1 scripts/archive/azure/
+mv scripts/get-azure-logs.ps1 scripts/archive/azure/
+mv scripts/deploy-with-logging.ps1 scripts/archive/azure/
+```
+
+#### 8.3 Package References Cleanup
+
+**Remove Azure-specific packages** from `GrandeTech.QueueHub.API.csproj`:
+```xml
+<!-- REMOVE these Azure-specific packages -->
+<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
+<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
+<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
+```
+
+**Add BoaHost-compatible packages** (if needed):
+```xml
+<!-- ADD these BoaHost-compatible packages -->
+<PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+<PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
+```
+
 ### 🚨 **Troubleshooting**
 
 #### Common Issues:
@@ -213,8 +324,23 @@ switch (monitoringProvider)
    - Ensure BoaHost file logging is enabled in Plesk
    - Verify monitoring configuration in appsettings
 
+5. **Azure Dependencies Issues**:
+   - Ensure all Azure-specific code has been replaced
+   - Verify Application Insights packages are removed
+   - Check that Azure scripts are archived
+   - Confirm docker-compose files use provider-agnostic config
+
 ### 📊 **Production Checklist**
 
+#### Pre-Deployment (Azure Cleanup)
+- [ ] **Azure App Service detection code** replaced with provider-agnostic code
+- [ ] **Application Insights setup** replaced with provider-agnostic monitoring
+- [ ] **Azure-specific packages** removed from `GrandeTech.QueueHub.API.csproj`
+- [ ] **Azure-specific environment variables** removed from all env files
+- [ ] **Azure-specific scripts** moved to `scripts/archive/azure/`
+- [ ] **Docker-compose files** updated to use provider-agnostic config
+
+#### BoaHost Deployment
 - [ ] BoaHost MySQL credentials configured
 - [ ] Environment variables updated
 - [ ] Application pool configured and site running in Plesk
@@ -223,10 +349,13 @@ switch (monitoringProvider)
 - [ ] Swagger documentation accessible
 - [ ] SSL certificates configured (if using HTTPS)
 - [ ] Domain pointing to BoaHost server
+
+#### Monitoring & Logging
 - [ ] **Monitoring provider configured** (`MONITORING_PROVIDER=BoaHost`)
 - [ ] **BoaHost logging enabled** and log path accessible
 - [ ] **Performance metrics** collection verified
 - [ ] **Error tracking** and alerting configured
+- [ ] **Azure dependencies completely removed** from codebase
 
 ### 🎉 **Success!**
 
