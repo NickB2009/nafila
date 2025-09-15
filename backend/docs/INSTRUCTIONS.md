@@ -316,28 +316,170 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 - **Cancel my queue entry** → `POST /api/Kiosk/cancel`
 - **View queue display** → `GET /api/Kiosk/display/{locationId}`
 
-### 📋 New API Endpoints Added
-- **GET /api/queues/{id}/entries** - Barbers can view current queue with all entries
-- **GET /api/queues/{id}/public** - Public endpoint for clients to view live queue status
-- **POST /api/queues/{id}/barber-add** - Barbers can add walk-in clients to queue
-- **GET /api/queues/{id}/wait-time** - Anyone can check estimated wait time for queue
-- **POST /api/kiosk/join** - Kiosk users can join queue with basic data input
-- **POST /api/kiosk/cancel** - Kiosk users can cancel their queue entry
-- **PUT /api/organizations/{id}/branding** - Admin/Owner can update organization branding
-- **GET /api/organizations/{id}/live-activity** - Admin/Owner can track real-time queue and staff activity
-- **PUT /api/staff/barbers/{id}** - Admin/Owner can edit barber details
-- **PUT /api/locations/{id}/queue-status** - Admin/Owner can enable/disable queue
-- **POST /api/queues/entries/{id}/haircut-details** - Barbers can save haircut details
-- **POST /api/subscriptionplans** - PlatformAdmin can create subscription plans
-- **GET /api/subscriptionplans** - PlatformAdmin can view all subscription plans
-- **GET /api/subscriptionplans/{id}** - PlatformAdmin can view specific subscription plan
-- **PUT /api/subscriptionplans/{id}** - PlatformAdmin can update subscription plan details
-- **PUT /api/subscriptionplans/{id}/activate** - PlatformAdmin can activate subscription plan
-- **PUT /api/subscriptionplans/{id}/deactivate** - PlatformAdmin can deactivate subscription plan
-- **GET /api/subscriptionplans/default** - Public endpoint to get default subscription plan
-- **POST /api/analytics/cross-barbershop** - PlatformAdmin can view aggregate analytics across consenting organizations
-- **POST /api/analytics/organization** - Owner/Admin can view organization-specific analytics with detailed breakdowns
-- **POST /api/analytics/top-organizations** - PlatformAdmin can view top performing organizations by various metrics
+## 10  Complete API Reference
+
+### 10.1  Public APIs (No Authentication Required)
+
+#### 10.1.1  Public Controller (`/api/Public`)
+| Method | Endpoint | Description | Use Case | Response Type |
+|--------|----------|-------------|----------|---------------|
+| `GET` | `/api/Public/salons` | Get all available salons with current status | UC-QUEUELISTCLI | `PublicSalonDto[]` |
+| `GET` | `/api/Public/salons/{salonId}` | Get detailed information for specific salon | UC-QUEUELISTCLI | `PublicSalonDto` |
+| `GET` | `/api/Public/queue-status/{salonId}` | Get current queue status for salon | UC-QUEUELISTCLI | `PublicQueueStatusDto` |
+| `POST` | `/api/Public/queue/join` | Anonymous user joins queue | UC-ENTRY | `AnonymousJoinResult` |
+| `GET` | `/api/Public/queue/entry-status/{entryId}` | Get status of specific queue entry | UC-QUEUELISTCLI | `QueueEntryStatusDto` |
+| `POST` | `/api/Public/queue/leave/{entryId}` | Anonymous user leaves queue | UC-CANCEL | `LeaveQueueResult` |
+| `PUT` | `/api/Public/queue/update/{entryId}` | Update contact info for queue entry | UC-ENTRY | `UpdateQueueEntryResult` |
+
+#### 10.1.2  Kiosk Controller (`/api/Kiosk`)
+| Method | Endpoint | Description | Use Case | Response Type |
+|--------|----------|-------------|----------|---------------|
+| `POST` | `/api/Kiosk/join` | Kiosk user joins queue with basic data | UC-INPUTDATA | `KioskJoinResult` |
+| `POST` | `/api/Kiosk/cancel` | Kiosk user cancels queue entry | UC-KIOSKCANCEL | `KioskCancelResult` |
+| `GET` | `/api/Kiosk/display/{locationId}` | Get kiosk display information | UC-KIOSKCALL | `KioskDisplayResult` |
+
+#### 10.1.3  Health Controller (`/api/Health`)
+| Method | Endpoint | Description | Use Case | Response Type |
+|--------|----------|-------------|----------|---------------|
+| `GET` | `/api/Health` | Overall system health check | System monitoring | `HealthStatus` |
+| `GET` | `/api/Health/database` | Database connectivity check | System monitoring | `DatabaseHealth` |
+
+### 10.2  Authenticated APIs
+
+#### 10.2.1  Authentication Controller (`/api/Auth`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/Auth/login` | User login (admin/barber/client) | UC-ADMINLOGIN, UC-BARBERLOGIN, UC-LOGINCLIENT | `LoginResult` | None |
+| `POST` | `/api/Auth/verify-2fa` | Verify two-factor authentication | UC-ADMINLOGIN, UC-BARBERLOGIN | `LoginResult` | None |
+| `POST` | `/api/Auth/register` | User registration | UC-LOGINCLIENT | `RegisterResult` | None |
+
+#### 10.2.2  Queues Controller (`/api/Queues`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/Queues` | Create new queue | UC-CREATEBARBER | `AddQueueResult` | Owner |
+| `GET` | `/api/Queues/{id}` | Get queue details | UC-QUEUELISTCLI | `QueueDto` | Client |
+| `POST` | `/api/Queues/{id}/join` | Join queue (authenticated) | UC-ENTRY | `JoinQueueResult` | Public |
+| `POST` | `/api/Queues/{id}/barber-add` | Barber adds customer to queue | UC-BARBERADD | `BarberAddResult` | Barber |
+| `POST` | `/api/Queues/{id}/call-next` | Barber calls next customer | UC-CALLNEXT | `CallNextResult` | Barber |
+| `POST` | `/api/Queues/{id}/check-in` | Customer checks in | UC-CHECKIN | `CheckInResult` | Client |
+| `POST` | `/api/Queues/{id}/finish` | Barber marks service complete | UC-FINISH | `FinishResult` | Barber |
+| `POST` | `/api/Queues/{id}/cancel` | Cancel queue entry | UC-CANCEL | `CancelResult` | Client |
+| `GET` | `/api/Queues/{id}/entries` | Get all queue entries | UC-BARBERQUEUE | `QueueEntryDto[]` | Barber |
+| `GET` | `/api/Queues/{id}/public` | Get public queue status | UC-QUEUELISTCLI | `PublicQueueDto` | Public |
+| `GET` | `/api/Queues/{id}/wait-time` | Get estimated wait time | UC-WAITTIME | `WaitTimeDto` | Public |
+| `POST` | `/api/Queues/entries/{id}/haircut-details` | Save haircut details | UC-SAVEHAIRCUT | `SaveHaircutResult` | Barber |
+
+#### 10.2.3  Staff Controller (`/api/Staff`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/Staff/barbers` | Add new barber | UC-ADDBARBER | `AddBarberResult` | Owner |
+| `PUT` | `/api/Staff/barbers/{id}` | Edit barber details | UC-EDITBARBER | `EditBarberResult` | Owner |
+| `PUT` | `/api/Staff/status` | Update staff status | UC-STAFFSTATUS | `UpdateStatusResult` | Barber |
+| `POST` | `/api/Staff/break/start` | Start break | UC-STARTBREAK | `StartBreakResult` | Barber |
+| `POST` | `/api/Staff/break/end` | End break | UC-ENDBREAK | `EndBreakResult` | Barber |
+
+#### 10.2.4  Organizations Controller (`/api/Organizations`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/Organizations` | Create new organization | UC-CREATEBARBER | `CreateOrganizationResult` | PlatformAdmin |
+| `GET` | `/api/Organizations/{id}` | Get organization details | UC-MULTILOC | `OrganizationDto` | Owner/Admin |
+| `PUT` | `/api/Organizations/{id}` | Update organization | UC-EDITSHOP | `UpdateOrganizationResult` | Owner/Admin |
+| `PUT` | `/api/Organizations/{id}/branding` | Update organization branding | UC-BRANDING | `UpdateBrandingResult` | Owner/Admin |
+| `GET` | `/api/Organizations/{id}/live-activity` | Get live activity tracking | UC-TRACKQ | `LiveActivityDto` | Owner/Admin |
+
+#### 10.2.5  Locations Controller (`/api/Locations`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/Locations` | Create new location | UC-CREATEBARBER | `CreateLocationResult` | Owner |
+| `GET` | `/api/Locations/{id}` | Get location details | UC-MULTILOC | `LocationDto` | Owner/Admin |
+| `PUT` | `/api/Locations/{id}` | Update location | UC-EDITSHOP | `UpdateLocationResult` | Owner/Admin |
+| `PUT` | `/api/Locations/{id}/queue-status` | Enable/disable queue | UC-DISABLEQ | `UpdateQueueStatusResult` | Owner/Admin |
+
+#### 10.2.6  Services Offered Controller (`/api/ServicesOffered`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/ServicesOffered` | Create new service | UC-MANAGESERV | `CreateServiceResult` | Owner/Admin |
+| `GET` | `/api/ServicesOffered` | Get all services | UC-MANAGESERV | `ServiceOfferedDto[]` | Owner/Admin |
+| `GET` | `/api/ServicesOffered/{id}` | Get service details | UC-MANAGESERV | `ServiceOfferedDto` | Owner/Admin |
+| `PUT` | `/api/ServicesOffered/{id}` | Update service | UC-MANAGESERV | `UpdateServiceResult` | Owner/Admin |
+| `DELETE` | `/api/ServicesOffered/{id}` | Delete service | UC-MANAGESERV | `DeleteServiceResult` | Owner/Admin |
+
+#### 10.2.7  Subscription Plans Controller (`/api/SubscriptionPlans`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/SubscriptionPlans` | Create subscription plan | UC-SUBPLAN | `CreatePlanResult` | PlatformAdmin |
+| `GET` | `/api/SubscriptionPlans` | Get all plans | UC-SUBPLAN | `SubscriptionPlanDto[]` | PlatformAdmin |
+| `GET` | `/api/SubscriptionPlans/{id}` | Get plan details | UC-SUBPLAN | `SubscriptionPlanDto` | PlatformAdmin |
+| `PUT` | `/api/SubscriptionPlans/{id}` | Update plan | UC-SUBPLAN | `UpdatePlanResult` | PlatformAdmin |
+| `PUT` | `/api/SubscriptionPlans/{id}/activate` | Activate plan | UC-SUBPLAN | `ActivatePlanResult` | PlatformAdmin |
+| `PUT` | `/api/SubscriptionPlans/{id}/deactivate` | Deactivate plan | UC-SUBPLAN | `DeactivatePlanResult` | PlatformAdmin |
+| `GET` | `/api/SubscriptionPlans/default` | Get default plan | UC-SUBPLAN | `SubscriptionPlanDto` | Public |
+
+#### 10.2.8  Analytics Controller (`/api/Analytics`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/Analytics/cross-barbershop` | Cross-barbershop analytics | UC-ANALYTICS | `CrossBarbershopAnalyticsDto` | PlatformAdmin |
+| `POST` | `/api/Analytics/organization` | Organization analytics | UC-ANALYTICS | `OrganizationAnalyticsDto` | Owner/Admin |
+| `POST` | `/api/Analytics/top-organizations` | Top performing organizations | UC-ANALYTICS | `TopOrganizationsDto` | PlatformAdmin |
+
+#### 10.2.9  Queue Analytics Controller (`/api/QueueAnalytics`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `GET` | `/api/QueueAnalytics/wait-time/{salonId}` | Calculate estimated wait time | UC-CALCWAIT | `WaitTimeEstimate` | Client |
+
+#### 10.2.10  Notifications Controller (`/api/Notifications`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `GET` | `/api/Notifications` | Get user notifications | UC-SMSNOTIF, UC-TURNREM | `NotificationDto[]` | Client |
+| `POST` | `/api/Notifications/send` | Send notification | UC-COUPONNOTIF | `SendNotificationResult` | Admin |
+| `PUT` | `/api/Notifications/{id}/read` | Mark notification as read | UC-SMSNOTIF | `MarkReadResult` | Client |
+
+#### 10.2.11  Performance Controller (`/api/Performance`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `GET` | `/api/Performance` | Get system performance metrics | UC-METRICS | `PerformanceMetricsDto` | Admin |
+
+#### 10.2.12  Queue Transfer Controller (`/api/QueueTransfer`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/QueueTransfer/transfer` | Transfer queue entry | UC-CHANGELOCATION | `TransferResult` | Client |
+
+#### 10.2.13  Maintenance Controller (`/api/Maintenance`)
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `POST` | `/api/Maintenance/apply-updates` | Apply system updates | UC-APPLYUPDT | `ApplyUpdatesResult` | PlatformAdmin |
+| `GET` | `/api/Maintenance/status` | Get maintenance status | UC-APPLYUPDT | `MaintenanceStatusDto` | PlatformAdmin |
+
+### 10.3  Test Controller (`/api/Test`) - Development Only
+| Method | Endpoint | Description | Use Case | Response Type | Authorization |
+|--------|----------|-------------|----------|---------------|---------------|
+| `GET` | `/api/Test/users` | Get test users | Development | `TestUsersResult` | None |
+| `GET` | `/api/Test/organizations` | Get test organizations | Development | `TestOrganizationsResult` | None |
+| `POST` | `/api/Test/clear` | Clear test data | Development | `ClearDataResult` | None |
+| `POST` | `/api/Test/initialize` | Initialize test data | Development | `InitializeDataResult` | None |
+| `GET` | `/api/Test/status` | Get test status | Development | `TestStatusResult` | None |
+
+### 10.4  API Testing and Documentation
+
+#### 10.4.1  Testing Strategy
+- **Unit Tests**: All application services have comprehensive unit tests following TDD approach
+- **Integration Tests**: End-to-end API testing with proper authentication and authorization
+- **Controller Tests**: Each controller endpoint is tested with various scenarios
+- **Mock Services**: Repository and external service dependencies are properly mocked
+- **Test Data**: BogusDataStore provides consistent test data for development
+
+#### 10.4.2  API Documentation
+- **Swagger/OpenAPI**: Available at `/swagger/index.html` when running locally
+- **HTTP Files**: Test files in `http/` directory for manual API testing
+- **Response Types**: All endpoints have proper `ProducesResponseType` attributes
+- **Error Handling**: Consistent error responses with proper HTTP status codes
+- **Authentication**: JWT-based authentication with role-based authorization
+
+#### 10.4.3  Development Tools
+- **Test Controller**: `/api/Test` endpoints for development and testing
+- **Health Checks**: `/api/Health` for system monitoring
+- **Performance Metrics**: `/api/Performance` for system performance monitoring
+- **Logging**: Comprehensive logging throughout the application
 
 ### 📋 Implementation Notes
 - All completed use cases follow TDD approach with comprehensive unit and integration tests
