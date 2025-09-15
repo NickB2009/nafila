@@ -246,6 +246,76 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 9. **UC-SMSNOTIF** (SMS notification) - Priority 1
 10. **UC-UPDATECACHE** (Update cache) - Priority 1
 
+## 9  User Stories and API Mapping
+
+### 9.1  Client User Stories
+
+#### 9.1.1  Anonymous Client Journey
+**As an anonymous client**, I want to:
+- **Browse available salons** → `GET /api/Public/salons`
+- **View salon details** → `GET /api/Public/salons/{salonId}`
+- **Check queue status** → `GET /api/Public/queue-status/{salonId}`
+- **Join queue anonymously** → `POST /api/Public/queue/join`
+- **Check my position** → `GET /api/Public/queue/entry-status/{entryId}`
+- **Update my contact info** → `PUT /api/Public/queue/update/{entryId}`
+- **Leave queue if needed** → `POST /api/Public/queue/leave/{entryId}`
+
+#### 9.1.2  Registered Client Journey
+**As a registered client**, I want to:
+- **Login to my account** → `POST /api/Auth/login`
+- **Register new account** → `POST /api/Auth/register`
+- **Join queue with profile** → `POST /api/Queues/{id}/join`
+- **Check my queue position** → `GET /api/Queues/{id}/entries`
+- **Cancel my queue entry** → `POST /api/Queues/{id}/cancel`
+- **Check in when called** → `POST /api/Queues/{id}/check-in`
+- **View my notifications** → `GET /api/Notifications`
+- **Transfer to different salon** → `POST /api/QueueTransfer/transfer`
+
+### 9.2  Barber User Stories
+
+#### 9.2.1  Barber Daily Operations
+**As a barber**, I want to:
+- **Login to barber panel** → `POST /api/Auth/login`
+- **View current queue** → `GET /api/Queues/{id}/entries`
+- **Add walk-in customer** → `POST /api/Queues/{id}/barber-add`
+- **Call next customer** → `POST /api/Queues/{id}/call-next`
+- **Mark service complete** → `POST /api/Queues/{id}/finish`
+- **Save haircut details** → `POST /api/Queues/entries/{id}/haircut-details`
+- **Update my status** → `PUT /api/Staff/status`
+- **Start/end break** → `POST /api/Staff/break/start`, `POST /api/Staff/break/end`
+
+### 9.3  Admin/Owner User Stories
+
+#### 9.3.1  Salon Management
+**As a salon owner**, I want to:
+- **Login to admin panel** → `POST /api/Auth/login`
+- **Create new salon** → `POST /api/Locations`
+- **Update salon details** → `PUT /api/Locations/{id}`
+- **Enable/disable queue** → `PUT /api/Locations/{id}/queue-status`
+- **Manage services offered** → `POST/GET/PUT/DELETE /api/ServicesOffered`
+- **Add/edit barbers** → `POST /api/Staff/barbers`, `PUT /api/Staff/barbers/{id}`
+- **Customize branding** → `PUT /api/Organizations/{id}/branding`
+- **Track live activity** → `GET /api/Organizations/{id}/live-activity`
+- **View analytics** → `POST /api/Analytics/organization`
+
+### 9.4  Platform Admin User Stories
+
+#### 9.4.1  Platform Management
+**As a platform admin**, I want to:
+- **Create organizations** → `POST /api/Organizations`
+- **Manage subscription plans** → `POST/GET/PUT /api/SubscriptionPlans`
+- **View cross-barbershop analytics** → `POST /api/Analytics/cross-barbershop`
+- **Apply system updates** → `POST /api/Maintenance/apply-updates`
+- **Monitor system performance** → `GET /api/Performance`
+
+### 9.5  Kiosk User Stories
+
+#### 9.5.1  Kiosk Operations
+**As a kiosk user**, I want to:
+- **Join queue with basic info** → `POST /api/Kiosk/join`
+- **Cancel my queue entry** → `POST /api/Kiosk/cancel`
+- **View queue display** → `GET /api/Kiosk/display/{locationId}`
+
 ### 📋 New API Endpoints Added
 - **GET /api/queues/{id}/entries** - Barbers can view current queue with all entries
 - **GET /api/queues/{id}/public** - Public endpoint for clients to view live queue status
