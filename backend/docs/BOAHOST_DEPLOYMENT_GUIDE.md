@@ -6,8 +6,8 @@ This guide will help you deploy your QueueHub API to BoaHost with MySQL database
 
 ### 📋 **Prerequisites**
 - BoaHost hosting account with MySQL database access
-- Docker installed on your local machine
-- Your project files ready for deployment
+- Plesk access to configure the .NET application and environment variables
+- Your project files published for deployment (framework-dependent or self-contained)
 
 ### 🔧 **Step 1: Get BoaHost MySQL Credentials**
 
@@ -41,62 +41,36 @@ This guide will help you deploy your QueueHub API to BoaHost with MySQL database
    - CORS origins (your frontend domains)
    - SSL certificates (if using HTTPS)
 
-### 🔧 **Step 3: Deploy to BoaHost**
+### 🔧 **Step 3: Deploy to BoaHost (Plesk, no containers)**
 
-#### Option A: Using Docker (Recommended)
-```bash
-# 1. Build and deploy
-powershell -ExecutionPolicy Bypass -File scripts/deploy-to-boahost.ps1
-
-# 2. Check status
-docker-compose -f docker-compose.boahost.yml --env-file boahost.env ps
-```
-
-#### Option B: Manual Deployment
-```bash
-# 1. Build the Docker image
-docker build -t grandetech-queuehub-api:boahost -f ./GrandeTech.QueueHub.API/Dockerfile ./GrandeTech.QueueHub.API
-
-# 2. Start services
-docker-compose -f docker-compose.boahost.yml --env-file boahost.env up -d
-```
+1. Publish the API:
+   ```bash
+   dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish
+   ```
+2. Upload the `publish/` folder to your domain (e.g., `httpdocs/api`).
+3. In Plesk, configure the .NET application to run via Kestrel and set the reverse proxy.
+4. Set environment variables in Plesk: `ASPNETCORE_ENVIRONMENT=Production`, `MYSQL_*`, `JWT_KEY`.
 
 ### 🔧 **Step 4: Database Migration**
 
-```bash
-# Run database migration
-powershell -ExecutionPolicy Bypass -File scripts/migrate-boahost-database.ps1
-```
+Run migrations automatically on startup (`Database:AutoMigrate=true`) or execute a published `dotnet` binary with `--migrate` task if available. Ensure the `MySqlConnection` string resolves from environment variables.
 
 ### 🔧 **Step 5: Verify Deployment**
 
-1. **Check API Status**:
-   ```bash
-   curl http://localhost
-   # Should return: {"status":"online","environment":"Production",...}
-   ```
+1. **Check API Status**: Browse to your domain root and verify the app is responding.
 
-2. **Check Swagger Documentation**:
-   - Open browser: `http://your-domain.com/swagger`
+2. **Check Swagger Documentation**: `https://api.eutonafila.com.br/swagger/index.html` (or your domain `/swagger`).
 
-3. **Check Health Endpoint**:
-   ```bash
-   curl http://localhost/health
-   ```
+3. **Check Health Endpoints**: `/api/Health`, `/api/Health/database`.
 
 ### 🔧 **Step 6: Configure BoaHost Domain**
 
-1. **Point your domain** to your BoaHost server
-2. **Configure SSL** (if using HTTPS):
-   - Upload SSL certificates to `./nginx/ssl/`
-   - Update nginx configuration if needed
+1. **Point your domain** to your BoaHost server.
+2. **Configure SSL** in Plesk (Let's Encrypt or upload certificate). Ensure reverse proxy forwards `X-Forwarded-*` headers.
 
 ### 🔧 **Step 7: Production Monitoring**
 
-1. **Check logs**:
-   ```bash
-   docker-compose -f docker-compose.boahost.yml --env-file boahost.env logs api
-   ```
+1. **Check logs**: Use Plesk application logs and server logs.
 
 2. **Monitor performance**:
    - Check BoaHost control panel for resource usage
@@ -126,7 +100,7 @@ powershell -ExecutionPolicy Bypass -File scripts/migrate-boahost-database.ps1
 
 - [ ] BoaHost MySQL credentials configured
 - [ ] Environment variables updated
-- [ ] Docker containers running
+- [ ] Application pool configured and site running in Plesk
 - [ ] Database migration completed
 - [ ] API responding on correct port
 - [ ] Swagger documentation accessible

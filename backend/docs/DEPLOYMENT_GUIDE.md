@@ -15,12 +15,9 @@ This guide covers the complete deployment process for the GrandeTech QueueHub ap
 - **Network**: Stable internet connection with static IP
 
 ### Software Requirements
-- **Docker**: 20.10+
-- **Docker Compose**: 2.0+
 - **PowerShell**: 7.0+ (Windows) or PowerShell Core (Linux)
-- **Python**: 3.8+ (for data transformation)
 - **MySQL Client**: 8.0+
-- **SQL Server Client**: For data export
+- Optional: **Python** 3.8+ (for data transformation)
 
 ## 🔧 Pre-Deployment Setup
 
@@ -68,31 +65,17 @@ sqlcmd -S "your-sql-server" -E -Q "BACKUP DATABASE QueueHubDb TO DISK = 'backups
 
 ## 🚀 Deployment Process
 
-### Phase 1: Staging Deployment
+### Phase 1: Staging Deployment (Plesk)
 
 #### 1.1 Deploy to Staging
 ```bash
-# Start staging environment
-docker-compose -f docker-compose.staging.yml --env-file staging.env up -d
-
-# Check service status
-docker-compose -f docker-compose.staging.yml ps
-
-# View logs
-docker-compose -f docker-compose.staging.yml logs -f
+# Publish build
+dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish
 ```
+Upload to staging domain via Plesk, configure reverse proxy, and set environment variables (`MYSQL_*`, `JWT_KEY`).
 
 #### 1.2 Test Staging Environment
-```bash
-# Test API health
-curl http://localhost:8080/health
-
-# Test database connectivity
-curl http://localhost:8080/api/health/database
-
-# Run migration tests
-powershell -ExecutionPolicy Bypass -File "scripts/run-mysql-tests.ps1"
-```
+Visit `/api/Health`, `/api/Health/database`, and `/swagger` on the staging domain.
 
 #### 1.3 Validate Staging
 ```bash
@@ -103,7 +86,7 @@ powershell -ExecutionPolicy Bypass -File "scripts/simple-validation.ps1"
 powershell -ExecutionPolicy Bypass -File "scripts/test-api-endpoints.ps1"
 ```
 
-### Phase 2: Production Migration
+### Phase 2: Production Migration (MySQL only)
 
 #### 2.1 Pre-Migration Checklist
 - [ ] Staging environment validated
@@ -114,10 +97,7 @@ powershell -ExecutionPolicy Bypass -File "scripts/test-api-endpoints.ps1"
 - [ ] Team notified of maintenance window
 
 #### 2.2 Execute Production Migration
-```bash
-# Run production migration
-powershell -ExecutionPolicy Bypass -File "scripts/execute-production-migration.ps1"
-```
+Ensure `Database:AutoMigrate=true` and correct `MYSQL_*` variables in Plesk; restart the app to apply migrations.
 
 #### 2.3 Post-Migration Validation
 ```bash
@@ -130,10 +110,8 @@ powershell -ExecutionPolicy Bypass -File "scripts/test-production-functionality.
 
 ## 📊 Monitoring and Alerting
 
-### 1. Access Monitoring Dashboards
-- **Grafana**: http://your-server:3000
-- **Prometheus**: http://your-server:9090
-- **API Health**: http://your-server:8080/health
+### 1. Access Monitoring
+- **API Health**: `https://your-domain/api/Health`
 
 ### 2. Key Metrics to Monitor
 - **API Response Time**: < 200ms average
@@ -143,11 +121,8 @@ powershell -ExecutionPolicy Bypass -File "scripts/test-production-functionality.
 - **Queue Length**: < 100 customers
 - **Error Rate**: < 1%
 
-### 3. Alert Configuration
-Alerts are configured in `monitoring/alert_rules.yml` and will notify via:
-- Email notifications
-- Slack webhooks
-- PagerDuty integration
+### 3. Alerting
+Use Plesk/host-level monitoring and email alerts provided by BoaHost. Optionally integrate external uptime monitors.
 
 ## 🔄 Rollback Procedures
 
@@ -158,11 +133,10 @@ powershell -ExecutionPolicy Bypass -File "scripts/rollback-migration.ps1"
 ```
 
 ### Manual Rollback Steps
-1. Stop all services
-2. Restore SQL Server from backup
-3. Restart with SQL Server configuration
-4. Validate functionality
-5. Investigate migration issues
+1. Stop the application in Plesk
+2. Restore MySQL backup
+3. Re-point environment variables to last known good state
+4. Start the application and validate
 
 ## 🛠️ Maintenance Tasks
 

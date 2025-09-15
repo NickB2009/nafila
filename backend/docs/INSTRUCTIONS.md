@@ -4,10 +4,6 @@ Follow these guidelines whenever generating or modifying code, infrastructure, o
 
 ---
 
-## 1  Azure‑Specific Coding Rules
-
-*Replaced by core practices and local environment notes to reduce noise.*
-
 ## 1  Core Practices
 
 - **TDD First**   Write the failing test before implementation.
@@ -16,19 +12,30 @@ Follow these guidelines whenever generating or modifying code, infrastructure, o
 - **Integration Tests**   `WebApplicationFactory<Program>` pattern.
 - **Observability Hooks**   Structured logs, metrics, correlation IDs.
 - **Security**   JWT for protected routes; authorization attributes.
+ - **No Value Objects**   Use primitives for persistence with MySQL; avoid owned types/JSON conversions.
 
 ### Local environment
 
 - **Runtime**: .NET 8
-- **Local DB**: SQL Server 2022 in Docker (container `queuehub-sqlserver`)
-- **Production DB**: Azure SQL Database (`barberqueue` on `grande.database.windows.net`) ✅
-- **API**: http://localhost:8080 (container listens on 80; mapped to host 8080)
-- **Connection string key**: `ConnectionStrings:AzureSqlConnection`
-- **Compose quick start**:
-  ```powershell
-  cd GrandeTech.QueueHub
-  docker-compose up -d --build
+- **Database**: MySQL 8.x (local instance)
+- **API (dev)**: http://localhost:5098 (per `Properties/launchSettings.json`)
+- **Connection string key**: `ConnectionStrings:MySqlConnection`
+- **Dev workflow (no containers)**:
+  - Install MySQL 8 locally and create database `QueueHubDb`
+  - Set credentials in `appsettings.Development.json` or environment variables
+  - From `GrandeTech.QueueHub/GrandeTech.QueueHub.API`, run: `dotnet run`
+
+  Example `appsettings.Development.json` snippet:
+  ```json
+  {
+    "ConnectionStrings": {
+      "MySqlConnection": "Server=localhost;Database=QueueHubDb;User=root;Password=your_password;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;"
+    },
+    "Database": { "Provider": "MySQL", "AutoMigrate": true }
+  }
   ```
+
+  Production Swagger: `https://api.eutonafila.com.br/swagger/index.html`
 
 ---
 
@@ -126,50 +133,37 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 
 ---
 
-## 4  Azure Resource Creation Standards
+## 4  Hosting on BoaHost/Plesk (No Containers)
 
-### 4.1  Naming Conventions
+### 4.1  Overview
+We deploy on BoaHost using Plesk. No Azure resources and no Docker/containers.
 
-* Lower‑case, numbers, hyphens only.
-* Format: `[resource-type]-[env]-queuehub-[purpose]-[seq]` e.g. `rg-p-queuehub-core-001`.
+### 4.2  Publish
+- Framework-dependent (server has .NET runtime):
+  ```bash
+  dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish
+  ```
+- Self-contained (server without .NET runtime), choose appropriate RID (e.g., `linux-x64`, `win-x64`):
+  ```bash
+  dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish -r linux-x64 --self-contained true
+  ```
 
-### 4.2  Resource Grouping
+### 4.3  Deploy via Plesk
+- Upload `publish/` to your domain path (e.g., `httpdocs/api`).
+- Configure the app to run with Kestrel; set reverse proxy from domain to the internal Kestrel port.
+- Set environment variables in Plesk:
+  - `ASPNETCORE_ENVIRONMENT=Production`
+  - `MYSQL_SERVER` (or `MYSQL_HOST`), `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_PORT=3306`
+  - `JWT_KEY`
+  The app reads `ConnectionStrings:MySqlConnection` from `appsettings.Production.json` with environment expansion.
 
-* Core resources: `rg-[env]-queuehub-core-[seq]`.
-* Service‑specific: `rg-[env]-queuehub-[service]-[seq]`.
-* BFFs: `rg-[env]-queuehub-bff-[frontend]-[seq]`.
+### 4.4  MySQL and TLS
+- Use BoaHost MySQL hostname and enable `SslMode=Required` in production.
+- Ensure reverse proxy forwards `X-Forwarded-*` headers.
 
-### 4.3  Tagging (mandatory)
-
-| Tag         | Value                           |       |
-| ----------- | ------------------------------- | ----- |
-| Project     | EuToNaFila / queuehub           |       |
-| Environment | Development / Test / Production |       |
-| CreatedBy   | \<name                          | team> |
-| Cost-Center | <code> (optional)               |       |
-
-### 4.4  Region
-
-* Default: **Brazil South** (`brazilsouth`).
-* Use additional regions only for latency/DR requirements.
-
-### 4.5  Architecture & Security Highlights
-
-* **BFF pattern** per frontend; single core backend.
-* **Multi‑tenancy** via location slug routing (`https://www.eutonafila.com.br/{location-slug}`).
-* Managed identities, Key  Vault, private endpoints.
-
-### 4.6  Automation & CI/CD
-
-* IaC: Bicep/ARM/Terraform, stored in VCS.
-* Pipelines: GitHub  Actions or Azure DevOps; separate for core vs each BFF.
-
-### 4.7  Monitoring, Cost, DR, Compliance
-
-* Application  Insights, dashboards, distributed tracing.
-* Budgets & alerts; monthly cost reviews; per‑BFF cost tracking.
-* Backup policies, tested DR; multi‑region where required.
-* Brazilian regulatory compliance; data residency; consent handling.
+### 4.5  Health and Logs
+- Health: `/api/Health`, `/api/Health/database`.
+- Use Plesk logs; optionally configure rolling file logs.
 
 ---
 
@@ -470,6 +464,7 @@ Based on the use case catalogue, these high-priority MVP use cases still need im
 
 #### 10.4.2  API Documentation
 - **Swagger/OpenAPI**: Available at `/swagger/index.html` when running locally
+- **Production Swagger**: `https://api.eutonafila.com.br/swagger/index.html`
 - **HTTP Files**: Test files in `http/` directory for manual API testing
 - **Response Types**: All endpoints have proper `ProducesResponseType` attributes
 - **Error Handling**: Consistent error responses with proper HTTP status codes
@@ -562,9 +557,7 @@ public class Location : Entity
     public bool MondayIsClosed { get; set; }
     // ... repeat for each day
     
-    // Helper methods to maintain domain logic
-    public BrandingConfig GetBrandingConfig() => new(PrimaryColor, SecondaryColor, LogoUrl, FontFamily);
-    public WeeklyBusinessHours GetWeeklyHours() => new(/* construct from individual properties */);
+    // No value objects; business logic uses primitives
 }
 ```
 
@@ -587,8 +580,7 @@ public class ServiceOffered : Entity
     public decimal PriceAmount { get; set; }
     public string PriceCurrency { get; set; } = "BRL";
     
-    // Helper method to maintain domain logic
-    public Money GetPrice() => new(PriceAmount, PriceCurrency);
+    // No value objects; pricing is represented by primitives only
 }
 ```
 
@@ -611,8 +603,7 @@ public class SubscriptionPlan : Entity
     public decimal PriceAmount { get; set; }
     public string PriceCurrency { get; set; } = "BRL";
     
-    // Helper method to maintain domain logic
-    public Money GetPrice() => new(PriceAmount, PriceCurrency);
+    // No value objects; pricing is represented by primitives only
 }
 ```
 
@@ -639,8 +630,7 @@ public class Organization : Entity
     public string? LogoUrl { get; set; }
     public string? FontFamily { get; set; }
     
-    // Helper method to maintain domain logic
-    public BrandingConfig GetCustomBranding() => new(PrimaryColor, SecondaryColor, LogoUrl, FontFamily);
+    // No value objects; branding handled via primitives only
 }
 ```
 
@@ -666,9 +656,7 @@ public class User : Entity
     // Replace PhoneNumber property with direct string
     public string? PhoneNumber { get; set; }
     
-    // Helper methods to maintain domain logic
-    public Email GetEmailValue() => new(Email);
-    public PhoneNumber? GetPhoneNumberValue() => PhoneNumber != null ? new PhoneNumber(PhoneNumber) : null;
+    // No value objects; validate via attributes/services
 }
 ```
 
@@ -694,9 +682,7 @@ public class Customer : Entity
     // Replace PhoneNumber property with direct string
     public string? PhoneNumber { get; set; }
     
-    // Helper methods to maintain domain logic
-    public Email? GetEmailValue() => Email != null ? new Email(Email) : null;
-    public PhoneNumber? GetPhoneNumberValue() => PhoneNumber != null ? new PhoneNumber(PhoneNumber) : null;
+    // No value objects; validate via attributes/services
 }
 ```
 
@@ -859,9 +845,9 @@ modelBuilder.Entity<Location>().Ignore(e => e.WeeklyHours);
 #### 8.7.1  Unit Tests
 
 **Domain Model Tests**:
-- Test helper methods return correct value objects
-- Test business logic works with flattened properties
-- Test validation rules are maintained
+- Test business logic works with flattened, primitive properties
+- Test validation rules on primitive properties are enforced
+- Test edge cases and invariants without value objects
 
 **Application Service Tests**:
 - Test mapping between domain models and DTOs
@@ -982,4 +968,4 @@ modelBuilder.Entity<Location>().Ignore(e => e.WeeklyHours);
 
 ---
 
-*Last updated: 2025-01-28*
+*Last updated: 2025-09-15*
