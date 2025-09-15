@@ -228,7 +228,15 @@ We deploy on BoaHost using Plesk.
 - **UC-ANALYTICS** (View cross-barbershop analytics) - Complete with AnalyticsService, comprehensive unit/integration tests, and cross-barbershop data aggregation
 
 ### 🔄 Remaining High Priority Use Cases
-Based on the use case catalogue, these high-priority MVP use cases still need implementation:
+**Primary next phase (focus): Public APIs (unauthenticated).**
+Scope: finalize and harden `/api/Public/*` and kiosk display endpoints (`/api/Kiosk/display/{locationId}`); ensure full MySQL alignment and tests.
+
+Targets:
+- `/api/Public/salons`, `/api/Public/salons/{salonId}`, `/api/Public/queue-status/{salonId}`
+- `/api/Public/queue/join`, `/api/Public/queue/entry-status/{entryId}`, `/api/Public/queue/leave/{entryId}`, `/api/Public/queue/update/{entryId}`
+- `/api/Kiosk/display/{locationId}`
+
+Then proceed with the remaining MVP items:
 1. **UC-APPLYUPDT** (Apply system updates) - Priority 1  
 2. **UC-ASKPROFILE** (Offer profile option) - Priority 1
 3. **UC-CALCWAIT** (Calculate estimated wait) - Priority 1
@@ -796,6 +804,16 @@ modelBuilder.Entity<Location>().Ignore(e => e.WeeklyHours);
 - Add foreign key constraints where needed
 
 ### 8.6  Refactoring Checklist
+
+#### 8.6.0  Next Phase: Public APIs (Unauthenticated) Hardening
+- [ ] Verify completeness of `/api/Public/*` and `/api/Kiosk/display/{locationId}`.
+- [ ] Align mappings with MySQL-flattened models (no owned types/JSON) for all public read models.
+- [ ] Add/refresh unit tests for application services powering public endpoints.
+- [ ] Add/refresh integration tests for anonymous flows (factory-based).
+- [ ] Validate DTOs and response shapes; keep entities internal.
+- [ ] Performance: index critical columns; validate query plans on MySQL.
+- [ ] Security: rate limiting and input validation for anonymous endpoints.
+- [ ] Observability: structured logs and metrics for public endpoints.
 
 #### 8.6.1  Phase 1 Implementation Steps
 
