@@ -41,7 +41,7 @@ This guide will help you deploy your QueueHub API to BoaHost with MySQL database
    - CORS origins (your frontend domains)
    - SSL certificates (if using HTTPS)
 
-### 🔧 **Step 3: Deploy to BoaHost (Plesk, no containers)**
+### 🔧 **Step 3: Deploy to BoaHost (Plesk)**
 
 1. Publish the API:
    ```bash

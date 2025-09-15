@@ -12,7 +12,7 @@ Follow these guidelines whenever generating or modifying code, infrastructure, o
 - **Integration Tests**   `WebApplicationFactory<Program>` pattern.
 - **Observability Hooks**   Structured logs, metrics, correlation IDs.
 - **Security**   JWT for protected routes; authorization attributes.
- - **No Value Objects**   Use primitives for persistence with MySQL; avoid owned types/JSON conversions.
+ - **Primitives for Persistence**   Use simple column types optimized for MySQL; avoid EF owned types and JSON conversions.
 
 ### Local environment
 
@@ -20,7 +20,7 @@ Follow these guidelines whenever generating or modifying code, infrastructure, o
 - **Database**: MySQL 8.x (local instance)
 - **API (dev)**: http://localhost:5098 (per `Properties/launchSettings.json`)
 - **Connection string key**: `ConnectionStrings:MySqlConnection`
-- **Dev workflow (no containers)**:
+- **Dev workflow**:
   - Install MySQL 8 locally and create database `QueueHubDb`
   - Set credentials in `appsettings.Development.json` or environment variables
   - From `GrandeTech.QueueHub/GrandeTech.QueueHub.API`, run: `dotnet run`
@@ -133,10 +133,10 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 
 ---
 
-## 4  Hosting on BoaHost/Plesk (No Containers)
+## 4  Hosting on BoaHost/Plesk
 
 ### 4.1  Overview
-We deploy on BoaHost using Plesk. No Azure resources and no Docker/containers.
+We deploy on BoaHost using Plesk.
 
 ### 4.2  Publish
 - Framework-dependent (server has .NET runtime):
