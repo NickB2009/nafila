@@ -211,6 +211,9 @@ builder.Services.AddScoped<Grande.Fila.API.Application.Locations.ToggleQueueServ
 builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetPublicSalonsService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetPublicSalonDetailService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetPublicQueueStatusService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetQueueEntryStatusService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.LeaveQueueService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.UpdateQueueEntryService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.AddBarberService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.EditBarberService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Staff.UpdateStaffStatusService>();

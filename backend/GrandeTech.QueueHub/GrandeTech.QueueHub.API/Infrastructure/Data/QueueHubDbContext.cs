@@ -53,6 +53,8 @@ namespace Grande.Fila.API.Infrastructure.Data
             // Ignore entities that should only exist as owned types (do this first)
             modelBuilder.Ignore<StaffBreak>();
             modelBuilder.Ignore<ServiceHistoryItem>();
+            modelBuilder.Ignore<WeeklyBusinessHours>();
+            modelBuilder.Ignore<BrandingConfig>();
 
             // Apply ALL entity configurations (now compatible with value object mappings)
             modelBuilder.ApplyConfiguration(new UserConfiguration());
@@ -311,8 +313,7 @@ namespace Grande.Fila.API.Infrastructure.Data
             modelBuilder.Entity<User>()
                 .Ignore(e => e.Permissions);
 
-            modelBuilder.Entity<Coupon>()
-                .Ignore(e => e.ApplicableServiceTypeIds);
+            // Coupon configuration moved to be consistent with ignore statement below
 
             // As a safety net, ignore any primitive collections that might slip through and cause EF mapping issues
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
