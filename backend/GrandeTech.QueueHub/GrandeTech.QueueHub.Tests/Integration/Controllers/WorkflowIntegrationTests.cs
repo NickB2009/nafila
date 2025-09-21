@@ -334,7 +334,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 _ => UserRoles.Customer
             };
             
-            var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);
+            var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", $"+1234567890{uniqueId}", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);
             user.DisableTwoFactor();
 
             if (role == "Admin" || role == "Owner" || role == "PlatformAdmin")
@@ -347,7 +347,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
 
             var loginRequest = new LoginRequest
             {
-                Username = user.Username,
+                PhoneNumber = user.PhoneNumber,
                 Password = "TestPassword123!"
             };
 

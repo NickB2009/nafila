@@ -216,10 +216,10 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 _ => UserRoles.Customer
             };
             
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
+            var user = new User(username, email, $"+1234567890{username}", BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
             await userRepo.AddAsync(user, CancellationToken.None);
 
-            var loginReq = new LoginRequest { Username = username, Password = password };
+            var loginReq = new LoginRequest { PhoneNumber = user.PhoneNumber, Password = password };
             var loginResult = await authService.LoginAsync(loginReq);
             
             Assert.IsTrue(loginResult.Success, $"Login failed: {loginResult.Error}");

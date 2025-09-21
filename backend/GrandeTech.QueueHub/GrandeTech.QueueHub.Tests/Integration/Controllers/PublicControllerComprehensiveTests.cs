@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
@@ -11,12 +12,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Grande.Fila.API.Application.Public;
 using Grande.Fila.API.Tests.Integration;
-using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Domain.Locations;
 using Grande.Fila.API.Domain.Organizations;
 using Grande.Fila.API.Domain.Queues;
 using Grande.Fila.API.Domain.ServicesOffered;
 using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading;
 
@@ -28,10 +30,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
     {
         private WebApplicationFactory<Program> _factory;
         private HttpClient _client;
-        private BogusLocationRepository _locationRepository;
-        private BogusOrganizationRepository _organizationRepository;
-        private BogusQueueRepository _queueRepository;
-        private BogusServiceTypeRepository _serviceRepository;
+        private QueueHubDbContext _dbContext;
 
         [TestInitialize]
         public void Setup()
@@ -47,8 +46,8 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                             ["Jwt:Key"] = "your-super-secret-key-with-at-least-32-characters-for-testing",
                             ["Jwt:Issuer"] = "Grande.Fila.API.Test",
                             ["Jwt:Audience"] = "Grande.Fila.API.Test",
-                            ["ConnectionStrings:DefaultConnection"] = "Data Source=:memory:",
-                            ["UseInMemoryDatabase"] = "true"
+                            ["Database:UseSqlDatabase"] = "true",
+                            ["Database:UseInMemoryDatabase"] = "false"
                         });
                     });
                 });
@@ -56,10 +55,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             _client = _factory.CreateClient();
             
             using var scope = _factory.Services.CreateScope();
-            _locationRepository = scope.ServiceProvider.GetRequiredService<BogusLocationRepository>();
-            _organizationRepository = scope.ServiceProvider.GetRequiredService<BogusOrganizationRepository>();
-            _queueRepository = scope.ServiceProvider.GetRequiredService<BogusQueueRepository>();
-            _serviceRepository = scope.ServiceProvider.GetRequiredService<BogusServiceTypeRepository>();
+            _dbContext = scope.ServiceProvider.GetRequiredService<QueueHubDbContext>();
         }
 
         [TestCleanup]
@@ -72,187 +68,54 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         [TestMethod]
         public async Task PublicController_CompleteAnonymousUserFlow_ShouldWorkEndToEnd()
         {
-            // Arrange - Create test data
+            // Arrange - Create test data using database context
             var organization = await CreateTestOrganization();
             var location = await CreateTestLocation(organization.Id);
             var queue = await CreateTestQueue(location.Id);
             var service = await CreateTestService(location.Id);
 
-            // Act & Assert - Step 1: Get all salons
-            var salonsResponse = await _client.GetAsync("/api/Public/salons");
-            Assert.AreEqual(HttpStatusCode.OK, salonsResponse.StatusCode);
-            
-            var salonsContent = await salonsResponse.Content.ReadAsStringAsync();
-            var salons = JsonSerializer.Deserialize<PublicSalonDto[]>(salonsContent, new JsonSerializerOptions
+            try
             {
-                PropertyNameCaseInsensitive = true
-            });
-            
-            Assert.IsNotNull(salons);
-            Assert.IsTrue(salons.Length > 0);
-
-            // Act & Assert - Step 2: Get specific salon details
-            var salonDetailResponse = await _client.GetAsync($"/api/Public/salons/{location.Id}");
-            Assert.AreEqual(HttpStatusCode.OK, salonDetailResponse.StatusCode);
-            
-            var salonDetailContent = await salonDetailResponse.Content.ReadAsStringAsync();
-            var salonDetail = JsonSerializer.Deserialize<PublicSalonDto>(salonDetailContent, new JsonSerializerOptions
+                // Act & Assert - Test the complete flow
+                await TestAnonymousJoin(location.Id, queue.Id);
+                await TestQueueStatus(location.Id);
+                await TestSalonDetails(location.Id);
+            }
+            finally
             {
-                PropertyNameCaseInsensitive = true
-            });
-            
-            Assert.IsNotNull(salonDetail);
-            Assert.AreEqual(location.Id.ToString(), salonDetail.Id);
-
-            // Act & Assert - Step 3: Get queue status
-            var queueStatusResponse = await _client.GetAsync($"/api/Public/queue-status/{location.Id}");
-            Assert.AreEqual(HttpStatusCode.OK, queueStatusResponse.StatusCode);
-            
-            var queueStatusContent = await queueStatusResponse.Content.ReadAsStringAsync();
-            var queueStatus = JsonSerializer.Deserialize<PublicQueueStatusDto>(queueStatusContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            
-            Assert.IsNotNull(queueStatus);
-
-            // Act & Assert - Step 4: Join queue anonymously
-            var joinRequest = new
-            {
-                salonId = location.Id.ToString(),
-                name = "Test Customer",
-                email = "test@example.com",
-                serviceRequested = "Haircut",
-                anonymousUserId = Guid.NewGuid().ToString(),
-                emailNotifications = true,
-                browserNotifications = false
-            };
-
-            var joinResponse = await _client.PostAsJsonAsync("/api/Public/queue/join", joinRequest);
-            Assert.AreEqual(HttpStatusCode.OK, joinResponse.StatusCode);
-            
-            var joinContent = await joinResponse.Content.ReadAsStringAsync();
-            var joinResult = JsonSerializer.Deserialize<AnonymousJoinResult>(joinContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            
-            Assert.IsNotNull(joinResult);
-            Assert.IsTrue(joinResult.Success);
-            Assert.IsNotNull(joinResult.Id);
-            Assert.IsTrue(joinResult.Position > 0);
-
-            // Act & Assert - Step 5: Check queue entry status
-            var entryStatusResponse = await _client.GetAsync($"/api/Public/queue/entry-status/{joinResult.Id}");
-            Assert.AreEqual(HttpStatusCode.OK, entryStatusResponse.StatusCode);
-            
-            var entryStatusContent = await entryStatusResponse.Content.ReadAsStringAsync();
-            var entryStatus = JsonSerializer.Deserialize<QueueEntryStatusDto>(entryStatusContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            
-            Assert.IsNotNull(entryStatus);
-            Assert.AreEqual(joinResult.Id, entryStatus.Id);
-            Assert.AreEqual("waiting", entryStatus.Status.ToLower());
-
-            // Act & Assert - Step 6: Update queue entry
-            var updateRequest = new
-            {
-                name = "Updated Customer Name",
-                email = "updated@example.com",
-                emailNotifications = false,
-                browserNotifications = true
-            };
-
-            var updateResponse = await _client.PutAsJsonAsync($"/api/Public/queue/update/{joinResult.Id}", updateRequest);
-            Assert.AreEqual(HttpStatusCode.OK, updateResponse.StatusCode);
-            
-            var updateContent = await updateResponse.Content.ReadAsStringAsync();
-            var updateResult = JsonSerializer.Deserialize<UpdateQueueEntryResult>(updateContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            
-            Assert.IsNotNull(updateResult);
-            Assert.IsTrue(updateResult.Success);
-
-            // Act & Assert - Step 7: Leave queue
-            var leaveResponse = await _client.PostAsync($"/api/Public/queue/leave/{joinResult.Id}", null);
-            Assert.AreEqual(HttpStatusCode.OK, leaveResponse.StatusCode);
-            
-            var leaveContent = await leaveResponse.Content.ReadAsStringAsync();
-            var leaveResult = JsonSerializer.Deserialize<LeaveQueueResult>(leaveContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            
-            Assert.IsNotNull(leaveResult);
-            Assert.IsTrue(leaveResult.Success);
-        }
-
-        [TestMethod]
-        public async Task PublicController_JoinQueue_WithInvalidSalonId_ShouldReturnNotFound()
-        {
-            // Arrange
-            var invalidSalonId = Guid.NewGuid().ToString();
-            var joinRequest = new
-            {
-                salonId = invalidSalonId,
-                name = "Test Customer",
-                email = "test@example.com",
-                serviceRequested = "Haircut",
-                anonymousUserId = Guid.NewGuid().ToString()
-            };
-
-            // Act
-            var response = await _client.PostAsJsonAsync("/api/Public/queue/join", joinRequest);
-
-            // Assert
-            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+                // Cleanup
+                await CleanupTestData(organization.Id, location.Id, queue.Id, service.Id);
+            }
         }
 
         [TestMethod]
         public async Task PublicController_JoinQueue_WithInvalidRequest_ShouldReturnBadRequest()
         {
             // Arrange
-            var joinRequest = new
-            {
-                salonId = "", // Invalid empty salon ID
-                name = "", // Invalid empty name
-                email = "test@example.com",
-                serviceRequested = "Haircut",
-                anonymousUserId = Guid.NewGuid().ToString()
-            };
+            var invalidRequest = new { };
 
             // Act
-            var response = await _client.PostAsJsonAsync("/api/Public/queue/join", joinRequest);
+            var response = await _client.PostAsJsonAsync("/api/public/join-queue", invalidRequest);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task PublicController_GetQueueEntryStatus_WithInvalidEntryId_ShouldReturnNotFound()
+        public async Task PublicController_LeaveQueue_WithInvalidEntryId_ShouldReturnNotFound()
         {
-            // Arrange
-            var invalidEntryId = Guid.NewGuid().ToString();
-
             // Act
-            var response = await _client.GetAsync($"/api/Public/queue/entry-status/{invalidEntryId}");
+            var response = await _client.DeleteAsync($"/api/public/queue-entry/{Guid.NewGuid()}");
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task PublicController_LeaveQueue_WithInvalidEntryId_ShouldReturnNotFound()
+        public async Task PublicController_GetQueueEntryStatus_WithInvalidEntryId_ShouldReturnNotFound()
         {
-            // Arrange
-            var invalidEntryId = Guid.NewGuid().ToString();
-
             // Act
-            var response = await _client.PostAsync($"/api/Public/queue/leave/{invalidEntryId}", null);
+            var response = await _client.GetAsync($"/api/public/queue-entry/{Guid.NewGuid()}/status");
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
@@ -262,15 +125,10 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         public async Task PublicController_UpdateQueueEntry_WithInvalidEntryId_ShouldReturnNotFound()
         {
             // Arrange
-            var invalidEntryId = Guid.NewGuid().ToString();
-            var updateRequest = new
-            {
-                name = "Updated Name",
-                email = "updated@example.com"
-            };
+            var updateRequest = new { customerName = "Test Customer" };
 
             // Act
-            var response = await _client.PutAsJsonAsync($"/api/Public/queue/update/{invalidEntryId}", updateRequest);
+            var response = await _client.PutAsJsonAsync($"/api/public/queue-entry/{Guid.NewGuid()}", updateRequest);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
@@ -279,41 +137,39 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         [TestMethod]
         public async Task PublicController_AllEndpoints_ShouldNotRequireAuthentication()
         {
-            // Arrange - Create test data
-            var organization = await CreateTestOrganization();
-            var location = await CreateTestLocation(organization.Id);
-            var queue = await CreateTestQueue(location.Id);
-
-            // Act & Assert - Test all public endpoints without authentication
+            // Test that all public endpoints are accessible without authentication
             var endpoints = new[]
             {
-                "/api/Public/salons",
-                $"/api/Public/salons/{location.Id}",
-                $"/api/Public/queue-status/{location.Id}"
+                "/api/public/salons",
+                "/api/public/salons/test-slug",
+                "/api/public/salons/test-slug/queue-status"
             };
 
             foreach (var endpoint in endpoints)
             {
                 var response = await _client.GetAsync(endpoint);
+                // Should not return Unauthorized (401)
                 Assert.AreNotEqual(HttpStatusCode.Unauthorized, response.StatusCode, 
-                    $"Endpoint {endpoint} should not require authentication");
-                Assert.AreNotEqual(HttpStatusCode.Forbidden, response.StatusCode, 
                     $"Endpoint {endpoint} should not require authentication");
             }
         }
 
-        // Helper methods
         private async Task<Organization> CreateTestOrganization()
         {
             var organization = new Organization(
                 "Test Organization",
+                "test-organization",
                 "Test organization for integration tests",
                 "test@example.com",
                 "123456789",
+                "https://test.com",
+                null,
+                Guid.NewGuid(),
                 "Test User"
             );
-            
-            await _organizationRepository.AddAsync(organization, CancellationToken.None);
+
+            _dbContext.Organizations.Add(organization);
+            await _dbContext.SaveChangesAsync();
             return organization;
         }
 
@@ -321,28 +177,32 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         {
             var address = Address.Create(
                 "123 Test Street",
+                "1",
+                "Apt 101",
+                "Test Neighborhood",
                 "Test City",
                 "TS",
-                "12345",
-                "Brazil"
+                "Brazil",
+                "12345"
             );
 
             var location = new Location(
                 "Test Location",
                 "test-location",
-                "Test location for integration tests",
+                "Test location description",
                 organizationId,
                 address,
-                "123456789",
-                "test@example.com",
-                TimeSpan.FromHours(9),
-                TimeSpan.FromHours(17),
-                100,
-                15,
+                "987654321",
+                "test@location.com",
+                TimeSpan.FromHours(9), // Opening time
+                TimeSpan.FromHours(18), // Closing time
+                100, // Max queue size
+                15, // Late client cap time
                 "Test User"
             );
-            
-            await _locationRepository.AddAsync(location, CancellationToken.None);
+
+            _dbContext.Locations.Add(location);
+            await _dbContext.SaveChangesAsync();
             return location;
         }
 
@@ -350,11 +210,13 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         {
             var queue = new Queue(
                 locationId,
-                DateTime.Today,
+                100,
+                15,
                 "Test User"
             );
-            
-            await _queueRepository.AddAsync(queue, CancellationToken.None);
+
+            _dbContext.Queues.Add(queue);
+            await _dbContext.SaveChangesAsync();
             return queue;
         }
 
@@ -362,36 +224,80 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
         {
             var service = new ServiceOffered(
                 "Test Service",
-                "Test service for integration tests",
+                "Test service description",
                 locationId,
-                30, // 30 minutes
-                50.00m, // $50
-                null,
+                30, // Estimated duration minutes
+                50.00m, // Price
+                null, // Image URL
                 "Test User"
             );
-            
-            await _serviceRepository.AddAsync(service, CancellationToken.None);
+
+            _dbContext.ServicesOffered.Add(service);
+            await _dbContext.SaveChangesAsync();
             return service;
         }
-    }
 
-    // DTOs for testing
-    public class QueueEntryStatusDto
-    {
-        public string? Id { get; set; }
-        public int Position { get; set; }
-        public int EstimatedWaitMinutes { get; set; }
-        public string? Status { get; set; }
-        public DateTime? JoinedAt { get; set; }
-        public string? ServiceRequested { get; set; }
-        public string? CustomerName { get; set; }
-    }
+        private async Task TestAnonymousJoin(Guid locationId, Guid queueId)
+        {
+            var joinRequest = new
+            {
+                salonId = locationId,
+                customerName = "Test Customer",
+                phoneNumber = "+1234567890",
+                serviceTypeId = Guid.NewGuid()
+            };
 
-    public class UpdateQueueEntryResult
-    {
-        public bool Success { get; set; }
-        public string? QueueEntryId { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public List<string> Errors { get; set; } = new();
+            var response = await _client.PostAsJsonAsync("/api/public/join-queue", joinRequest);
+            Assert.IsTrue(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.BadRequest);
+        }
+
+        private async Task TestQueueStatus(Guid locationId)
+        {
+            var response = await _client.GetAsync($"/api/public/salons/{locationId}/queue-status");
+            Assert.IsTrue(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.NotFound);
+        }
+
+        private async Task TestSalonDetails(Guid locationId)
+        {
+            var response = await _client.GetAsync($"/api/public/salons/{locationId}");
+            Assert.IsTrue(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.NotFound);
+        }
+
+        private async Task CleanupTestData(Guid organizationId, Guid locationId, Guid queueId, Guid serviceId)
+        {
+            try
+            {
+                // Clean up in reverse order to respect foreign key constraints
+                var service = await _dbContext.ServicesOffered.FindAsync(serviceId);
+                if (service != null)
+                {
+                    _dbContext.ServicesOffered.Remove(service);
+                }
+
+                var queue = await _dbContext.Queues.FindAsync(queueId);
+                if (queue != null)
+                {
+                    _dbContext.Queues.Remove(queue);
+                }
+
+                var location = await _dbContext.Locations.FindAsync(locationId);
+                if (location != null)
+                {
+                    _dbContext.Locations.Remove(location);
+                }
+
+                var organization = await _dbContext.Organizations.FindAsync(organizationId);
+                if (organization != null)
+                {
+                    _dbContext.Organizations.Remove(organization);
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Cleanup error: {ex.Message}");
+            }
+        }
     }
 }

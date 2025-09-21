@@ -82,10 +82,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Arrange
             var registerRequest = new RegisterRequest
             {
-                Username = "testuser123",
+                FullName = "Test User",
+                PhoneNumber = "+12345678901",
                 Email = "test@example.com",
-                Password = "password123",
-                ConfirmPassword = "password123"
+                Password = "password123"
             };
 
             var registerJson = JsonSerializer.Serialize(registerRequest);
@@ -98,7 +98,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Now test login
             var loginRequest = new LoginRequest
             {
-                Username = "testuser123",
+                PhoneNumber = "+12345678901",
                 Password = "password123"
             };
 
@@ -120,7 +120,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult);
             Assert.IsTrue(loginResult.Success);
             Assert.IsNotNull(loginResult.Token);
-            Assert.AreEqual("testuser123", loginResult.Username);
+            Assert.AreEqual("Test User", loginResult.Username);
             Assert.AreEqual("User", loginResult.Role);
         }
 
@@ -132,7 +132,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var loginRequest = new LoginRequest
             {
-                Username = "nonexistentuser",
+                PhoneNumber = "+12345678902",
                 Password = "wrongpassword"
             };
 
@@ -168,12 +168,12 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             // Create a test user with known credentials in the repository
             var knownUser = new User("integrationtestuser", "integration@test.com",
-                BCrypt.Net.BCrypt.HashPassword("password123"), "User");
+                "+12345678903", BCrypt.Net.BCrypt.HashPassword("password123"), "User");
             await userRepository.AddAsync(knownUser, CancellationToken.None);
 
             var loginRequest = new LoginRequest
             {
-                Username = "integrationtestuser",
+                PhoneNumber = "+12345678903",
                 Password = "password123"
             };
 
@@ -195,7 +195,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult);
             Assert.IsTrue(loginResult.Success);
             Assert.IsNotNull(loginResult.Token);
-            Assert.AreEqual("integrationtestuser", loginResult.Username);
+            Assert.AreEqual("Test User", loginResult.Username);
         }
 
         [TestMethod]
@@ -206,10 +206,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var registerRequest = new RegisterRequest
             {
-                Username = "newuser123",
+                FullName = "New User",
+                PhoneNumber = "+12345678904",
                 Email = "newuser@example.com",
-                Password = "securepassword123",
-                ConfirmPassword = "securepassword123"
+                Password = "securepassword123"
             };
 
             var json = JsonSerializer.Serialize(registerRequest);
@@ -237,10 +237,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // First registration
             var firstRequest = new RegisterRequest
             {
-                Username = "testuser_duplicate",
+                FullName = "First User",
+                PhoneNumber = "+12345678905",
                 Email = "first@example.com",
-                Password = "password123",
-                ConfirmPassword = "password123"
+                Password = "password123"
             };
 
             var firstJson = JsonSerializer.Serialize(firstRequest);
@@ -252,10 +252,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Second registration with same username
             var secondRequest = new RegisterRequest
             {
-                Username = "testuser_duplicate", // Same username
+                FullName = "Second User",
+                PhoneNumber = "+12345678905", // Same phone number
                 Email = "second@example.com",    // Different email
-                Password = "password123",
-                ConfirmPassword = "password123"
+                Password = "password123"
             };
 
             var secondJson = JsonSerializer.Serialize(secondRequest);
@@ -285,10 +285,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // First registration
             var firstRequest = new RegisterRequest
             {
-                Username = "user1_email",
+                FullName = "First User",
+                PhoneNumber = "+12345678906",
                 Email = "duplicate@example.com",
-                Password = "password123",
-                ConfirmPassword = "password123"
+                Password = "password123"
             };
 
             var firstJson = JsonSerializer.Serialize(firstRequest);
@@ -300,10 +300,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Second registration with same email
             var secondRequest = new RegisterRequest
             {
-                Username = "user2_email",        // Different username
+                FullName = "Second User",
+                PhoneNumber = "+12345678907",        // Different phone number
                 Email = "duplicate@example.com", // Same email
-                Password = "password123",
-                ConfirmPassword = "password123"
+                Password = "password123"
             };
 
             var secondJson = JsonSerializer.Serialize(secondRequest);
@@ -335,10 +335,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var registerRequest = new RegisterRequest
             {
-                Username = "testuser",
+                FullName = "Test User",
+                PhoneNumber = "+12345678908",
                 Email = "test@example.com",
-                Password = "password123",
-                ConfirmPassword = "differentpassword"
+                Password = "password123"
             };
 
             var json = JsonSerializer.Serialize(registerRequest);
@@ -370,10 +370,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var registerRequest = new RegisterRequest
             {
-                Username = "",
+                FullName = "",
+                PhoneNumber = "",
                 Email = "",
-                Password = "",
-                ConfirmPassword = ""
+                Password = ""
             };
 
             var json = JsonSerializer.Serialize(registerRequest);
@@ -409,10 +409,10 @@ namespace Grande.Fila.Tests.Integration.Controllers
 
             var registerRequest = new RegisterRequest
             {
-                Username = username,
+                FullName = "Test User",
+                PhoneNumber = username,
                 Email = email,
-                Password = password,
-                ConfirmPassword = password
+                Password = password
             };
 
             // Act 1: Register
@@ -426,7 +426,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Act 2: Login with the registered credentials
             var loginRequest = new LoginRequest
             {
-                Username = username,
+                PhoneNumber = username,
                 Password = password
             };
 
@@ -446,7 +446,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult);
             Assert.IsTrue(loginResult.Success);
             Assert.IsNotNull(loginResult.Token);
-            Assert.AreEqual(username, loginResult.Username);
+            Assert.AreEqual("Test User", loginResult.Username);
             Assert.AreEqual("User", loginResult.Role);
         }
 
@@ -465,14 +465,14 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var email = $"{username}@test.com";
             var password = "ownerpass123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
+            var user = new User("Test User", email, username, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
             user.EnableTwoFactor();
             await userRepository.AddAsync(user, CancellationToken.None);
 
             // Act
             var loginRequest = new LoginRequest
             {
-                Username = username,
+                PhoneNumber = username,
                 Password = password
             };
 
@@ -512,14 +512,14 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var email = $"{username}@test.com";
             var password = "ownerpass123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
+            var user = new User("Test User", email, username, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
             user.EnableTwoFactor();
             await userRepository.AddAsync(user, CancellationToken.None);
 
             // Step 1: Initial login to get 2FA token
             var loginRequest = new LoginRequest
             {
-                Username = username,
+                PhoneNumber = username,
                 Password = password
             };
 
@@ -542,7 +542,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Step 2: Verify 2FA code
             var verifyRequest = new VerifyTwoFactorRequest
             {
-                Username = username,
+                PhoneNumber = username,
                 TwoFactorCode = "123456", // In a real implementation, this would be validated
                 TwoFactorToken = loginResult.TwoFactorToken
             };
@@ -564,7 +564,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(verifyResult);
             Assert.IsTrue(verifyResult.Success);
             Assert.IsNotNull(verifyResult.Token);
-            Assert.AreEqual(username, verifyResult.Username);
+            Assert.AreEqual("Test User", verifyResult.Username);
             Assert.AreEqual(UserRoles.Owner, verifyResult.Role);
             Assert.IsNotNull(verifyResult.Permissions);
             Assert.IsTrue(verifyResult.Permissions.Length > 0);
@@ -585,14 +585,14 @@ namespace Grande.Fila.Tests.Integration.Controllers
             var email = $"{username}@test.com";
             var password = "ownerpass123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
+            var user = new User("Test User", email, username, BCrypt.Net.BCrypt.HashPassword(password), UserRoles.Owner);
             user.Lock();
             await userRepository.AddAsync(user, CancellationToken.None);
 
             // Act
             var loginRequest = new LoginRequest
             {
-                Username = username,
+                PhoneNumber = username,
                 Password = password
             };
 

@@ -136,7 +136,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var email = $"{username}@test.com";
             var password = "testpassword123";
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), role);
+            var user = new User(username, email, $"+1234567890{username}", BCrypt.Net.BCrypt.HashPassword(password), role);
             // Disable 2FA for test users to avoid additional verification steps
             user.DisableTwoFactor();
             
@@ -151,7 +151,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             }
             await userRepo.AddAsync(user, CancellationToken.None);
 
-            var loginReq = new LoginRequest { Username = username, Password = password };
+            var loginReq = new LoginRequest { PhoneNumber = user.PhoneNumber, Password = password };
             var json = JsonSerializer.Serialize(loginReq);
             var resp = await client.PostAsync("/api/auth/login", new StringContent(json, Encoding.UTF8, "application/json"));
             

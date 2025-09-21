@@ -50,6 +50,18 @@ namespace Grande.Fila.API.Tests.Application.Public
             var organizationId = Guid.NewGuid();
             
             var address = Address.Create("123 Main St", "100", "", "Downtown", "São Paulo", "SP", "Brazil", "01310-100");
+            
+            // Create business hours that are always open (24/7)
+            var alwaysOpenHours = WeeklyBusinessHours.Create(
+                DayBusinessHours.Create(TimeSpan.Zero, TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))), // Monday
+                DayBusinessHours.Create(TimeSpan.Zero, TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))), // Tuesday
+                DayBusinessHours.Create(TimeSpan.Zero, TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))), // Wednesday
+                DayBusinessHours.Create(TimeSpan.Zero, TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))), // Thursday
+                DayBusinessHours.Create(TimeSpan.Zero, TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))), // Friday
+                DayBusinessHours.Create(TimeSpan.Zero, TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))), // Saturday
+                DayBusinessHours.Create(TimeSpan.Zero, TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59)))  // Sunday
+            );
+            
             var location = new Location(
                 "Barbearia do João",
                 "barbearia-joao",
@@ -64,6 +76,10 @@ namespace Grande.Fila.API.Tests.Application.Public
                 15,
                 "system"
             );
+            
+            // Override the business hours to ensure it's always open
+            var weeklyHoursProperty = typeof(Location).GetProperty("WeeklyHours");
+            weeklyHoursProperty?.SetValue(location, alwaysOpenHours);
 
             // Set the location ID using reflection
             var idProperty = typeof(Location).GetProperty("Id");

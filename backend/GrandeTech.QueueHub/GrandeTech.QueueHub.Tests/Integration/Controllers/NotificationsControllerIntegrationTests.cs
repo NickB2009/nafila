@@ -133,11 +133,11 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 _ => UserRoles.Customer // Default fallback
             };
 
-            var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
+            var user = new User(username, email, $"+1234567890{username}", BCrypt.Net.BCrypt.HashPassword(password), mappedRole);
             user.DisableTwoFactor(); // Disable 2FA for test users
             await userRepo.AddAsync(user, CancellationToken.None);
 
-            var loginReq = new LoginRequest { Username = username, Password = password };
+            var loginReq = new LoginRequest { PhoneNumber = user.PhoneNumber, Password = password };
             var json = JsonSerializer.Serialize(loginReq);
             var resp = await client.PostAsync("/api/auth/login", new StringContent(json, Encoding.UTF8, "application/json"));
             var respContent = await resp.Content.ReadAsStringAsync();

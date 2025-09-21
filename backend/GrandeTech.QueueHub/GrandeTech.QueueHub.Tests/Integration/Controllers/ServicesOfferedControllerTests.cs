@@ -143,7 +143,7 @@ public class ServicesOfferedControllerTests
         // Get the user from the token
         var tokenHandler = new JwtSecurityTokenHandler();
         var jwtToken = tokenHandler.ReadJwtToken(adminToken);
-        var username = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Username)?.Value;
+        var username = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Email)?.Value;
         var organizationId = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.OrganizationId)?.Value;
         Assert.IsNotNull(username);
         Assert.IsNotNull(organizationId);
@@ -374,7 +374,7 @@ public class ServicesOfferedControllerTests
         // Get the user from the token
         var tokenHandler = new JwtSecurityTokenHandler();
         var jwtToken = tokenHandler.ReadJwtToken(adminToken);
-        var username = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Username)?.Value;
+        var username = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.Email)?.Value;
         var organizationId = jwtToken.Claims.FirstOrDefault(c => c.Type == TenantClaims.OrganizationId)?.Value;
         Assert.IsNotNull(username);
         Assert.IsNotNull(organizationId);
@@ -492,13 +492,13 @@ public class ServicesOfferedControllerTests
         await locationRepository.AddAsync(testLocation, CancellationToken.None);
         locationId = testLocation.Id;
 
-        var user = new User(username, email, BCrypt.Net.BCrypt.HashPassword(password), role);
+        var user = new User(username, email, $"+1234567890{username}", BCrypt.Net.BCrypt.HashPassword(password), role);
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
         await userRepository.AddAsync(user, CancellationToken.None);
 
         var loginRequest = new LoginRequest
         {
-            Username = username,
+            PhoneNumber = user.PhoneNumber,
             Password = password
         };
 
@@ -514,7 +514,7 @@ public class ServicesOfferedControllerTests
             // Verify 2FA
             var verifyRequest = new VerifyTwoFactorRequest
             {
-                Username = username,
+                PhoneNumber = user.PhoneNumber,
                 TwoFactorCode = "123456", // In a real implementation, this would be validated
                 TwoFactorToken = loginResult.TwoFactorToken
             };

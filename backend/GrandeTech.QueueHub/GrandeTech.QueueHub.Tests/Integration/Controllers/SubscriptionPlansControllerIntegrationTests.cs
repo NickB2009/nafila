@@ -315,7 +315,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
                 _ => UserRoles.Customer
             };
             
-            var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);
+            var user = new User($"testuser_{uniqueId}", $"test_{uniqueId}@example.com", $"+1234567890{uniqueId}", BCrypt.Net.BCrypt.HashPassword("TestPassword123!"), mappedRole);
 
             // Disable 2FA for test users to simplify integration tests
             user.DisableTwoFactor();
@@ -330,14 +330,14 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
 
             var loginRequest = new LoginRequest
             {
-                Username = user.Username,
+                PhoneNumber = user.PhoneNumber,
                 Password = "TestPassword123!"
             };
 
             var loginResult = await authService.LoginAsync(loginRequest);
 
-            Assert.IsTrue(loginResult.Success, $"Login failed for user {user.Username}");
-            Assert.IsNotNull(loginResult.Token, $"Token was null for user {user.Username}");
+            Assert.IsTrue(loginResult.Success, $"Login failed for user {user.FullName}");
+            Assert.IsNotNull(loginResult.Token, $"Token was null for user {user.FullName}");
 
             return loginResult.Token;
         }
