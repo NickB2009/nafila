@@ -72,9 +72,8 @@ namespace Grande.Fila.API.Tests.Application.Public
                 "system"
             );
             
-            // Override the business hours to ensure it's always open
-            var weeklyHoursProperty = typeof(Location).GetProperty("WeeklyHours");
-            weeklyHoursProperty?.SetValue(location, alwaysOpenHours);
+            // Update the business hours to ensure it's always open
+            location.UpdateWeeklyHours(alwaysOpenHours, "test");
 
             // Set the location ID using reflection
             var idProperty = typeof(Location).GetProperty("Id");
