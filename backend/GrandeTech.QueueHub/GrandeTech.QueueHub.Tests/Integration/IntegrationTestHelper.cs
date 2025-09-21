@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Grande.Fila.API.Application.Auth;
@@ -70,6 +71,23 @@ namespace Grande.Fila.API.Tests.Integration
                 Console.WriteLine($"Authentication error for user {user.FullName}: {ex.Message}");
                 throw;
             }
+        }
+
+        public static async Task<HttpClient> CreateAuthenticatedClientAsync(
+            Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> factory, string role, string[] permissions)
+        {
+            var token = await CreateAndAuthenticateUserAsync(factory.Services, role, permissions);
+            
+            // Create a new HTTP client with the authentication header
+            var client = factory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            
+            return client;
+        }
+
+        public static async Task<HttpClient> CreateAuthenticatedClientAsync(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> factory, string role)
+        {
+            return await CreateAuthenticatedClientAsync(factory, role, Array.Empty<string>());
         }
 
         public static async Task<string> CreateAndAuthenticateUserAsync(IServiceProvider services, string role)

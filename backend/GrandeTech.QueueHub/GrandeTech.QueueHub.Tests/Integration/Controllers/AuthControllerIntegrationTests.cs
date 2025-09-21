@@ -120,7 +120,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             Assert.IsNotNull(loginResult);
             Assert.IsTrue(loginResult.Success);
             Assert.IsNotNull(loginResult.Token);
-            Assert.AreEqual("integrationtestuser", loginResult.Username);
+            Assert.AreEqual("Test User", loginResult.Username);
             Assert.AreEqual("Customer", loginResult.Role);
         }
 
