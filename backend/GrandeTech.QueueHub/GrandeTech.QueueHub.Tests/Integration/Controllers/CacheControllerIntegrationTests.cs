@@ -134,7 +134,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
             var username = $"testuser_{role.ToLower()}_{Guid.NewGuid():N}";
             var email = $"{username}@test.com";
-            var password = "testpassword123";
+            var password = "TestPassword123";
 
             var user = new User(username, email, $"+1234567890{username}", BCrypt.Net.BCrypt.HashPassword(password), role);
             // Disable 2FA for test users to avoid additional verification steps

@@ -198,7 +198,7 @@ namespace Grande.Fila.API.Tests.Integration.Controllers
             var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
             var username = $"testuser_{role.ToLower()}_{Guid.NewGuid():N}";
             var email = $"{username}@test.com";
-            var password = "testpassword123";
+            var password = "TestPassword123";
 
             // Map old test roles to new roles
             var mappedRole = role.ToLower() switch

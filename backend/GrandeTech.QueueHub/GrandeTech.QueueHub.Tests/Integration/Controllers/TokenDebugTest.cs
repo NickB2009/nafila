@@ -88,7 +88,7 @@ namespace Grande.Fila.Tests.Integration.Controllers
             // Create a user with the specified role
             var username = $"testuser_admin_{Guid.NewGuid():N}";
             var email = $"{username}@test.com";
-            var password = "testpassword123";
+            var password = "TestPassword123";
 
             var user = new User(username, email, $"+1234567890{username}", BCrypt.Net.BCrypt.HashPassword(password), "Admin");
             await userRepository.AddAsync(user, CancellationToken.None);

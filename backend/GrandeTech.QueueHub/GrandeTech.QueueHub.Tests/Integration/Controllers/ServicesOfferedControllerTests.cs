@@ -456,7 +456,7 @@ public class ServicesOfferedControllerTests
     {
         var username = $"testuser_{Guid.NewGuid():N}";
         var email = $"{username}@test.com";
-        var password = "testpassword123";
+        var password = "TestPassword123";
         var organizationId = Guid.NewGuid();
         var locationId = Guid.NewGuid();
 
