@@ -152,7 +152,7 @@ namespace Grande.Fila.API.Application.Public
                 var locationBySlug = await _locationRepository.GetBySlugAsync(salonSlug, cancellationToken);
                 if (locationBySlug == null)
                 {
-                    result.Errors.Add($"Salon not found with slug: {salonSlug}");
+                    result.FieldErrors["SalonId"] = $"Salon not found with ID: {salonSlug}";
                     return result;
                 }
                 finalSalonId = locationBySlug.Id;

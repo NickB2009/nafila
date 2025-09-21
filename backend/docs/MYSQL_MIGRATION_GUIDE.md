@@ -114,7 +114,7 @@ var connectionStringBuilder = new MySqlConnectionStringBuilder(connectionString)
 
 // DbContext configuration
 options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mySqlOptions => {
-    mySqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
+    mySqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(15), errorNumbersToAdd: null);
     mySqlOptions.CommandTimeout(30);
     mySqlOptions.EnableStringComparisonTranslations();
 });

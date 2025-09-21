@@ -55,6 +55,10 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             // Index on ContactEmail for searches
             builder.HasIndex("ContactEmail")
                 .HasDatabaseName("IX_Organizations_ContactEmail");
+
+            // Concurrency token: rely on provider default mapping for byte[]
+            builder.Property(o => o.RowVersion)
+                .IsConcurrencyToken();
         }
     }
 } 

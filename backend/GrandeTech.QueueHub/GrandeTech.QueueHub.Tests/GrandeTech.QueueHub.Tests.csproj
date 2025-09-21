@@ -27,9 +27,7 @@
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Integration/**/*.cs" />
-  </ItemGroup>
+  <!-- Integration tests are now included -->
 
   <ItemGroup>
     <ProjectReference Include="..\GrandeTech.QueueHub.API\GrandeTech.QueueHub.API.csproj" />

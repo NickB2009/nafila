@@ -53,8 +53,8 @@ namespace Grande.Fila.API.Tests.Application.Public
                 address,
                 null,
                 null,
-                TimeSpan.FromHours(8),
-                TimeSpan.FromHours(18),
+                TimeSpan.Zero, // Open at midnight (00:00)
+                TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59)), // Close at 23:59 (24/7)
                 50,
                 15,
                 "system"

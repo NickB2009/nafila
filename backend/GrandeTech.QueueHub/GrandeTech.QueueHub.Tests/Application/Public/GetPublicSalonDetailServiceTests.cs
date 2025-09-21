@@ -54,8 +54,8 @@ namespace Grande.Fila.API.Tests.Application.Public
                 address,
                 "+5511999999999",
                 "contato@barberiapremium.com",
-                TimeSpan.FromHours(8),
-                TimeSpan.FromHours(18),
+                TimeSpan.Zero, // Open at midnight (00:00)
+                TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59)), // Close at 23:59 (24/7)
                 50,
                 15,
                 "system"
@@ -104,11 +104,11 @@ namespace Grande.Fila.API.Tests.Application.Public
             Assert.IsTrue(result.Salon.Services.Contains("Barba"));
             Assert.IsTrue(result.Salon.Services.Contains("Sobrancelha"));
             
-            // Check business hours
+            // Check business hours (24/7 for testing)
             Assert.IsTrue(result.Salon.BusinessHours.ContainsKey("monday"));
             Assert.IsTrue(result.Salon.BusinessHours.ContainsKey("tuesday"));
             Assert.IsTrue(result.Salon.BusinessHours.ContainsKey("sunday"));
-            Assert.AreEqual("08:00-18:00", result.Salon.BusinessHours["monday"]);
+            Assert.AreEqual("00:00-23:59", result.Salon.BusinessHours["monday"]);
             Assert.AreEqual("closed", result.Salon.BusinessHours["sunday"]);
         }
 
@@ -161,8 +161,8 @@ namespace Grande.Fila.API.Tests.Application.Public
                 address,
                 null,
                 null,
-                TimeSpan.FromHours(8),
-                TimeSpan.FromHours(18),
+                TimeSpan.Zero, // Open at midnight (00:00)
+                TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59)), // Close at 23:59 (24/7)
                 50,
                 15,
                 "system"

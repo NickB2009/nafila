@@ -45,21 +45,21 @@ namespace Grande.Fila.API.Domain.Common.ValueObjects
 
         [JsonConstructor]
         private WeeklyBusinessHours(
-            DayBusinessHours monday,
-            DayBusinessHours tuesday,
-            DayBusinessHours wednesday,
-            DayBusinessHours thursday,
-            DayBusinessHours friday,
-            DayBusinessHours saturday,
-            DayBusinessHours sunday)
+            DayBusinessHours? monday = null,
+            DayBusinessHours? tuesday = null,
+            DayBusinessHours? wednesday = null,
+            DayBusinessHours? thursday = null,
+            DayBusinessHours? friday = null,
+            DayBusinessHours? saturday = null,
+            DayBusinessHours? sunday = null)
         {
-            Monday = monday;
-            Tuesday = tuesday;
-            Wednesday = wednesday;
-            Thursday = thursday;
-            Friday = friday;
-            Saturday = saturday;
-            Sunday = sunday;
+            Monday = monday ?? DayBusinessHours.Closed();
+            Tuesday = tuesday ?? DayBusinessHours.Closed();
+            Wednesday = wednesday ?? DayBusinessHours.Closed();
+            Thursday = thursday ?? DayBusinessHours.Closed();
+            Friday = friday ?? DayBusinessHours.Closed();
+            Saturday = saturday ?? DayBusinessHours.Closed();
+            Sunday = sunday ?? DayBusinessHours.Closed();
         }
 
         /// <summary>
@@ -165,10 +165,10 @@ namespace Grande.Fila.API.Domain.Common.ValueObjects
         [JsonPropertyName("isOpen")]
         public bool IsOpen { get; }
         
-        [JsonPropertyName("openTime")]
+        [JsonPropertyName("start")]
         public TimeSpan? OpenTime { get; }
         
-        [JsonPropertyName("closeTime")]
+        [JsonPropertyName("end")]
         public TimeSpan? CloseTime { get; }
 
         // For EF Core

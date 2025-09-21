@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Common.ValueObjects;
+using Grande.Fila.API.Infrastructure.Data.Converters;
+using System.Text.Json;
 
 namespace Grande.Fila.API.Infrastructure.Data.Configurations
 {
@@ -46,6 +49,18 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.Property(l => l.LastAverageTimeReset)
                 .IsRequired()
                 .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
+            // Configure WeeklyBusinessHours as JSON with custom TimeSpan converter
+            var jsonOptions = new JsonSerializerOptions
+            {
+                Converters = { new NullableTimeSpanConverter() }
+            };
+            
+            builder.Property(l => l.WeeklyHours)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, jsonOptions),
+                    v => JsonSerializer.Deserialize<WeeklyBusinessHours>(v, jsonOptions)!)
+                .HasColumnName("WeeklyBusinessHours");
 
             // Value objects are now configured in QueueHubDbContext.ConfigureValueObjects()
             // No need to ignore them anymore

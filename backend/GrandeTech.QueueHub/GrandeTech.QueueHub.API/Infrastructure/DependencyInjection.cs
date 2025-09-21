@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using MySqlConnector;
+using System.Collections.Generic;
 using Grande.Fila.API.Domain.Common;
 using Grande.Fila.API.Domain.Users;
 using Grande.Fila.API.Domain.Organizations;
@@ -125,7 +126,7 @@ namespace Grande.Fila.API.Infrastructure
                             mySqlOptions.EnableRetryOnFailure(
                                 maxRetryCount: maxRetryCount,
                                 maxRetryDelay: TimeSpan.FromSeconds(maxRetryDelay),
-                                errorNumbersToAdd: new[] { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
+                                errorNumbersToAdd: new List<int> { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
                         }
                         mySqlOptions.MaxBatchSize(maxBatchSize);
                         

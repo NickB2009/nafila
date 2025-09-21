@@ -32,7 +32,7 @@ public abstract class MySqlTestBase : IDisposable
             
             options.UseMySql(connectionString, ServerVersion.Create(8, 0, 0, ServerType.MySql), mySqlOptions =>
             {
-                mySqlOptions.EnableRetryOnFailure(maxRetryCount: 1, maxRetryDelay: TimeSpan.FromSeconds(5));
+                mySqlOptions.EnableRetryOnFailure(maxRetryCount: 1, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null);
                 mySqlOptions.EnableStringComparisonTranslations();
             });
 

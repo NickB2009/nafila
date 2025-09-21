@@ -53,8 +53,8 @@ namespace Grande.Fila.API.Infrastructure.Data
             // Ignore entities that should only exist as owned types (do this first)
             modelBuilder.Ignore<StaffBreak>();
             modelBuilder.Ignore<ServiceHistoryItem>();
-            modelBuilder.Ignore<WeeklyBusinessHours>();
-            modelBuilder.Ignore<BrandingConfig>();
+            // WeeklyBusinessHours is now configured as JSON in LocationConfiguration
+            // BrandingConfig is configured as owned type, not ignored
 
             // Apply ALL entity configurations (now compatible with value object mappings)
             modelBuilder.ApplyConfiguration(new UserConfiguration());
@@ -210,7 +210,32 @@ namespace Grande.Fila.API.Infrastructure.Data
                     address.Property(a => a.Longitude).HasColumnName("AddressLongitude");
                 });
 
-            // Location complex value objects are configured later in this method
+            // Configure CustomBranding as owned type (nullable)
+            modelBuilder.Entity<Location>()
+                .OwnsOne(e => e.CustomBranding, branding =>
+                {
+                    branding.Property(b => b.PrimaryColor)
+                        .HasColumnName("CustomBrandingPrimaryColor")
+                        .HasMaxLength(50);
+                    branding.Property(b => b.SecondaryColor)
+                        .HasColumnName("CustomBrandingSecondaryColor")
+                        .HasMaxLength(50);
+                    branding.Property(b => b.LogoUrl)
+                        .HasColumnName("CustomBrandingLogoUrl")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.FaviconUrl)
+                        .HasColumnName("CustomBrandingFaviconUrl")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.CompanyName)
+                        .HasColumnName("CustomBrandingCompanyName")
+                        .HasMaxLength(200);
+                    branding.Property(b => b.TagLine)
+                        .HasColumnName("CustomBrandingTagLine")
+                        .HasMaxLength(500);
+                    branding.Property(b => b.FontFamily)
+                        .HasColumnName("CustomBrandingFontFamily")
+                        .HasMaxLength(100);
+                });
 
             // Configure Customer with value objects
             modelBuilder.Entity<Customer>()

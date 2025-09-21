@@ -105,7 +105,7 @@ services.AddDbContext<QueueHubDbContext>(options =>
         mySqlOptions.EnableRetryOnFailure(
             maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(15),
-            errorNumbersToAdd: new[] { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
+            errorNumbersToAdd: new List<int> { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
         mySqlOptions.CommandTimeout(30);
     });
 });
@@ -1184,7 +1184,7 @@ services.AddDbContext<QueueHubDbContext>(options =>
         mySqlOptions.EnableRetryOnFailure(
             maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(15),
-            errorNumbersToAdd: new[] { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
+            errorNumbersToAdd: new List<int> { 1205, 1213, 2006, 2013, 2014, 2015, 2016, 2017, 2018, 2019 });
         mySqlOptions.CommandTimeout(30);
         mySqlOptions.MaxBatchSize(1000);
         mySqlOptions.EnableStringComparisonTranslations();
