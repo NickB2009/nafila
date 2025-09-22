@@ -97,10 +97,10 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
         public async Task<Queue?> GetActiveQueueByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)
         {
             var queues = await GetAllAsync(cancellationToken);
-            return queues.FirstOrDefault(q => 
-                q.LocationId == locationId && 
-                q.QueueDate.Date == DateTime.Today.Date && 
-                q.IsActive);
+            return queues
+                .Where(q => q.LocationId == locationId && q.IsActive)
+                .OrderByDescending(q => q.QueueDate)
+                .FirstOrDefault();
         }
 
         public async Task<IList<Queue>> GetAllByLocationIdAsync(Guid locationId, CancellationToken cancellationToken)

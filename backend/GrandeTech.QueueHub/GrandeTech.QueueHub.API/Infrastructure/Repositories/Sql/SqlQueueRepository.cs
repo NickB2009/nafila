@@ -19,7 +19,8 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
         {
             return await _dbSet
                 .Include(q => q.Entries)
-                .Where(q => q.LocationId == locationId && q.QueueDate == DateTime.UtcNow.Date)
+                .Where(q => q.LocationId == locationId)
+                .OrderByDescending(q => q.QueueDate)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -27,7 +28,8 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
         {
             return await _dbSet
                 .Include(q => q.Entries)
-                .Where(q => q.LocationId == locationId && q.IsActive && q.QueueDate == DateTime.UtcNow.Date)
+                .Where(q => q.LocationId == locationId && q.IsActive)
+                .OrderByDescending(q => q.QueueDate)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
