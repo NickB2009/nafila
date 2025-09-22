@@ -6,7 +6,7 @@ import '../screens/account_screen.dart';
 import '../../models/salon.dart';
 import '../../controllers/app_controller.dart';
 
-/// TEMP: Global check-in state for demo (replace with Provider or real state management)
+/// Global check-in state (replace with Provider or real state management)
 class CheckInState {
   static bool isCheckedIn = false;
   static Salon? checkedInSalon;

@@ -259,7 +259,7 @@ class AuthService {
     _apiClient.clearAuthToken();
   }
 
-  /// Clears all cached user data including test/demo data
+  /// Clears all cached user data
   Future<void> clearAllCachedData() async {
     // Clear all authentication-related data
     await logout();
@@ -317,20 +317,9 @@ class AuthService {
     return _currentRole == role;
   }
 
-  /// Demo-only login (local token without hitting the server)
+  /// Demo-only login (local token without hitting the server) - DEPRECATED
   Future<void> demoLogin({String phoneNumber = '+5511999999999', String role = 'Customer'}) async {
-    // Generate a pseudo token and store
-    final token = 'demo-token-${DateTime.now().millisecondsSinceEpoch}';
-    await _storeAuthData(token: token, phoneNumber: phoneNumber, role: role);
-    
-    // Create a demo user
-    _currentUser = User(
-      id: 'demo-user-id',
-      fullName: 'Usuário Demo',
-      email: 'demo@example.com',
-      phoneNumber: phoneNumber,
-      role: role,
-      permissions: ['read'],
-    );
+    // This method is deprecated and should not be used in production
+    throw UnsupportedError('Demo login is not available in production');
   }
 }

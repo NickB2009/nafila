@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:eutonafila_frontend/ui/screens/salon_finder_screen.dart';
-import 'package:eutonafila_frontend/ui/view_models/mock_queue_notifier.dart';
+// MockQueueNotifier removed - using real queue service
 import 'package:eutonafila_frontend/theme/app_theme.dart';
 import 'package:eutonafila_frontend/controllers/app_controller.dart';
 
@@ -13,7 +13,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -32,7 +32,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -53,7 +53,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -72,7 +72,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -96,7 +96,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -116,7 +116,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -136,7 +136,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -157,7 +157,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -177,7 +177,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -198,7 +198,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
           ],
           child: const MaterialApp(
             home: SalonFinderScreen(),
@@ -222,7 +222,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
             ChangeNotifierProvider<AppController>.value(value: mockAppController),
           ],
           child: const MaterialApp(
@@ -249,7 +249,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
             ChangeNotifierProvider<AppController>.value(value: mockAppController),
           ],
           child: const MaterialApp(
@@ -276,7 +276,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
             ChangeNotifierProvider<AppController>.value(value: mockAppController),
           ],
           child: const MaterialApp(
@@ -310,7 +310,7 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider(create: (_) => ThemeProvider()),
-            ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
             ChangeNotifierProvider<AppController>.value(value: mockAppController),
           ],
           child: const MaterialApp(

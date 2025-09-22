@@ -259,9 +259,9 @@ class QueueStatusScreen extends StatelessWidget {
   }
 
   Widget _buildSalonCard(ThemeData theme, SalonColors colors, String name, String address, bool isOpen, String closingTime, double distance, String phone, BuildContext context) {
-    // Mock coordinates for the salon
-    const double lat = -22.9068;
-    const double lng = -43.1729;
+    // TODO: Get real coordinates from salon data
+    const double lat = 0.0;
+    const double lng = 0.0;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -702,15 +702,8 @@ class WaitlistSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Mock waitlist data
-    final List<Map<String, dynamic>> waitlist = [
-      {"name": "DM", "inSalon": false},
-      {"name": "JC", "inSalon": false},
-      {"name": "MP", "inSalon": true},
-      {"name": "AP", "inSalon": true},
-      {"name": "CM", "inSalon": false},
-      {"name": BrazilianNamesGenerator.generateNameWithInitial(), "inSalon": false, "isUser": true},
-    ];
+    // TODO: Load real waitlist data from API
+    final List<Map<String, dynamic>> waitlist = [];
     final int userPosition = waitlist.indexWhere((g) => g["isUser"] == true) + 1;
 
     return Padding(

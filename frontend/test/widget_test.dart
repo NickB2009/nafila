@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eutonafila_frontend/main.dart';
-import 'package:eutonafila_frontend/models/queue_entry.dart';
-import 'package:eutonafila_frontend/ui/view_models/mock_queue_notifier.dart';
+// QueueEntry import removed - no longer needed
+// MockQueueNotifier removed - using real queue service
 import 'package:eutonafila_frontend/theme/app_theme.dart';
 
 void main() {
@@ -77,62 +77,5 @@ void main() {
     });
   });
 
-  group('MockQueueNotifier Tests', () {
-    late MockQueueNotifier notifier;
-
-    setUp(() {
-      notifier = MockQueueNotifier();
-    });
-
-    test('Initial state is loading', () {
-      expect(notifier.isLoading, isTrue);
-      expect(notifier.entries, isEmpty);
-    });
-
-    test('Mock data loads correctly', () async {
-      // Wait for mock data to load
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      expect(notifier.isLoading, isFalse);
-      expect(notifier.entries.length, equals(5));
-      expect(notifier.waitingCount, equals(3));
-      expect(notifier.inServiceCount, equals(1));
-    });
-
-    test('Add person to queue works', () async {
-      // Wait for initial load
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      final initialCount = notifier.entries.length;
-      notifier.addToQueue('Test Person');
-
-      expect(notifier.entries.length, equals(initialCount + 1));
-      expect(notifier.entries.last.name, equals('Test Person'));
-    });
-
-    test('Update status works', () async {
-      // Wait for initial load
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      final firstEntry = notifier.entries.first;
-      notifier.updateStatus(firstEntry.id, QueueStatus.inService);
-
-      final updatedEntry =
-          notifier.entries.firstWhere((e) => e.id == firstEntry.id);
-      expect(updatedEntry.status, equals(QueueStatus.inService));
-    });
-
-    test('Remove from queue works', () async {
-      // Wait for initial load
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      final initialCount = notifier.entries.length;
-      final firstEntryId = notifier.entries.first.id;
-
-      notifier.removeFromQueue(firstEntryId);
-
-      expect(notifier.entries.length, equals(initialCount - 1));
-      expect(notifier.entries.any((e) => e.id == firstEntryId), isFalse);
-    });
-  });
+  // MockQueueNotifier tests removed - using real queue service
 }

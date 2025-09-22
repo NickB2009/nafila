@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:eutonafila_frontend/ui/screens/salon_map_screen.dart';
-import 'package:eutonafila_frontend/ui/view_models/mock_queue_notifier.dart';
+// MockQueueNotifier removed - using real queue service
 import 'package:eutonafila_frontend/theme/app_theme.dart';
 
 void main() {
@@ -11,7 +11,7 @@ void main() {
       return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
-          ChangeNotifierProvider(create: (_) => MockQueueNotifier()),
+            // MockQueueNotifier removed - using real queue service
         ],
         child: const MaterialApp(
           home: SalonMapScreen(),

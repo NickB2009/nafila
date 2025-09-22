@@ -97,6 +97,7 @@ class AtendimentoScreen extends StatelessWidget {
                         icon: Icons.chat,
                         label: 'WhatsApp',
                         onTap: () async {
+                          // TODO: Replace with real support phone number
                           final uri = Uri.parse('https://wa.me/5511999999999');
                           if (await canLaunchUrl(uri)) {
                             await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -110,6 +111,7 @@ class AtendimentoScreen extends StatelessWidget {
                         icon: Icons.phone,
                         label: 'Ligar para suporte',
                         onTap: () async {
+                          // TODO: Replace with real support phone number
                           final uri = Uri.parse('tel:+5511999999999');
                           if (await canLaunchUrl(uri)) {
                             await launchUrl(uri);

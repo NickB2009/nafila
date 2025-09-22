@@ -134,7 +134,7 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erro ao carregar salões. Mostrando dados de exemplo.'),
+            content: Text('Erro ao carregar salões. Tente novamente mais tarde.'),
             backgroundColor: Colors.orange,
             duration: Duration(seconds: 3),
           ),
@@ -181,100 +181,9 @@ class _SalonMapScreenState extends State<SalonMapScreen> {
     );
   }
 
-  /// Fallback method with mock data when API is unavailable
+  /// Fallback method when API is unavailable - show empty state
   void _generateFallbackSalons() {
-    _salonLocations = [
-      SalonLocation(
-        publicSalon: PublicSalon(
-          id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-          name: 'Barbearia Moderna (Exemplo)',
-          address: 'Rua das Flores, 123, São Paulo',
-          latitude: -23.5505,
-          longitude: -46.6333,
-          distanceKm: 0.8,
-          isOpen: true,
-          currentWaitTimeMinutes: 25,
-          queueLength: 3,
-          isFast: true,
-          isPopular: false,
-          services: ['Haircut', 'Beard Trim', 'Hair Styling'],
-          rating: 4.5,
-          reviewCount: 120,
-        ),
-        salon: Salon(
-          name: 'Barbearia Moderna (Exemplo)',
-          address: 'Rua das Flores, 123, São Paulo',
-          waitTime: 25,
-          distance: 0.8,
-          isOpen: true,
-          closingTime: '19:00',
-          isFavorite: false,
-          queueLength: 3,
-          colors: _randomSalonColors(0),
-        ),
-        position: const LatLng(-23.5505, -46.6333),
-      ),
-      SalonLocation(
-        publicSalon: PublicSalon(
-          id: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
-          name: 'Studio Hair (Exemplo)',
-          address: 'Av. Paulista, 456, São Paulo',
-          latitude: -23.5605,
-          longitude: -46.6433,
-          distanceKm: 1.2,
-          isOpen: true,
-          currentWaitTimeMinutes: 35,
-          queueLength: 2,
-          isFast: false,
-          isPopular: true,
-          services: ['Haircut', 'Beard Trim', 'Hair Wash', 'Styling'],
-          rating: 4.8,
-          reviewCount: 89,
-        ),
-        salon: Salon(
-          name: 'Studio Hair (Exemplo)',
-          address: 'Av. Paulista, 456, São Paulo',
-          waitTime: 35,
-          distance: 1.2,
-          isOpen: true,
-          closingTime: '19:00',
-          isFavorite: false,
-          queueLength: 2,
-          colors: _randomSalonColors(1),
-        ),
-        position: const LatLng(-23.5605, -46.6433),
-      ),
-      SalonLocation(
-        publicSalon: PublicSalon(
-          id: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
-          name: 'Barbearia Clássica (Exemplo)',
-          address: 'Rua Augusta, 789, São Paulo',
-          latitude: -23.5405,
-          longitude: -46.6233,
-          distanceKm: 1.5,
-          isOpen: false,
-          currentWaitTimeMinutes: 20,
-          queueLength: 4,
-          isFast: true,
-          isPopular: true,
-          services: ['Haircut', 'Beard Trim', 'Mustache Trim'],
-          rating: 4.2,
-          reviewCount: 67,
-        ),
-        salon: Salon(
-          name: 'Barbearia Clássica (Exemplo)',
-          address: 'Rua Augusta, 789, São Paulo',
-          waitTime: 20,
-          distance: 1.5,
-          isOpen: false,
-          closingTime: '19:00',
-          isFavorite: false,
-          queueLength: 4,
-          colors: _randomSalonColors(2),
-        ),
-        position: const LatLng(-23.5405, -46.6233),
-      ),
-    ];
+    _salonLocations = [];
     
     if (mounted) {
       setState(() {});

@@ -202,7 +202,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Exemplo de visualização',
+              'Visualização do Salão',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: previewText,

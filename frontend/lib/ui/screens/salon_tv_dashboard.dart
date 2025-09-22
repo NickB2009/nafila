@@ -15,44 +15,16 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
   int _currentAdIndex = 0;
   bool? isAdLarge; // User toggle for ad size
   
-  // Mock data for the salon
-  final String salonName = "Great Clips";
-  final int currentWaitTime = 37;
-  final int customersWaiting = 5;
+  // Real data for the salon - will be loaded from API
+  String salonName = "Carregando...";
+  int currentWaitTime = 0;
+  int customersWaiting = 0;
   
-  // Mock customer queue
-  final List<Map<String, dynamic>> customerQueue = [
-    {"name": "David M.", "position": 1, "inSalon": false},
-          {"name": BrazilianNamesGenerator.generateNameWithInitial(), "position": 2, "inSalon": false},
-    {"name": "Wendy S.", "position": 3, "inSalon": true},
-    {"name": "Tatiana T.", "position": 4, "inSalon": false},
-    {"name": "Michael L.", "position": 5, "inSalon": false},
-  ];
+  // Real customer queue - will be loaded from API
+  List<Map<String, dynamic>> customerQueue = [];
   
-  // Mock ads data
-  final List<Map<String, dynamic>> ads = [
-    {
-      "title": "Seu estilo, em arquivo.",
-      "subtitle": "Salvamos os detalhes do seu corte\npara que você tenha, sempre.",
-      "brand": "CLIP notes",
-      "image": "assets/images/clip_notes_ad.jpg",
-      "backgroundColor": AppTheme.primaryColor,
-    },
-    {
-      "title": "Produtos Premium",
-      "subtitle": "Os melhores produtos para\nseu cabelo e barba.",
-      "brand": "SALON PRO",
-      "image": "assets/images/products_ad.jpg",
-      "backgroundColor": Colors.deepOrange,
-    },
-    {
-      "title": "Agende Online",
-      "subtitle": "Use nosso app para\nagendar seu próximo corte.",
-      "brand": "EUTONAFILA",
-      "image": "assets/images/app_ad.jpg",
-      "backgroundColor": Colors.indigo,
-    },
-  ];
+  // Real ads data - will be loaded from API
+  List<Map<String, dynamic>> ads = [];
 
   // Add state for custom ad size
   double? customAdWidth;
@@ -61,7 +33,21 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
   @override
   void initState() {
     super.initState();
+    _loadSalonData();
     _startAdRotation();
+  }
+
+  /// Load real salon data from API
+  Future<void> _loadSalonData() async {
+    // TODO: Implement real API calls to load salon data
+    // For now, show empty state
+    setState(() {
+      salonName = "Nenhum salão selecionado";
+      currentWaitTime = 0;
+      customersWaiting = 0;
+      customerQueue = [];
+      ads = [];
+    });
   }
 
   @override
@@ -72,9 +58,11 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
 
   void _startAdRotation() {
     _timer = Timer.periodic(const Duration(seconds: 8), (timer) {
-      setState(() {
-        _currentAdIndex = (_currentAdIndex + 1) % ads.length;
-      });
+      if (ads.isNotEmpty) {
+        setState(() {
+          _currentAdIndex = (_currentAdIndex + 1) % ads.length;
+        });
+      }
     });
   }
 
@@ -578,7 +566,7 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     final minAdHeight = 120.0;
     final verticalPadding = 80.0;
     final maxAdHeight = constraints.maxHeight - verticalPadding;
-    final ad = ads[_currentAdIndex];
+    final ad = ads.isNotEmpty ? ads[_currentAdIndex] : null;
     final adFontSize = adHeight0 > 300 ? 40.0 : 18.0;
     final adSubtitleFontSize = adHeight0 > 300 ? 24.0 : 12.0;
     final adBrandFontSize = adHeight0 > 300 ? 20.0 : 10.0;
@@ -586,6 +574,31 @@ class _SalonTvDashboardState extends State<SalonTvDashboard> {
     // Remove expand/reset button UI
     // final toggleLabel = (customAdWidth != null || customAdHeight != null) ? 'Redefinir tamanho' : 'Expandir anúncio';
     // final toggleIcon = (customAdWidth != null || customAdHeight != null) ? Icons.refresh : Icons.open_in_full;
+
+    if (ad == null) {
+      return Center(
+        child: Container(
+          width: adWidth0,
+          height: adHeight0,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              'Nenhum anúncio disponível',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

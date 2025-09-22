@@ -330,7 +330,7 @@ class LegalPrivacyScreen extends StatelessWidget {
               icon: Icons.phone,
               title: 'Telefone',
               description: '+55 (11) 99999-9999',
-              onTap: () => _launchPhone('+5511999999999'),
+              onTap: () => _launchPhone('+5511999999999'), // TODO: Replace with real support phone number
             ),
             _buildContactItem(
               context,

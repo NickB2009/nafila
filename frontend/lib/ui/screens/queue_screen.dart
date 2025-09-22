@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../view_models/mock_queue_notifier.dart';
+import '../../controllers/queue_controller.dart';
 import '../widgets/queue_card.dart';
 import '../../models/queue_entry.dart';
 import '../theme/app_theme.dart';
@@ -30,7 +30,7 @@ class QueueScreen extends StatelessWidget {
             icon: const Icon(Icons.refresh),
             color: colors?.onSurface ?? theme.colorScheme.onPrimary,
             onPressed: () {
-              context.read<MockQueueNotifier>().refresh();
+              // TODO: Implement refresh functionality with real queue service
             },
             tooltip: 'Atualizar',
           ),
@@ -40,9 +40,9 @@ class QueueScreen extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return Consumer<MockQueueNotifier>(
-              builder: (context, queueNotifier, child) {
-                if (queueNotifier.isLoading) {
+            return Consumer<QueueController>(
+              builder: (context, queueController, child) {
+                if (queueController.isLoading) {
                   return Center(
                     child: CircularProgressIndicator(
                       color: theme.colorScheme.primary,
@@ -50,7 +50,7 @@ class QueueScreen extends StatelessWidget {
                   );
                 }
 
-                if (queueNotifier.entries.isEmpty) {
+                if (queueController.queueEntries.isEmpty) {
                   return _buildEmptyState(context);
                 }
 
@@ -58,12 +58,12 @@ class QueueScreen extends StatelessWidget {
                   children: [
                     // Queue stats
                     _buildQueueStats(
-                        context, queueNotifier, constraints.maxWidth),
+                        context, queueController, constraints.maxWidth),
 
                     // Queue list
                     Expanded(
                       child: _buildQueueList(
-                          context, queueNotifier, constraints.maxWidth),
+                          context, queueController, constraints.maxWidth),
                     ),
                   ],
                 );
@@ -81,7 +81,7 @@ class QueueScreen extends StatelessWidget {
   }
 
   Widget _buildQueueStats(
-      BuildContext context, MockQueueNotifier notifier, double width) {
+      BuildContext context, QueueController controller, double width) {
     final theme = Theme.of(context);
     final isCompact = width < 400;
     final brightness = Theme.of(context).brightness;
@@ -103,7 +103,7 @@ class QueueScreen extends StatelessWidget {
             child: _buildStatItem(
               context,
               'Aguardando',
-              notifier.waitingCount.toString(),
+              '0', // TODO: Calculate from real queue data
               Icons.schedule,
               // fallback: use secondary or primary from palette
               colors?.secondary ?? theme.colorScheme.tertiary,
@@ -115,7 +115,7 @@ class QueueScreen extends StatelessWidget {
             child: _buildStatItem(
               context,
               'Em Atendimento',
-              notifier.inServiceCount.toString(),
+              '0', // TODO: Calculate from real queue data
               Icons.person_outline,
               colors?.secondary ?? theme.colorScheme.secondary,
               isCompact,
@@ -126,7 +126,7 @@ class QueueScreen extends StatelessWidget {
             child: _buildStatItem(
               context,
               'Total',
-              notifier.entries.length.toString(),
+              controller.queueEntries.length.toString(),
               Icons.people,
               colors?.primary ?? theme.colorScheme.primary,
               isCompact,
@@ -171,9 +171,10 @@ class QueueScreen extends StatelessWidget {
   }
 
   Widget _buildQueueList(
-      BuildContext context, MockQueueNotifier notifier, double width) {
+      BuildContext context, QueueController controller, double width) {
     // Sort entries: in-service first, then waiting by position, then completed
-    final sortedEntries = List<QueueEntry>.from(notifier.entries);
+    // TODO: Convert controller.queueEntries to QueueEntry objects
+    final sortedEntries = <QueueEntry>[];
     sortedEntries.sort((a, b) {
       if (a.status == QueueStatus.inService &&
           b.status != QueueStatus.inService) {
@@ -300,9 +301,7 @@ class QueueScreen extends StatelessWidget {
             FilledButton(
               onPressed: () {
                 if (nameController.text.trim().isNotEmpty) {
-                  context
-                      .read<MockQueueNotifier>()
-                      .addToQueue(nameController.text.trim());
+                  // TODO: Implement add to queue with real service
                   Navigator.of(dialogContext).pop();
                 }
               },
@@ -368,9 +367,7 @@ class QueueScreen extends StatelessWidget {
                   ),
                 ),
                 onTap: () {
-                  context
-                      .read<MockQueueNotifier>()
-                      .updateStatus(entry.id, QueueStatus.inService);
+                  // TODO: Implement update status with real service
                   Navigator.of(bottomSheetContext).pop();
                 },
               ),
@@ -388,9 +385,7 @@ class QueueScreen extends StatelessWidget {
                   ),
                 ),
                 onTap: () {
-                  context
-                      .read<MockQueueNotifier>()
-                      .updateStatus(entry.id, QueueStatus.completed);
+                  // TODO: Implement update status with real service
                   Navigator.of(bottomSheetContext).pop();
                 },
               ),
@@ -407,7 +402,7 @@ class QueueScreen extends StatelessWidget {
                 ),
               ),
               onTap: () {
-                context.read<MockQueueNotifier>().removeFromQueue(entry.id);
+                // TODO: Implement remove from queue with real service
                 Navigator.of(bottomSheetContext).pop();
               },
             ),

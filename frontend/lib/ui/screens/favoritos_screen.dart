@@ -161,7 +161,7 @@ class _FavoritosScreenState extends State<FavoritosScreen> with SingleTickerProv
     } catch (e) {
       if (!mounted) return;
       
-      // Show error instead of mock data - let user know there's an API issue
+      // Show error - let user know there's an API issue
       setState(() {
         _favoritos = [];
         _isLoading = false;

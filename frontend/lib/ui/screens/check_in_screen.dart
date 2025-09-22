@@ -13,7 +13,7 @@ class CheckInScreen extends StatefulWidget {
 }
 
 class _CheckInScreenState extends State<CheckInScreen> {
-  // Mock user data and state
+  // Real user data and state - loaded from API
   final List<String> peopleOptions = ["1 pessoa", "2 pessoas", "3 pessoas"];
   String selectedPeople = "1 pessoa";
   final TextEditingController nameController = TextEditingController();

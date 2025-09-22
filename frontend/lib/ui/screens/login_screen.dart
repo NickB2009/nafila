@@ -271,18 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     : const Text('Entrar'),
                               ),
                             ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: auth.isLoading
-                      ? null
-                      : () async {
-                          await app.auth.demoLogin(phoneNumber: _phoneNumberController.text.trim().isEmpty ? '+5511999999999' : _phoneNumberController.text.trim());
-                          if (!mounted) return;
-                          Navigator.pushReplacementNamed(context, '/home');
-                        },
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Entrar em modo demo'),
-                ),
+                // Demo login removed - not available in production
                           ],
                         ),
                       ),

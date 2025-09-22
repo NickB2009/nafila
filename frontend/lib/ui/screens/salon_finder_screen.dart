@@ -204,7 +204,7 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erro ao carregar salões. Mostrando dados de exemplo.'),
+            content: Text('Erro ao carregar salões. Tente novamente mais tarde.'),
             backgroundColor: Colors.orange,
             duration: Duration(seconds: 3),
           ),
@@ -219,59 +219,9 @@ class _SalonFinderScreenState extends State<SalonFinderScreen> with SingleTicker
     }
   }
 
-  /// Fallback method with mock data when API is unavailable
+  /// Fallback method when API is unavailable - show empty state
   void _generateFallbackSalons() {
-    final random = math.Random();
-    _dynamicSalons = [
-      PublicSalon(
-        id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-        name: 'Barbearia Moderna (Exemplo)',
-        address: 'Rua das Flores, 123',
-        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
-        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
-        distanceKm: 0.8,
-        isOpen: true,
-        currentWaitTimeMinutes: 25,
-        queueLength: 3,
-        isFast: true,
-        isPopular: false,
-        services: ['Haircut', 'Beard Trim', 'Hair Styling'],
-        rating: 4.5,
-        reviewCount: 120,
-      ),
-      PublicSalon(
-        id: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
-        name: 'Studio Hair (Exemplo)',
-        address: 'Av. Paulista, 456',
-        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
-        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
-        distanceKm: 1.2,
-        isOpen: true,
-        currentWaitTimeMinutes: 35,
-        queueLength: 2,
-        isFast: false,
-        isPopular: true,
-        services: ['Haircut', 'Beard Trim', 'Hair Wash', 'Styling'],
-        rating: 4.8,
-        reviewCount: 89,
-      ),
-      PublicSalon(
-        id: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
-        name: 'Barbearia Clássica (Exemplo)',
-        address: 'Rua Augusta, 789',
-        latitude: -23.5505 + (random.nextDouble() - 0.5) * 0.1,
-        longitude: -46.6333 + (random.nextDouble() - 0.5) * 0.1,
-        distanceKm: 1.5,
-        isOpen: true,
-        currentWaitTimeMinutes: 20,
-        queueLength: 4,
-        isFast: true,
-        isPopular: true,
-        services: ['Haircut', 'Beard Trim', 'Mustache Trim'],
-        rating: 4.2,
-        reviewCount: 67,
-      ),
-    ];
+    _dynamicSalons = [];
     
     if (mounted) {
       setState(() {});

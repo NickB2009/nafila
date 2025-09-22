@@ -176,7 +176,7 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  /// Clears all cached data including test/demo users
+  /// Clears all cached data
   Future<void> clearAllCachedData() async {
     try {
       _setLoading(true);
@@ -221,10 +221,10 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Demo login (local token without backend) for development
+  /// Demo login (local token without backend) for development - DEPRECATED
   Future<void> demoLogin({String phoneNumber = '+5511999999999', String role = 'Customer'}) async {
-    await _authService.demoLogin(phoneNumber: phoneNumber, role: role);
-    notifyListeners();
+    // This method is deprecated and should not be used in production
+    throw UnsupportedError('Demo login is not available in production');
   }
 
   /// Verifies token by calling profile; returns true on success
