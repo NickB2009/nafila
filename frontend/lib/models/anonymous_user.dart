@@ -158,4 +158,33 @@ class JoinQueueRequest {
       _$JoinQueueRequestFromJson(json);
 
   Map<String, dynamic> toJson() => _$JoinQueueRequestToJson(this);
+}
+
+/// Response model for anonymous queue join API
+@JsonSerializable()
+class AnonymousJoinResult {
+  final bool success;
+  final String? id;
+  final int position;
+  final int estimatedWaitMinutes;
+  final DateTime? joinedAt;
+  final String? status;
+  final Map<String, String>? fieldErrors;
+  final List<String>? errors;
+
+  const AnonymousJoinResult({
+    required this.success,
+    this.id,
+    required this.position,
+    required this.estimatedWaitMinutes,
+    this.joinedAt,
+    this.status,
+    this.fieldErrors,
+    this.errors,
+  });
+
+  factory AnonymousJoinResult.fromJson(Map<String, dynamic> json) =>
+      _$AnonymousJoinResultFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AnonymousJoinResultToJson(this);
 } 

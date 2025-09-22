@@ -922,6 +922,86 @@ modelBuilder.Entity<Location>().Ignore(e => e.WeeklyHours);
 - Test that existing data still works
 - Ensure no data loss during rollback
 
+## 9  Anonymous User System
+
+### 9.1  Current Implementation Status
+
+**Frontend Integration** ✅ **COMPLETE**:
+- Anonymous user ID generation working correctly (GUID format)
+- API request/response models match production specification exactly
+- Error handling and validation working properly
+- Queue join functionality ready for production
+
+**Backend API** ✅ **WORKING**:
+- `POST /api/public/queue/join` endpoint functional
+- Anonymous user creation automatic on queue join
+- Proper validation and error responses
+- No authentication required for anonymous users
+
+### 9.2  Known Issues
+
+**Salon Service Configuration** ❌ **REQUIRES BACKEND FIX**:
+- Salons exist and are open (`isOpen: true`)
+- Salons accept customers (`isAcceptingCustomers: true`)
+- **Issue**: Salons have no services configured (`availableServices: []`)
+- **Result**: Queue join requests return 404 "Salon not found or not accepting customers"
+
+### 9.3  Backend Team Action Required
+
+**RECOMMENDED APPROACH**: Backend Configuration
+The backend team should configure services for the existing salons to enable queue join functionality.
+
+**Immediate Fix Needed**:
+1. **Add services to salon records** in the database
+2. **Populate `availableServices` array** for each salon
+3. **Verify salon queue configuration** allows customer entries
+
+**Specific Requirements**:
+- **Salon ID**: `55555555-5555-5555-5555-555555555555` (Elite Barbershop Downtown)
+- **Salon ID**: `66666666-6666-6666-6666-666666666666` (Quick Cuts Express)
+- **Services needed**: Add 3-4 services per salon (e.g., "Haircut", "Beard Trim", "Styling", "Quick Trim")
+- **Service properties**: Name, description, estimated duration, price, active status
+
+**Database Table**: `ServicesOffered`
+**Required Fields**: `Id`, `Name`, `Description`, `LocationId`, `EstimatedDurationMinutes`, `PriceAmount`, `IsActive`
+
+**Alternative**: Use the provided SQL script `add_services_for_test_salons.sql` to add services programmatically.
+
+### 9.4  Frontend Implementation Details
+
+**Anonymous User Flow**:
+1. Frontend generates GUID for anonymous user ID
+2. User fills queue join form with name, email, service requested
+3. Frontend calls `POST /api/public/queue/join` with `AnonymousJoinRequest`
+4. Backend creates anonymous customer and queue entry
+5. Frontend receives `AnonymousJoinResult` with position and wait time
+
+**API Contract**:
+```typescript
+// Request
+interface AnonymousJoinRequest {
+  salonId: string;           // Required - salon identifier
+  name: string;              // Required - customer name
+  email: string;             // Required - customer email
+  anonymousUserId: string;   // Required - GUID format
+  serviceRequested: string;  // Required - service description
+  emailNotifications: boolean;
+  browserNotifications: boolean;
+}
+
+// Response
+interface AnonymousJoinResult {
+  success: boolean;
+  id?: string;                    // Queue entry ID
+  position: number;               // Position in queue
+  estimatedWaitMinutes: number;   // Wait time
+  joinedAt?: string;             // ISO timestamp
+  status: string;                 // "waiting"
+  fieldErrors: Record<string, string>;
+  errors: string[];
+}
+```
+
 ### 8.9  Acceptance Criteria
 
 #### 8.9.1  Functional Requirements

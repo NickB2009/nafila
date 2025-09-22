@@ -74,18 +74,31 @@ class AnonymousQueueService {
         ),
       );
 
-      // Parse response and create queue entry
-      final queueData = response.data;
+      // Parse response using the correct API response model
+      final joinResult = AnonymousJoinResult.fromJson(response.data);
+      
+      if (!joinResult.success) {
+        final errorMessage = joinResult.errors?.join(', ') ?? 
+                           joinResult.fieldErrors?.values.join(', ') ?? 
+                           'Failed to join queue';
+        throw Exception(errorMessage);
+      }
+      
+      if (joinResult.id == null) {
+        throw Exception('Queue entry ID not returned from server');
+      }
+      
+      // Create queue entry from API response
       final queueEntry = AnonymousQueueEntry(
-        id: queueData['id'] ?? queueData['Id'],
+        id: joinResult.id!,
         anonymousUserId: user.id,
         salonId: salon.id,
         salonName: salon.name,
-        position: queueData['position'] ?? queueData['Position'],
-        estimatedWaitMinutes: queueData['estimatedWaitMinutes'] ?? queueData['EstimatedWaitMinutes'],
-        joinedAt: DateTime.parse(queueData['joinedAt'] ?? queueData['JoinedAt']),
+        position: joinResult.position,
+        estimatedWaitMinutes: joinResult.estimatedWaitMinutes,
+        joinedAt: joinResult.joinedAt ?? DateTime.now(),
         lastUpdated: DateTime.now(),
-        status: _parseQueueStatus(queueData['status'] ?? queueData['Status'] ?? 'waiting'),
+        status: _parseQueueStatus(joinResult.status ?? 'waiting'),
         serviceRequested: serviceRequested,
       );
 
@@ -120,18 +133,31 @@ class AnonymousQueueService {
             
             print('✅ Success with alternative URL!');
             
-            // Parse response and create queue entry
-            final queueData = response.data;
+            // Parse response using the correct API response model
+            final joinResult = AnonymousJoinResult.fromJson(response.data);
+            
+            if (!joinResult.success) {
+              final errorMessage = joinResult.errors?.join(', ') ?? 
+                                 joinResult.fieldErrors?.values.join(', ') ?? 
+                                 'Failed to join queue';
+              throw Exception(errorMessage);
+            }
+            
+            if (joinResult.id == null) {
+              throw Exception('Queue entry ID not returned from server');
+            }
+            
+            // Create queue entry from API response
             final queueEntry = AnonymousQueueEntry(
-              id: queueData['id'],
+              id: joinResult.id!,
               anonymousUserId: user.id,
               salonId: salon.id,
               salonName: salon.name,
-              position: queueData['position'],
-              estimatedWaitMinutes: queueData['estimatedWaitMinutes'],
-              joinedAt: DateTime.parse(queueData['joinedAt']),
+              position: joinResult.position,
+              estimatedWaitMinutes: joinResult.estimatedWaitMinutes,
+              joinedAt: joinResult.joinedAt ?? DateTime.now(),
               lastUpdated: DateTime.now(),
-              status: QueueEntryStatus.waiting,
+              status: _parseQueueStatus(joinResult.status ?? 'waiting'),
               serviceRequested: serviceRequested,
             );
 

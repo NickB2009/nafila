@@ -182,7 +182,19 @@ VALUES
   ('88888888-8888-8888-8888-888888888883', 'Premium Styling', 'Full styling service with wash, cut, and finish', '99999999-9999-9999-9999-999999999991', 45, 45.00, 'USD', 'https://grandetech.com/services/premium-styling.jpg', 1, 28, 42.8, NOW(), 'seed', 0, 0x0000000000000000),
   ('88888888-8888-8888-8888-888888888884', 'Quick Trim', 'Fast 15-minute cleanup cut', '99999999-9999-9999-9999-999999999992', 15, 18.00, 'USD', NULL, 1, 67, 14.5, NOW(), 'seed', 0, 0x0000000000000000),
   ('88888888-8888-8888-8888-888888888885', 'Traditional Shave', 'Classic straight razor shave with hot towel', '99999999-9999-9999-9999-999999999993', 35, 30.00, 'USD', 'https://classiccuts.com/services/traditional-shave.jpg', 1, 23, 38.2, NOW(), 'seed', 0, 0x0000000000000000),
-  ('88888888-8888-8888-8888-888888888886', 'Father & Son Cut', 'Special package for father and son haircuts', '99999999-9999-9999-9999-999999999993', 50, 40.00, 'USD', NULL, 1, 15, 52.5, NOW(), 'seed', 0, 0x0000000000000000);
+  ('88888888-8888-8888-8888-888888888886', 'Father & Son Cut', 'Special package for father and son haircuts', '99999999-9999-9999-9999-999999999993', 50, 40.00, 'USD', NULL, 1, 15, 52.5, NOW(), 'seed', 0, 0x0000000000000000),
+  
+  -- Services for test salons (Elite Barbershop Downtown - 55555555-5555-5555-5555-555555555555)
+  ('77777777-7777-7777-7777-777777777771', 'Classic Haircut', 'Traditional men''s haircut with scissors and clipper', '55555555-5555-5555-5555-555555555555', 30, 25.00, 'USD', 'https://example.com/services/classic-cut.jpg', 1, 0, 30.0, NOW(), 'seed', 0, 0x0000000000000000),
+  ('77777777-7777-7777-7777-777777777772', 'Beard Trim', 'Professional beard trimming and shaping', '55555555-5555-5555-5555-555555555555', 20, 15.00, 'USD', 'https://example.com/services/beard-trim.jpg', 1, 0, 20.0, NOW(), 'seed', 0, 0x0000000000000000),
+  ('77777777-7777-7777-7777-777777777773', 'Premium Styling', 'Full styling service with wash, cut, and finish', '55555555-5555-5555-5555-555555555555', 45, 45.00, 'USD', 'https://example.com/services/premium-styling.jpg', 1, 0, 45.0, NOW(), 'seed', 0, 0x0000000000000000),
+  ('77777777-7777-7777-7777-777777777774', 'Quick Trim', 'Fast 15-minute cleanup cut', '55555555-5555-5555-5555-555555555555', 15, 18.00, 'USD', NULL, 1, 0, 15.0, NOW(), 'seed', 0, 0x0000000000000000),
+  
+  -- Services for test salons (Quick Cuts Express - 66666666-6666-6666-6666-666666666666)
+  ('99999999-9999-9999-9999-999999999991', 'Express Haircut', 'Quick and efficient haircut for busy professionals', '66666666-6666-6666-6666-666666666666', 20, 20.00, 'USD', 'https://example.com/services/express-cut.jpg', 1, 0, 20.0, NOW(), 'seed', 0, 0x0000000000000000),
+  ('99999999-9999-9999-9999-999999999992', 'Beard Trim', 'Professional beard trimming and shaping', '66666666-6666-6666-6666-666666666666', 15, 12.00, 'USD', 'https://example.com/services/beard-trim.jpg', 1, 0, 15.0, NOW(), 'seed', 0, 0x0000000000000000),
+  ('99999999-9999-9999-9999-999999999993', 'Wash & Cut', 'Hair wash followed by precision cut', '66666666-6666-6666-6666-666666666666', 25, 28.00, 'USD', 'https://example.com/services/wash-cut.jpg', 1, 0, 25.0, NOW(), 'seed', 0, 0x0000000000000000),
+  ('99999999-9999-9999-9999-999999999994', 'Styling Service', 'Complete styling with product application', '66666666-6666-6666-6666-666666666666', 30, 35.00, 'USD', 'https://example.com/services/styling.jpg', 1, 0, 30.0, NOW(), 'seed', 0, 0x0000000000000000);
 
 SELECT 'Services offered inserted successfully.' as Status;
 

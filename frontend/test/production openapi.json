@@ -1,0 +1,6513 @@
+{
+    "openapi": "3.0.4",
+    "info": {
+      "title": "GrandeTech.QueueHub.API",
+      "description": "REST API for Queue Hub Application",
+      "version": "v1"
+    },
+    "paths": {
+      "/api/Analytics/calculate-wait": {
+        "post": {
+          "tags": [
+            "Analytics"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculateWaitRequestDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculateWaitRequestDto"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculateWaitRequestDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Analytics/cross-barbershop": {
+        "post": {
+          "tags": [
+            "Analytics"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrossBarbershopAnalyticsRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrossBarbershopAnalyticsRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrossBarbershopAnalyticsRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Analytics/organization": {
+        "post": {
+          "tags": [
+            "Analytics"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationAnalyticsRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationAnalyticsRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationAnalyticsRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Analytics/top-organizations": {
+        "post": {
+          "tags": [
+            "Analytics"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopPerformingOrganizationsRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopPerformingOrganizationsRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopPerformingOrganizationsRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Auth/login": {
+        "post": {
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LoginResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LoginResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LoginResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Auth/verify-2fa": {
+        "post": {
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyTwoFactorRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyTwoFactorRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyTwoFactorRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LoginResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LoginResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LoginResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Auth/register": {
+        "post": {
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RegisterResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RegisterResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RegisterResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Auth/profile": {
+        "get": {
+          "tags": [
+            "Auth"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Auth/admin/verify": {
+        "post": {
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVerificationRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVerificationRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVerificationRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AdminVerificationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AdminVerificationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AdminVerificationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Auth/debug/test-registration": {
+        "post": {
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/cache/wait-time/locations/{locationId}": {
+        "put": {
+          "tags": [
+            "Cache"
+          ],
+          "parameters": [
+            {
+              "name": "locationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateAverageRequestDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateAverageRequestDto"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateAverageRequestDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/diagnostics/config": {
+        "get": {
+          "tags": [
+            "Diagnostics"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/BooleanInt32StringStringStringBooleanBooleanBooleanBoolean<>f__AnonymousType77"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/": {
+        "get": {
+          "tags": [
+            "GrandeTech.QueueHub.API"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/StringStringStringDateTimeString<>f__AnonymousType74"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/ping": {
+        "get": {
+          "tags": [
+            "GrandeTech.QueueHub.API"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Health": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Health/detailed": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Health/database": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Health/system": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Health/queues": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Health/ping": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Health/ready": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Health/live": {
+        "get": {
+          "tags": [
+            "Health"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Kiosk/join": {
+        "post": {
+          "tags": [
+            "Kiosk"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskJoinRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskJoinRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskJoinRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Kiosk/cancel": {
+        "post": {
+          "tags": [
+            "Kiosk"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskCancelRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskCancelRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskCancelRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Kiosk/display/{locationId}": {
+        "get": {
+          "tags": [
+            "Kiosk"
+          ],
+          "parameters": [
+            {
+              "name": "locationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Locations": {
+        "post": {
+          "tags": [
+            "Locations"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateLocationRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateLocationRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateLocationRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Locations/{id}": {
+        "get": {
+          "tags": [
+            "Locations"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        },
+        "put": {
+          "tags": [
+            "Locations"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateLocationRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateLocationRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateLocationRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "Locations"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Locations/{id}/queue-status": {
+        "put": {
+          "tags": [
+            "Locations"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToggleQueueRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToggleQueueRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToggleQueueRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Locations/{locationId}/weekly-hours": {
+        "put": {
+          "tags": [
+            "Locations"
+          ],
+          "parameters": [
+            {
+              "name": "locationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyHoursDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyHoursDto"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyHoursDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Maintenance/reset-averages": {
+        "post": {
+          "tags": [
+            "Maintenance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Notifications/sms": {
+        "post": {
+          "tags": [
+            "Notifications"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendSmsRequestDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendSmsRequestDto"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendSmsRequestDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Notifications/queue/health": {
+        "get": {
+          "tags": [
+            "Notifications"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Notifications/queue/length": {
+        "get": {
+          "tags": [
+            "Notifications"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Organizations": {
+        "post": {
+          "tags": [
+            "Organizations"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOrganizationRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOrganizationRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOrganizationRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CreateOrganizationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CreateOrganizationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CreateOrganizationResult"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "Organizations"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "array",
+                    "items": { }
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { }
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Organizations/{organizationId}": {
+        "put": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOrganizationRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOrganizationRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOrganizationRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Organizations/{organizationId}/branding": {
+        "put": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateBrandingRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateBrandingRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateBrandingRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Organizations/{organizationId}/subscription/{subscriptionPlanId}": {
+        "put": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "subscriptionPlanId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Organizations/{organizationId}/analytics-sharing": {
+        "put": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Organizations/{organizationId}/activate": {
+        "put": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Organizations/{organizationId}/deactivate": {
+        "put": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/OrganizationOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Organizations/by-slug/{slug}": {
+        "get": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "slug",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Organizations/{organizationId}/live-activity": {
+        "get": {
+          "tags": [
+            "Organizations"
+          ],
+          "parameters": [
+            {
+              "name": "organizationId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TrackLiveActivityResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TrackLiveActivityResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TrackLiveActivityResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Performance": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Performance/health-score": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Performance/http": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Performance/queues": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Performance/system": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Performance/custom": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Performance/history/{metricName}": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "parameters": [
+            {
+              "name": "metricName",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "hours",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "format": "int32",
+                "default": 24
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Performance/summary": {
+        "get": {
+          "tags": [
+            "Performance"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Promotions/notify-coupon": {
+        "post": {
+          "tags": [
+            "Promotions"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendCouponNotificationRequestDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendCouponNotificationRequestDto"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendCouponNotificationRequestDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Public/salons": {
+        "get": {
+          "tags": [
+            "Public"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PublicSalonDto"
+                    }
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PublicSalonDto"
+                    }
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PublicSalonDto"
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
+      "/api/Public/salons/{salonId}": {
+        "get": {
+          "tags": [
+            "Public"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicSalonDto"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicSalonDto"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicSalonDto"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
+      "/api/Public/queue-status/{salonId}": {
+        "get": {
+          "tags": [
+            "Public"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicQueueStatusDto"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicQueueStatusDto"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicQueueStatusDto"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
+      "/api/Public/queue/join": {
+        "post": {
+          "tags": [
+            "Public"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousJoinRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousJoinRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousJoinRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AnonymousJoinResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AnonymousJoinResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AnonymousJoinResult"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Conflict",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
+      "/api/Public/queue/entry-status/{entryId}": {
+        "get": {
+          "tags": [
+            "Public"
+          ],
+          "parameters": [
+            {
+              "name": "entryId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueEntryStatusDto"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueEntryStatusDto"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueEntryStatusDto"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
+      "/api/Public/queue/leave/{entryId}": {
+        "post": {
+          "tags": [
+            "Public"
+          ],
+          "parameters": [
+            {
+              "name": "entryId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LeaveQueueResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LeaveQueueResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LeaveQueueResult"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
+      "/api/Public/queue/update/{entryId}": {
+        "put": {
+          "tags": [
+            "Public"
+          ],
+          "parameters": [
+            {
+              "name": "entryId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateQueueEntryRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateQueueEntryRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateQueueEntryRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UpdateQueueEntryResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UpdateQueueEntryResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UpdateQueueEntryResult"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
+      "/api/QrCode/generate": {
+        "post": {
+          "tags": [
+            "QrCode"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateQrRequestDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateQrRequestDto"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateQrRequestDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueAnalytics/wait-time/{salonId}": {
+        "get": {
+          "tags": [
+            "QueueAnalytics"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            {
+              "name": "serviceType",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "default": "haircut"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/WaitTimeEstimate"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/WaitTimeEstimate"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/WaitTimeEstimate"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/QueueAnalytics/performance/{salonId}": {
+        "get": {
+          "tags": [
+            "QueueAnalytics"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            {
+              "name": "fromDate",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            {
+              "name": "toDate",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueuePerformanceMetrics"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueuePerformanceMetrics"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueuePerformanceMetrics"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/QueueAnalytics/trends/{salonId}": {
+        "get": {
+          "tags": [
+            "QueueAnalytics"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            {
+              "name": "days",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "format": "int32",
+                "default": 7
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/WaitTimeTrend"
+                    }
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/WaitTimeTrend"
+                    }
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/WaitTimeTrend"
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/QueueAnalytics/satisfaction": {
+        "post": {
+          "tags": [
+            "QueueAnalytics"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSatisfactionRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSatisfactionRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerSatisfactionRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CustomerSatisfactionResponse"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CustomerSatisfactionResponse"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CustomerSatisfactionResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/QueueAnalytics/recommendations/{salonId}": {
+        "get": {
+          "tags": [
+            "QueueAnalytics"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueRecommendations"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueRecommendations"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueRecommendations"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/QueueAnalytics/health/{salonId}": {
+        "get": {
+          "tags": [
+            "QueueAnalytics"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueAnalyticsHealthStatus"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueAnalyticsHealthStatus"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QueueAnalyticsHealthStatus"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ProblemDetails"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Queues": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddQueueRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddQueueRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddQueueRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}": {
+        "get": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}/join": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinQueueRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinQueueRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinQueueRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}/barber-add": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarberAddRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarberAddRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarberAddRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}/call-next": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallNextRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallNextRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallNextRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}/check-in": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckInRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckInRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckInRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}/finish": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinishRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinishRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinishRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}/cancel": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelQueueRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelQueueRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelQueueRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/{id}/entries/{entryId}/wait-time": {
+        "get": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            {
+              "name": "entryId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Queues/entries/{entryId}/haircut-details": {
+        "post": {
+          "tags": [
+            "Queues"
+          ],
+          "parameters": [
+            {
+              "name": "entryId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveHaircutDetailsRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveHaircutDetailsRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveHaircutDetailsRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SaveHaircutDetailsResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SaveHaircutDetailsResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SaveHaircutDetailsResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/transfer": {
+        "post": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueTransferRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueTransferRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueTransferRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/suggestions": {
+        "post": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSuggestionsRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSuggestionsRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSuggestionsRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/eligibility": {
+        "post": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferEligibilityRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferEligibilityRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferEligibilityRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/bulk-transfer": {
+        "post": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkTransferRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkTransferRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkTransferRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/analytics/{transferId}": {
+        "get": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "parameters": [
+            {
+              "name": "transferId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/history/{customerId}": {
+        "get": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "parameters": [
+            {
+              "name": "customerId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/cancel/{transferId}": {
+        "post": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "parameters": [
+            {
+              "name": "transferId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/stats/{salonId}": {
+        "get": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "fromDate",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            {
+              "name": "toDate",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/QueueTransfer/nearby-salons/{salonId}": {
+        "get": {
+          "tags": [
+            "QueueTransfer"
+          ],
+          "parameters": [
+            {
+              "name": "salonId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "maxDistanceKm",
+              "in": "query",
+              "schema": {
+                "type": "number",
+                "format": "double",
+                "default": 5
+              }
+            },
+            {
+              "name": "maxResults",
+              "in": "query",
+              "schema": {
+                "type": "integer",
+                "format": "int32",
+                "default": 10
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/ServicesOffered": {
+        "post": {
+          "tags": [
+            "ServicesOffered"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddServiceOfferedRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddServiceOfferedRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddServiceOfferedRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "ServicesOffered"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/ServicesOffered/{id}": {
+        "get": {
+          "tags": [
+            "ServicesOffered"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        },
+        "put": {
+          "tags": [
+            "ServicesOffered"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateServiceOfferedRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateServiceOfferedRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateServiceOfferedRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "ServicesOffered"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/ServicesOffered/{id}/activate": {
+        "put": {
+          "tags": [
+            "ServicesOffered"
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Staff/barbers": {
+        "post": {
+          "tags": [
+            "Staff"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddBarberRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddBarberRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddBarberRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AddBarberResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AddBarberResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AddBarberResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Staff/barbers/{staffMemberId}": {
+        "put": {
+          "tags": [
+            "Staff"
+          ],
+          "parameters": [
+            {
+              "name": "staffMemberId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditBarberRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditBarberRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditBarberRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/EditBarberResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/EditBarberResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/EditBarberResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Staff/barbers/{staffMemberId}/status": {
+        "put": {
+          "tags": [
+            "Staff"
+          ],
+          "parameters": [
+            {
+              "name": "staffMemberId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateStaffStatusRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateStaffStatusRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateStaffStatusRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UpdateStaffStatusResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UpdateStaffStatusResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UpdateStaffStatusResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Staff/barbers/{staffMemberId}/start-break": {
+        "put": {
+          "tags": [
+            "Staff"
+          ],
+          "parameters": [
+            {
+              "name": "staffMemberId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartBreakRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartBreakRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartBreakRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/StartBreakResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/StartBreakResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/StartBreakResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/Staff/barbers/{staffMemberId}/end-break": {
+        "put": {
+          "tags": [
+            "Staff"
+          ],
+          "parameters": [
+            {
+              "name": "staffMemberId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndBreakRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndBreakRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndBreakRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/EndBreakResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/EndBreakResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/EndBreakResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/SubscriptionPlans": {
+        "post": {
+          "tags": [
+            "SubscriptionPlans"
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSubscriptionPlanRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSubscriptionPlanRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSubscriptionPlanRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CreateSubscriptionPlanResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CreateSubscriptionPlanResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CreateSubscriptionPlanResult"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "SubscriptionPlans"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "array",
+                    "items": { }
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { }
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/SubscriptionPlans/{subscriptionPlanId}": {
+        "put": {
+          "tags": [
+            "SubscriptionPlans"
+          ],
+          "parameters": [
+            {
+              "name": "subscriptionPlanId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSubscriptionPlanRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSubscriptionPlanRequest"
+                }
+              },
+              "application/*+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSubscriptionPlanRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "SubscriptionPlans"
+          ],
+          "parameters": [
+            {
+              "name": "subscriptionPlanId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/SubscriptionPlans/{subscriptionPlanId}/activate": {
+        "put": {
+          "tags": [
+            "SubscriptionPlans"
+          ],
+          "parameters": [
+            {
+              "name": "subscriptionPlanId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/SubscriptionPlans/{subscriptionPlanId}/deactivate": {
+        "put": {
+          "tags": [
+            "SubscriptionPlans"
+          ],
+          "parameters": [
+            {
+              "name": "subscriptionPlanId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                },
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                },
+                "text/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SubscriptionPlanOperationResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/SubscriptionPlans/default": {
+        "get": {
+          "tags": [
+            "SubscriptionPlans"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Test/users": {
+        "get": {
+          "tags": [
+            "Test"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Test/organizations": {
+        "get": {
+          "tags": [
+            "Test"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Test/clear": {
+        "post": {
+          "tags": [
+            "Test"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Test/initialize": {
+        "post": {
+          "tags": [
+            "Test"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/api/Test/status": {
+        "get": {
+          "tags": [
+            "Test"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "AddBarberRequest": {
+          "required": [
+            "email",
+            "firstName",
+            "lastName",
+            "locationId",
+            "phoneNumber",
+            "serviceTypeIds",
+            "username"
+          ],
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "type": "string",
+              "nullable": true
+            },
+            "lastName": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "username": {
+              "type": "string",
+              "nullable": true
+            },
+            "locationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceTypeIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "deactivateOnCreation": {
+              "type": "boolean"
+            },
+            "address": {
+              "type": "string",
+              "nullable": true
+            },
+            "notes": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "AddBarberResult": {
+          "required": [
+            "barberId",
+            "errors",
+            "fieldErrors",
+            "status"
+          ],
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "barberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "status": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "AddQueueRequest": {
+          "type": "object",
+          "properties": {
+            "locationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxSize": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "lateClientCapTimeInMinutes": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "additionalProperties": false
+        },
+        "AddServiceOfferedRequest": {
+          "type": "object",
+          "properties": {
+            "locationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "estimatedDurationMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "price": {
+              "type": "number",
+              "format": "double"
+            },
+            "imageUrl": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "AdminVerificationRequest": {
+          "required": [
+            "phoneNumber",
+            "twoFactorCode",
+            "twoFactorToken"
+          ],
+          "type": "object",
+          "properties": {
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "twoFactorCode": {
+              "type": "string",
+              "nullable": true
+            },
+            "twoFactorToken": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "AdminVerificationResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "error": {
+              "type": "string",
+              "nullable": true
+            },
+            "token": {
+              "type": "string",
+              "nullable": true
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "AnonymousJoinRequest": {
+          "type": "object",
+          "properties": {
+            "salonId": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "anonymousUserId": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceRequested": {
+              "type": "string",
+              "nullable": true
+            },
+            "emailNotifications": {
+              "type": "boolean"
+            },
+            "browserNotifications": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "AnonymousJoinResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string",
+              "nullable": true
+            },
+            "position": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "estimatedWaitMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "joinedAt": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "status": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "BarberAddRequest": {
+          "type": "object",
+          "properties": {
+            "queueId": {
+              "type": "string",
+              "nullable": true
+            },
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "customerName": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceTypeId": {
+              "type": "string",
+              "nullable": true
+            },
+            "notes": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "BooleanInt32StringStringStringBooleanBooleanBooleanBoolean<>f__AnonymousType77": {
+          "type": "object",
+          "properties": {
+            "hasConnectionString": {
+              "type": "boolean"
+            },
+            "connectionStringLength": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "serverName": {
+              "type": "string",
+              "nullable": true
+            },
+            "databaseName": {
+              "type": "string",
+              "nullable": true
+            },
+            "environment": {
+              "type": "string",
+              "nullable": true
+            },
+            "useSqlDatabase": {
+              "type": "boolean"
+            },
+            "useInMemoryDatabase": {
+              "type": "boolean"
+            },
+            "useBogusRepositories": {
+              "type": "boolean"
+            },
+            "applicationInsightsConfigured": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "BulkTransferRequest": {
+          "required": [
+            "queueEntryIds",
+            "targetSalonId"
+          ],
+          "type": "object",
+          "properties": {
+            "queueEntryIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "targetSalonId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "reason": {
+              "type": "string",
+              "nullable": true
+            },
+            "maintainRelativePositions": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "CalculateWaitRequestDto": {
+          "type": "object",
+          "properties": {
+            "locationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "queueId": {
+              "type": "string",
+              "nullable": true
+            },
+            "entryId": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CallNextRequest": {
+          "type": "object",
+          "properties": {
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "queueId": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CancelQueueRequest": {
+          "required": [
+            "queueEntryId"
+          ],
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CheckInRequest": {
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CreateLocationRequest": {
+          "type": "object",
+          "properties": {
+            "businessName": {
+              "type": "string",
+              "nullable": true
+            },
+            "contactEmail": {
+              "type": "string",
+              "nullable": true
+            },
+            "contactPhone": {
+              "type": "string",
+              "nullable": true
+            },
+            "address": {
+              "$ref": "#/components/schemas/LocationAddressRequest"
+            },
+            "businessHours": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "maxQueueCapacity": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "website": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CreateOrganizationRequest": {
+          "required": [
+            "name",
+            "subscriptionPlanId"
+          ],
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "slug": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "contactEmail": {
+              "type": "string",
+              "nullable": true
+            },
+            "contactPhone": {
+              "type": "string",
+              "nullable": true
+            },
+            "websiteUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "primaryColor": {
+              "type": "string",
+              "nullable": true
+            },
+            "secondaryColor": {
+              "type": "string",
+              "nullable": true
+            },
+            "logoUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "faviconUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "tagLine": {
+              "type": "string",
+              "nullable": true
+            },
+            "subscriptionPlanId": {
+              "type": "string",
+              "nullable": true
+            },
+            "sharesDataForAnalytics": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "CreateOrganizationResult": {
+          "required": [
+            "errors",
+            "fieldErrors",
+            "organizationId",
+            "slug",
+            "status"
+          ],
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "organizationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "status": {
+              "type": "string",
+              "nullable": true
+            },
+            "slug": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CreateSubscriptionPlanRequest": {
+          "required": [
+            "name"
+          ],
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "monthlyPrice": {
+              "type": "number",
+              "format": "double"
+            },
+            "yearlyPrice": {
+              "type": "number",
+              "format": "double"
+            },
+            "maxLocations": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "maxStaffPerLocation": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "includesAnalytics": {
+              "type": "boolean"
+            },
+            "includesAdvancedReporting": {
+              "type": "boolean"
+            },
+            "includesCustomBranding": {
+              "type": "boolean"
+            },
+            "includesAdvertising": {
+              "type": "boolean"
+            },
+            "includesMultipleLocations": {
+              "type": "boolean"
+            },
+            "maxQueueEntriesPerDay": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "isFeatured": {
+              "type": "boolean"
+            },
+            "isDefault": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "CreateSubscriptionPlanResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "subscriptionPlanId": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CrossBarbershopAnalyticsRequest": {
+          "type": "object",
+          "properties": {
+            "startDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "includeActiveQueues": {
+              "type": "boolean"
+            },
+            "includeCompletedServices": {
+              "type": "boolean"
+            },
+            "includeAverageWaitTimes": {
+              "type": "boolean"
+            },
+            "includeStaffUtilization": {
+              "type": "boolean"
+            },
+            "includeLocationMetrics": {
+              "type": "boolean"
+            },
+            "organizationIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CustomerSatisfactionRequest": {
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "rating": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "feedback": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "CustomerSatisfactionResponse": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "message": {
+              "type": "string",
+              "nullable": true
+            },
+            "recordedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "additionalProperties": false
+        },
+        "DayHoursDto": {
+          "type": "object",
+          "properties": {
+            "isOpen": {
+              "type": "boolean"
+            },
+            "openTime": {
+              "type": "string",
+              "nullable": true
+            },
+            "closeTime": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "EditBarberRequest": {
+          "type": "object",
+          "properties": {
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "profilePictureUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "role": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "EditBarberResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "profilePictureUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "role": {
+              "type": "string",
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "EndBreakRequest": {
+          "type": "object",
+          "properties": {
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "breakId": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "EndBreakResult": {
+          "required": [
+            "breakId",
+            "errors",
+            "fieldErrors",
+            "newStatus",
+            "staffMemberId"
+          ],
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "breakId": {
+              "type": "string",
+              "nullable": true
+            },
+            "newStatus": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "FinishRequest": {
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceDurationMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "notes": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "GenerateQrRequestDto": {
+          "type": "object",
+          "properties": {
+            "locationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceTypeId": {
+              "type": "string",
+              "nullable": true
+            },
+            "expiryMinutes": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "JoinQueueRequest": {
+          "type": "object",
+          "properties": {
+            "queueId": {
+              "type": "string",
+              "nullable": true
+            },
+            "customerName": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "isAnonymous": {
+              "type": "boolean"
+            },
+            "notes": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceTypeId": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "KioskCancelRequest": {
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "KioskJoinRequest": {
+          "type": "object",
+          "properties": {
+            "queueId": {
+              "type": "string",
+              "nullable": true
+            },
+            "customerName": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "LeaveQueueResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            },
+            "leftAt": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "customerName": {
+              "type": "string",
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "LiveActivityDto": {
+          "type": "object",
+          "properties": {
+            "organizationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "organizationName": {
+              "type": "string",
+              "nullable": true
+            },
+            "lastUpdated": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "summary": {
+              "$ref": "#/components/schemas/OrganizationSummaryDto"
+            },
+            "locations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/LocationActivityDto"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "LocationActivityDto": {
+          "type": "object",
+          "properties": {
+            "locationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "locationName": {
+              "type": "string",
+              "nullable": true
+            },
+            "isOpen": {
+              "type": "boolean"
+            },
+            "totalCustomersWaiting": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalStaffMembers": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "availableStaffMembers": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "busyStaffMembers": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "averageWaitTimeMinutes": {
+              "type": "number",
+              "format": "double"
+            },
+            "queues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/QueueActivityDto"
+              },
+              "nullable": true
+            },
+            "staff": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/StaffActivityDto"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "LocationAddressRequest": {
+          "type": "object",
+          "properties": {
+            "street": {
+              "type": "string",
+              "nullable": true
+            },
+            "city": {
+              "type": "string",
+              "nullable": true
+            },
+            "state": {
+              "type": "string",
+              "nullable": true
+            },
+            "postalCode": {
+              "type": "string",
+              "nullable": true
+            },
+            "country": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "LoginRequest": {
+          "required": [
+            "password",
+            "phoneNumber"
+          ],
+          "type": "object",
+          "properties": {
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "password": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "LoginResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "token": {
+              "type": "string",
+              "nullable": true
+            },
+            "error": {
+              "type": "string",
+              "nullable": true
+            },
+            "username": {
+              "type": "string",
+              "nullable": true
+            },
+            "role": {
+              "type": "string",
+              "nullable": true
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "requiresTwoFactor": {
+              "type": "boolean"
+            },
+            "twoFactorToken": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "OrganizationAnalyticsRequest": {
+          "type": "object",
+          "properties": {
+            "organizationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "includeQueueMetrics": {
+              "type": "boolean"
+            },
+            "includeServiceMetrics": {
+              "type": "boolean"
+            },
+            "includeStaffMetrics": {
+              "type": "boolean"
+            },
+            "includeLocationMetrics": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "OrganizationOperationResult": {
+          "required": [
+            "errors",
+            "fieldErrors"
+          ],
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "OrganizationSummaryDto": {
+          "type": "object",
+          "properties": {
+            "totalLocations": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalActiveQueues": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalCustomersWaiting": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalStaffMembers": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalAvailableStaff": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalBusyStaff": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "averageWaitTimeMinutes": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false
+        },
+        "ProblemDetails": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "nullable": true
+            },
+            "title": {
+              "type": "string",
+              "nullable": true
+            },
+            "status": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            },
+            "detail": {
+              "type": "string",
+              "nullable": true
+            },
+            "instance": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": { }
+        },
+        "PublicQueueStatusDto": {
+          "type": "object",
+          "properties": {
+            "salonId": {
+              "type": "string",
+              "nullable": true
+            },
+            "salonName": {
+              "type": "string",
+              "nullable": true
+            },
+            "queueLength": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "estimatedWaitTimeMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "isAcceptingCustomers": {
+              "type": "boolean"
+            },
+            "lastUpdated": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "availableServices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "PublicSalonDto": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "address": {
+              "type": "string",
+              "nullable": true
+            },
+            "latitude": {
+              "type": "number",
+              "format": "double"
+            },
+            "longitude": {
+              "type": "number",
+              "format": "double"
+            },
+            "isOpen": {
+              "type": "boolean"
+            },
+            "currentWaitTimeMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "queueLength": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "isFast": {
+              "type": "boolean"
+            },
+            "isPopular": {
+              "type": "boolean"
+            },
+            "rating": {
+              "type": "number",
+              "format": "double"
+            },
+            "reviewCount": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "services": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "businessHours": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "QueueActivityDto": {
+          "type": "object",
+          "properties": {
+            "queueId": {
+              "type": "string",
+              "nullable": true
+            },
+            "queueDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "isActive": {
+              "type": "boolean"
+            },
+            "customersWaiting": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "customersBeingServed": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalCustomersToday": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "averageWaitTimeMinutes": {
+              "type": "number",
+              "format": "double"
+            },
+            "maxSize": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "additionalProperties": false
+        },
+        "QueueAnalyticsHealthStatus": {
+          "type": "object",
+          "properties": {
+            "salonId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "status": {
+              "type": "string",
+              "nullable": true
+            },
+            "lastUpdated": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "currentQueueLength": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "currentAverageWaitTime": {
+              "type": "string",
+              "format": "date-span"
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "recommendations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "healthScore": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false
+        },
+        "QueueEntryStatusDto": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "nullable": true
+            },
+            "position": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "estimatedWaitMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "status": {
+              "type": "string",
+              "nullable": true
+            },
+            "joinedAt": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "serviceRequested": {
+              "type": "string",
+              "nullable": true
+            },
+            "customerName": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "QueuePerformanceMetrics": {
+          "type": "object",
+          "properties": {
+            "salonId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "periodStart": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "periodEnd": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "totalCustomers": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "averageWaitTime": {
+              "type": "string",
+              "format": "date-span"
+            },
+            "averageServiceTime": {
+              "type": "string",
+              "format": "date-span"
+            },
+            "peakHour": {
+              "type": "string",
+              "format": "date-span",
+              "nullable": true
+            },
+            "customerSatisfaction": {
+              "type": "number",
+              "format": "double"
+            },
+            "queueEfficiency": {
+              "type": "number",
+              "format": "double"
+            },
+            "peakWaitTime": {
+              "type": "string",
+              "format": "date-span"
+            },
+            "peakHourCustomers": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "completedServices": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "cancelledServices": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "cancellationRate": {
+              "type": "number",
+              "format": "double",
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "QueueRecommendations": {
+          "type": "object",
+          "properties": {
+            "salonId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "generatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "recommendations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "priority": {
+              "type": "string",
+              "nullable": true
+            },
+            "confidenceScore": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false
+        },
+        "QueueTransferRequest": {
+          "required": [
+            "queueEntryId",
+            "transferType"
+          ],
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "transferType": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "targetSalonId": {
+              "type": "string",
+              "nullable": true
+            },
+            "targetServiceType": {
+              "type": "string",
+              "nullable": true
+            },
+            "preferredTime": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "reason": {
+              "type": "string",
+              "nullable": true
+            },
+            "maintainPosition": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "RegisterRequest": {
+          "required": [
+            "email",
+            "fullName",
+            "password",
+            "phoneNumber"
+          ],
+          "type": "object",
+          "properties": {
+            "fullName": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "password": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "RegisterResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "error": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "SaveHaircutDetailsRequest": {
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            },
+            "haircutDetails": {
+              "type": "string",
+              "nullable": true
+            },
+            "additionalNotes": {
+              "type": "string",
+              "nullable": true
+            },
+            "photoUrl": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "SaveHaircutDetailsResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "serviceHistoryId": {
+              "type": "string",
+              "nullable": true
+            },
+            "customerId": {
+              "type": "string",
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "SendCouponNotificationRequestDto": {
+          "type": "object",
+          "properties": {
+            "customerId": {
+              "type": "string",
+              "nullable": true
+            },
+            "couponId": {
+              "type": "string",
+              "nullable": true
+            },
+            "message": {
+              "type": "string",
+              "nullable": true
+            },
+            "notificationChannel": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "SendSmsRequestDto": {
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            },
+            "message": {
+              "type": "string",
+              "nullable": true
+            },
+            "notificationType": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "customerName": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "StaffActivityDto": {
+          "type": "object",
+          "properties": {
+            "staffId": {
+              "type": "string",
+              "nullable": true
+            },
+            "staffName": {
+              "type": "string",
+              "nullable": true
+            },
+            "status": {
+              "type": "string",
+              "nullable": true
+            },
+            "lastActivity": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "customersServedToday": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "averageServiceTimeMinutes": {
+              "type": "number",
+              "format": "double"
+            },
+            "isOnBreak": {
+              "type": "boolean"
+            },
+            "breakStartTime": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "StartBreakRequest": {
+          "required": [
+            "durationMinutes",
+            "staffMemberId"
+          ],
+          "type": "object",
+          "properties": {
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "durationMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "reason": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "StartBreakResult": {
+          "required": [
+            "errors",
+            "fieldErrors",
+            "staffMemberId"
+          ],
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "breakId": {
+              "type": "string",
+              "nullable": true
+            },
+            "newStatus": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "StringStringStringDateTimeString<>f__AnonymousType74": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "nullable": true
+            },
+            "environment": {
+              "type": "string",
+              "nullable": true
+            },
+            "port": {
+              "type": "string",
+              "nullable": true
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "version": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "SubscriptionPlanOperationResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "ToggleQueueRequest": {
+          "type": "object",
+          "properties": {
+            "locationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "enableQueue": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "TopPerformingOrganizationsRequest": {
+          "type": "object",
+          "properties": {
+            "startDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "metricType": {
+              "type": "string",
+              "nullable": true
+            },
+            "maxResults": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "includeDetails": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "TrackLiveActivityResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "liveActivity": {
+              "$ref": "#/components/schemas/LiveActivityDto"
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "TransferEligibilityRequest": {
+          "required": [
+            "queueEntryId",
+            "transferType"
+          ],
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "transferType": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "targetSalonId": {
+              "type": "string",
+              "nullable": true
+            },
+            "targetServiceType": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "TransferSuggestionsRequest": {
+          "required": [
+            "queueEntryId"
+          ],
+          "type": "object",
+          "properties": {
+            "queueEntryId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxDistanceKm": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            },
+            "maxWaitTimeMinutes": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            },
+            "preferredServiceTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "includeSalonTransfers": {
+              "type": "boolean"
+            },
+            "includeServiceTransfers": {
+              "type": "boolean"
+            },
+            "includeTimeTransfers": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateAverageRequestDto": {
+          "type": "object",
+          "properties": {
+            "averageServiceTimeMinutes": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateBrandingRequest": {
+          "required": [
+            "organizationId",
+            "primaryColor",
+            "secondaryColor"
+          ],
+          "type": "object",
+          "properties": {
+            "organizationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "primaryColor": {
+              "type": "string",
+              "nullable": true
+            },
+            "secondaryColor": {
+              "type": "string",
+              "nullable": true
+            },
+            "logoUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "faviconUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "tagLine": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateLocationRequest": {
+          "type": "object",
+          "properties": {
+            "businessName": {
+              "type": "string",
+              "nullable": true
+            },
+            "address": {
+              "$ref": "#/components/schemas/LocationAddressRequest"
+            },
+            "businessHours": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "maxQueueCapacity": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateOrganizationRequest": {
+          "required": [
+            "name",
+            "organizationId"
+          ],
+          "type": "object",
+          "properties": {
+            "organizationId": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "contactEmail": {
+              "type": "string",
+              "nullable": true
+            },
+            "contactPhone": {
+              "type": "string",
+              "nullable": true
+            },
+            "websiteUrl": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateQueueEntryRequest": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "nullable": true
+            },
+            "emailNotifications": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "browserNotifications": {
+              "type": "boolean",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateQueueEntryResult": {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "queueEntryId": {
+              "type": "string",
+              "nullable": true
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateServiceOfferedRequest": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "locationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "estimatedDurationMinutes": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "price": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            },
+            "imageUrl": {
+              "type": "string",
+              "nullable": true
+            },
+            "isActive": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateStaffStatusRequest": {
+          "required": [
+            "newStatus",
+            "staffMemberId"
+          ],
+          "type": "object",
+          "properties": {
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "newStatus": {
+              "type": "string",
+              "nullable": true
+            },
+            "notes": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateStaffStatusResult": {
+          "required": [
+            "errors",
+            "fieldErrors",
+            "newStatus",
+            "staffMemberId"
+          ],
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "staffMemberId": {
+              "type": "string",
+              "nullable": true
+            },
+            "newStatus": {
+              "type": "string",
+              "nullable": true
+            },
+            "previousStatus": {
+              "type": "string",
+              "nullable": true
+            },
+            "fieldErrors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "UpdateSubscriptionPlanRequest": {
+          "required": [
+            "name"
+          ],
+          "type": "object",
+          "properties": {
+            "subscriptionPlanId": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "monthlyPrice": {
+              "type": "number",
+              "format": "double"
+            },
+            "yearlyPrice": {
+              "type": "number",
+              "format": "double"
+            },
+            "maxLocations": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "maxStaffPerLocation": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "includesAnalytics": {
+              "type": "boolean"
+            },
+            "includesAdvancedReporting": {
+              "type": "boolean"
+            },
+            "includesCustomBranding": {
+              "type": "boolean"
+            },
+            "includesAdvertising": {
+              "type": "boolean"
+            },
+            "includesMultipleLocations": {
+              "type": "boolean"
+            },
+            "maxQueueEntriesPerDay": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "isFeatured": {
+              "type": "boolean"
+            },
+            "isDefault": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "VerifyTwoFactorRequest": {
+          "required": [
+            "phoneNumber",
+            "twoFactorCode",
+            "twoFactorToken"
+          ],
+          "type": "object",
+          "properties": {
+            "phoneNumber": {
+              "type": "string",
+              "nullable": true
+            },
+            "twoFactorCode": {
+              "type": "string",
+              "nullable": true
+            },
+            "twoFactorToken": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "WaitTimeEstimate": {
+          "type": "object",
+          "properties": {
+            "salonId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "serviceType": {
+              "type": "string",
+              "nullable": true
+            },
+            "estimatedWaitTime": {
+              "type": "string",
+              "format": "date-span"
+            },
+            "calculatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "confidence": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "WaitTimeTrend": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "averageWaitTime": {
+              "type": "string",
+              "format": "date-span"
+            },
+            "peakWaitTime": {
+              "type": "string",
+              "format": "date-span"
+            },
+            "totalCustomers": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "busiestHour": {
+              "type": "string",
+              "format": "date-span",
+              "nullable": true
+            },
+            "busiestHourCustomers": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "additionalProperties": false
+        },
+        "WeeklyHoursDto": {
+          "type": "object",
+          "properties": {
+            "monday": {
+              "$ref": "#/components/schemas/DayHoursDto"
+            },
+            "tuesday": {
+              "$ref": "#/components/schemas/DayHoursDto"
+            },
+            "wednesday": {
+              "$ref": "#/components/schemas/DayHoursDto"
+            },
+            "thursday": {
+              "$ref": "#/components/schemas/DayHoursDto"
+            },
+            "friday": {
+              "$ref": "#/components/schemas/DayHoursDto"
+            },
+            "saturday": {
+              "$ref": "#/components/schemas/DayHoursDto"
+            },
+            "sunday": {
+              "$ref": "#/components/schemas/DayHoursDto"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "securitySchemes": {
+        "Bearer": {
+          "type": "apiKey",
+          "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+          "name": "Authorization",
+          "in": "header"
+        }
+      }
+    },
+    "security": [
+      {
+        "Bearer": [ ]
+      }
+    ]
+  }
+  
