@@ -1,20 +1,24 @@
-# EuToNaFila QueueHub API
+# EuTôNaFila QueueHub API
 
 A modern, multi-tenant queue management system built with .NET 8, designed for barbershops, clinics, and other service-based businesses.
 
 ## 🏗️ Architecture Overview
 
-### Backend For Frontend (BFF) Pattern
+### Monolithic API Architecture
 
-The QueueHub/EuToNaFila platform uses a Backend For Frontend (BFF) pattern with:
+The QueueHub/EuTôNaFila platform uses a single, comprehensive API that serves all client types through specialized controllers:
 
 - **Core API**: Centralized backend with business logic, data models, and multi-tenant support
-- **Multiple BFF Services**: Specialized backends for different frontend types:
-  - Barbershop Web BFF: Optimized for desktop with administrative features
-  - Clinic Web BFF: Healthcare domain with clinic-specific features
-  - Kiosk BFF: Streamlined for in-location interfaces
+- **Specialized Controllers**: Different endpoints optimized for various client types:
+  - **PublicController**: Anonymous access for customers (queue joining, status checking)
+  - **KioskController**: Streamlined for in-location kiosk interfaces
+  - **StaffController**: Administrative features for barbers and staff
+  - **OrganizationsController**: Business management for owners
+  - **QueuesController**: Core queue operations for all authenticated users
 
-Refer to [BFF_ARCHITECTURE.md](./BFF_ARCHITECTURE.md) for detailed architecture information.
+### Future BFF Architecture
+
+The platform is designed to evolve toward a Backend For Frontend (BFF) pattern. Refer to [BFF_ARCHITECTURE.md](./docs/BFF_ARCHITECTURE.md) for the planned future architecture.
 
 ### URL Structure
 
@@ -35,8 +39,8 @@ Refer to [URL_STRUCTURE.md](./URL_STRUCTURE.md) for comprehensive URL guidelines
 ### Prerequisites
 
 - .NET 8.0 SDK
-- Docker Desktop
-- Azure CLI (for deployment)
+- MySQL 8.x (local instance or Docker)
+- Docker Desktop (optional)
 - PowerShell 7+ (for scripts)
 
 ### Local Development
@@ -47,23 +51,23 @@ git clone <repository-url>
 cd backend
 
 # Restore dependencies
-dotnet restore GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj
+dotnet restore GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj
 
 # Build the project
-dotnet build GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj
+dotnet build GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj
 
 # Run tests
-dotnet test GrandeTech.QueueHub.API/GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj
+dotnet test GrandeTech.QueueHub/GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj
 
 # Run the API locally
-dotnet run --project GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj
+dotnet run --project GrandeTech.QueueHub/GrandeTech.QueueHub.API/GrandeTech.QueueHub.API.csproj
 ```
 
 ### Docker Development
 
 ```bash
 # Build and run with Docker
-docker build -t queuehub-api -f GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/Dockerfile .
+docker build -t queuehub-api -f GrandeTech.QueueHub/GrandeTech.QueueHub.API/Dockerfile .
 docker run -p 8080:8080 queuehub-api
 ```
 
@@ -87,46 +91,38 @@ The application implements a comprehensive multi-tenant security model with role
 
 Refer to [SECURITY_MODEL.md](./SECURITY_MODEL.md) for detailed security documentation.
 
-## 🏢 Azure Environment
+## 🏢 Production Environment
 
-### Subscription Information
-- **Subscription Name:** Grande Tech
-- **Subscription ID:** `160af2e4-319f-4384-b38f-71e23d140a0f`
-- **Tenant ID:** `621db766-1ccd-40f1-80b0-ef469bd8f081`
-- **Directory:** Default Directory (rommelbgmail.onmicrosoft.com)
-- **Status:** Active
-- **Role:** Owner
+### Hosting Information
+- **Hosting Provider:** BoaHost
+- **Control Panel:** Plesk
+- **Database:** MySQL 8.x
+- **Domain:** api.eutonafila.com.br
+- **SSL:** Enabled with automatic certificates
 
-### Current Resources
+### Database Configuration
 
-- **Resource Group:** `rg-p-queuehub-core-001` (Production, Core Services)
-- **App Service:** `app-p-queuehub-api-001` (Core API)
-- **App Service Plan:** `asp-p-queuehub-core-001` (F1: 1)
-- **Primary Region:** Brazil South
-- **Container Registry:** `acrqueuehubapi001.azurecr.io`
+- **MySQL Host:** Provided by BoaHost
+- **Database Name:** QueueHubDb
+- **Connection String:** Configured via environment variables
+- **SSL Mode:** Required in production
+- **Auto Migration:** Enabled for seamless updates
 
-### Managed Identity
+### Environment Variables
 
-The application uses Azure Managed Identity for secure, credential-free access to Azure services:
-
-- **App Service Managed Identity**: `app-p-queuehub-api-001` has system-assigned managed identity enabled
-- **Permissions**: 
-  - **Azure Container Registry**: AcrPull role for pulling images
-  - **Key Vault**: Get and List permissions for configuration secrets
-  - **Application Insights**: Contributor role for telemetry data
-- **Benefits**: 
-  - No secrets to manage or rotate
-  - Automatic credential rotation
-  - Enhanced security posture
-  - Simplified CI/CD pipeline
+Production environment variables are configured in Plesk:
+- `ASPNETCORE_ENVIRONMENT=Production`
+- `MYSQL_HOST`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`
+- `JWT_KEY`, `JWT_ISSUER`, `JWT_AUDIENCE`
+- `APPLICATION_INSIGHTS_CONNECTION_STRING`
 
 ### Production URLs
 
-- **Core API (Production):** `https://app-p-queuehub-api-001-e4g8b2e8dngffgc5.brazilsouth-01.azurewebsites.net`
-- **Health Check:** `https://app-p-queuehub-api-001-e4g8b2e8dngffgc5.brazilsouth-01.azurewebsites.net/health`
-- **Swagger Documentation:** `https://app-p-queuehub-api-001-e4g8b2e8dngffgc5.brazilsouth-01.azurewebsites.net/swagger`
+- **Core API (Production):** `https://api.eutonafila.com.br`
+- **Health Check:** `https://api.eutonafila.com.br/health`
+- **Swagger Documentation:** `https://api.eutonafila.com.br/swagger/index.html`
 
-> **Note:** The production URL includes a unique identifier (`e4g8b2e8dngffgc5`) which is automatically generated by Azure App Service for security and routing purposes.
+> **Note:** The production API is deployed on BoaHost with MySQL database integration.
 
 ## 🔄 CI/CD Pipeline
 
@@ -163,48 +159,70 @@ The project uses GitHub Actions for continuous integration and deployment with a
 ## 🏗️ Project Structure
 
 ```
-GrandeTech.QueueHub.API/
-├── Application/           # Application services and business logic
-│   ├── Auth/             # Authentication services
-│   ├── Locations/        # Location management
-│   ├── Organizations/    # Organization management
-│   ├── Queues/          # Queue operations
-│   ├── ServicesOffered/ # Service management
-│   └── Staff/           # Staff management
-├── Controllers/          # API controllers
-├── Domain/              # Domain models and business rules
-│   ├── Common/          # Shared domain concepts
-│   ├── Customers/       # Customer domain
-│   ├── Locations/       # Location domain
-│   ├── Organizations/   # Organization domain
-│   ├── Queues/          # Queue domain
-│   ├── ServicesOffered/ # Services domain
-│   ├── Staff/           # Staff domain
-│   └── Users/           # User domain
-├── Infrastructure/      # Infrastructure concerns
-│   ├── Authorization/   # Custom authorization
-│   ├── Persistence/     # Data persistence
-│   └── Repositories/    # Data access layer
-└── GrandeTech.QueueHub.Tests/  # Unit and integration tests
+GrandeTech.QueueHub/
+├── GrandeTech.QueueHub.API/     # Main API project
+│   ├── Application/             # Application services and business logic
+│   │   ├── Auth/               # Authentication services
+│   │   ├── Analytics/          # Analytics and reporting
+│   │   ├── Kiosk/             # Kiosk-specific services
+│   │   ├── Locations/         # Location management
+│   │   ├── Notifications/     # Notification services
+│   │   ├── Organizations/     # Organization management
+│   │   ├── Promotions/        # Promotions and coupons
+│   │   ├── Public/            # Public API services
+│   │   ├── QrCode/            # QR code services
+│   │   ├── Queues/            # Queue operations
+│   │   ├── Services/          # Core services
+│   │   ├── ServicesOffered/   # Service management
+│   │   ├── Staff/             # Staff management
+│   │   └── SubscriptionPlans/ # Subscription management
+│   ├── Controllers/            # API controllers
+│   ├── Domain/                # Domain models and business rules
+│   │   ├── Common/            # Shared domain concepts
+│   │   ├── Customers/         # Customer domain
+│   │   ├── Locations/         # Location domain
+│   │   ├── Notifications/     # Notification domain
+│   │   ├── Organizations/     # Organization domain
+│   │   ├── Promotions/        # Promotion domain
+│   │   ├── Queues/            # Queue domain
+│   │   ├── ServicesOffered/   # Services domain
+│   │   ├── Staff/             # Staff domain
+│   │   ├── Subscriptions/     # Subscription domain
+│   │   └── Users/             # User domain
+│   ├── Infrastructure/        # Infrastructure concerns
+│   │   ├── Authorization/     # Custom authorization
+│   │   ├── Data/             # Entity Framework context
+│   │   ├── Logging/          # Logging services
+│   │   ├── Middleware/       # Custom middleware
+│   │   ├── Repositories/     # Data access layer
+│   │   └── Services/         # Infrastructure services
+│   └── Migrations/           # Database migrations
+├── GrandeTech.QueueHub.Tests/  # Unit and integration tests
+│   ├── Application/          # Application layer tests
+│   ├── Domain/              # Domain layer tests
+│   ├── Integration/         # Integration tests
+│   └── Infrastructure/      # Infrastructure tests
+└── docs/                    # Documentation
 ```
 
 ## 🛠️ Technology Stack
 
 - **Framework**: .NET 8.0
 - **Runtime**: ASP.NET Core 8.0
+- **Database**: MySQL 8.x (Pomelo.EntityFrameworkCore.MySql)
 - **Authentication**: JWT Bearer tokens
 - **Documentation**: Swagger/OpenAPI
 - **Testing**: MSTest
 - **Containerization**: Docker
-- **Cloud Platform**: Azure
+- **Hosting**: BoaHost (Production)
 - **CI/CD**: GitHub Actions
-- **Container Registry**: Azure Container Registry
+- **Monitoring**: Application Insights
 
 ## 📊 API Documentation
 
 The API includes comprehensive Swagger documentation available at:
-- **Local**: `https://localhost:8080/swagger`
-- **Production**: `https://app-p-queuehub-api-001-e4g8b2e8dngffgc5.brazilsouth-01.azurewebsites.net/swagger`
+- **Local**: `https://localhost:5098/swagger` or `https://localhost:7126/swagger`
+- **Production**: `https://api.eutonafila.com.br/swagger/index.html`
 
 ### Key Endpoints
 
@@ -222,12 +240,19 @@ The API includes comprehensive Swagger documentation available at:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=...;Database=barberqueue;..."
+    "MySqlConnection": "Server=localhost;Database=QueueHubDb;User=root;Password=your_password;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;"
   },
   "Jwt": {
     "Key": "your-super-secret-key-with-at-least-32-characters",
     "Issuer": "GrandeTech.QueueHub.API",
     "Audience": "GrandeTech.QueueHub.API"
+  },
+  "Database": {
+    "UseSqlDatabase": true,
+    "UseInMemoryDatabase": false,
+    "UseBogusRepositories": false,
+    "AutoMigrate": true,
+    "SeedData": true
   }
 }
 ```
@@ -245,7 +270,7 @@ The application is containerized using a multi-stage Dockerfile optimized for:
 
 ```bash
 # Run all tests
-dotnet test GrandeTech.QueueHub.API/GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj
+dotnet test GrandeTech.QueueHub/GrandeTech.QueueHub.Tests/GrandeTech.QueueHub.Tests.csproj
 
 # Run with coverage
 dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
@@ -259,22 +284,24 @@ dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
 
 ## 🚀 Deployment
 
-### Manual Deployment
+### Manual Deployment (BoaHost)
 
-```powershell
-# Build and push Docker image
-docker build -t acrqueuehubapi001.azurecr.io/queuehub-api:v1 -f GrandeTech.QueueHub.API/GrandeTech.QueueHub.API/Dockerfile .
-az acr login --name acrqueuehubapi001
-docker push acrqueuehubapi001.azurecr.io/queuehub-api:v1
+```bash
+# Build for production
+dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish
 
-# Deploy to Azure App Service
-az webapp config container set --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-core-001 --container-image-name acrqueuehubapi001.azurecr.io/queuehub-api:v1
-az webapp restart --name app-p-queuehub-api-001 --resource-group rg-p-queuehub-core-001
+# Upload to BoaHost via Plesk
+# Configure environment variables in Plesk:
+# - ASPNETCORE_ENVIRONMENT=Production
+# - MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD
+# - JWT_KEY, JWT_ISSUER, JWT_AUDIENCE
 ```
 
 ### Automated Deployment
 
-The CI/CD pipeline automatically deploys on merge to `main` branch. See [.github/README.md](../../.github/README.md) for setup and troubleshooting instructions.
+The CI/CD pipeline automatically deploys on merge to `main` branch. For detailed deployment instructions, see:
+- [BoaHost Deployment Guide](./docs/BOAHOST_DEPLOYMENT_GUIDE.md)
+- [Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)
 
 ## 📈 Monitoring and Health Checks
 
@@ -290,7 +317,8 @@ The CI/CD pipeline automatically deploys on merge to `main` branch. See [.github
 - **Role-based access**: Granular permissions based on user roles
 - **Input validation**: Comprehensive request validation
 - **HTTPS enforcement**: All production traffic encrypted
-- **Managed Identity**: Azure-managed authentication for secure service-to-service communication
+- **Rate limiting**: Protection against abuse and DDoS attacks
+- **Data anonymization**: Privacy protection for sensitive data
 
 ## 🤝 Contributing
 
@@ -314,6 +342,6 @@ For support and questions:
 
 ---
 
-**Last Updated**: December 2024  
+**Last Updated**: January 2025  
 **Version**: 1.0.0  
 **Status**: Production Ready
