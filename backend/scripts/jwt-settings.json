@@ -1,5 +1,0 @@
-{
-  "Jwt__Key": "your-super-secret-key-with-at-least-32-characters-for-production-use-2025",
-  "Jwt__Issuer": "GrandeTech.QueueHub.API",
-  "Jwt__Audience": "GrandeTech.QueueHub.API"
-} 

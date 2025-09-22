@@ -2,6 +2,7 @@
 # Usage: 
 #   .\run-integration-tests.ps1 -Environment Local
 #   .\run-integration-tests.ps1 -Environment Prod -ProdUrl "https://api.eutonafila.com.br"
+#   .\run-integration-tests.ps1 -Environment Prod -TestFilter "TestCategory=Production"
 
 param(
     [Parameter(Mandatory=$true)]
@@ -23,6 +24,12 @@ $env:TEST_ENVIRONMENT = $Environment
 if ($Environment -eq "Prod" -or $Environment -eq "BoaHost") {
     $env:PROD_API_URL = $ProdUrl
     Write-Host "Production URL: $ProdUrl" -ForegroundColor Yellow
+    
+    # For production tests, set default filter to Production category
+    if ($TestFilter -eq "TestCategory=Environment") {
+        $TestFilter = "TestCategory=Production"
+        Write-Host "Using Production test filter: $TestFilter" -ForegroundColor Cyan
+    }
 }
 
 # Check if local API is running when testing locally
@@ -39,6 +46,21 @@ if ($Environment -eq "Local") {
         Write-Host "   cd GrandeTech.QueueHub.API" -ForegroundColor Gray
         Write-Host "   dotnet run --urls=http://localhost:5098" -ForegroundColor Gray
         exit 1
+    }
+}
+
+# Check production API accessibility when testing production
+if ($Environment -eq "Prod" -or $Environment -eq "BoaHost") {
+    Write-Host "Checking if production API is accessible..." -ForegroundColor Cyan
+    try {
+        $response = Invoke-WebRequest -Uri "$ProdUrl/api/Health" -TimeoutSec 10 -ErrorAction Stop
+        if ($response.StatusCode -eq 200) {
+            Write-Host "✅ Production API is accessible" -ForegroundColor Green
+        }
+    }
+    catch {
+        Write-Host "⚠️ Production API health check failed: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "Continuing with tests anyway..." -ForegroundColor Yellow
     }
 }
 

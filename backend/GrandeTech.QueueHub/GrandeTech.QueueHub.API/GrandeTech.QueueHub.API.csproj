@@ -43,8 +43,5 @@
 
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="insert_test_data.sql" />
-  </ItemGroup>
 
 </Project>

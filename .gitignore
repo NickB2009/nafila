@@ -97,3 +97,7 @@ logs
 .env
 .env.local
 .env.production
+backend/GrandeTech.QueueHub/boahost.env
+backend/GrandeTech.QueueHub/boahost.env
+backend/GrandeTech.QueueHub/boahost.env
+backend/GrandeTech.QueueHub/production.env
