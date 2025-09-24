@@ -30,3 +30,4 @@ namespace Grande.Fila.API.Infrastructure.Monitoring
     }
 }
 
+
