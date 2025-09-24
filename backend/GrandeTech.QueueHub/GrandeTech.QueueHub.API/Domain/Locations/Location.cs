@@ -17,8 +17,37 @@ namespace Grande.Fila.API.Domain.Locations
         public Address Address { get; private set; } = null!;
         public PhoneNumber? ContactPhone { get; private set; }
         public Email? ContactEmail { get; private set; }
-        public BrandingConfig? CustomBranding { get; private set; }
-        public WeeklyBusinessHours WeeklyHours { get; private set; } = null!;
+        // Flattened branding properties (replaces CustomBranding value object)
+        public string? PrimaryColor { get; private set; }
+        public string? SecondaryColor { get; private set; }
+        public string? LogoUrl { get; private set; }
+        public string? FaviconUrl { get; private set; }
+        public string? CompanyName { get; private set; }
+        public string? TagLine { get; private set; }
+        public string? FontFamily { get; private set; }
+
+        // Flattened weekly hours properties (replaces WeeklyBusinessHours value object)
+        public TimeSpan? MondayOpenTime { get; private set; }
+        public TimeSpan? MondayCloseTime { get; private set; }
+        public bool MondayIsClosed { get; private set; }
+        public TimeSpan? TuesdayOpenTime { get; private set; }
+        public TimeSpan? TuesdayCloseTime { get; private set; }
+        public bool TuesdayIsClosed { get; private set; }
+        public TimeSpan? WednesdayOpenTime { get; private set; }
+        public TimeSpan? WednesdayCloseTime { get; private set; }
+        public bool WednesdayIsClosed { get; private set; }
+        public TimeSpan? ThursdayOpenTime { get; private set; }
+        public TimeSpan? ThursdayCloseTime { get; private set; }
+        public bool ThursdayIsClosed { get; private set; }
+        public TimeSpan? FridayOpenTime { get; private set; }
+        public TimeSpan? FridayCloseTime { get; private set; }
+        public bool FridayIsClosed { get; private set; }
+        public TimeSpan? SaturdayOpenTime { get; private set; }
+        public TimeSpan? SaturdayCloseTime { get; private set; }
+        public bool SaturdayIsClosed { get; private set; }
+        public TimeSpan? SundayOpenTime { get; private set; }
+        public TimeSpan? SundayCloseTime { get; private set; }
+        public bool SundayIsClosed { get; private set; }
         public bool IsQueueEnabled { get; private set; }
         public int MaxQueueSize { get; private set; }
         public int LateClientCapTimeInMinutes { get; private set; }
@@ -66,7 +95,8 @@ namespace Grande.Fila.API.Domain.Locations
             Address = address;
             ContactPhone = contactPhone != null ? PhoneNumber.Create(contactPhone) : null;
             ContactEmail = contactEmail != null ? Email.Create(contactEmail) : null;
-            WeeklyHours = WeeklyBusinessHours.CreateMondayToSaturday(openingTime, closingTime); // Default: Monday-Saturday same hours, Sunday closed
+            // Set default business hours (Monday-Saturday same hours, Sunday closed)
+            SetBusinessHours(openingTime, closingTime);
             IsQueueEnabled = true;
             MaxQueueSize = maxQueueSize > 0 ? maxQueueSize : 100;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes >= 0 ? lateClientCapTimeInMinutes : 15;
@@ -97,7 +127,7 @@ namespace Grande.Fila.API.Domain.Locations
             Address = address;
             ContactPhone = contactPhone != null ? PhoneNumber.Create(contactPhone) : null;
             ContactEmail = contactEmail != null ? Email.Create(contactEmail) : null;
-            WeeklyHours = WeeklyBusinessHours.CreateMondayToSaturday(openingTime, closingTime); // Maintain backward compatibility
+            SetBusinessHours(openingTime, closingTime);
 
             MarkAsModified(updatedBy);
             AddDomainEvent(new LocationUpdatedEvent(Id));
@@ -111,14 +141,13 @@ namespace Grande.Fila.API.Domain.Locations
             string? tagLine,
             string updatedBy)
         {
-            CustomBranding = BrandingConfig.Create(
-                primaryColor,
-                secondaryColor,
-                logoUrl ?? string.Empty,
-                faviconUrl ?? string.Empty,
-                Name,
-                tagLine ?? string.Empty
-            );
+            PrimaryColor = ValidateHexColor(primaryColor);
+            SecondaryColor = ValidateHexColor(secondaryColor ?? "#FFFFFF");
+            LogoUrl = logoUrl?.Trim() ?? string.Empty;
+            FaviconUrl = faviconUrl?.Trim() ?? string.Empty;
+            CompanyName = Name;
+            TagLine = tagLine?.Trim() ?? string.Empty;
+            FontFamily = "Arial, sans-serif";
 
             MarkAsModified(updatedBy);
             AddDomainEvent(new LocationBrandingUpdatedEvent(Id));
@@ -126,12 +155,16 @@ namespace Grande.Fila.API.Domain.Locations
 
         public void ClearCustomBranding(string updatedBy)
         {
-            if (CustomBranding != null)
-            {
-                CustomBranding = null;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new LocationBrandingUpdatedEvent(Id));
-            }
+            PrimaryColor = null;
+            SecondaryColor = null;
+            LogoUrl = null;
+            FaviconUrl = null;
+            CompanyName = null;
+            TagLine = null;
+            FontFamily = null;
+            
+            MarkAsModified(updatedBy);
+            AddDomainEvent(new LocationBrandingUpdatedEvent(Id));
         }
 
         public void EnableQueue(string updatedBy)
@@ -268,13 +301,13 @@ namespace Grande.Fila.API.Domain.Locations
                 // Use Brazil timezone (UTC-3) since all locations are in Brazil
                 var brazilTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
                 var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, brazilTimeZone);
-                return WeeklyHours.IsOpenAt(now);
+                return IsOpenAt(now);
             }
             catch (TimeZoneNotFoundException)
             {
                 // Fallback to UTC if Brazil timezone is not available (e.g., in test environments)
                 var now = DateTime.UtcNow;
-                return WeeklyHours.IsOpenAt(now);
+                return IsOpenAt(now);
             }
         }
 
@@ -285,9 +318,135 @@ namespace Grande.Fila.API.Domain.Locations
 
         public void UpdateWeeklyHours(WeeklyBusinessHours weeklyHours, string updatedBy)
         {
-            WeeklyHours = weeklyHours ?? throw new ArgumentNullException(nameof(weeklyHours));
+            if (weeklyHours == null)
+                throw new ArgumentNullException(nameof(weeklyHours));
+
+            // Copy hours from the value object to flattened properties
+            MondayOpenTime = weeklyHours.Monday.OpenTime;
+            MondayCloseTime = weeklyHours.Monday.CloseTime;
+            MondayIsClosed = !weeklyHours.Monday.IsOpen;
+            TuesdayOpenTime = weeklyHours.Tuesday.OpenTime;
+            TuesdayCloseTime = weeklyHours.Tuesday.CloseTime;
+            TuesdayIsClosed = !weeklyHours.Tuesday.IsOpen;
+            WednesdayOpenTime = weeklyHours.Wednesday.OpenTime;
+            WednesdayCloseTime = weeklyHours.Wednesday.CloseTime;
+            WednesdayIsClosed = !weeklyHours.Wednesday.IsOpen;
+            ThursdayOpenTime = weeklyHours.Thursday.OpenTime;
+            ThursdayCloseTime = weeklyHours.Thursday.CloseTime;
+            ThursdayIsClosed = !weeklyHours.Thursday.IsOpen;
+            FridayOpenTime = weeklyHours.Friday.OpenTime;
+            FridayCloseTime = weeklyHours.Friday.CloseTime;
+            FridayIsClosed = !weeklyHours.Friday.IsOpen;
+            SaturdayOpenTime = weeklyHours.Saturday.OpenTime;
+            SaturdayCloseTime = weeklyHours.Saturday.CloseTime;
+            SaturdayIsClosed = !weeklyHours.Saturday.IsOpen;
+            SundayOpenTime = weeklyHours.Sunday.OpenTime;
+            SundayCloseTime = weeklyHours.Sunday.CloseTime;
+            SundayIsClosed = !weeklyHours.Sunday.IsOpen;
+
             MarkAsModified(updatedBy);
             AddDomainEvent(new LocationUpdatedEvent(Id));
+        }
+
+        // Helper methods for working with flattened properties
+
+        /// <summary>
+        /// Sets business hours for Monday-Saturday with same hours, Sunday closed
+        /// </summary>
+        private void SetBusinessHours(TimeSpan openingTime, TimeSpan closingTime)
+        {
+            // Monday-Saturday: same hours
+            MondayOpenTime = openingTime;
+            MondayCloseTime = closingTime;
+            MondayIsClosed = false;
+            TuesdayOpenTime = openingTime;
+            TuesdayCloseTime = closingTime;
+            TuesdayIsClosed = false;
+            WednesdayOpenTime = openingTime;
+            WednesdayCloseTime = closingTime;
+            WednesdayIsClosed = false;
+            ThursdayOpenTime = openingTime;
+            ThursdayCloseTime = closingTime;
+            ThursdayIsClosed = false;
+            FridayOpenTime = openingTime;
+            FridayCloseTime = closingTime;
+            FridayIsClosed = false;
+            SaturdayOpenTime = openingTime;
+            SaturdayCloseTime = closingTime;
+            SaturdayIsClosed = false;
+            
+            // Sunday: closed
+            SundayOpenTime = null;
+            SundayCloseTime = null;
+            SundayIsClosed = true;
+        }
+
+        /// <summary>
+        /// Checks if the location is open at a specific date/time
+        /// </summary>
+        private bool IsOpenAt(DateTime dateTime)
+        {
+            var dayOfWeek = dateTime.DayOfWeek;
+            var timeOfDay = dateTime.TimeOfDay;
+
+            return dayOfWeek switch
+            {
+                DayOfWeek.Monday => !MondayIsClosed && IsTimeWithinHours(timeOfDay, MondayOpenTime, MondayCloseTime),
+                DayOfWeek.Tuesday => !TuesdayIsClosed && IsTimeWithinHours(timeOfDay, TuesdayOpenTime, TuesdayCloseTime),
+                DayOfWeek.Wednesday => !WednesdayIsClosed && IsTimeWithinHours(timeOfDay, WednesdayOpenTime, WednesdayCloseTime),
+                DayOfWeek.Thursday => !ThursdayIsClosed && IsTimeWithinHours(timeOfDay, ThursdayOpenTime, ThursdayCloseTime),
+                DayOfWeek.Friday => !FridayIsClosed && IsTimeWithinHours(timeOfDay, FridayOpenTime, FridayCloseTime),
+                DayOfWeek.Saturday => !SaturdayIsClosed && IsTimeWithinHours(timeOfDay, SaturdayOpenTime, SaturdayCloseTime),
+                DayOfWeek.Sunday => !SundayIsClosed && IsTimeWithinHours(timeOfDay, SundayOpenTime, SundayCloseTime),
+                _ => false
+            };
+        }
+
+        /// <summary>
+        /// Checks if a time is within the specified open/close hours
+        /// </summary>
+        private static bool IsTimeWithinHours(TimeSpan time, TimeSpan? openTime, TimeSpan? closeTime)
+        {
+            if (!openTime.HasValue || !closeTime.HasValue)
+                return false;
+
+            // Handle cases where close time is after midnight (e.g., 22:00 - 02:00)
+            if (closeTime.Value < openTime.Value)
+            {
+                return time >= openTime.Value || time <= closeTime.Value;
+            }
+
+            return time >= openTime.Value && time <= closeTime.Value;
+        }
+
+        /// <summary>
+        /// Validates hex color format
+        /// </summary>
+        private static string ValidateHexColor(string color)
+        {
+            if (string.IsNullOrWhiteSpace(color))
+                return "#000000";
+
+            color = color.Trim();
+
+            // If it doesn't start with #, add it
+            if (!color.StartsWith("#"))
+                color = "#" + color;
+
+            // If it's a short form hex color (#RGB), convert to long form (#RRGGBB)
+            if (color.Length == 4)
+            {
+                color = "#" +
+                       color[1] + color[1] +
+                       color[2] + color[2] +
+                       color[3] + color[3];
+            }
+
+            // Check if it's a valid hex color
+            if (color.Length != 7 || !System.Text.RegularExpressions.Regex.IsMatch(color, "^#[0-9A-Fa-f]{6}$"))
+                throw new ArgumentException("Invalid hex color format. Must be #RRGGBB", nameof(color));
+
+            return color.ToUpperInvariant();
         }
 
         /// <summary>
@@ -296,7 +455,30 @@ namespace Grande.Fila.API.Domain.Locations
         /// </summary>
         public Dictionary<string, string> GetBusinessHoursDictionary()
         {
-            return WeeklyHours.ToDictionary();
+            return new Dictionary<string, string>
+            {
+                ["monday"] = FormatDayHours(MondayOpenTime, MondayCloseTime, MondayIsClosed),
+                ["tuesday"] = FormatDayHours(TuesdayOpenTime, TuesdayCloseTime, TuesdayIsClosed),
+                ["wednesday"] = FormatDayHours(WednesdayOpenTime, WednesdayCloseTime, WednesdayIsClosed),
+                ["thursday"] = FormatDayHours(ThursdayOpenTime, ThursdayCloseTime, ThursdayIsClosed),
+                ["friday"] = FormatDayHours(FridayOpenTime, FridayCloseTime, FridayIsClosed),
+                ["saturday"] = FormatDayHours(SaturdayOpenTime, SaturdayCloseTime, SaturdayIsClosed),
+                ["sunday"] = FormatDayHours(SundayOpenTime, SundayCloseTime, SundayIsClosed)
+            };
+        }
+
+        /// <summary>
+        /// Formats a day's hours for display
+        /// </summary>
+        private static string FormatDayHours(TimeSpan? openTime, TimeSpan? closeTime, bool isClosed)
+        {
+            if (isClosed)
+                return "Closed";
+
+            if (!openTime.HasValue || !closeTime.HasValue)
+                return "Closed";
+
+            return $"{openTime.Value:hh\\:mm} - {closeTime.Value:hh\\:mm}";
         }
 
         public int CalculateEstimatedWaitTime(int positionInQueue, double? overrideAverageTime = null)

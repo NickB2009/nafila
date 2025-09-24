@@ -18,7 +18,12 @@ services:
       - JWT__ExpirationMinutes=${JWT_EXPIRATION_MINUTES}
       - RateLimiting__RequestsPerMinute=${RATE_LIMIT_REQUESTS_PER_MINUTE}
       - DataAnonymization__Salt=${DATA_ANONYMIZATION_SALT}
-      - ApplicationInsights__ConnectionString=${APPLICATION_INSIGHTS_CONNECTION_STRING}
+      - Monitoring__Provider=${MONITORING_PROVIDER:-BoaHost}
+      - BoaHost__LogLevel=${BOAHOST_LOG_LEVEL:-Information}
+      - BoaHost__EnableFileLogging=${BOAHOST_ENABLE_FILE_LOGGING:-true}
+      - BoaHost__LogPath=${BOAHOST_LOG_PATH:-/var/log/queuehub}
+      - BoaHost__EnablePerformanceMetrics=${BOAHOST_ENABLE_PERFORMANCE_METRICS:-true}
+      - BoaHost__EnableErrorTracking=${BOAHOST_ENABLE_ERROR_TRACKING:-true}
       - Logging__LogLevel__Default=${LOG_LEVEL}
       - Logging__LogLevel__Microsoft.AspNetCore=${LOG_LEVEL}
       - Logging__LogLevel__Microsoft.EntityFrameworkCore=${LOG_LEVEL}

@@ -19,6 +19,9 @@ public class PublicController : ControllerBase
     private readonly GetPublicSalonDetailService _getPublicSalonDetailService;
     private readonly GetPublicQueueStatusService _getPublicQueueStatusService;
     private readonly AnonymousJoinService _anonymousJoinService;
+    private readonly GetQueueEntryStatusService _getQueueEntryStatusService;
+    private readonly LeaveQueueService _leaveQueueService;
+    private readonly UpdateQueueEntryService _updateQueueEntryService;
     private readonly ILogger<PublicController> _logger;
 
     public PublicController(
@@ -26,12 +29,18 @@ public class PublicController : ControllerBase
         GetPublicSalonDetailService getPublicSalonDetailService,
         GetPublicQueueStatusService getPublicQueueStatusService,
         AnonymousJoinService anonymousJoinService,
+        GetQueueEntryStatusService getQueueEntryStatusService,
+        LeaveQueueService leaveQueueService,
+        UpdateQueueEntryService updateQueueEntryService,
         ILogger<PublicController> logger)
     {
         _getPublicSalonsService = getPublicSalonsService ?? throw new ArgumentNullException(nameof(getPublicSalonsService));
         _getPublicSalonDetailService = getPublicSalonDetailService ?? throw new ArgumentNullException(nameof(getPublicSalonDetailService));
         _getPublicQueueStatusService = getPublicQueueStatusService ?? throw new ArgumentNullException(nameof(getPublicQueueStatusService));
         _anonymousJoinService = anonymousJoinService ?? throw new ArgumentNullException(nameof(anonymousJoinService));
+        _getQueueEntryStatusService = getQueueEntryStatusService ?? throw new ArgumentNullException(nameof(getQueueEntryStatusService));
+        _leaveQueueService = leaveQueueService ?? throw new ArgumentNullException(nameof(leaveQueueService));
+        _updateQueueEntryService = updateQueueEntryService ?? throw new ArgumentNullException(nameof(updateQueueEntryService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -203,18 +212,20 @@ public class PublicController : ControllerBase
             return BadRequest(new { message = "Invalid entry ID format" });
         }
 
-        // For now, return a mock response until we implement the service
-        var mockResult = new QueueEntryStatusDto
-        {
-            Id = entryId,
-            Position = 1,
-            EstimatedWaitMinutes = 15,
-            Status = "waiting",
-            JoinedAt = DateTime.UtcNow.AddMinutes(-5),
-            ServiceRequested = "Haircut"
-        };
+        var result = await _getQueueEntryStatusService.ExecuteAsync(entryId, cancellationToken);
 
-        return Ok(mockResult);
+        if (!result.Success)
+        {
+            if (result.Errors.Contains("Queue entry not found"))
+            {
+                return NotFound(new { message = "Queue entry not found" });
+            }
+
+            _logger.LogError("Failed to retrieve queue entry status for {EntryId}: {Errors}", entryId, string.Join(", ", result.Errors));
+            return BadRequest(new { errors = result.Errors });
+        }
+
+        return Ok(result.QueueEntryStatus);
     }
 
     /// <summary>
@@ -251,13 +262,13 @@ public class PublicController : ControllerBase
             });
         }
 
-        // For now, return a mock success response until we implement the service
-        var result = new LeaveQueueResult
+        var result = await _leaveQueueService.ExecuteAsync(entryId, cancellationToken);
+
+        if (!result.Success)
         {
-            Success = true,
-            QueueEntryId = entryId,
-            LeftAt = DateTime.UtcNow
-        };
+            _logger.LogError("Failed to leave queue for entry {EntryId}: {Errors}", entryId, string.Join(", ", result.Errors));
+            return BadRequest(result);
+        }
 
         return Ok(result);
     }
@@ -300,49 +311,14 @@ public class PublicController : ControllerBase
             });
         }
 
-        // For now, return a mock success response until we implement the service
-        var result = new UpdateQueueEntryResult
+        var result = await _updateQueueEntryService.ExecuteAsync(entryId, request, cancellationToken);
+
+        if (!result.Success)
         {
-            Success = true,
-            QueueEntryId = entryId,
-            UpdatedAt = DateTime.UtcNow
-        };
+            _logger.LogError("Failed to update queue entry {EntryId}: {Errors}", entryId, string.Join(", ", result.Errors));
+            return BadRequest(result);
+        }
 
         return Ok(result);
     }
-}
-
-// DTOs for Public Queue Operations
-public class QueueEntryStatusDto
-{
-    public string? Id { get; set; }
-    public int Position { get; set; }
-    public int EstimatedWaitMinutes { get; set; }
-    public string? Status { get; set; }
-    public DateTime? JoinedAt { get; set; }
-    public string? ServiceRequested { get; set; }
-}
-
-public class LeaveQueueResult
-{
-    public bool Success { get; set; }
-    public string? QueueEntryId { get; set; }
-    public DateTime? LeftAt { get; set; }
-    public List<string> Errors { get; set; } = new();
-}
-
-public class UpdateQueueEntryRequest
-{
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public bool? EmailNotifications { get; set; }
-    public bool? BrowserNotifications { get; set; }
-}
-
-public class UpdateQueueEntryResult
-{
-    public bool Success { get; set; }
-    public string? QueueEntryId { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public List<string> Errors { get; set; } = new();
 }

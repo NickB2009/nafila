@@ -28,36 +28,68 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
-using Microsoft.ApplicationInsights.Extensibility;
+using Serilog;
+using Grande.Fila.API.Infrastructure.Monitoring;
 using MySqlConnector; // Added for MySqlException specific handling
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure for Azure App Service (only if WEBSITES_PORT is set)
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITES_PORT")))
-{
-    var port = Environment.GetEnvironmentVariable("WEBSITES_PORT");
-    builder.WebHost.UseUrls($"http://*:{port}");
-}
+// Configure port for different hosting providers
+var port = Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? 
+           Environment.GetEnvironmentVariable("BOAHOST_PORT") ?? 
+           "80";
+builder.WebHost.UseUrls($"http://*:{port}");
 
 // Add services to the container.
 
-// Add Application Insights
-builder.Services.AddApplicationInsightsTelemetry(options =>
-{
-    options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-    options.EnableAdaptiveSampling = false;
-    options.EnablePerformanceCounterCollectionModule = true;
-    options.EnableQuickPulseMetricStream = true;
-    options.EnableDebugLogger = false;
-});
+// Configure provider-agnostic monitoring
+var monitoringProvider = builder.Configuration["Monitoring:Provider"] ?? "BoaHost";
 
-// Add Application Insights logging
-builder.Services.AddLogging(loggingBuilder =>
+switch (monitoringProvider)
 {
-    loggingBuilder.AddApplicationInsights();
-});
+    case "Azure":
+        // Keep Azure Application Insights if explicitly configured
+        builder.Services.AddApplicationInsightsTelemetry(options =>
+        {
+            options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+            options.EnableAdaptiveSampling = false;
+            options.EnablePerformanceCounterCollectionModule = true;
+            options.EnableQuickPulseMetricStream = true;
+            options.EnableDebugLogger = false;
+        });
+        builder.Services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.AddApplicationInsights();
+        });
+        builder.Services.AddScoped<IMonitoringProvider, AzureMonitoringProvider>();
+        break;
+        
+    case "BoaHost":
+        // Configure Serilog for BoaHost file-based logging
+        var logPath = builder.Configuration["BoaHost:LogPath"] ?? "/var/log/queuehub";
+        var logLevel = builder.Configuration["BoaHost:LogLevel"] ?? "Information";
+        
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.File($"{logPath}/queuehub-.log", 
+                rollingInterval: Serilog.Events.RollingInterval.Day,
+                retainedFileCountLimit: 7,
+                shared: true)
+            .CreateLogger();
+            
+        builder.Host.UseSerilog();
+        builder.Services.AddScoped<IMonitoringProvider, BoaHostMonitoringProvider>();
+        break;
+        
+    case "None":
+    default:
+        // No monitoring for development/testing
+        builder.Services.AddScoped<IMonitoringProvider, NoOpMonitoringProvider>();
+        break;
+}
 
 // Register logging service
 builder.Services.AddScoped<Grande.Fila.API.Application.Logging.ILoggingService, Grande.Fila.API.Application.Logging.LoggingService>();
@@ -243,6 +275,9 @@ builder.Services.AddScoped<KioskDisplayService>();
 builder.Services.AddScoped<QrJoinService>();
 builder.Services.AddScoped<CouponNotificationService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Public.AnonymousJoinService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.GetQueueEntryStatusService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.LeaveQueueService>();
+builder.Services.AddScoped<Grande.Fila.API.Application.Public.UpdateQueueEntryService>();
 builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.MockQrCodeGenerator>();
 builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
 builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
@@ -286,7 +321,8 @@ try
         
         logger?.LogInformation("Application starting up...");
         logger?.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
-        logger?.LogInformation("Listening on port: {Port}", Environment.GetEnvironmentVariable("WEBSITES_PORT") ?? "80");
+        logger?.LogInformation("Listening on port: {Port}", port);
+        logger?.LogInformation("Monitoring provider: {Provider}", monitoringProvider);
         
         // Quick connection string validation without detailed parsing
         var connectionString = config.GetConnectionString("MySqlConnection");
@@ -328,7 +364,7 @@ if (isProduction)
         return next();
     });
     
-    // Application Insights telemetry is automatically enabled via AddApplicationInsightsTelemetry
+    // Monitoring is configured via provider-agnostic interface
 }
 
 // Database migration and seeding (when explicitly enabled, regardless of environment)
@@ -556,7 +592,7 @@ app.MapGet("/diagnostics/config", (IConfiguration config) =>
         useSqlDatabase = config.GetValue<bool>("Database:UseSqlDatabase", true),
         useInMemoryDatabase = config.GetValue<bool>("Database:UseInMemoryDatabase", false),
         useBogusRepositories = config.GetValue<bool>("Database:UseBogusRepositories", false),
-        applicationInsightsConfigured = !string.IsNullOrEmpty(config["ApplicationInsights:ConnectionString"])
+        monitoringProvider = config["Monitoring:Provider"] ?? "BoaHost"
     };
 }).WithTags("Diagnostics");
 
