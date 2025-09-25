@@ -1,45 +1,73 @@
-# BoaHost Standalone Deployment Guide (No Docker Required)
+# EuTôNaFila / QueueHub - Deployment Guide
 
-This guide explains how to deploy the QueueHub API directly to your BoaHost server as a standalone .NET application without Docker.
+## Overview
+
+This document provides comprehensive deployment instructions for the EuTôNaFila queue management platform on BoaHost infrastructure.
 
 ## Prerequisites
 
-1. **BoaHost Server Access**: SSH access or file manager access to your BoaHost server
-2. **Linux Server**: The BoaHost server should run Linux (Ubuntu, CentOS, or similar)
-3. **Domain Configuration**: Your domain should point to the BoaHost server
-4. **MySQL Access**: The server should be able to connect to `mysql.boahost.com`
+### System Requirements
+- **OS**: Linux (Ubuntu 20.04+) or Windows Server 2019+
+- **RAM**: Minimum 8GB, Recommended 16GB+
+- **CPU**: Minimum 4 cores, Recommended 8+ cores
+- **Storage**: Minimum 100GB SSD, Recommended 500GB+ SSD
+- **Network**: Stable internet connection with static IP
 
-## What This Deployment Includes
-
-- ✅ **Standalone .NET Application**: Self-contained executable with all dependencies
-- ✅ **Production Configuration**: Optimized settings for production environment
-- ✅ **Systemd Service**: Automatic startup and management
-- ✅ **Database Setup**: Automatic MySQL schema creation
-- ✅ **Health Monitoring**: Built-in health checks and logging
+### Software Requirements
+- **PowerShell**: 7.0+ (Windows) or PowerShell Core (Linux)
+- **MySQL Client**: 8.0+
+- **BoaHost Account**: With MySQL database access and Plesk control panel
 
 ## Deployment Methods
 
-### Method 1: Complete Automated Deployment
+### Method 1: BoaHost Plesk Deployment (Recommended)
 
-1. **Upload the deployment package to your BoaHost server**
-2. **Extract the files**
-3. **Run the automated deployment script**
-
+#### Step 1: Prepare Application
 ```bash
-# Extract the deployment package
-unzip QueueHub-BoaHost-Standalone.zip
-cd QueueHub-BoaHost-Standalone
-
-# Make scripts executable
-chmod +x scripts/*.sh
-
-# Run the complete deployment
-./scripts/deploy-boahost-standalone.sh
+# Publish the application
+dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish
 ```
 
-### Method 2: Step-by-Step Manual Deployment
+#### Step 2: Configure BoaHost MySQL
+1. Login to BoaHost Control Panel
+2. Navigate to MySQL Databases
+3. Create database: `QueueHubDb`
+4. Create MySQL user with strong password
+5. Note down connection details:
+   - Host: `mysql.boahost.com`
+   - Port: `3306`
+   - Database: `QueueHubDb`
+   - Username: Your MySQL username
+   - Password: Your MySQL password
 
-#### Step 1: Set Up Application Directory
+#### Step 3: Upload to BoaHost
+1. Upload `publish/` folder to domain path (e.g., `httpdocs/api`)
+2. Configure .NET application in Plesk
+3. Set reverse proxy from domain to internal Kestrel port
+
+#### Step 4: Configure Environment Variables
+Set these in Plesk:
+```bash
+ASPNETCORE_ENVIRONMENT=Production
+MYSQL_HOST=mysql.boahost.com
+MYSQL_DATABASE=QueueHubDb
+MYSQL_USER=your_username
+MYSQL_PASSWORD=your_password
+MYSQL_PORT=3306
+JWT_KEY=your_jwt_secret_key
+MONITORING_PROVIDER=BoaHost
+BOAHOST_LOG_LEVEL=Information
+BOAHOST_ENABLE_FILE_LOGGING=true
+BOAHOST_LOG_PATH=/var/log/queuehub
+```
+
+#### Step 5: Database Migration
+- Ensure `Database:AutoMigrate=true` in configuration
+- Restart application to apply migrations automatically
+
+### Method 2: Standalone Server Deployment
+
+#### Step 1: Server Setup
 ```bash
 # Create application directory
 sudo mkdir -p /var/www/queuehub-api
@@ -47,10 +75,10 @@ sudo chown -R $USER:$USER /var/www/queuehub-api
 cd /var/www/queuehub-api
 ```
 
-#### Step 2: Install .NET 8 (if not already installed)
+#### Step 2: Install .NET 8
 ```bash
 # For Ubuntu/Debian
-wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
 sudo dpkg -i packages-microsoft-prod.deb
 sudo apt-get update
 sudo apt-get install -y dotnet-sdk-8.0
@@ -62,28 +90,13 @@ sudo yum install -y dotnet-sdk-8.0
 
 #### Step 3: Copy Application Files
 ```bash
-# Copy all files from the deployment package
-cp -r /path/to/deployment/* /var/www/queuehub-api/
-cd /var/www/queuehub-api
-
-# Make the application executable
+# Copy published files
+cp -r /path/to/publish/* /var/www/queuehub-api/
 chmod +x GrandeTech.QueueHub.API
 ```
 
-#### Step 4: Set Up Database
+#### Step 4: Create Systemd Service
 ```bash
-# Install MySQL client (if needed)
-sudo apt-get install -y mysql-client  # Ubuntu/Debian
-# or
-sudo yum install -y mysql            # CentOS/RHEL
-
-# Run database setup
-./scripts/setup-database.sh
-```
-
-#### Step 5: Create Systemd Service
-```bash
-# Create the service file
 sudo tee /etc/systemd/system/queuehub-api.service > /dev/null <<EOF
 [Unit]
 Description=GrandeTech QueueHub API
@@ -103,23 +116,13 @@ Environment=ASPNETCORE_URLS=http://0.0.0.0:80
 [Install]
 WantedBy=multi-user.target
 EOF
+```
 
-# Enable and start the service
+#### Step 5: Enable and Start Service
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable queuehub-api
 sudo systemctl start queuehub-api
-```
-
-#### Step 6: Verify Deployment
-```bash
-# Check service status
-sudo systemctl status queuehub-api
-
-# Test the API
-curl http://localhost/health
-
-# View logs
-sudo journalctl -u queuehub-api -f
 ```
 
 ## Configuration Files
@@ -136,15 +139,16 @@ sudo journalctl -u queuehub-api -f
     "Audience": "GrandeTech.QueueHub.Production",
     "ExpirationMinutes": 30
   },
-  "ASPNETCORE_ENVIRONMENT": "Production",
-  "Urls": "http://0.0.0.0:80"
+  "Database": {
+    "Provider": "MySQL",
+    "AutoMigrate": true
+  }
 }
 ```
 
 ## Service Management
 
 ### Useful Commands
-
 ```bash
 # Start the service
 sudo systemctl start queuehub-api
@@ -163,18 +167,11 @@ sudo journalctl -u queuehub-api -f
 
 # View recent logs
 sudo journalctl -u queuehub-api --no-pager -n 50
-
-# Enable auto-start on boot
-sudo systemctl enable queuehub-api
-
-# Disable auto-start on boot
-sudo systemctl disable queuehub-api
 ```
 
-## Monitoring and Troubleshooting
+## Monitoring and Health Checks
 
-### Health Checks
-
+### Health Endpoints
 ```bash
 # Basic health check
 curl http://localhost/health
@@ -187,7 +184,6 @@ curl http://localhost/api/Health/database
 ```
 
 ### Log Analysis
-
 ```bash
 # View all logs
 sudo journalctl -u queuehub-api
@@ -195,17 +191,13 @@ sudo journalctl -u queuehub-api
 # View logs from today
 sudo journalctl -u queuehub-api --since today
 
-# View logs with timestamps
-sudo journalctl -u queuehub-api --no-pager -o short-iso
-
 # Filter for errors
 sudo journalctl -u queuehub-api --no-pager | grep -i error
 ```
 
 ### Performance Monitoring
-
 ```bash
-# Check if the service is running
+# Check if service is running
 sudo systemctl is-active queuehub-api
 
 # Check port usage
@@ -221,7 +213,6 @@ top -p $(pgrep -f GrandeTech.QueueHub.API)
 ## Database Management
 
 ### Manual Database Operations
-
 ```bash
 # Connect to MySQL
 mysql -h mysql.boahost.com -u nafila -psigmarizzlerz67 -P 3306 QueueHubDb
@@ -247,7 +238,6 @@ mysql -h mysql.boahost.com -u nafila -psigmarizzlerz67 -P 3306 QueueHubDb < back
 ## Updates and Maintenance
 
 ### Updating the Application
-
 ```bash
 # Stop the service
 sudo systemctl stop queuehub-api
@@ -266,7 +256,6 @@ curl http://localhost/health
 ```
 
 ### Regular Maintenance
-
 ```bash
 # Check disk space
 df -h
@@ -279,7 +268,6 @@ sudo journalctl --since "1 week ago"
 
 # Update system packages
 sudo apt update && sudo apt upgrade  # Ubuntu/Debian
-# or
 sudo yum update                      # CentOS/RHEL
 ```
 
@@ -287,30 +275,45 @@ sudo yum update                      # CentOS/RHEL
 
 ### Common Issues
 
-1. **Service Won't Start**:
-   - Check logs: `sudo journalctl -u queuehub-api -n 50`
-   - Verify file permissions: `ls -la /var/www/queuehub-api/GrandeTech.QueueHub.API`
-   - Check configuration: `cat /var/www/queuehub-api/appsettings.Production.json`
+#### 1. Service Won't Start
+```bash
+# Check logs
+sudo journalctl -u queuehub-api -n 50
 
-2. **Database Connection Issues**:
-   - Test MySQL connection: `mysql -h mysql.boahost.com -u nafila -psigmarizzlerz67 -P 3306 -e "SELECT 1;"`
-   - Check network connectivity: `ping mysql.boahost.com`
-   - Verify credentials in configuration
+# Verify file permissions
+ls -la /var/www/queuehub-api/GrandeTech.QueueHub.API
 
-3. **Port Already in Use**:
-   - Check what's using port 80: `sudo netstat -tlnp | grep :80`
-   - Stop conflicting services or change the port in configuration
+# Check configuration
+cat /var/www/queuehub-api/appsettings.Production.json
+```
 
-4. **Permission Denied**:
-   - Fix file ownership: `sudo chown -R $USER:$USER /var/www/queuehub-api`
-   - Fix file permissions: `chmod +x /var/www/queuehub-api/GrandeTech.QueueHub.API`
+#### 2. Database Connection Issues
+```bash
+# Test MySQL connection
+mysql -h mysql.boahost.com -u nafila -psigmarizzlerz67 -P 3306 -e "SELECT 1;"
 
-### Getting Help
+# Check network connectivity
+ping mysql.boahost.com
 
-1. Check the application logs first
-2. Verify all prerequisites are met
-3. Test each component individually
-4. Contact BoaHost support for server-specific issues
+# Verify credentials in configuration
+```
+
+#### 3. Port Already in Use
+```bash
+# Check what's using port 80
+sudo netstat -tlnp | grep :80
+
+# Stop conflicting services or change port in configuration
+```
+
+#### 4. Permission Denied
+```bash
+# Fix file ownership
+sudo chown -R $USER:$USER /var/www/queuehub-api
+
+# Fix file permissions
+chmod +x /var/www/queuehub-api/GrandeTech.QueueHub.API
+```
 
 ## Post-Deployment Checklist
 
@@ -322,3 +325,14 @@ sudo yum update                      # CentOS/RHEL
 - [ ] Monitoring is set up
 - [ ] Backups are configured
 - [ ] Firewall rules are properly configured
+
+## Production URLs
+
+Once deployed, your API will be available at:
+- **Main API**: `https://api.eutonafila.com.br`
+- **Swagger Docs**: `https://api.eutonafila.com.br/swagger/index.html`
+- **Health Check**: `https://api.eutonafila.com.br/api/Health`
+
+---
+
+*Last updated: 2025-01-15*

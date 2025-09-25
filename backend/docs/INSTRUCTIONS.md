@@ -1,45 +1,138 @@
-# Project Coding Instructions
+# EuTôNaFila / QueueHub - Complete Project Documentation
 
-Follow these guidelines whenever generating or modifying code, infrastructure, or documentation for **EuTôNaFila / QueueHub**. If any instruction conflicts with an explicit system directive, the system directive prevails.
+## Overview
 
----
+This is the comprehensive documentation for the EuTôNaFila queue management platform. This document consolidates all essential information for development, deployment, architecture, and operations.
 
-## 1  Core Practices
+## Core Development Practices
 
-- **TDD First**   Write the failing test before implementation.
-- **DDD Layering**   Domain, Application, Infrastructure, API separation.
-- **Thin Controllers**   Validate → delegate → format response.
-- **Integration Tests**   `WebApplicationFactory<Program>` pattern.
-- **Observability Hooks**   Structured logs, metrics, correlation IDs.
-- **Security**   JWT for protected routes; authorization attributes.
- - **Primitives for Persistence**   Use simple column types optimized for MySQL; avoid EF owned types and JSON conversions.
+- **TDD First** - Write the failing test before implementation
+- **DDD Layering** - Domain, Application, Infrastructure, API separation  
+- **Thin Controllers** - Validate → delegate → format response
+- **Integration Tests** - `WebApplicationFactory<Program>` pattern
+- **Observability Hooks** - Structured logs, metrics, correlation IDs
+- **Security** - JWT for protected routes; authorization attributes
+- **Primitives for Persistence** - Use simple column types optimized for MySQL; avoid EF owned types and JSON conversions
 
-### Local environment
+## Development Environment
 
+### Local Setup
 - **Runtime**: .NET 8
 - **Database**: MySQL 8.x (local instance)
 - **API (dev)**: http://localhost:5098 (per `Properties/launchSettings.json`)
 - **Connection string key**: `ConnectionStrings:MySqlConnection`
-- **Dev workflow**:
-  - Install MySQL 8 locally and create database `QueueHubDb`
-  - Set credentials in `appsettings.Development.json` or environment variables
-  - From `GrandeTech.QueueHub/GrandeTech.QueueHub.API`, run: `dotnet run`
 
-  Example `appsettings.Development.json` snippet:
-  ```json
-  {
-    "ConnectionStrings": {
-      "MySqlConnection": "Server=localhost;Database=QueueHubDb;User=root;Password=your_password;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;"
-    },
-    "Database": { "Provider": "MySQL", "AutoMigrate": true }
-  }
-  ```
+### Development Workflow
+1. Install MySQL 8 locally and create database `QueueHubDb`
+2. Set credentials in `appsettings.Development.json` or environment variables
+3. From `GrandeTech.QueueHub/GrandeTech.QueueHub.API`, run: `dotnet run`
 
-  Production Swagger: `https://api.eutonafila.com.br/swagger/index.html`
+### Configuration Example
+```json
+{
+  "ConnectionStrings": {
+    "MySqlConnection": "Server=localhost;Database=QueueHubDb;User=root;Password=your_password;Port=3306;CharSet=utf8mb4;SslMode=None;ConnectionTimeout=30;"
+  },
+  "Database": { "Provider": "MySQL", "AutoMigrate": true }
+}
+```
+
+### Production API
+- **Swagger**: `https://api.eutonafila.com.br/swagger/index.html`
+- **Health Check**: `https://api.eutonafila.com.br/api/Health`
+
+## Deployment
+
+### BoaHost Production Deployment
+
+#### Prerequisites
+- BoaHost hosting account with MySQL database access
+- Plesk access for configuration
+- Published project files
+
+#### Deployment Steps
+1. **Publish Application**:
+   ```bash
+   dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish
+   ```
+
+2. **Configure BoaHost MySQL**:
+   ```bash
+   MYSQL_HOST=mysql.boahost.com
+   MYSQL_DATABASE=QueueHubDb
+   MYSQL_USER=your_username
+   MYSQL_PASSWORD=your_password
+   MYSQL_PORT=3306
+   ```
+
+3. **Upload to BoaHost**:
+   - Upload `publish/` folder to domain path (e.g., `httpdocs/api`)
+   - Configure .NET application in Plesk
+   - Set environment variables in Plesk
+
+4. **Environment Variables**:
+   ```bash
+   ASPNETCORE_ENVIRONMENT=Production
+   MYSQL_HOST=mysql.boahost.com
+   MYSQL_DATABASE=QueueHubDb
+   MYSQL_USER=nafila
+   MYSQL_PASSWORD=sigmarizzlerz67
+   MYSQL_PORT=3306
+   JWT_KEY=your_jwt_secret
+   ```
+
+#### Standalone Deployment (No Docker)
+For direct server deployment without Docker:
+
+```bash
+# Create application directory
+sudo mkdir -p /var/www/queuehub-api
+cd /var/www/queuehub-api
+
+# Install .NET 8
+wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-8.0
+
+# Create systemd service
+sudo tee /etc/systemd/system/queuehub-api.service > /dev/null <<EOF
+[Unit]
+Description=GrandeTech QueueHub API
+After=network.target
+
+[Service]
+Type=notify
+ExecStart=/var/www/queuehub-api/GrandeTech.QueueHub.API
+WorkingDirectory=/var/www/queuehub-api
+Restart=always
+RestartSec=10
+User=$USER
+Group=$USER
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://0.0.0.0:80
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable queuehub-api
+sudo systemctl start queuehub-api
+```
+
+#### Monitoring Configuration
+```bash
+MONITORING_PROVIDER=BoaHost
+BOAHOST_LOG_LEVEL=Information
+BOAHOST_ENABLE_FILE_LOGGING=true
+BOAHOST_LOG_PATH=/var/log/queuehub
+```
 
 ---
 
-## 2  Use‑Case Catalogue (CSV)
+## Use Cases
 
 ```csv
 ID,Role,Use  Case,Description,Priority,Status
@@ -131,43 +224,82 @@ UC-RATE,Client,Rate barber (future),Rate experience post‑service.,4,Posterior
 | **UserAccount**      | UC-LOGINCLIENT · UC-LOGINWEB · UC-JWT · UC-PROTECT · UC-BARBERLOGIN · UC-QRJOIN · UC-ADMINLOGIN                                                                                                                                                                                                                                                                                                                       |
 | **Feedback**         | UC-RATE (V2)                                                                                                                                                                                                                                                                                                                                                                                                          |
 
+## Architecture
+
+### Backend For Frontend (BFF) Pattern
+The platform uses a BFF architecture to support multiple frontends while maintaining a single core backend:
+
+#### Core Components
+- **Centralized Backend API**: Houses core business logic, data models, and domain services
+- **BFF Services**: Dedicated services for each frontend type (web, mobile, kiosk)
+- **Location-Slug Routing**: Globally unique location identifiers for consistent URL structure
+
+#### URL Structure
+```
+https://www.eutonafila.com.br/{location-slug}
+https://www.eutonafila.com.br/{location-slug}/queue
+https://www.eutonafila.com.br/{location-slug}/admin
+https://kiosk.eutonafila.com.br/{location-slug}
+```
+
+#### BFF Responsibilities
+1. **Data Transformation**: Reshape data for specific frontend requirements
+2. **Authentication Flows**: Frontend-specific authentication methods
+3. **Optimization**: Response compression and client-specific caching
+4. **API Versioning**: Client-specific API versioning and backward compatibility
+
+### Database Architecture
+- **Primary Database**: MySQL 8.x with UTF-8 support
+- **Data Type Mapping**: Optimized for MySQL compatibility
+- **Multi-tenancy**: Organization and location-based isolation
+- **Performance**: Indexed queries and connection pooling
+
+## Security Model
+
+### Role Structure
+The platform uses a consolidated role-based security model:
+
+#### Final Roles
+1. **PlatformAdmin** - Platform-level administrator (cross-tenant)
+2. **Admin** - Organization administrator (combined Admin + Owner)
+3. **Barber** - Staff member at a location
+4. **Client** - End user/customer
+5. **ServiceAccount** - Background processes/system operations
+
+#### Authorization Attributes
+```csharp
+[RequirePlatformAdmin]  // Cross-organization operations
+[RequireAdmin]         // Organization-level operations
+[RequireBarber]        // Location-level operations
+[RequireClient]        // Authenticated user operations
+[AllowPublicAccess]    // No authentication required
+[RequireServiceAccount] // Background processes
+```
+
+#### Tenant-Aware Claims Structure
+```csharp
+// Standard claims
+sub: user_id
+role: PlatformAdmin|Admin|Barber|Client|ServiceAccount
+email: user@example.com
+
+// Tenant-specific claims
+org_id: organization_guid
+loc_id: location_guid (for location-scoped users)
+tenant_slug: location-slug
+permissions: ["read:queue", "write:staff"]
+is_service_account: true|false
+```
+
+### Security Implementation
+- **JWT Authentication**: Token-based authentication for all protected routes
+- **Tenant Isolation**: Strong separation between organizations and locations
+- **Role-Based Access**: Hierarchical permission system
+- **Public Endpoints**: Clear separation of public vs private operations
+
 ---
 
-## 4  Hosting on BoaHost/Plesk
-
-### 4.1  Overview
-We deploy on BoaHost using Plesk.
-
-### 4.2  Publish
-- Framework-dependent (server has .NET runtime):
-  ```bash
-  dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish
-  ```
-- Self-contained (server without .NET runtime), choose appropriate RID (e.g., `linux-x64`, `win-x64`):
-  ```bash
-  dotnet publish GrandeTech.QueueHub/GrandeTech.QueueHub.API -c Release -o publish -r linux-x64 --self-contained true
-  ```
-
-### 4.3  Deploy via Plesk
-- Upload `publish/` to your domain path (e.g., `httpdocs/api`).
-- Configure the app to run with Kestrel; set reverse proxy from domain to the internal Kestrel port.
-- Set environment variables in Plesk:
-  - `ASPNETCORE_ENVIRONMENT=Production`
-  - `MYSQL_SERVER` (or `MYSQL_HOST`), `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_PORT=3306`
-  - `JWT_KEY`
-  The app reads `ConnectionStrings:MySqlConnection` from `appsettings.Production.json` with environment expansion.
-
-### 4.4  MySQL and TLS
-- Use BoaHost MySQL hostname and enable `SslMode=Required` in production.
-- Ensure reverse proxy forwards `X-Forwarded-*` headers.
-
-### 4.5  Health and Logs
-- Health: `/api/Health`, `/api/Health/database`.
-- Use Plesk logs; optionally configure rolling file logs.
-
----
-
-## 5  EuTôNaFila Development Guidelines
+## Development Guidelines
 
 1. **TDD First**   Write the failing test before implementation.
 2. **DDD Layering**   Domain, Application, Infrastructure, API separation.
@@ -494,9 +626,31 @@ Then proceed with the remaining MVP items:
 - Service history functionality enables tracking customer haircut preferences over time
 - Location-level queue control allows temporary disabling for holidays/maintenance
 
----
+## MySQL Data Type Mapping
 
-## 8  MySQL-Optimized Flattening Plan
+### Core Data Type Mappings
+
+| SQL Server Type | MySQL Type | Notes | Example |
+|----------------|------------|-------|---------|
+| `uniqueidentifier` | `CHAR(36)` | GUID as string | `550e8400-e29b-41d4-a716-446655440000` |
+| `nvarchar(max)` | `LONGTEXT` | Large text | `LONGTEXT CHARACTER SET utf8mb4` |
+| `varbinary(max)` | `LONGBLOB` | Binary data | `LONGBLOB` |
+| `datetime2` | `DATETIME(6)` | High precision datetime | `2024-01-15 14:30:25.123456` |
+| `bit` | `TINYINT(1)` | Boolean | `0` or `1` |
+| `rowversion` | `TIMESTAMP` | Auto-updating timestamp | `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` |
+| `decimal(18,2)` | `DECIMAL(18,2)` | Same precision | `123.45` |
+
+### Character Set and Collation
+- **Character Set**: `utf8mb4` (supports full Unicode including emojis)
+- **Collation**: `utf8mb4_unicode_ci` (case-insensitive Unicode)
+
+### Performance Optimizations
+1. **JSON Columns**: Use native `JSON` type instead of `LONGTEXT`
+2. **Indexes**: Create composite indexes for common query patterns
+3. **Connection Pooling**: Configure appropriate pool sizes
+4. **Query Optimization**: Use EXPLAIN to analyze query performance
+
+## MySQL-Optimized Entity Flattening
 
 ### 8.1  Goals and Principles
 
@@ -922,7 +1076,82 @@ modelBuilder.Entity<Location>().Ignore(e => e.WeeklyHours);
 - Test that existing data still works
 - Ensure no data loss during rollback
 
-## 9  Anonymous User System
+## Kiosk Display Integration
+
+### API Endpoint
+```
+GET /api/kiosk/display/{locationId}
+```
+
+### Response Structure
+```json
+{
+  "success": true,
+  "currentPosition": 1,        // Position number currently being served
+  "currentlyServing": "João Silva",  // Customer name being served
+  "totalWaiting": 2,
+  "queueEntries": [
+    {
+      "position": 1,
+      "status": "CheckedIn",   // Currently being served
+      "customerName": "João Silva"
+    }
+  ]
+}
+```
+
+### Flutter Integration Example
+```dart
+Future<void> fetchCurrentPosition() async {
+  final response = await http.get(
+    Uri.parse('${baseUrl}/api/kiosk/display/$locationId'),
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    
+    if (data['success']) {
+      setState(() {
+        currentPosition = data['currentPosition'];
+      });
+    }
+  }
+}
+
+// Display the current position:
+Text(
+  currentPosition != null 
+    ? 'Atendendo senha: $currentPosition'
+    : 'Nenhuma senha sendo atendida',
+  style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+)
+```
+
+### Kiosk Display Best Practices
+- **Polling Strategy**: Poll every 5-10 seconds for updates
+- **Visual Design**: Hide cursor, disable text selection, remove scrollbars
+- **Error Handling**: Implement exponential backoff for failed requests
+- **Performance**: Use lightweight data transfer, minimal payload
+
+### CSS for Kiosk Displays
+```css
+/* Hide cursor for kiosk displays */
+body { cursor: none; }
+
+/* Disable text selection */
+* {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Hide scrollbars */
+::-webkit-scrollbar { display: none; }
+body { -ms-overflow-style: none; scrollbar-width: none; }
+```
+
+## Anonymous User System
 
 ### 9.1  Current Implementation Status
 
@@ -1064,6 +1293,47 @@ interface AnonymousJoinResult {
 - Easier debugging and troubleshooting
 - Improved code quality
 
+## MCP Docker Setup
+
+### Context7 MCP Server Configuration
+
+For running the `mcp/context7` Docker image as a stdio-based MCP server:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "MCP_TRANSPORT=stdio",
+        "--entrypoint=",
+        "mcp/context7",
+        "node",
+        "dist/index.js"
+      ],
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+```
+
+### Key Configuration Points
+- **MCP_TRANSPORT=stdio**: Forces stdio mode for Cursor compatibility
+- **--entrypoint=""**: Clears default HTTP mode entrypoint
+- **"node", "dist/index.js"**: Direct execution of MCP server script
+
+### Setup Steps
+1. Create `mcp.json` file in `~/.cursor/mcp.json`
+2. Paste the configuration above
+3. Restart Cursor
+4. Context7 MCP tools should now be available
+
 ---
 
-*Last updated: 2025-09-15*
+*Last updated: 2025-01-15*
