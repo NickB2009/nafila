@@ -56,11 +56,7 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
                 Converters = { new NullableTimeSpanConverter() }
             };
             
-            builder.Property(l => l.WeeklyHours)
-                .HasConversion(
-                    v => JsonSerializer.Serialize(v, jsonOptions),
-                    v => JsonSerializer.Deserialize<WeeklyBusinessHours>(v, jsonOptions)!)
-                .HasColumnName("WeeklyBusinessHours");
+            // WeeklyHours is now flattened into individual day properties
 
             // Value objects are now configured in QueueHubDbContext.ConfigureValueObjects()
             // No need to ignore them anymore

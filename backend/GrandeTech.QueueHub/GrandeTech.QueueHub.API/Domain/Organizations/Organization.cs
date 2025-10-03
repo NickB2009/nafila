@@ -16,7 +16,14 @@ namespace Grande.Fila.API.Domain.Organizations
         public Email? ContactEmail { get; private set; }
         public PhoneNumber? ContactPhone { get; private set; }
         public string? WebsiteUrl { get; private set; }
-        public BrandingConfig BrandingConfig { get; private set; } = null!;
+        // Flattened branding properties (replacing BrandingConfig value object)
+        public string PrimaryColor { get; private set; } = "#3B82F6";
+        public string SecondaryColor { get; private set; } = "#1E40AF";
+        public string LogoUrl { get; private set; } = string.Empty;
+        public string FaviconUrl { get; private set; } = string.Empty;
+        public string CompanyName { get; private set; } = string.Empty;
+        public string TagLine { get; private set; } = string.Empty;
+        public string FontFamily { get; private set; } = "Arial, sans-serif";
         public Guid SubscriptionPlanId { get; private set; }
         public bool IsActive { get; private set; }
         public bool SharesDataForAnalytics { get; private set; }
@@ -48,7 +55,28 @@ namespace Grande.Fila.API.Domain.Organizations
             ContactEmail = contactEmail != null ? Email.Create(contactEmail) : null;
             ContactPhone = contactPhone != null ? PhoneNumber.Create(contactPhone) : null;
             WebsiteUrl = websiteUrl;
-            BrandingConfig = brandingConfig ?? BrandingConfig.Default;
+            // Set flattened branding properties
+            if (brandingConfig != null)
+            {
+                PrimaryColor = brandingConfig.PrimaryColor;
+                SecondaryColor = brandingConfig.SecondaryColor;
+                LogoUrl = brandingConfig.LogoUrl;
+                FaviconUrl = brandingConfig.FaviconUrl;
+                CompanyName = brandingConfig.CompanyName;
+                TagLine = brandingConfig.TagLine;
+                FontFamily = brandingConfig.FontFamily;
+            }
+            else
+            {
+                // Use default values
+                PrimaryColor = "#3B82F6";
+                SecondaryColor = "#1E40AF";
+                LogoUrl = string.Empty;
+                FaviconUrl = string.Empty;
+                CompanyName = name;
+                TagLine = string.Empty;
+                FontFamily = "Arial, sans-serif";
+            }
             SubscriptionPlanId = subscriptionPlanId;
             IsActive = true;
             SharesDataForAnalytics = false;
@@ -87,14 +115,14 @@ namespace Grande.Fila.API.Domain.Organizations
             string? tagLine,
             string updatedBy)
         {
-            BrandingConfig = BrandingConfig.Create(
-                primaryColor,
-                secondaryColor,
-                logoUrl ?? BrandingConfig.LogoUrl,
-                faviconUrl ?? BrandingConfig.FaviconUrl,
-                Name,
-                tagLine ?? BrandingConfig.TagLine
-            );
+            // Update flattened branding properties
+            PrimaryColor = ValidateHexColor(primaryColor);
+            SecondaryColor = ValidateHexColor(secondaryColor ?? "#FFFFFF");
+            LogoUrl = logoUrl?.Trim() ?? LogoUrl;
+            FaviconUrl = faviconUrl?.Trim() ?? FaviconUrl;
+            CompanyName = Name.Trim();
+            TagLine = tagLine?.Trim() ?? TagLine;
+            // Keep existing font family
 
             MarkAsModified(updatedBy);
             AddDomainEvent(new OrganizationBrandingUpdatedEvent(Id));
@@ -156,6 +184,36 @@ namespace Grande.Fila.API.Domain.Organizations
                 MarkAsModified(updatedBy);
                 AddDomainEvent(new OrganizationDeactivatedEvent(Id));
             }
+        }
+
+        /// <summary>
+        /// Validates and formats hex color (moved from BrandingConfig)
+        /// </summary>
+        private static string ValidateHexColor(string color)
+        {
+            if (string.IsNullOrWhiteSpace(color))
+                return "#000000";
+
+            color = color.Trim();
+
+            // If it doesn't start with #, add it
+            if (!color.StartsWith("#"))
+                color = "#" + color;
+
+            // If it's a short form hex color (#RGB), convert to long form (#RRGGBB)
+            if (color.Length == 4)
+            {
+                color = "#" +
+                       color[1] + color[1] +
+                       color[2] + color[2] +
+                       color[3] + color[3];
+            }
+
+            // Check if it's a valid hex color
+            if (color.Length != 7 || !System.Text.RegularExpressions.Regex.IsMatch(color, "^#[0-9A-Fa-f]{6}$"))
+                throw new ArgumentException("Invalid hex color format. Must be #RRGGBB");
+
+            return color.ToUpperInvariant();
         }
     }
 }

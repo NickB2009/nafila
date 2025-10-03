@@ -239,12 +239,12 @@ namespace Grande.Fila.API.Controllers
                 SubscriptionPlanId = org.SubscriptionPlanId,
                 BrandingConfig = new
                 {
-                    PrimaryColor = org.BrandingConfig.PrimaryColor,
-                    SecondaryColor = org.BrandingConfig.SecondaryColor,
-                    LogoUrl = org.BrandingConfig.LogoUrl,
-                    FaviconUrl = org.BrandingConfig.FaviconUrl,
-                    CompanyName = org.BrandingConfig.CompanyName,
-                    TagLine = org.BrandingConfig.TagLine
+                    PrimaryColor = org.PrimaryColor,
+                    SecondaryColor = org.SecondaryColor,
+                    LogoUrl = org.LogoUrl,
+                    FaviconUrl = org.FaviconUrl,
+                    CompanyName = org.CompanyName,
+                    TagLine = org.TagLine
                 },                ServiceProviderCount = org.LocationIds.Count,
                 CreatedAt = org.CreatedAt,
                 UpdatedAt = org.LastModifiedAt
@@ -285,12 +285,12 @@ namespace Grande.Fila.API.Controllers
                 SubscriptionPlanId = organization.SubscriptionPlanId,
                 BrandingConfig = new
                 {
-                    PrimaryColor = organization.BrandingConfig.PrimaryColor,
-                    SecondaryColor = organization.BrandingConfig.SecondaryColor,
-                    LogoUrl = organization.BrandingConfig.LogoUrl,
-                    FaviconUrl = organization.BrandingConfig.FaviconUrl,
-                    CompanyName = organization.BrandingConfig.CompanyName,
-                    TagLine = organization.BrandingConfig.TagLine
+                    PrimaryColor = organization.PrimaryColor,
+                    SecondaryColor = organization.SecondaryColor,
+                    LogoUrl = organization.LogoUrl,
+                    FaviconUrl = organization.FaviconUrl,
+                    CompanyName = organization.CompanyName,
+                    TagLine = organization.TagLine
                 },                ServiceProviderIds = organization.LocationIds,
                 CreatedAt = organization.CreatedAt,
                 UpdatedAt = organization.LastModifiedAt
@@ -322,12 +322,12 @@ namespace Grande.Fila.API.Controllers
                 WebsiteUrl = organization.WebsiteUrl,
                 BrandingConfig = new
                 {
-                    PrimaryColor = organization.BrandingConfig.PrimaryColor,
-                    SecondaryColor = organization.BrandingConfig.SecondaryColor,
-                    LogoUrl = organization.BrandingConfig.LogoUrl,
-                    FaviconUrl = organization.BrandingConfig.FaviconUrl,
-                    CompanyName = organization.BrandingConfig.CompanyName,
-                    TagLine = organization.BrandingConfig.TagLine
+                    PrimaryColor = organization.PrimaryColor,
+                    SecondaryColor = organization.SecondaryColor,
+                    LogoUrl = organization.LogoUrl,
+                    FaviconUrl = organization.FaviconUrl,
+                    CompanyName = organization.CompanyName,
+                    TagLine = organization.TagLine
                 }
             };
 

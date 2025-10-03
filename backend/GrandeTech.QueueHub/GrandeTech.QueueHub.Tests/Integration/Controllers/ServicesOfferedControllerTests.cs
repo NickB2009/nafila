@@ -202,7 +202,7 @@ public class ServicesOfferedControllerTests
         Assert.AreEqual(addRequest.Name, getResult.Name);
         Assert.AreEqual(addRequest.Description, getResult.Description);
         Assert.AreEqual(addRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
-        Assert.AreEqual(addRequest.Price, getResult.Price.Amount);
+        Assert.AreEqual(addRequest.Price, getResult.PriceAmount);
         Assert.AreEqual(Guid.Parse(testLocationId), getResult.LocationId);
     }
 
@@ -327,7 +327,7 @@ public class ServicesOfferedControllerTests
             Assert.AreEqual(updateRequest.Description, getResult.Description);
             Assert.AreEqual(updateRequest.LocationId, getResult.LocationId);
             Assert.AreEqual(updateRequest.EstimatedDurationMinutes, getResult.EstimatedDurationMinutes);
-            Assert.AreEqual(updateRequest.Price, getResult.Price.Amount);
+            Assert.AreEqual(updateRequest.Price, getResult.PriceAmount);
             Assert.AreEqual(updateRequest.ImageUrl, getResult.ImageUrl);
             Assert.AreEqual(updateRequest.IsActive, getResult.IsActive);
         }
@@ -584,14 +584,9 @@ public class ServicesOfferedControllerTests
         public string Description { get; set; } = string.Empty;
         public Guid LocationId { get; set; }  // Changed from string to Guid
         public int EstimatedDurationMinutes { get; set; }
-        public PriceDto Price { get; set; } = new PriceDto();
+        public decimal? PriceAmount { get; set; }
+        public string PriceCurrency { get; set; } = "BRL";
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
-    }
-
-    public class PriceDto
-    {
-        public decimal Amount { get; set; }
-        public string Currency { get; set; } = "USD";
     }
 }

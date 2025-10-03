@@ -60,8 +60,8 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 entity.Address,
                 entity.ContactPhone?.Value,
                 entity.ContactEmail?.Value,
-                entity.WeeklyHours.Monday.OpenTime ?? TimeSpan.FromHours(9), // Default 9 AM if closed
-                entity.WeeklyHours.Monday.CloseTime ?? TimeSpan.FromHours(17), // Default 5 PM if closed
+                entity.MondayOpenTime ?? TimeSpan.FromHours(9), // Default 9 AM if closed
+                entity.MondayCloseTime ?? TimeSpan.FromHours(17), // Default 5 PM if closed
                 entity.MaxQueueSize,
                 entity.LateClientCapTimeInMinutes,
                 entity.CreatedBy ?? "system");

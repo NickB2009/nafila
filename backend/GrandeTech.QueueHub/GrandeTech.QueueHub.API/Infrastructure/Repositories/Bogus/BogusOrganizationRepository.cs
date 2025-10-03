@@ -57,7 +57,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 entity.ContactEmail?.Value,
                 entity.ContactPhone?.Value,
                 entity.WebsiteUrl,
-                entity.BrandingConfig,
+                null, // BrandingConfig is now flattened, pass null
                 entity.SubscriptionPlanId,
                 entity.CreatedBy ?? "system");
             

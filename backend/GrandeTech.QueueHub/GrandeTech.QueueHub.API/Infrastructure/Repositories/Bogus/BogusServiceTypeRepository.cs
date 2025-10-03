@@ -57,7 +57,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
                 entity.Description,
                 entity.LocationId,
                 entity.EstimatedDurationMinutes,
-                entity.Price?.Amount,
+                entity.PriceAmount,
                 entity.ImageUrl,
                 entity.CreatedBy ?? "system");
             

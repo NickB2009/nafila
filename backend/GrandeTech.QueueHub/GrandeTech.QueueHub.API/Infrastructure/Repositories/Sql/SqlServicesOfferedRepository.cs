@@ -100,14 +100,14 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
         public async Task<decimal> GetAveragePriceForLocationAsync(Guid locationId, CancellationToken cancellationToken = default)
         {
             var services = await _dbSet
-                .Where(s => s.LocationId == locationId && s.IsActive && s.Price != null)
+                .Where(s => s.LocationId == locationId && s.IsActive && s.PriceAmount != null)
                 .ToListAsync(cancellationToken);
 
             if (!services.Any())
                 return 0;
 
-            // Convert Money value objects to decimals for calculation
-            var prices = services.Where(s => s.Price != null).Select(s => s.Price!.Amount).ToList();
+            // Use flattened price properties for calculation
+            var prices = services.Where(s => s.PriceAmount != null).Select(s => s.PriceAmount!.Value).ToList();
             return prices.Any() ? prices.Average() : 0;
         }
     }

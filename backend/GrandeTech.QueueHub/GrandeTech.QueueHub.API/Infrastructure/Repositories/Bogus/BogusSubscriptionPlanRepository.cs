@@ -55,8 +55,8 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Bogus
             var subscriptionPlan = new SubscriptionPlan(
                 entity.Name,
                 entity.Description,
-                entity.MonthlyPrice.Amount,
-                entity.YearlyPrice.Amount,
+                entity.MonthlyPriceAmount,
+                entity.YearlyPriceAmount,
                 entity.MaxLocations,
                 entity.MaxStaffPerLocation,
                 entity.IncludesAnalytics,

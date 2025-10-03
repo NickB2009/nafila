@@ -13,7 +13,9 @@ namespace Grande.Fila.API.Domain.ServicesOffered
         public string? Description { get; private set; }
         public Guid LocationId { get; private set; }
         public int EstimatedDurationMinutes { get; private set; }
-        public Money? Price { get; private set; }
+        // Flattened price properties (replacing Money value object)
+        public decimal? PriceAmount { get; private set; }
+        public string PriceCurrency { get; private set; } = "BRL";
         public string? ImageUrl { get; private set; }
         public bool IsActive { get; private set; }
         public int TimesProvided { get; private set; }        public double ActualAverageDurationMinutes { get; private set; }
@@ -43,7 +45,8 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             Description = description;
             LocationId = locationId;
             EstimatedDurationMinutes = estimatedDurationMinutes;
-            Price = priceValue.HasValue ? Money.Create(priceValue.Value) : null;
+            PriceAmount = priceValue;
+            PriceCurrency = "BRL"; // Default to Brazilian Real
             ImageUrl = imageUrl;
             IsActive = true;
             TimesProvided = 0;
@@ -71,7 +74,8 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             Name = name;
             Description = description;
             EstimatedDurationMinutes = estimatedDurationMinutes;
-            Price = price.HasValue ? Money.Create(price.Value) : null;
+            PriceAmount = price;
+            // Keep existing currency
             ImageUrl = imageUrl;
             
             MarkAsModified(updatedBy);
@@ -128,7 +132,8 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             Description = description;
             LocationId = locationId;
             EstimatedDurationMinutes = estimatedDurationMinutes;
-            Price = price.HasValue ? Money.Create(price.Value, "USD") : null;
+            PriceAmount = price;
+            PriceCurrency = "BRL"; // Default to Brazilian Real
             ImageUrl = imageUrl;
             IsActive = isActive;
         }

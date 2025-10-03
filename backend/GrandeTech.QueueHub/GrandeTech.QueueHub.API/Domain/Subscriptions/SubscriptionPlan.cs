@@ -11,8 +11,11 @@ namespace Grande.Fila.API.Domain.Subscriptions
     public class SubscriptionPlan : BaseEntity, IAggregateRoot
     {
         public string Name { get; private set; } = string.Empty;
-        public string Description { get; private set; } = string.Empty;        public Money MonthlyPrice { get; private set; } = null!;
-        public Money YearlyPrice { get; private set; } = null!;
+        public string Description { get; private set; } = string.Empty;        // Flattened price properties (replacing Money value objects)
+        public decimal MonthlyPriceAmount { get; private set; }
+        public string MonthlyPriceCurrency { get; private set; } = "BRL";
+        public decimal YearlyPriceAmount { get; private set; }
+        public string YearlyPriceCurrency { get; private set; } = "BRL";
         public decimal Price { get; private set; } // Simple price property for queries
         public bool IsActive { get; private set; }
         public bool IsDefault { get; private set; }
@@ -50,8 +53,10 @@ namespace Grande.Fila.API.Domain.Subscriptions
 
             Name = name;
             Description = description ?? string.Empty;
-            MonthlyPrice = Money.Create(monthlyPrice);
-            YearlyPrice = Money.Create(yearlyPrice);
+            MonthlyPriceAmount = monthlyPrice;
+            MonthlyPriceCurrency = "BRL";
+            YearlyPriceAmount = yearlyPrice;
+            YearlyPriceCurrency = "BRL";
             IsActive = true;
             MaxLocations = maxLocations;
             MaxStaffPerLocation = maxStaffPerLocation;
@@ -88,8 +93,10 @@ namespace Grande.Fila.API.Domain.Subscriptions
 
             Name = name;
             Description = description ?? string.Empty;
-            MonthlyPrice = Money.Create(monthlyPrice);
-            YearlyPrice = Money.Create(yearlyPrice);
+            MonthlyPriceAmount = monthlyPrice;
+            MonthlyPriceCurrency = "BRL";
+            YearlyPriceAmount = yearlyPrice;
+            YearlyPriceCurrency = "BRL";
             MaxLocations = maxLocations;
             MaxStaffPerLocation = maxStaffPerLocation;
             IncludesAnalytics = includesAnalytics;

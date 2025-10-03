@@ -153,17 +153,41 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("ContactPhone")
                 .HasMaxLength(50);
 
+            // Configure flattened branding properties for Organization
             modelBuilder.Entity<Organization>()
-                .OwnsOne(e => e.BrandingConfig, branding =>
-                {
-                    branding.Property(b => b.PrimaryColor).HasColumnName("BrandingPrimaryColor").HasMaxLength(50);
-                    branding.Property(b => b.SecondaryColor).HasColumnName("BrandingSecondaryColor").HasMaxLength(50);
-                    branding.Property(b => b.LogoUrl).HasColumnName("BrandingLogoUrl").HasMaxLength(500);
-                    branding.Property(b => b.FaviconUrl).HasColumnName("BrandingFaviconUrl").HasMaxLength(500);
-                    branding.Property(b => b.CompanyName).HasColumnName("BrandingCompanyName").HasMaxLength(200);
-                    branding.Property(b => b.TagLine).HasColumnName("BrandingTagLine").HasMaxLength(500);
-                    branding.Property(b => b.FontFamily).HasColumnName("BrandingFontFamily").HasMaxLength(100);
-                });
+                .Property(e => e.PrimaryColor)
+                    .HasColumnName("BrandingPrimaryColor")
+                    .HasMaxLength(7);
+            
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.SecondaryColor)
+                    .HasColumnName("BrandingSecondaryColor")
+                    .HasMaxLength(7);
+            
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.LogoUrl)
+                    .HasColumnName("BrandingLogoUrl")
+                    .HasMaxLength(500);
+            
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.FaviconUrl)
+                    .HasColumnName("BrandingFaviconUrl")
+                    .HasMaxLength(500);
+            
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.CompanyName)
+                    .HasColumnName("BrandingCompanyName")
+                    .HasMaxLength(200);
+            
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.TagLine)
+                    .HasColumnName("BrandingTagLine")
+                    .HasMaxLength(500);
+            
+            modelBuilder.Entity<Organization>()
+                .Property(e => e.FontFamily)
+                    .HasColumnName("BrandingFontFamily")
+                    .HasMaxLength(100);
 
             // Configure Location value objects (required by entity configuration indexes)
             modelBuilder.Entity<Location>()
@@ -210,32 +234,147 @@ namespace Grande.Fila.API.Infrastructure.Data
                     address.Property(a => a.Longitude).HasColumnName("AddressLongitude");
                 });
 
-            // Configure CustomBranding as owned type (nullable)
+            // Configure flattened branding properties for Location
             modelBuilder.Entity<Location>()
-                .OwnsOne(e => e.CustomBranding, branding =>
-                {
-                    branding.Property(b => b.PrimaryColor)
-                        .HasColumnName("CustomBrandingPrimaryColor")
-                        .HasMaxLength(50);
-                    branding.Property(b => b.SecondaryColor)
-                        .HasColumnName("CustomBrandingSecondaryColor")
-                        .HasMaxLength(50);
-                    branding.Property(b => b.LogoUrl)
-                        .HasColumnName("CustomBrandingLogoUrl")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.FaviconUrl)
-                        .HasColumnName("CustomBrandingFaviconUrl")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.CompanyName)
-                        .HasColumnName("CustomBrandingCompanyName")
-                        .HasMaxLength(200);
-                    branding.Property(b => b.TagLine)
-                        .HasColumnName("CustomBrandingTagLine")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.FontFamily)
-                        .HasColumnName("CustomBrandingFontFamily")
-                        .HasMaxLength(100);
-                });
+                .Property(e => e.PrimaryColor)
+                    .HasColumnName("CustomBrandingPrimaryColor")
+                    .HasMaxLength(50);
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.SecondaryColor)
+                    .HasColumnName("CustomBrandingSecondaryColor")
+                    .HasMaxLength(50);
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.LogoUrl)
+                    .HasColumnName("CustomBrandingLogoUrl")
+                    .HasMaxLength(500);
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.FaviconUrl)
+                    .HasColumnName("CustomBrandingFaviconUrl")
+                    .HasMaxLength(500);
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.CompanyName)
+                    .HasColumnName("CustomBrandingCompanyName")
+                    .HasMaxLength(200);
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.TagLine)
+                    .HasColumnName("CustomBrandingTagLine")
+                    .HasMaxLength(500);
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.FontFamily)
+                    .HasColumnName("CustomBrandingFontFamily")
+                    .HasMaxLength(100);
+
+            // Configure flattened weekly hours properties for Location
+            modelBuilder.Entity<Location>()
+                .Property(e => e.MondayOpenTime)
+                    .HasColumnName("MondayOpenTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.MondayCloseTime)
+                    .HasColumnName("MondayCloseTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.MondayIsClosed)
+                    .HasColumnName("MondayIsClosed")
+                    .HasColumnType("BIT");
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.TuesdayOpenTime)
+                    .HasColumnName("TuesdayOpenTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.TuesdayCloseTime)
+                    .HasColumnName("TuesdayCloseTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.TuesdayIsClosed)
+                    .HasColumnName("TuesdayIsClosed")
+                    .HasColumnType("BIT");
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.WednesdayOpenTime)
+                    .HasColumnName("WednesdayOpenTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.WednesdayCloseTime)
+                    .HasColumnName("WednesdayCloseTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.WednesdayIsClosed)
+                    .HasColumnName("WednesdayIsClosed")
+                    .HasColumnType("BIT");
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ThursdayOpenTime)
+                    .HasColumnName("ThursdayOpenTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ThursdayCloseTime)
+                    .HasColumnName("ThursdayCloseTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.ThursdayIsClosed)
+                    .HasColumnName("ThursdayIsClosed")
+                    .HasColumnType("BIT");
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.FridayOpenTime)
+                    .HasColumnName("FridayOpenTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.FridayCloseTime)
+                    .HasColumnName("FridayCloseTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.FridayIsClosed)
+                    .HasColumnName("FridayIsClosed")
+                    .HasColumnType("BIT");
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.SaturdayOpenTime)
+                    .HasColumnName("SaturdayOpenTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.SaturdayCloseTime)
+                    .HasColumnName("SaturdayCloseTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.SaturdayIsClosed)
+                    .HasColumnName("SaturdayIsClosed")
+                    .HasColumnType("BIT");
+
+            modelBuilder.Entity<Location>()
+                .Property(e => e.SundayOpenTime)
+                    .HasColumnName("SundayOpenTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.SundayCloseTime)
+                    .HasColumnName("SundayCloseTime")
+                    .HasColumnType("TIME");
+            
+            modelBuilder.Entity<Location>()
+                .Property(e => e.SundayIsClosed)
+                    .HasColumnName("SundayIsClosed")
+                    .HasColumnType("BIT");
 
             // Configure Customer with value objects
             modelBuilder.Entity<Customer>()
@@ -283,40 +422,40 @@ namespace Grande.Fila.API.Infrastructure.Data
                 .HasColumnName("PhoneNumber")
                 .HasMaxLength(50);
 
-            // Configure Money value objects for SubscriptionPlan
+            // Configure flattened price properties for SubscriptionPlan
             modelBuilder.Entity<SubscriptionPlan>()
-                .OwnsOne(e => e.MonthlyPrice, money =>
-                {
-                    money.Property(m => m.Amount)
+                .Property(e => e.MonthlyPriceAmount)
                         .HasColumnName("MonthlyPriceAmount")
                         .HasColumnType("decimal(18,2)");
-                    money.Property(m => m.Currency)
+            
+            modelBuilder.Entity<SubscriptionPlan>()
+                .Property(e => e.MonthlyPriceCurrency)
                         .HasColumnName("MonthlyPriceCurrency")
                         .HasMaxLength(3);
-                });
 
             modelBuilder.Entity<SubscriptionPlan>()
-                .OwnsOne(e => e.YearlyPrice, money =>
-                {
-                    money.Property(m => m.Amount)
+                .Property(e => e.YearlyPriceAmount)
                         .HasColumnName("YearlyPriceAmount")
                         .HasColumnType("decimal(18,2)");
-                    money.Property(m => m.Currency)
+            
+            modelBuilder.Entity<SubscriptionPlan>()
+                .Property(e => e.YearlyPriceCurrency)
                         .HasColumnName("YearlyPriceCurrency")
                         .HasMaxLength(3);
-                });
 
-            // Configure Money value object for ServiceOffered
+            // Remove the old conflicting Price property - it should not exist in the entity
+            // The old Price column in the migration will be removed in the next migration
+
+            // Configure flattened price properties for ServiceOffered
             modelBuilder.Entity<ServiceOffered>()
-                .OwnsOne(e => e.Price, money =>
-                {
-                    money.Property(m => m.Amount)
+                .Property(e => e.PriceAmount)
                         .HasColumnName("PriceAmount")
                         .HasColumnType("decimal(18,2)");
-                    money.Property(m => m.Currency)
+            
+            modelBuilder.Entity<ServiceOffered>()
+                .Property(e => e.PriceCurrency)
                         .HasColumnName("PriceCurrency")
                         .HasMaxLength(3);
-                });
 
             // Explicitly ignore primitive collections that are exposed as read-only collections
             modelBuilder.Entity<Organization>()
@@ -380,285 +519,7 @@ namespace Grande.Fila.API.Infrastructure.Data
             }
         }
 
-        private static void ConfigureValueObjectsOriginal(ModelBuilder modelBuilder)
-        {
-            // ================================
-            // ORGANIZATION VALUE OBJECTS
-            // ================================
-            
-            // Configure Slug value object
-            modelBuilder.Entity<Organization>()
-                .Property(e => e.Slug)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => !string.IsNullOrEmpty(v) ? Slug.Create(v) : null)
-                .HasColumnName("Slug")
-                .HasMaxLength(100);
-
-            // Configure Email value objects
-            modelBuilder.Entity<Organization>()
-                .Property(e => e.ContactEmail)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? Email.Create(v) : null)
-                .HasColumnName("ContactEmail")
-                .HasMaxLength(320);
-
-            // Configure PhoneNumber value objects
-            modelBuilder.Entity<Organization>()
-                .Property(e => e.ContactPhone)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? PhoneNumber.Create(v) : null)
-                .HasColumnName("ContactPhone")
-                .HasMaxLength(50);
-
-            // Configure BrandingConfig as owned type (complex value object)
-            modelBuilder.Entity<Organization>()
-                .OwnsOne(e => e.BrandingConfig, branding =>
-                {
-                    branding.Property(b => b.PrimaryColor)
-                        .HasColumnName("BrandingPrimaryColor")
-                        .HasMaxLength(50);
-                    branding.Property(b => b.SecondaryColor)
-                        .HasColumnName("BrandingSecondaryColor")
-                        .HasMaxLength(50);
-                    branding.Property(b => b.LogoUrl)
-                        .HasColumnName("BrandingLogoUrl")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.FaviconUrl)
-                        .HasColumnName("BrandingFaviconUrl")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.CompanyName)
-                        .HasColumnName("BrandingCompanyName")
-                        .HasMaxLength(200);
-                    branding.Property(b => b.TagLine)
-                        .HasColumnName("BrandingTagLine")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.FontFamily)
-                        .HasColumnName("BrandingFontFamily")
-                        .HasMaxLength(100);
-                });
-
-            // Temporarily ignore LocationIds to avoid EF Core collection mapping issues
-            modelBuilder.Entity<Organization>()
-                .Ignore(e => e.LocationIds);
-
-            // ================================
-            // LOCATION VALUE OBJECTS
-            // ================================
-            
-            // Configure Slug for Location
-            modelBuilder.Entity<Location>()
-                .Property(e => e.Slug)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => !string.IsNullOrEmpty(v) ? Slug.Create(v) : null)
-                .HasColumnName("Slug")
-                .HasMaxLength(100);
-
-            // Configure Email for Location
-            modelBuilder.Entity<Location>()
-                .Property(e => e.ContactEmail)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? Email.Create(v) : null)
-                .HasColumnName("ContactEmail")
-                .HasMaxLength(320);
-
-            // Configure PhoneNumber for Location
-            modelBuilder.Entity<Location>()
-                .Property(e => e.ContactPhone)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? PhoneNumber.Create(v) : null)
-                .HasColumnName("ContactPhone")
-                .HasMaxLength(50);
-
-            // Configure Address as owned type
-            modelBuilder.Entity<Location>()
-                .OwnsOne(e => e.Address, address =>
-                {
-                    address.Property(a => a.Street)
-                        .HasColumnName("AddressStreet")
-                        .HasMaxLength(200);
-                    address.Property(a => a.Number)
-                        .HasColumnName("AddressNumber")
-                        .HasMaxLength(20);
-                    address.Property(a => a.Complement)
-                        .HasColumnName("AddressComplement")
-                        .HasMaxLength(100);
-                    address.Property(a => a.Neighborhood)
-                        .HasColumnName("AddressNeighborhood")
-                        .HasMaxLength(100);
-                    address.Property(a => a.City)
-                        .HasColumnName("AddressCity")
-                        .HasMaxLength(100);
-                    address.Property(a => a.State)
-                        .HasColumnName("AddressState")
-                        .HasMaxLength(50);
-                    address.Property(a => a.Country)
-                        .HasColumnName("AddressCountry")
-                        .HasMaxLength(50);
-                    address.Property(a => a.PostalCode)
-                        .HasColumnName("AddressPostalCode")
-                        .HasMaxLength(20);
-                    address.Property(a => a.Latitude)
-                        .HasColumnName("AddressLatitude");
-                    address.Property(a => a.Longitude)
-                        .HasColumnName("AddressLongitude");
-                });
-
-            // Configure CustomBranding as owned type (nullable)
-            modelBuilder.Entity<Location>()
-                .OwnsOne(e => e.CustomBranding, branding =>
-                {
-                    branding.Property(b => b.PrimaryColor)
-                        .HasColumnName("CustomBrandingPrimaryColor")
-                        .HasMaxLength(50);
-                    branding.Property(b => b.SecondaryColor)
-                        .HasColumnName("CustomBrandingSecondaryColor")
-                        .HasMaxLength(50);
-                    branding.Property(b => b.LogoUrl)
-                        .HasColumnName("CustomBrandingLogoUrl")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.FaviconUrl)
-                        .HasColumnName("CustomBrandingFaviconUrl")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.CompanyName)
-                        .HasColumnName("CustomBrandingCompanyName")
-                        .HasMaxLength(200);
-                    branding.Property(b => b.TagLine)
-                        .HasColumnName("CustomBrandingTagLine")
-                        .HasMaxLength(500);
-                    branding.Property(b => b.FontFamily)
-                        .HasColumnName("CustomBrandingFontFamily")
-                        .HasMaxLength(100);
-                });
-
-            // Configure WeeklyBusinessHours as simple string storage (temporary fix)
-            modelBuilder.Entity<Location>()
-                .Property(e => e.WeeklyHours)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                    v => !string.IsNullOrEmpty(v) ? System.Text.Json.JsonSerializer.Deserialize<WeeklyBusinessHours>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? WeeklyBusinessHours.CreateUniform(TimeSpan.FromHours(9), TimeSpan.FromHours(17)) : WeeklyBusinessHours.CreateUniform(TimeSpan.FromHours(9), TimeSpan.FromHours(17)))
-                .HasColumnName("WeeklyBusinessHours")
-                .HasColumnType("LONGTEXT");
-
-            // Temporarily ignore collections to avoid EF Core collection mapping issues
-            modelBuilder.Entity<Location>()
-                .Ignore(e => e.StaffMemberIds)
-                .Ignore(e => e.ServiceTypeIds)
-                .Ignore(e => e.AdvertisementIds);
-
-            // ================================
-            // CUSTOMER VALUE OBJECTS
-            // ================================
-            
-            // Configure Email for Customer
-            modelBuilder.Entity<Customer>()
-                .Property(e => e.Email)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? Email.Create(v) : null)
-                .HasColumnName("Email")
-                .HasMaxLength(320);
-
-            // Configure PhoneNumber for Customer
-            modelBuilder.Entity<Customer>()
-                .Property(e => e.PhoneNumber)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? PhoneNumber.Create(v) : null)
-                .HasColumnName("PhoneNumber")
-                .HasMaxLength(50);
-
-            // ServiceHistory configuration removed to avoid conflicts
-
-            // Temporarily ignore collections to avoid EF Core collection mapping issues
-            modelBuilder.Entity<Customer>()
-                .Ignore(e => e.FavoriteLocationIds)
-                .Ignore(e => e.ServiceHistory);
-
-            // ================================
-            // STAFFMEMBER VALUE OBJECTS
-            // ================================
-            
-            // Configure Email for StaffMember
-            modelBuilder.Entity<StaffMember>()
-                .Property(e => e.Email)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? Email.Create(v) : null)
-                .HasColumnName("Email")
-                .HasMaxLength(320);
-
-            // Configure PhoneNumber for StaffMember
-            modelBuilder.Entity<StaffMember>()
-                .Property(e => e.PhoneNumber)
-                .HasConversion(
-                    v => v != null ? v.Value : null,
-                    v => v != null ? PhoneNumber.Create(v) : null)
-                .HasColumnName("PhoneNumber")
-                .HasMaxLength(50);
-
-            // Temporarily ignore collections to avoid EF Core collection mapping issues
-            modelBuilder.Entity<StaffMember>()
-                .Ignore(e => e.SpecialtyServiceTypeIds)
-                .Ignore(e => e.Breaks);
-
-            // Ignore User collections to avoid EF Core collection mapping issues
-            modelBuilder.Entity<User>()
-                .Ignore(e => e.Permissions);
-
-            // ================================
-            // SUBSCRIPTIONPLAN VALUE OBJECTS
-            // ================================
-            
-            // Configure MonthlyPrice as owned type
-            modelBuilder.Entity<SubscriptionPlan>()
-                .OwnsOne(e => e.MonthlyPrice, money =>
-                {
-                    money.Property(m => m.Amount)
-                        .HasColumnName("MonthlyPriceAmount")
-                        .HasColumnType("decimal(18,2)");
-                    money.Property(m => m.Currency)
-                        .HasColumnName("MonthlyPriceCurrency")
-                        .HasMaxLength(3);
-                });
-
-            // Configure YearlyPrice as owned type
-            modelBuilder.Entity<SubscriptionPlan>()
-                .OwnsOne(e => e.YearlyPrice, money =>
-                {
-                    money.Property(m => m.Amount)
-                        .HasColumnName("YearlyPriceAmount")
-                        .HasColumnType("decimal(18,2)");
-                    money.Property(m => m.Currency)
-                        .HasColumnName("YearlyPriceCurrency")
-                        .HasMaxLength(3);
-                });
-
-            // ================================
-            // SERVICEOFFERED VALUE OBJECTS
-            // ================================
-            
-            // Configure Price as owned type (nullable)
-            modelBuilder.Entity<ServiceOffered>()
-                .OwnsOne(e => e.Price, money =>
-                {
-                    money.Property(m => m.Amount)
-                        .HasColumnName("PriceAmount")
-                        .HasColumnType("decimal(18,2)");
-                    money.Property(m => m.Currency)
-                        .HasColumnName("PriceCurrency")
-                        .HasMaxLength(3);
-                });
-
-            // COUPON: ignore complex parts not needed now to avoid shared-type conflicts
-            modelBuilder.Ignore<Coupon>();
-            modelBuilder.Ignore<CouponRedemption>();
-        }
+        // REMOVED: ConfigureValueObjectsOriginal method - configurations moved to ConfigureBasicValueObjects
 
         private static void IgnoreDomainEvents(ModelBuilder modelBuilder)
         {
