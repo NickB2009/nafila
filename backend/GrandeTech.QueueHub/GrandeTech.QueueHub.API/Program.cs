@@ -264,6 +264,10 @@ builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IQueryOptimiz
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IConnectionPoolingService, Grande.Fila.API.Infrastructure.Services.ConnectionPoolingService>();
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IQueryCacheService, Grande.Fila.API.Infrastructure.Services.QueryCacheService>();
 
+// Register bulk operations services
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IBulkOperationsService, Grande.Fila.API.Infrastructure.Services.BulkOperationsService>();
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IQueueBulkOperationsService, Grande.Fila.API.Infrastructure.Services.QueueBulkOperationsService>();
+
 // Add enhanced logging and monitoring services
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Logging.EnhancedLoggingService>();
 

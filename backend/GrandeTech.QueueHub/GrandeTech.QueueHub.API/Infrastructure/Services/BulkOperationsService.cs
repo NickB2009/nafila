@@ -5,6 +5,13 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using Grande.Fila.API.Infrastructure.Data;
+using Grande.Fila.API.Domain.Queues;
+using Grande.Fila.API.Domain.Locations;
+using Grande.Fila.API.Domain.Organizations;
+using Grande.Fila.API.Domain.Staff;
+using Grande.Fila.API.Domain.Customers;
+using Grande.Fila.API.Domain.Users;
+using Grande.Fila.API.Domain.ServicesOffered;
 
 namespace Grande.Fila.API.Infrastructure.Services
 {
