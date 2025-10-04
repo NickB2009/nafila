@@ -1,293 +1,222 @@
-using System;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using Grande.Fila.API.Infrastructure.Services;
-using System.Collections.Generic; // Added for List
-using System.Linq; // Added for Count()
+using Grande.Fila.API.Infrastructure.Authorization;
 
 namespace Grande.Fila.API.Controllers
 {
-    /// <summary>
-    /// Controller for performance monitoring and metrics
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class PerformanceController : ControllerBase
     {
+        private readonly IQueryOptimizationService _queryOptimizationService;
+        private readonly IConnectionPoolingService _connectionPoolingService;
+        private readonly IQueryCacheService _cacheService;
         private readonly ILogger<PerformanceController> _logger;
-        private readonly IPerformanceMonitoringService _performanceService;
 
         public PerformanceController(
-            ILogger<PerformanceController> logger,
-            IPerformanceMonitoringService performanceService)
+            IQueryOptimizationService queryOptimizationService,
+            IConnectionPoolingService connectionPoolingService,
+            IQueryCacheService cacheService,
+            ILogger<PerformanceController> logger)
         {
+            _queryOptimizationService = queryOptimizationService;
+            _connectionPoolingService = connectionPoolingService;
+            _cacheService = cacheService;
             _logger = logger;
-            _performanceService = performanceService;
         }
 
         /// <summary>
-        /// Get current performance metrics
+        /// Get database query performance statistics
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetCurrentMetrics()
+        /// <returns>Query performance metrics</returns>
+        [HttpGet("query-stats")]
+        [Authorize(Policy = "PlatformAdminOnly")]
+        [ProducesResponseType(typeof(QueryPerformanceStats), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetQueryStats(CancellationToken cancellationToken = default)
         {
             try
             {
-                var metrics = _performanceService.GetCurrentMetrics();
-                return Ok(metrics);
+                var stats = await _queryOptimizationService.GetPerformanceStatsAsync(cancellationToken);
+                
+                _logger.LogInformation("Retrieved query performance statistics");
+                return Ok(stats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get current performance metrics");
-                return StatusCode(500, new { Error = "Failed to retrieve performance metrics" });
+                _logger.LogError(ex, "Failed to retrieve query performance statistics");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to retrieve query statistics" });
             }
         }
 
         /// <summary>
-        /// Get system health score
+        /// Get database connection pool statistics
         /// </summary>
-        [HttpGet("health-score")]
-        public async Task<IActionResult> GetHealthScore()
+        /// <returns>Connection pool metrics</returns>
+        [HttpGet("connection-stats")]
+        [Authorize(Policy = "PlatformAdminOnly")]
+        [ProducesResponseType(typeof(ConnectionPoolStats), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetConnectionStats(CancellationToken cancellationToken = default)
         {
             try
             {
-                var score = _performanceService.GetSystemHealthScore();
-                var healthStatus = new
+                var stats = await _connectionPoolingService.GetPoolStatsAsync(cancellationToken);
+                
+                _logger.LogInformation("Retrieved connection pool statistics");
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve connection pool statistics");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to retrieve connection statistics" });
+            }
+        }
+
+        /// <summary>
+        /// Get cache performance statistics
+        /// </summary>
+        /// <returns>Cache performance metrics</returns>
+        [HttpGet("cache-stats")]
+        [Authorize(Policy = "PlatformAdminOnly")]
+        [ProducesResponseType(typeof(CacheStatistics), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetCacheStats(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var stats = await _cacheService.GetStatisticsAsync(cancellationToken);
+                
+                _logger.LogInformation("Retrieved cache performance statistics");
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve cache performance statistics");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to retrieve cache statistics" });
+            }
+        }
+
+        /// <summary>
+        /// Get database connection health status
+        /// </summary>
+        /// <returns>Connection health information</returns>
+        [HttpGet("health")]
+        [AllowPublicAccess] // Allow public access for health checks
+        [ProducesResponseType(typeof(ConnectionHealthStatus), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+        public async Task<IActionResult> GetConnectionHealth(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var health = await _connectionPoolingService.CheckConnectionHealthAsync(cancellationToken);
+                
+                if (health.IsHealthy)
                 {
-                    Score = score,
-                    Status = GetHealthStatus(score),
-                    Timestamp = DateTime.UtcNow,
-                    Recommendations = GetHealthRecommendations(score)
-                };
-
-                return Ok(healthStatus);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get system health score");
-                return StatusCode(500, new { Error = "Failed to calculate health score" });
-            }
-        }
-
-        /// <summary>
-        /// Get HTTP performance metrics
-        /// </summary>
-        [HttpGet("http")]
-        public async Task<IActionResult> GetHttpMetrics()
-        {
-            try
-            {
-                var metrics = _performanceService.GetCurrentMetrics();
-                return Ok(metrics.HttpMetrics);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get HTTP performance metrics");
-                return StatusCode(500, new { Error = "Failed to retrieve HTTP metrics" });
-            }
-        }
-
-        /// <summary>
-        /// Get queue performance metrics
-        /// </summary>
-        [HttpGet("queues")]
-        public async Task<IActionResult> GetQueueMetrics()
-        {
-            try
-            {
-                var metrics = _performanceService.GetCurrentMetrics();
-                return Ok(metrics.QueueMetrics);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get queue performance metrics");
-                return StatusCode(500, new { Error = "Failed to retrieve queue metrics" });
-            }
-        }
-
-        /// <summary>
-        /// Get system resource metrics
-        /// </summary>
-        [HttpGet("system")]
-        public async Task<IActionResult> GetSystemMetrics()
-        {
-            try
-            {
-                var metrics = _performanceService.GetCurrentMetrics();
-                return Ok(metrics.SystemMetrics);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get system metrics");
-                return StatusCode(500, new { Error = "Failed to retrieve system metrics" });
-            }
-        }
-
-        /// <summary>
-        /// Get custom metrics
-        /// </summary>
-        [HttpGet("custom")]
-        public async Task<IActionResult> GetCustomMetrics()
-        {
-            try
-            {
-                var metrics = _performanceService.GetCurrentMetrics();
-                return Ok(metrics.CustomMetrics);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get custom metrics");
-                return StatusCode(500, new { Error = "Failed to retrieve custom metrics" });
-            }
-        }
-
-        /// <summary>
-        /// Get metric history for a specific metric
-        /// </summary>
-        [HttpGet("history/{metricName}")]
-        public async Task<IActionResult> GetMetricHistory(
-            string metricName,
-            [FromQuery] int hours = 24)
-        {
-            try
-            {
-                if (hours <= 0 || hours > 168) // Max 1 week
-                {
-                    return BadRequest(new { Error = "Hours must be between 1 and 168" });
+                    return Ok(health);
                 }
-
-                var duration = TimeSpan.FromHours(hours);
-                var history = _performanceService.GetMetricHistory(metricName, duration);
-
-                var response = new
+                else
                 {
-                    MetricName = metricName,
-                    Duration = duration,
-                    DataPoints = history,
-                    Count = history.Count()
-                };
-
-                return Ok(response);
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable, health);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get metric history for {MetricName}", metricName);
-                return StatusCode(500, new { Error = "Failed to retrieve metric history" });
+                _logger.LogError(ex, "Failed to check connection health");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { 
+                    IsHealthy = false, 
+                    Status = "Error", 
+                    Issues = new[] { "Health check failed" },
+                    Details = new { Error = ex.Message }
+                });
             }
         }
 
         /// <summary>
-        /// Get performance summary with key indicators
+        /// Optimize database connection pool settings
         /// </summary>
-        [HttpGet("summary")]
-        public async Task<IActionResult> GetPerformanceSummary()
+        /// <returns>Optimization results</returns>
+        [HttpPost("optimize-connections")]
+        [Authorize(Policy = "PlatformAdminOnly")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> OptimizeConnections(CancellationToken cancellationToken = default)
         {
             try
             {
-                var metrics = _performanceService.GetCurrentMetrics();
-                var healthScore = _performanceService.GetSystemHealthScore();
-
-                var summary = new
-                {
-                    Timestamp = DateTime.UtcNow,
-                    HealthScore = healthScore,
-                    HealthStatus = GetHealthStatus(healthScore),
-                    KeyMetrics = new
-                    {
-                        AverageResponseTime = $"{metrics.HttpMetrics.AverageResponseTimeMs:F2}ms",
-                        ErrorRate = $"{metrics.HttpMetrics.ErrorRate:P2}",
-                        TotalRequests = metrics.HttpMetrics.TotalRequests,
-                        QueueOperations = metrics.QueueMetrics.TotalOperations,
-                        MemoryUsage = $"{metrics.SystemMetrics.MemoryUsagePercent:F1}%",
-                        Uptime = $"{metrics.SystemMetrics.ProcessUptimeSeconds / 3600:F1}h"
-                    },
-                    Alerts = GetPerformanceAlerts(metrics, healthScore)
-                };
-
-                return Ok(summary);
+                await _connectionPoolingService.OptimizePoolSettingsAsync(cancellationToken);
+                
+                _logger.LogInformation("Connection pool optimization completed");
+                return Ok(new { message = "Connection pool optimization completed successfully" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get performance summary");
-                return StatusCode(500, new { Error = "Failed to generate performance summary" });
+                _logger.LogError(ex, "Failed to optimize connection pool");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to optimize connection pool" });
             }
         }
 
-        private string GetHealthStatus(double score)
+        /// <summary>
+        /// Clear query cache
+        /// </summary>
+        /// <returns>Cache clearing results</returns>
+        [HttpPost("clear-cache")]
+        [Authorize(Policy = "PlatformAdminOnly")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> ClearCache(CancellationToken cancellationToken = default)
         {
-            return score switch
+            try
             {
-                >= 90 => "Excellent",
-                >= 80 => "Good",
-                >= 70 => "Fair",
-                >= 60 => "Poor",
-                _ => "Critical"
-            };
+                await _cacheService.ClearAllAsync(cancellationToken);
+                
+                _logger.LogInformation("Query cache cleared");
+                return Ok(new { message = "Query cache cleared successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to clear query cache");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to clear query cache" });
+            }
         }
 
-        private string[] GetHealthRecommendations(double score)
+        /// <summary>
+        /// Get comprehensive performance dashboard data
+        /// </summary>
+        /// <returns>Complete performance metrics</returns>
+        [HttpGet("dashboard")]
+        [Authorize(Policy = "PlatformAdminOnly")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetPerformanceDashboard(CancellationToken cancellationToken = default)
         {
-            if (score >= 90) return new[] { "System is performing excellently" };
-
-            var recommendations = new List<string>();
-
-            if (score < 80)
+            try
             {
-                recommendations.Add("Consider optimizing response times");
-                recommendations.Add("Review error handling and logging");
+                var dashboard = new
+                {
+                    QueryStats = await _queryOptimizationService.GetPerformanceStatsAsync(cancellationToken),
+                    ConnectionStats = await _connectionPoolingService.GetPoolStatsAsync(cancellationToken),
+                    CacheStats = await _cacheService.GetStatisticsAsync(cancellationToken),
+                    ConnectionHealth = await _connectionPoolingService.CheckConnectionHealthAsync(cancellationToken),
+                    Timestamp = DateTime.UtcNow
+                };
+                
+                _logger.LogInformation("Retrieved performance dashboard data");
+                return Ok(dashboard);
             }
-
-            if (score < 70)
+            catch (Exception ex)
             {
-                recommendations.Add("Investigate system resource usage");
-                recommendations.Add("Check for memory leaks or performance bottlenecks");
+                _logger.LogError(ex, "Failed to retrieve performance dashboard");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to retrieve performance dashboard" });
             }
-
-            if (score < 60)
-            {
-                recommendations.Add("Immediate attention required");
-                recommendations.Add("Consider scaling or infrastructure improvements");
-            }
-
-            return recommendations.ToArray();
-        }
-
-        private string[] GetPerformanceAlerts(Infrastructure.Services.PerformanceMetrics metrics, double healthScore)
-        {
-            var alerts = new List<string>();
-
-            // Response time alerts
-            if (metrics.HttpMetrics.AverageResponseTimeMs > 1000)
-            {
-                alerts.Add("High average response time detected");
-            }
-
-            // Error rate alerts
-            if (metrics.HttpMetrics.ErrorRate > 0.05)
-            {
-                alerts.Add("High error rate detected");
-            }
-
-            // Memory usage alerts
-            if (metrics.SystemMetrics.MemoryUsagePercent > 80)
-            {
-                alerts.Add("High memory usage detected");
-            }
-
-            // Queue performance alerts
-            if (metrics.QueueMetrics.AverageOperationTimeMs > 2000)
-            {
-                alerts.Add("Slow queue operations detected");
-            }
-
-            // Health score alerts
-            if (healthScore < 70)
-            {
-                alerts.Add("System health score is below acceptable threshold");
-            }
-
-            return alerts.ToArray();
         }
     }
 }

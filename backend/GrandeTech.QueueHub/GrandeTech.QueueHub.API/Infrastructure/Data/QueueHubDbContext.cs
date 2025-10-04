@@ -75,6 +75,9 @@ namespace Grande.Fila.API.Infrastructure.Data
 
             // Configure domain events (they won't be persisted)
             IgnoreDomainEvents(modelBuilder);
+
+            // Configure database indexes for performance optimization
+            DatabaseIndexesConfiguration.ConfigureIndexes(modelBuilder);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

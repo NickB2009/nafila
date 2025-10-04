@@ -259,6 +259,11 @@ builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Rep
 // Register kiosk services
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IKioskNotificationService, Grande.Fila.API.Infrastructure.Services.KioskNotificationService>();
 
+// Register database performance services
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IQueryOptimizationService, Grande.Fila.API.Infrastructure.Services.QueryOptimizationService>();
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IConnectionPoolingService, Grande.Fila.API.Infrastructure.Services.ConnectionPoolingService>();
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IQueryCacheService, Grande.Fila.API.Infrastructure.Services.QueryCacheService>();
+
 // Add enhanced logging and monitoring services
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Logging.EnhancedLoggingService>();
 
