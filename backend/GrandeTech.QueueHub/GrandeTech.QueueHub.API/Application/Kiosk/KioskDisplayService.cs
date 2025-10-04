@@ -69,14 +69,21 @@ namespace Grande.Fila.API.Application.Kiosk
                     averageTimeMinutes = cachedAverage;
                 }
 
+                // Set location information
+                result.LocationId = locationId.ToString();
+                result.LocationName = location.Name;
+                result.ActiveStaffCount = activeStaffCount;
+                result.AverageServiceTimeMinutes = averageTimeMinutes;
+
                 // Aggregate all queue entries
                 var allEntries = queues.SelectMany(q => q.Entries).ToList();
 
-                // Filter active entries (waiting, called, checked-in)
+                // Filter entries based on request
                 var activeEntries = allEntries.Where(e => 
                     e.Status == QueueEntryStatus.Waiting || 
                     e.Status == QueueEntryStatus.Called || 
-                    e.Status == QueueEntryStatus.CheckedIn).ToList();
+                    e.Status == QueueEntryStatus.CheckedIn ||
+                    (request.IncludeCompletedEntries && e.Status == QueueEntryStatus.Completed)).ToList();
 
                 // Sort by position
                 activeEntries = activeEntries.OrderBy(e => e.Position).ToList();
@@ -90,7 +97,13 @@ namespace Grande.Fila.API.Application.Kiosk
                     Status = e.Status.ToString(),
                     TokenNumber = e.TokenNumber,
                     EstimatedWaitMinutes = CalculateEstimatedWaitMinutes(e, activeEntries, activeStaffCount, averageTimeMinutes),
-                    EstimatedWaitTime = FormatEstimatedWaitTime(CalculateEstimatedWaitMinutes(e, activeEntries, activeStaffCount, averageTimeMinutes))
+                    EstimatedWaitTime = FormatEstimatedWaitTime(CalculateEstimatedWaitMinutes(e, activeEntries, activeStaffCount, averageTimeMinutes)),
+                    JoinedAt = e.EnteredAt,
+                    CalledAt = e.CalledAt,
+                    CheckedInAt = e.CheckedInAt,
+                    ServiceType = e.ServiceTypeId?.ToString(), // Convert GUID to string
+                    StaffMemberName = e.StaffMemberId.HasValue ? 
+                        staffMembers.FirstOrDefault(s => s.Id == e.StaffMemberId)?.Name : null
                 }).ToList();
 
                 // Find currently being served
@@ -98,11 +111,16 @@ namespace Grande.Fila.API.Application.Kiosk
                 result.CurrentlyServing = currentlyServing?.CustomerName;
                 result.CurrentPosition = currentlyServing?.Position;
 
-                // Count waiting customers
+                // Count customers by status
                 result.TotalWaiting = activeEntries.Count(e => e.Status == QueueEntryStatus.Waiting);
+                result.TotalActive = activeEntries.Count(e => 
+                    e.Status == QueueEntryStatus.Waiting || 
+                    e.Status == QueueEntryStatus.Called || 
+                    e.Status == QueueEntryStatus.CheckedIn);
 
                 result.Success = true;
-                _logger.LogInformation("Retrieved kiosk display data for location {LocationId} with {Count} active entries", locationId, activeEntries.Count);
+                _logger.LogInformation("Retrieved kiosk display data for location {LocationId} with {Count} active entries, {Waiting} waiting", 
+                    locationId, activeEntries.Count, result.TotalWaiting);
             }
             catch (Exception ex)
             {

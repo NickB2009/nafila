@@ -83,11 +83,13 @@ namespace Grande.Fila.API.Infrastructure.Middleware
         {
             if (string.IsNullOrEmpty(endpoint)) return false;
 
-            // Rate limit queue operations
+            // Rate limit different endpoint types with different limits
             return endpoint.Contains("/api/Public/queue/join") ||
                    endpoint.Contains("/api/Public/queue/leave") ||
                    endpoint.Contains("/api/Public/queue/update") ||
-                   endpoint.Contains("/api/Public/queue/entry-status");
+                   endpoint.Contains("/api/Public/queue/entry-status") ||
+                   endpoint.Contains("/api/Public/salons/") ||
+                   endpoint.Contains("/api/Public/queue-status/");
         }
 
         private async Task<bool> CheckRateLimit(string clientId, string endpoint)
@@ -98,6 +100,9 @@ namespace Grande.Fila.API.Infrastructure.Middleware
             // Clean up expired entries
             CleanupExpiredEntries();
 
+            // Get endpoint-specific rate limits
+            var (maxRequests, windowMinutes) = GetEndpointRateLimit(endpoint);
+
             // Get or create rate limit info for this client/endpoint
             var rateLimitInfo = _rateLimitStore.GetOrAdd(key, _ => new RateLimitInfo
             {
@@ -106,7 +111,7 @@ namespace Grande.Fila.API.Infrastructure.Middleware
             });
 
             // Check if we're in a new time window
-            if (now.Subtract(rateLimitInfo.FirstRequest).TotalMinutes >= _options.WindowMinutes)
+            if (now.Subtract(rateLimitInfo.FirstRequest).TotalMinutes >= windowMinutes)
             {
                 rateLimitInfo.FirstRequest = now;
                 rateLimitInfo.RequestCount = 0;
@@ -116,12 +121,37 @@ namespace Grande.Fila.API.Infrastructure.Middleware
             rateLimitInfo.RequestCount++;
 
             // Check if limit exceeded
-            if (rateLimitInfo.RequestCount > _options.MaxRequestsPerWindow)
+            if (rateLimitInfo.RequestCount > maxRequests)
             {
                 return false;
             }
 
             return true;
+        }
+
+        private (int maxRequests, int windowMinutes) GetEndpointRateLimit(string endpoint)
+        {
+            // Different rate limits for different endpoint types
+            if (endpoint.Contains("/api/Public/queue/join"))
+            {
+                return (5, 1); // 5 join requests per minute
+            }
+            else if (endpoint.Contains("/api/Public/queue/leave") || endpoint.Contains("/api/Public/queue/update"))
+            {
+                return (10, 1); // 10 leave/update requests per minute
+            }
+            else if (endpoint.Contains("/api/Public/queue/entry-status"))
+            {
+                return (30, 1); // 30 status checks per minute
+            }
+            else if (endpoint.Contains("/api/Public/salons/") || endpoint.Contains("/api/Public/queue-status/"))
+            {
+                return (60, 1); // 60 salon/queue status requests per minute
+            }
+            else
+            {
+                return (_options.MaxRequestsPerWindow, _options.WindowMinutes); // Default limits
+            }
         }
 
         private void CleanupExpiredEntries()

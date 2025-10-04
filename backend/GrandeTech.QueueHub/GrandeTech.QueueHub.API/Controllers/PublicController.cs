@@ -7,6 +7,7 @@ using Grande.Fila.API.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Grande.Fila.API.Controllers;
 
@@ -78,8 +79,15 @@ public class PublicController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetSalonById(string salonId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetSalonById([FromRoute] string salonId, CancellationToken cancellationToken = default)
     {
+        // Parameter validation
+        if (string.IsNullOrWhiteSpace(salonId))
+        {
+            _logger.LogWarning("Invalid salon ID provided: {SalonId}", salonId);
+            return BadRequest(new { error = "Salon ID is required" });
+        }
+
         _logger.LogInformation("Getting salon details for {SalonId}", salonId);
 
         var result = await _getPublicSalonDetailService.ExecuteAsync(salonId, cancellationToken);
@@ -114,8 +122,15 @@ public class PublicController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetQueueStatus(string salonId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetQueueStatus([FromRoute] string salonId, CancellationToken cancellationToken = default)
     {
+        // Parameter validation
+        if (string.IsNullOrWhiteSpace(salonId))
+        {
+            _logger.LogWarning("Invalid salon ID provided for queue status: {SalonId}", salonId);
+            return BadRequest(new { error = "Salon ID is required" });
+        }
+
         _logger.LogInformation("Getting queue status for salon {SalonId}", salonId);
 
         var result = await _getPublicQueueStatusService.ExecuteAsync(salonId, cancellationToken);
@@ -153,6 +168,20 @@ public class PublicController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> JoinQueue([FromBody] AnonymousJoinRequest request, CancellationToken cancellationToken = default)
     {
+        // Model validation
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? new string[0]
+                );
+            
+            _logger.LogWarning("Model validation failed for anonymous join request: {Errors}", errors);
+            return BadRequest(new { errors = errors });
+        }
+
         _logger.LogInformation("Anonymous user joining queue for salon {SalonId}", request.SalonId);
 
         var result = await _anonymousJoinService.ExecuteAsync(request, cancellationToken);
@@ -198,8 +227,15 @@ public class PublicController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetQueueEntryStatus(string entryId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetQueueEntryStatus([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {
+        // Parameter validation
+        if (string.IsNullOrWhiteSpace(entryId))
+        {
+            _logger.LogWarning("Invalid entry ID provided: {EntryId}", entryId);
+            return BadRequest(new { error = "Entry ID is required" });
+        }
+
         _logger.LogInformation("Getting queue status for entry {EntryId}", entryId);
 
         var result = await _getQueueEntryStatusService.ExecuteAsync(entryId, cancellationToken);
@@ -235,8 +271,15 @@ public class PublicController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> LeaveQueue(string entryId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> LeaveQueue([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {
+        // Parameter validation
+        if (string.IsNullOrWhiteSpace(entryId))
+        {
+            _logger.LogWarning("Invalid entry ID provided for leave queue: {EntryId}", entryId);
+            return BadRequest(new { error = "Entry ID is required" });
+        }
+
         _logger.LogInformation("Anonymous user leaving queue entry {EntryId}", entryId);
 
         var result = await _leaveQueueService.ExecuteAsync(entryId, cancellationToken);
@@ -269,10 +312,31 @@ public class PublicController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateQueueEntry(
-        string entryId,
+        [FromRoute] string entryId,
         [FromBody] UpdateQueueEntryRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Parameter validation
+        if (string.IsNullOrWhiteSpace(entryId))
+        {
+            _logger.LogWarning("Invalid entry ID provided for update: {EntryId}", entryId);
+            return BadRequest(new { error = "Entry ID is required" });
+        }
+
+        // Model validation
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? new string[0]
+                );
+            
+            _logger.LogWarning("Model validation failed for update queue entry request: {Errors}", errors);
+            return BadRequest(new { errors = errors });
+        }
+
         _logger.LogInformation("Updating queue entry {EntryId}", entryId);
 
         var result = await _updateQueueEntryService.ExecuteAsync(entryId, request, cancellationToken);

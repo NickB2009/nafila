@@ -102,14 +102,6 @@ public class UpdateQueueEntryService
     }
 }
 
-public class UpdateQueueEntryRequest
-{
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public bool? EmailNotifications { get; set; }
-    public bool? BrowserNotifications { get; set; }
-}
-
 public class UpdateQueueEntryResult
 {
     public bool Success { get; set; }

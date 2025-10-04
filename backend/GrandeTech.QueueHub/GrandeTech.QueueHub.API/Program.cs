@@ -59,6 +59,12 @@ builder.Services.AddLogging(loggingBuilder =>
     loggingBuilder.AddApplicationInsights();
 });
 
+// Add memory cache for response caching
+builder.Services.AddMemoryCache();
+
+// Add SignalR for real-time kiosk updates
+builder.Services.AddSignalR();
+
 // Register logging service
 builder.Services.AddScoped<Grande.Fila.API.Application.Logging.ILoggingService, Grande.Fila.API.Application.Logging.LoggingService>();
 
@@ -250,6 +256,9 @@ builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.Mock
 builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
 builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
 
+// Register kiosk services
+builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IKioskNotificationService, Grande.Fila.API.Infrastructure.Services.KioskNotificationService>();
+
 // Add enhanced logging and monitoring services
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Logging.EnhancedLoggingService>();
 
@@ -398,11 +407,23 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
+// Add correlation ID middleware (very early in pipeline)
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.CorrelationIdMiddleware>();
+
+// Add security headers middleware (early in pipeline)
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.SecurityHeadersMiddleware>();
+
+// Add request size limiting middleware
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.RequestSizeLimitingMiddleware>();
+
 // Add global exception handler middleware
 app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.GlobalExceptionHandler>();
 
 // Add rate limiting middleware
 app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.RateLimitingMiddleware>();
+
+// Add response caching middleware for GET endpoints
+app.UseMiddleware<Grande.Fila.API.Infrastructure.Middleware.ResponseCachingMiddleware>();
 
 // Add CORS middleware
 app.UseCors();
@@ -418,7 +439,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// WebSocket endpoint for queue updates
+// Map SignalR hub for kiosk displays
+app.MapHub<Grande.Fila.API.Infrastructure.Hubs.KioskDisplayHub>("/kioskHub");
+
+// WebSocket endpoint for queue updates (legacy)
 app.Map("/queueHub", async context =>
 {
     if (context.WebSockets.IsWebSocketRequest)

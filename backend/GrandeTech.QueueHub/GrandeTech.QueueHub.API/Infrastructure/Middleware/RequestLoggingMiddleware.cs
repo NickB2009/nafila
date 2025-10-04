@@ -29,12 +29,15 @@ public class RequestLoggingMiddleware
             var organizationId = context.User?.FindFirst("org")?.Value;
             var locationId = context.User?.FindFirst("loc")?.Value;
 
+            var correlationId = context.Items["CorrelationId"]?.ToString();
+
             _loggingService.LogApiRequest(
                 context.Request.Method,
                 context.Request.Path,
                 userId,
                 organizationId,
-                locationId
+                locationId,
+                correlationId
             );
 
             // Process the request
@@ -42,12 +45,14 @@ public class RequestLoggingMiddleware
 
             // Log the response
             stopwatch.Stop();
+
             _loggingService.LogApiResponse(
                 context.Request.Method,
                 context.Request.Path,
                 context.Response.StatusCode,
                 stopwatch.ElapsedMilliseconds,
-                userId
+                userId,
+                correlationId
             );
         }
         catch (Exception ex)

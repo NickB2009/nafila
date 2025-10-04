@@ -63,7 +63,7 @@ public class LoggingService : ILoggingService
         _logger.LogTrace(message, args);
     }
 
-    public void LogApiRequest(string method, string path, string? userId = null, string? organizationId = null, string? locationId = null)
+    public void LogApiRequest(string method, string path, string? userId = null, string? organizationId = null, string? locationId = null, string? correlationId = null)
     {
         var properties = new Dictionary<string, object>
         {
@@ -78,12 +78,14 @@ public class LoggingService : ILoggingService
             properties["OrganizationId"] = organizationId;
         if (!string.IsNullOrEmpty(locationId))
             properties["LocationId"] = locationId;
+        if (!string.IsNullOrEmpty(correlationId))
+            properties["CorrelationId"] = correlationId;
 
-        _logger.LogInformation("API Request: {Method} {Path}", method, path);
+        _logger.LogInformation("API Request: {Method} {Path} [CorrelationId: {CorrelationId}]", method, path, correlationId ?? "N/A");
         TrackCustomEvent("ApiRequest", properties);
     }
 
-    public void LogApiResponse(string method, string path, int statusCode, long durationMs, string? userId = null)
+    public void LogApiResponse(string method, string path, int statusCode, long durationMs, string? userId = null, string? correlationId = null)
     {
         var properties = new Dictionary<string, object>
         {
@@ -96,6 +98,8 @@ public class LoggingService : ILoggingService
 
         if (!string.IsNullOrEmpty(userId))
             properties["UserId"] = userId;
+        if (!string.IsNullOrEmpty(correlationId))
+            properties["CorrelationId"] = correlationId;
 
         var logLevel = statusCode >= 500 ? LogLevel.Error : statusCode >= 400 ? LogLevel.Warning : LogLevel.Information;
         _logger.Log(logLevel, "API Response: {Method} {Path} - {StatusCode} ({DurationMs}ms)", method, path, statusCode, durationMs);
