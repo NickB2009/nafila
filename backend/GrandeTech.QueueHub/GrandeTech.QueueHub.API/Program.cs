@@ -197,6 +197,23 @@ builder.Services.AddAuthorization(options =>
     
     options.AddPolicy("RequireClient", policy =>
         policy.Requirements.Add(new Grande.Fila.API.Infrastructure.Authorization.TenantRequirement(UserRoles.Customer, requireOrganizationContext: false))); // Map to Customer
+    
+    // Composite policies for bulk operations and other features
+    options.AddPolicy("AdminOrBarber", policy =>
+        policy.RequireAssertion(context => 
+            context.User.IsInRole("Admin") || 
+            context.User.IsInRole("Barber") || 
+            context.User.IsInRole("Owner") || 
+            context.User.IsInRole("Staff")));
+    
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireAssertion(context => 
+            context.User.IsInRole("Admin") || 
+            context.User.IsInRole("Owner")));
+    
+    options.AddPolicy("PlatformAdminOnly", policy =>
+        policy.RequireAssertion(context => 
+            context.User.IsInRole("PlatformAdmin")));
 });
 
 builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Grande.Fila.API.Infrastructure.Authorization.TenantAuthorizationHandler>();
