@@ -16,7 +16,6 @@ using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
 using Grande.Fila.API.Domain.ServicesOffered;
 using Grande.Fila.API.Infrastructure.Data;
-using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Infrastructure.Repositories.Sql;
 using Grande.Fila.API.Application.Auth;
 using Grande.Fila.API.Application.Organizations;
@@ -79,13 +78,6 @@ namespace Grande.Fila.API.Infrastructure
         {
             var useInMemoryDatabase = configuration.GetValue<bool>("Database:UseInMemoryDatabase", false);
             var useSqlDatabase = configuration.GetValue<bool>("Database:UseSqlDatabase", true);
-            var useBogusRepositories = configuration.GetValue<bool>("Database:UseBogusRepositories", false);
-
-            if (useBogusRepositories)
-            {
-                // When using Bogus repositories, don't register DbContext or health checks
-                return;
-            }
 
             if (useSqlDatabase && !useInMemoryDatabase)
             {
@@ -166,34 +158,8 @@ namespace Grande.Fila.API.Infrastructure
 
         private static void AddRepositories(IServiceCollection services, IConfiguration configuration)
         {
-            var useInMemoryDatabase = configuration.GetValue<bool>("Database:UseInMemoryDatabase", false);
-            var useSqlDatabase = configuration.GetValue<bool>("Database:UseSqlDatabase", true);
-            var useBogusRepositories = configuration.GetValue<bool>("Database:UseBogusRepositories", false);
-
-            if (useBogusRepositories || (!useSqlDatabase && !useInMemoryDatabase))
-            {
-                // Use Bogus repositories for testing/development
-                AddBogusRepositories(services);
-            }
-            else
-            {
-                // Use SQL repositories for production/testing with actual database
-                AddSqlRepositories(services);
-            }
-        }
-
-        private static void AddBogusRepositories(IServiceCollection services)
-        {
-            services.AddScoped(typeof(IRepository<>), typeof(BogusGenericRepository<>));
-            services.AddScoped<IUserRepository, BogusUserRepository>();
-            services.AddScoped<IOrganizationRepository, BogusOrganizationRepository>();
-            services.AddScoped<ILocationRepository, BogusLocationRepository>();
-            services.AddScoped<IQueueRepository, BogusQueueRepository>();
-            services.AddScoped<ICustomerRepository, BogusCustomerRepository>();
-            services.AddScoped<IStaffMemberRepository, BogusStaffMemberRepository>();
-            services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
-            services.AddScoped<ISubscriptionPlanRepository, BogusSubscriptionPlanRepository>();
-            services.AddScoped<IAuditLogRepository, BogusAuditLogRepository>();
+            // Always use SQL repositories
+            AddSqlRepositories(services);
         }
 
         private static void AddSqlRepositories(IServiceCollection services)

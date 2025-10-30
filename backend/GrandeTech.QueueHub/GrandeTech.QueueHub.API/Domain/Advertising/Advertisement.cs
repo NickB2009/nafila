@@ -7,7 +7,7 @@ namespace Grande.Fila.API.Domain.Advertising
     /// <summary>
     /// Represents an advertisement that can be displayed on kiosks or queue screens
     /// </summary>
-    public class Advertisement : BaseEntity, IAggregateRoot
+    public class Advertisement : BaseEntity
     {
         public string Title { get; private set; } = string.Empty;
         public string? Description { get; private set; }

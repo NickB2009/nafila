@@ -7,7 +7,7 @@ namespace Grande.Fila.API.Domain.ServicesOffered
     /// <summary>
     /// Represents a type of service (e.g., haircut style) offered by a service provider
     /// </summary>
-    public class ServiceOffered : BaseEntity, IAggregateRoot
+    public class ServiceOffered : BaseEntity
     {
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }

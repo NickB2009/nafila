@@ -8,7 +8,7 @@ namespace Grande.Fila.API.Domain.Staff
     /// <summary>
     /// Represents a staff member (barber) who serves customers
     /// </summary>
-    public class StaffMember : BaseEntity, IAggregateRoot
+    public class StaffMember : BaseEntity
     {        public string Name { get; private set; } = string.Empty;
         public Guid LocationId { get; private set; }
         public Email? Email { get; private set; }

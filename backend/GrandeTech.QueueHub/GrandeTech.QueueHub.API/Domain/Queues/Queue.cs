@@ -9,27 +9,30 @@ namespace Grande.Fila.API.Domain.Queues
     /// <summary>
     /// Represents a queue for a service provider
     /// </summary>
-    public class Queue : BaseEntity, IAggregateRoot
+    public class Queue : BaseEntity
     {
         [JsonPropertyName("locationId")]
-        public Guid LocationId { get; private set; }
-        public DateTime QueueDate { get; private set; }
-        public bool IsActive { get; private set; }
-        public int MaxSize { get; private set; }
-        public int LateClientCapTimeInMinutes { get; private set; }
+        public Guid LocationId { get; set; }
+        public DateTime QueueDate { get; set; }
+        public bool IsActive { get; set; }
+        public int MaxSize { get; set; }
+        public int LateClientCapTimeInMinutes { get; set; }
 
         // Navigation properties
-        private readonly List<QueueEntry> _entries = new();
-        public IReadOnlyCollection<QueueEntry> Entries => _entries.AsReadOnly();
+        public List<QueueEntry> Entries { get; set; } = new();
 
         // For EF Core and deserialization
-        private Queue() { }
+        public Queue() 
+        {
+            IsActive = true;
+            MaxSize = 100;
+            LateClientCapTimeInMinutes = 15;
+        }
 
         public Queue(
             Guid locationId,
             int maxSize,
-            int lateClientCapTimeInMinutes,
-            string createdBy)
+            int lateClientCapTimeInMinutes)
         {
             if (locationId == Guid.Empty)
                 throw new ArgumentException("Service provider ID is required", nameof(locationId));
@@ -39,9 +42,6 @@ namespace Grande.Fila.API.Domain.Queues
             IsActive = true;
             MaxSize = maxSize > 0 ? maxSize : 100;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes >= 0 ? lateClientCapTimeInMinutes : 15;
-            CreatedBy = createdBy;
-
-            AddDomainEvent(new QueueCreatedEvent(Id, LocationId, QueueDate));
         }
 
         // Domain behavior methods
@@ -71,13 +71,7 @@ namespace Grande.Fila.API.Domain.Queues
                 serviceTypeId,
                 notes);
 
-            _entries.Add(queueEntry);
-            
-            // Mark the queue as modified so EF Core knows it has been updated
-            MarkAsModified("System"); // TODO: Pass actual user context when available
-            
-            AddDomainEvent(new CustomerAddedToQueueEvent(Id, queueEntry.Id, customerId, position));
-            
+            Entries.Add(queueEntry);
             return queueEntry;
         }
 
@@ -94,16 +88,10 @@ namespace Grande.Fila.API.Domain.Queues
                 throw new InvalidOperationException("No customers in queue");
 
             nextEntry.Call(staffMemberId);
-            
-            // Mark the queue as modified since it affects queue state
-            MarkAsModified("System"); // TODO: Pass actual user context when available
-            
-            AddDomainEvent(new CustomerCalledFromQueueEvent(Id, nextEntry.Id, nextEntry.CustomerId, staffMemberId));
-            
             return nextEntry;
         }
 
-        public void UpdateSettings(int maxSize, int lateClientCapTimeInMinutes, string updatedBy)
+        public void UpdateSettings(int maxSize, int lateClientCapTimeInMinutes)
         {
             if (maxSize <= 0)
                 throw new ArgumentException("Maximum queue size must be positive", nameof(maxSize));
@@ -113,34 +101,12 @@ namespace Grande.Fila.API.Domain.Queues
 
             MaxSize = maxSize;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes;
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new QueueSettingsUpdatedEvent(Id));
-        }
-
-        public void Activate(string updatedBy)
-        {
-            if (!IsActive)
-            {
-                IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new QueueActivatedEvent(Id));
-            }
-        }
-
-        public void Deactivate(string updatedBy)
-        {
-            if (IsActive)
-            {
-                IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new QueueDeactivatedEvent(Id));
-            }
         }
 
         public void RemoveLateCustomers()
         {
             var now = DateTime.UtcNow;
-            var lateEntries = _entries.Where(e => 
+            var lateEntries = Entries.Where(e => 
                 e.Status == QueueEntryStatus.Called && 
                 e.CalledAt.HasValue &&
                 now.Subtract(e.CalledAt.Value).TotalMinutes > LateClientCapTimeInMinutes).ToList();
@@ -148,21 +114,12 @@ namespace Grande.Fila.API.Domain.Queues
             foreach (var entry in lateEntries)
             {
                 entry.MarkAsNoShow();
-                AddDomainEvent(new CustomerMarkedAsNoShowEvent(Id, entry.Id, entry.CustomerId));
-            }
-
-            if (lateEntries.Any())
-            {
-                // Mark the queue as modified since entries were changed
-                MarkAsModified("System"); // TODO: Pass actual user context when available
-                
-                AddDomainEvent(new LateCustomersRemovedEvent(Id, lateEntries.Count));
             }
         }
 
         public int GetPosition(Guid queueEntryId)
         {
-            var entry = _entries.FirstOrDefault(e => e.Id == queueEntryId);
+            var entry = Entries.FirstOrDefault(e => e.Id == queueEntryId);
             if (entry == null)
                 throw new InvalidOperationException($"Queue entry with ID {queueEntryId} not found");
 
@@ -188,15 +145,15 @@ namespace Grande.Fila.API.Domain.Queues
 
         private int CalculateNextPosition()
         {
-            if (!_entries.Any())
+            if (!Entries.Any())
                 return 1;
 
-            return _entries.Max(e => e.Position) + 1;
+            return Entries.Max(e => e.Position) + 1;
         }
 
         private IEnumerable<QueueEntry> GetActiveEntries()
         {
-            return _entries.Where(e => e.Status == QueueEntryStatus.Waiting || e.Status == QueueEntryStatus.Called);
+            return Entries.Where(e => e.Status == QueueEntryStatus.Waiting || e.Status == QueueEntryStatus.Called);
         }
     }
 }

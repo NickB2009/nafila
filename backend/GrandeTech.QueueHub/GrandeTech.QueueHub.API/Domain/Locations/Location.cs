@@ -8,7 +8,7 @@ namespace Grande.Fila.API.Domain.Locations
     /// <summary>
     /// Represents a location (barbershop) that belongs to an organization
     /// </summary>
-    public class Location : BaseEntity, IAggregateRoot
+    public class Location : BaseEntity
     {
         public string Name { get; private set; } = string.Empty;
         public Slug Slug { get; private set; } = null!;

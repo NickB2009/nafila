@@ -7,7 +7,7 @@ namespace Grande.Fila.API.Domain.Promotions
 {    /// <summary>
     /// Represents a coupon that can be used by customers to receive discounts
     /// </summary>
-    public class Coupon : BaseEntity, IAggregateRoot
+    public class Coupon : BaseEntity
     {
         public string Code { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;

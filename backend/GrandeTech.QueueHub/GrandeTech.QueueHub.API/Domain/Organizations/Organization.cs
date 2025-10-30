@@ -8,7 +8,7 @@ namespace Grande.Fila.API.Domain.Organizations
     /// <summary>
     /// Represents the top-level organization that can own multiple service providers (locations)
     /// </summary>
-    public class Organization : BaseEntity, IAggregateRoot
+    public class Organization : BaseEntity
     {
         public string Name { get; private set; } = string.Empty;
         public Slug Slug { get; private set; } = null!;

@@ -35,7 +35,7 @@ namespace Grande.Fila.API.Domain.Notifications
     /// <summary>
     /// Represents a notification sent to customers or staff members
     /// </summary>
-    public class Notification : BaseEntity, IAggregateRoot
+    public class Notification : BaseEntity
     {
         public Guid RecipientId { get; private set; }
         public string RecipientType { get; private set; } = string.Empty; // Customer, StaffMember

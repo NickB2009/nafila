@@ -73,9 +73,6 @@ namespace Grande.Fila.API.Infrastructure.Data
             // Use basic value object configuration for stability
             ConfigureBasicValueObjects(modelBuilder);
 
-            // Configure domain events (they won't be persisted)
-            IgnoreDomainEvents(modelBuilder);
-
             // Configure database indexes for performance optimization
             DatabaseIndexesConfiguration.ConfigureIndexes(modelBuilder);
         }
@@ -103,21 +100,14 @@ namespace Grande.Fila.API.Infrastructure.Data
             {
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
                 {
-                    // Configure common properties
+                    // Configure CreatedAt with default value
                     modelBuilder.Entity(entityType.ClrType)
                         .Property<DateTime>("CreatedAt")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
 
-                    modelBuilder.Entity(entityType.ClrType)
-                        .Property<DateTime?>("LastModifiedAt");
-
                     // Add global query filter for soft delete
                     modelBuilder.Entity(entityType.ClrType)
                         .HasQueryFilter(GetSoftDeleteFilter(entityType.ClrType));
-
-                    // Temporarily ignore RowVersion across all entities to avoid provider collection mapping issues
-                    modelBuilder.Entity(entityType.ClrType)
-                        .Ignore("RowVersion");
                 }
             }
         }
@@ -523,18 +513,7 @@ namespace Grande.Fila.API.Infrastructure.Data
         }
 
         // REMOVED: ConfigureValueObjectsOriginal method - configurations moved to ConfigureBasicValueObjects
-
-        private static void IgnoreDomainEvents(ModelBuilder modelBuilder)
-        {
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-                {
-                    modelBuilder.Entity(entityType.ClrType)
-                        .Ignore("DomainEvents");
-                }
-            }
-        }
+        // REMOVED: IgnoreDomainEvents method - domain events infrastructure removed
 
         private static System.Linq.Expressions.LambdaExpression GetSoftDeleteFilter(Type entityType)
         {
@@ -546,64 +525,32 @@ namespace Grande.Fila.API.Infrastructure.Data
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // Update audit fields before saving
-            UpdateAuditFields();
+            // Set CreatedAt for new entities
+            var entries = ChangeTracker.Entries<BaseEntity>();
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added && entry.Entity.CreatedAt == default)
+                {
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                }
+            }
 
-            var result = await base.SaveChangesAsync(cancellationToken);
-
-            // Dispatch domain events after successful save
-            await DispatchDomainEvents();
-
-            return result;
+            return await base.SaveChangesAsync(cancellationToken);
         }
 
         public override int SaveChanges()
         {
-            UpdateAuditFields();
-            var result = base.SaveChanges();
-            DispatchDomainEvents().GetAwaiter().GetResult();
-            return result;
-        }
-
-        private void UpdateAuditFields()
-        {
+            // Set CreatedAt for new entities
             var entries = ChangeTracker.Entries<BaseEntity>();
-
             foreach (var entry in entries)
             {
-                switch (entry.State)
+                if (entry.State == EntityState.Added && entry.Entity.CreatedAt == default)
                 {
-                    case EntityState.Added:
-                        entry.Entity.CreatedAt = DateTime.UtcNow;
-                        // CreatedBy will be set by application logic
-                        break;
-
-                    case EntityState.Modified:
-                        entry.Entity.LastModifiedAt = DateTime.UtcNow;
-                        // LastModifiedBy will be set by application logic
-                        break;
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
                 }
             }
-        }
 
-        private async Task DispatchDomainEvents()
-        {
-            var entities = ChangeTracker.Entries<BaseEntity>()
-                .Where(e => e.Entity.DomainEvents.Any())
-                .Select(e => e.Entity)
-                .ToList();
-
-            var domainEvents = entities
-                .SelectMany(e => e.DomainEvents)
-                .ToList();
-
-            // Clear domain events
-            entities.ForEach(e => e.ClearDomainEvents());
-
-            // Here you would dispatch events to handlers
-            // For now, we'll just clear them
-            // TODO: Implement domain event dispatcher when needed
-            await Task.CompletedTask;
+            return base.SaveChanges();
         }
     }
 } 

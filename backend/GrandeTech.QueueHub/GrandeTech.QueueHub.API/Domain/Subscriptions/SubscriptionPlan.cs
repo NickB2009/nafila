@@ -8,7 +8,7 @@ namespace Grande.Fila.API.Domain.Subscriptions
     /// <summary>
     /// Represents a subscription plan that organizations can subscribe to
     /// </summary>
-    public class SubscriptionPlan : BaseEntity, IAggregateRoot
+    public class SubscriptionPlan : BaseEntity
     {
         public string Name { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;        // Flattened price properties (replacing Money value objects)
