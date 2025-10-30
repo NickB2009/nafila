@@ -164,7 +164,7 @@ namespace Grande.Fila.API.Controllers
                 MaxQueueEntriesPerDay = plan.MaxQueueEntriesPerDay,
                 IsFeatured = plan.IsFeatured,
                 CreatedAt = plan.CreatedAt,
-                UpdatedAt = plan.LastModifiedAt
+                UpdatedAt = plan.CreatedAt // LastModifiedAt removed during simplification
             });
 
             return Ok(result);
@@ -209,7 +209,7 @@ namespace Grande.Fila.API.Controllers
                 MaxQueueEntriesPerDay = subscriptionPlan.MaxQueueEntriesPerDay,
                 IsFeatured = subscriptionPlan.IsFeatured,
                 CreatedAt = subscriptionPlan.CreatedAt,
-                UpdatedAt = subscriptionPlan.LastModifiedAt
+                UpdatedAt = subscriptionPlan.CreatedAt // LastModifiedAt removed during simplification
             };
 
             return Ok(result);

@@ -11,6 +11,7 @@ using Grande.Fila.API.Domain.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
 using System.Text.Json;
 
 namespace Grande.Fila.API.Application.Auth
@@ -21,13 +22,15 @@ namespace Grande.Fila.API.Application.Auth
         private readonly IConfiguration _config;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AuthService> _logger;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthService(IUserRepository userRepo, IConfiguration config, IUnitOfWork unitOfWork, ILogger<AuthService> logger)
+        public AuthService(IUserRepository userRepo, IConfiguration config, IUnitOfWork unitOfWork, ILogger<AuthService> logger, IPasswordHasher<User> passwordHasher)
         {
             _userRepo = userRepo;
             _config = config;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<LoginResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -56,7 +59,7 @@ namespace Grande.Fila.API.Application.Auth
                 return result;
             }
 
-            if (!VerifyPassword(request.Password, user.PasswordHash))
+            if (!VerifyPasswordFlexible(user, request.Password, user.PasswordHash))
             {
                 result.Error = "Invalid username or password.";
                 return result;
@@ -170,8 +173,9 @@ namespace Grande.Fila.API.Application.Auth
                 }
 
                 // Create user
-                _logger.LogDebug("Hashing password");
-                var passwordHash = HashPassword(request.Password);
+                _logger.LogDebug("Hashing password with Identity PasswordHasher");
+                var tempUser = new User(normalizedFullName!, normalizedEmail!, normalizedPhoneNumber!, string.Empty, "Customer");
+                var passwordHash = _passwordHasher.HashPassword(tempUser, request.Password);
                 
                 _logger.LogDebug("Creating user entity");
                 var user = new User(normalizedFullName!, normalizedEmail!, normalizedPhoneNumber!, passwordHash, "Customer");
@@ -271,14 +275,24 @@ namespace Grande.Fila.API.Application.Auth
             };
         }
 
-        private string HashPassword(string password)
+        private bool VerifyPasswordFlexible(User user, string password, string storedHash)
         {
-            return BCrypt.Net.BCrypt.HashPassword(password);
-        }
+            try
+            {
+                // If stored hash looks like ASP.NET Identity v3 format, use Identity hasher
+                if (!string.IsNullOrEmpty(storedHash) && storedHash.StartsWith("AQAAAA"))
+                {
+                    var result = _passwordHasher.VerifyHashedPassword(user, storedHash, password);
+                    return result == PasswordVerificationResult.Success || result == PasswordVerificationResult.SuccessRehashNeeded;
+                }
 
-        private bool VerifyPassword(string password, string hash)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, hash);
+                // Fallback to BCrypt for legacy hashes
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private (bool IsValid, string ErrorMessage) ValidatePasswordStrength(string password)

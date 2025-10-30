@@ -19,8 +19,7 @@ namespace Grande.Fila.API.Application.Queues
             var queue = new Queue(
                 request.LocationId,
                 request.MaxSize,
-                request.LateClientCapTimeInMinutes,
-                "system" // TODO: Get from authenticated user
+                request.LateClientCapTimeInMinutes
             );
 
             await _queueRepository.AddAsync(queue, cancellationToken);

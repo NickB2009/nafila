@@ -80,9 +80,7 @@ namespace Grande.Fila.API.Domain.Organizations
             SubscriptionPlanId = subscriptionPlanId;
             IsActive = true;
             SharesDataForAnalytics = false;
-            CreatedBy = createdBy;
-
-            AddDomainEvent(new OrganizationCreatedEvent(Id, Name, Slug.Value));
+            // AddDomainEvent(new OrganizationCreatedEvent(Id, Name, Slug.Value));
         }
 
         // Domain behavior methods
@@ -103,8 +101,8 @@ namespace Grande.Fila.API.Domain.Organizations
             ContactPhone = contactPhone != null ? PhoneNumber.Create(contactPhone) : null;
             WebsiteUrl = websiteUrl;
 
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new OrganizationUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new OrganizationUpdatedEvent(Id));
         }
 
         public void UpdateBranding(
@@ -124,8 +122,8 @@ namespace Grande.Fila.API.Domain.Organizations
             TagLine = tagLine?.Trim() ?? TagLine;
             // Keep existing font family
 
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new OrganizationBrandingUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new OrganizationBrandingUpdatedEvent(Id));
         }
 
         public void ChangeSubscriptionPlan(Guid newSubscriptionPlanId, string updatedBy)
@@ -134,8 +132,8 @@ namespace Grande.Fila.API.Domain.Organizations
                 throw new ArgumentException("Subscription plan ID cannot be empty", nameof(newSubscriptionPlanId));
 
             SubscriptionPlanId = newSubscriptionPlanId;
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new OrganizationSubscriptionChangedEvent(Id, newSubscriptionPlanId));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new OrganizationSubscriptionChangedEvent(Id, newSubscriptionPlanId));
         }
 
         public void SetAnalyticsSharing(bool sharesData, string updatedBy)
@@ -143,8 +141,8 @@ namespace Grande.Fila.API.Domain.Organizations
             if (SharesDataForAnalytics != sharesData)
             {
                 SharesDataForAnalytics = sharesData;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new OrganizationAnalyticsSharingChangedEvent(Id, sharesData));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new OrganizationAnalyticsSharingChangedEvent(Id, sharesData));
             }
         }
 
@@ -153,7 +151,7 @@ namespace Grande.Fila.API.Domain.Organizations
             if (!_LocationIds.Contains(LocationId))
             {
                 _LocationIds.Add(LocationId);
-                AddDomainEvent(new LocationAddedToOrganizationEvent(Id, LocationId));
+                // AddDomainEvent(new LocationAddedToOrganizationEvent(Id, LocationId));
             }
         }
 
@@ -162,7 +160,7 @@ namespace Grande.Fila.API.Domain.Organizations
             if (_LocationIds.Contains(LocationId))
             {
                 _LocationIds.Remove(LocationId);
-                AddDomainEvent(new LocationRemovedFromOrganizationEvent(Id, LocationId));
+                // AddDomainEvent(new LocationRemovedFromOrganizationEvent(Id, LocationId));
             }
         }
 
@@ -171,8 +169,8 @@ namespace Grande.Fila.API.Domain.Organizations
             if (!IsActive)
             {
                 IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new OrganizationActivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new OrganizationActivatedEvent(Id));
             }
         }
 
@@ -181,8 +179,8 @@ namespace Grande.Fila.API.Domain.Organizations
             if (IsActive)
             {
                 IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new OrganizationDeactivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new OrganizationDeactivatedEvent(Id));
             }
         }
 

@@ -47,18 +47,11 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.HasIndex(o => o.IsActive)
                 .HasDatabaseName("IX_Organizations_IsActive");
 
-            // Index on Slug for faster lookups
-            builder.HasIndex("Slug")
-                .IsUnique()
-                .HasDatabaseName("IX_Organizations_Slug");
+            // Slug, ContactEmail, ContactPhone ignored - no indexes needed
 
-            // Index on ContactEmail for searches
-            builder.HasIndex("ContactEmail")
-                .HasDatabaseName("IX_Organizations_ContactEmail");
-
-            // Concurrency token: rely on provider default mapping for byte[]
-            builder.Property(o => o.RowVersion)
-                .IsConcurrencyToken();
+            // RowVersion removed during simplification
+            // builder.Property(o => o.RowVersion)
+            //     .IsConcurrencyToken();
         }
     }
 } 

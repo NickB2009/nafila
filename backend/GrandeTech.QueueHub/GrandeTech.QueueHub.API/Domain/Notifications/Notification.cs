@@ -1,6 +1,5 @@
 using System;
 using Grande.Fila.API.Domain.Common;
-using Grande.Fila.API.Domain.Notifications.Events;
 
 namespace Grande.Fila.API.Domain.Notifications
 {
@@ -94,7 +93,7 @@ namespace Grande.Fila.API.Domain.Notifications
             DeepLink = deepLink;
             RetryCount = 0;
 
-            AddDomainEvent(new NotificationCreatedEvent(Id, Type.ToString(), RecipientType, RecipientId.ToString(), Content));
+            // AddDomainEvent(new NotificationCreatedEvent(Id, Type.ToString(), RecipientType, RecipientId.ToString(), Content));
         }
 
         // Domain behavior methods
@@ -107,11 +106,11 @@ namespace Grande.Fila.API.Domain.Notifications
             SentAt = DateTime.UtcNow;
             ErrorMessage = error;            if (Status == NotificationStatus.Sent)
             {
-                AddDomainEvent(new NotificationSentEvent(Id));
+                // AddDomainEvent(new NotificationSentEvent(Id));
             }
             else
             {
-                AddDomainEvent(new NotificationFailedEvent(Id, ErrorMessage));
+                // AddDomainEvent(new NotificationFailedEvent(Id, ErrorMessage));
             }
         }
 
@@ -122,7 +121,7 @@ namespace Grande.Fila.API.Domain.Notifications
 
             Status = NotificationStatus.Delivered;
             DeliveredAt = DateTime.UtcNow;
-            AddDomainEvent(new NotificationDeliveredEvent(Id));
+            // AddDomainEvent(new NotificationDeliveredEvent(Id));
         }
 
         public void MarkAsRead()
@@ -132,14 +131,14 @@ namespace Grande.Fila.API.Domain.Notifications
 
             Status = NotificationStatus.Read;
             ReadAt = DateTime.UtcNow;
-            AddDomainEvent(new NotificationReadEvent(Id));
+            // AddDomainEvent(new NotificationReadEvent(Id));
         }
 
         public void IncrementRetryCount(string? error = null)
         {
             RetryCount++;
             ErrorMessage = error;
-            AddDomainEvent(new NotificationRetryEvent(Id, RetryCount));
+            // AddDomainEvent(new NotificationRetryEvent(Id, RetryCount));
         }
 
         public bool ShouldSend()

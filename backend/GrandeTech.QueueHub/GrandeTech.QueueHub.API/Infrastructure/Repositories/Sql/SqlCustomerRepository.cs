@@ -21,11 +21,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(phoneNumber))
                 throw new ArgumentException("Phone number cannot be null or whitespace", nameof(phoneNumber));
 
-            // Create PhoneNumber value object for comparison
-            // EF Core will use the configured converter to translate this to the database column
-            var phoneNumberValueObject = PhoneNumber.Create(phoneNumber);
+            // Customer.PhoneNumber is now a plain string (simplified from Value Object)
             return await _dbSet
-                .Where(c => c.PhoneNumber != null && c.PhoneNumber == phoneNumberValueObject)
+                .Where(c => c.PhoneNumber != null && c.PhoneNumber == phoneNumber)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -34,11 +32,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be null or whitespace", nameof(email));
 
-            // Create Email value object for comparison
-            // EF Core will use the configured converter to translate this to the database column
-            var emailValueObject = Email.Create(email);
+            // Customer.Email is now a plain string (simplified from Value Object)
             return await _dbSet
-                .Where(c => c.Email != null && c.Email == emailValueObject)
+                .Where(c => c.Email != null && c.Email == email)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -57,13 +53,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             int minVisits = 5, 
             CancellationToken cancellationToken = default)
         {
-            // This would typically involve a join with queue entries or visit history
-            // For now, return customers who have this location in their favorites
-            // Note: FavoriteLocationIds is IReadOnlyCollection<Guid>, need to handle differently
-            return await _dbSet
-                .Where(c => c.FavoriteLocationIds.Any(id => id == locationId))
-                .OrderBy(c => c.Name)
-                .ToListAsync(cancellationToken);
+            // FavoriteLocationIds removed during simplification
+            // Return empty list for now - this feature needs to be reimplemented if needed
+            return new List<Customer>();
         }
 
         public async Task<IReadOnlyList<Customer>> GetAnonymousCustomersAsync(CancellationToken cancellationToken = default)
@@ -86,10 +78,9 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             Guid locationId, 
             CancellationToken cancellationToken = default)
         {
-            return await _dbSet
-                .Where(c => c.FavoriteLocationIds.Any(id => id == locationId))
-                .OrderBy(c => c.Name)
-                .ToListAsync(cancellationToken);
+            // FavoriteLocationIds removed during simplification
+            // Return empty list for now - this feature needs to be reimplemented if needed
+            return new List<Customer>();
         }
 
         public async Task<bool> IsPhoneNumberUniqueAsync(string phoneNumber, CancellationToken cancellationToken = default)

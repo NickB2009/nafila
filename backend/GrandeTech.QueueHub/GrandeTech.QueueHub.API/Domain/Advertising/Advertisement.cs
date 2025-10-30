@@ -66,9 +66,7 @@ namespace Grande.Fila.API.Domain.Advertising
             DisplayPriority = displayPriority;
             IsGlobal = isGlobal;
             IsActive = true;
-            CreatedBy = createdBy;
-
-            AddDomainEvent(new AdvertisementCreatedEvent(Id, Title, LocationId));
+            // AddDomainEvent(new AdvertisementCreatedEvent(Id, Title, LocationId));
         }
 
         // Domain behavior methods
@@ -110,8 +108,8 @@ namespace Grande.Fila.API.Domain.Advertising
             DisplayDurationSeconds = displayDurationSeconds;
             DisplayPriority = displayPriority;
             
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new AdvertisementUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new AdvertisementUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -119,8 +117,8 @@ namespace Grande.Fila.API.Domain.Advertising
             if (!IsActive)
             {
                 IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new AdvertisementActivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new AdvertisementActivatedEvent(Id));
             }
         }
 
@@ -129,8 +127,8 @@ namespace Grande.Fila.API.Domain.Advertising
             if (IsActive)
             {
                 IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new AdvertisementDeactivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new AdvertisementDeactivatedEvent(Id));
             }
         }
 
@@ -139,8 +137,8 @@ namespace Grande.Fila.API.Domain.Advertising
             if (IsGlobal != isGlobal)
             {
                 IsGlobal = isGlobal;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new AdvertisementVisibilityChangedEvent(Id, isGlobal));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new AdvertisementVisibilityChangedEvent(Id, isGlobal));
             }
         }
 

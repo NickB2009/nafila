@@ -190,7 +190,7 @@ namespace Grande.Fila.API.Application.Organizations
                 StaffId = staff.Id.ToString(),
                 StaffName = staff.Name,
                 Status = staff.StaffStatus,
-                LastActivity = staff.LastModifiedAt,
+                LastActivity = staff.CreatedAt, // LastModifiedAt removed during simplification
                 CustomersServedToday = customersServedToday,
                 AverageServiceTimeMinutes = averageServiceTime,
                 IsOnBreak = staff.IsOnBreak(),

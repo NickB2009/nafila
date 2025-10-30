@@ -96,14 +96,8 @@ namespace Grande.Fila.API.Application.Queues
                     combinedNotes += $"\nPhoto: {request.PhotoUrl}";
                 }
 
-                // Add to customer's service history
-                customer.AddServiceHistoryItem(
-                    queue.LocationId,
-                    queueEntry.StaffMemberId ?? Guid.Empty,
-                    queueEntry.ServiceTypeId ?? Guid.Empty,
-                    queueEntry.CompletedAt ?? DateTime.UtcNow,
-                    combinedNotes
-                );
+                // ServiceHistory removed during simplification
+                // Service history tracking needs to be reimplemented if needed
 
                 // Update the queue entry notes as well
                 queueEntry.UpdateNotes(combinedNotes);
@@ -112,12 +106,9 @@ namespace Grande.Fila.API.Application.Queues
                 await _customerRepository.UpdateAsync(customer, cancellationToken);
                 await _queueRepository.UpdateAsync(queue, cancellationToken);
 
-                // Get the newly added service history item
-                var serviceHistoryItem = customer.ServiceHistory.LastOrDefault();
-
                 // Return success result
                 result.Success = true;
-                result.ServiceHistoryId = serviceHistoryItem?.Id.ToString();
+                result.ServiceHistoryId = null; // ServiceHistory removed during simplification
                 result.CustomerId = customer.Id.ToString();
 
                 _logger.LogInformation(

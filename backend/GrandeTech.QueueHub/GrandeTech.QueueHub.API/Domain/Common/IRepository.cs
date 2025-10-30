@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace Grande.Fila.API.Domain.Common
 {
     /// <summary>
-    /// Generic repository interface for aggregate roots
+    /// Generic repository interface
     /// </summary>
-    /// <typeparam name="T">The aggregate root type</typeparam>
-    public interface IRepository<T> where T : IAggregateRoot
+    /// <typeparam name="T">The entity type</typeparam>
+    public interface IRepository<T> where T : BaseEntity
     {
         /// <summary>
         /// Gets an entity by its ID

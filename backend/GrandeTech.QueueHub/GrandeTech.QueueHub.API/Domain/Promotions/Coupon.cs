@@ -65,12 +65,12 @@ namespace Grande.Fila.API.Domain.Promotions
             CurrentUsageCount = 0;
             IsActive = true;
             RequiresLogin = requiresLogin;
-            CreatedBy = createdBy;            if (applicableServiceTypeIds != null)
+            if (applicableServiceTypeIds != null)
             {
                 _applicableServiceTypeIds = new List<Guid>(applicableServiceTypeIds);
             }
 
-            AddDomainEvent(new CouponCreatedEvent(Id, Code, LocationId));
+            // AddDomainEvent(new CouponCreatedEvent(Id, Code, LocationId));
         }
 
         // Domain behavior methods
@@ -114,8 +114,8 @@ namespace Grande.Fila.API.Domain.Promotions
                 }
             }
             
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new CouponUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new CouponUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -123,8 +123,8 @@ namespace Grande.Fila.API.Domain.Promotions
             if (!IsActive)
             {
                 IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new CouponActivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new CouponActivatedEvent(Id));
             }
         }
 
@@ -133,8 +133,8 @@ namespace Grande.Fila.API.Domain.Promotions
             if (IsActive)
             {
                 IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new CouponDeactivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new CouponDeactivatedEvent(Id));
             }
         }
 
@@ -167,7 +167,7 @@ namespace Grande.Fila.API.Domain.Promotions
             CurrentUsageCount++;
             
             var redemption = new CouponRedemption(Id, customerId, queueEntryId);
-            AddDomainEvent(new CouponRedeemedEvent(Id, customerId, queueEntryId));
+            // AddDomainEvent(new CouponRedeemedEvent(Id, customerId, queueEntryId));
             
             return redemption;
         }

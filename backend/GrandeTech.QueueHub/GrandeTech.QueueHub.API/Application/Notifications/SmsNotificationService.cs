@@ -75,7 +75,7 @@ namespace Grande.Fila.API.Application.Notifications
                 if (queueEntry.CustomerId != Guid.Empty)
                 {
                     var customer = await _customerRepository.GetByIdAsync(queueEntry.CustomerId, cancellationToken);
-                    phoneNumber = customer?.PhoneNumber?.Value;
+                    phoneNumber = customer?.PhoneNumber;
                 }
                 
                 // For anonymous entries, we would need to add phone to QueueEntry or use different approach

@@ -247,7 +247,7 @@ namespace Grande.Fila.API.Controllers
                     TagLine = org.TagLine
                 },                ServiceProviderCount = org.LocationIds.Count,
                 CreatedAt = org.CreatedAt,
-                UpdatedAt = org.LastModifiedAt
+                UpdatedAt = org.CreatedAt // LastModifiedAt removed during simplification
             });
 
             return Ok(result);
@@ -293,7 +293,7 @@ namespace Grande.Fila.API.Controllers
                     TagLine = organization.TagLine
                 },                ServiceProviderIds = organization.LocationIds,
                 CreatedAt = organization.CreatedAt,
-                UpdatedAt = organization.LastModifiedAt
+                UpdatedAt = organization.CreatedAt // LastModifiedAt removed during simplification
             };
 
             return Ok(result);

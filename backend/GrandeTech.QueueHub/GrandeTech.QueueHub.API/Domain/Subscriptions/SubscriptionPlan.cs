@@ -67,9 +67,7 @@ namespace Grande.Fila.API.Domain.Subscriptions
             IncludesMultipleLocations = includesMultipleLocations;
             MaxQueueEntriesPerDay = maxQueueEntriesPerDay;
             IsFeatured = isFeatured;
-            CreatedBy = createdBy;
-
-            AddDomainEvent(new SubscriptionPlanCreatedEvent(Id, Name));
+            // AddDomainEvent(new SubscriptionPlanCreatedEvent(Id, Name));
         }
 
         public void UpdateDetails(
@@ -106,9 +104,6 @@ namespace Grande.Fila.API.Domain.Subscriptions
             IncludesMultipleLocations = includesMultipleLocations;
             MaxQueueEntriesPerDay = maxQueueEntriesPerDay;
             IsFeatured = isFeatured;
-            
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new SubscriptionPlanUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -116,8 +111,8 @@ namespace Grande.Fila.API.Domain.Subscriptions
             if (!IsActive)
             {
                 IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new SubscriptionPlanActivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new SubscriptionPlanActivatedEvent(Id));
             }
         }
 
@@ -126,8 +121,8 @@ namespace Grande.Fila.API.Domain.Subscriptions
             if (IsActive)
             {
                 IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new SubscriptionPlanDeactivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new SubscriptionPlanDeactivatedEvent(Id));
             }
         }
 

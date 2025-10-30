@@ -32,9 +32,9 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasDefaultValue(15);
 
-            // Concurrency token: rely on provider default mapping for byte[]
-            builder.Property(q => q.RowVersion)
-                .IsConcurrencyToken();
+            // RowVersion removed during simplification
+            // builder.Property(q => q.RowVersion)
+            //     .IsConcurrencyToken();
 
             // Configure the entries collection - this will be a separate table
             builder.HasMany(q => q.Entries)

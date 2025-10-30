@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
 
 namespace Grande.Fila.API.Infrastructure.Data
 {
     /// <summary>
-    /// Design-time factory for QueueHubDbContext to enable EF Core migrations
+    /// Design-time factory for EF migrations - allows migrations without running database
     /// </summary>
     public class QueueHubDbContextFactory : IDesignTimeDbContextFactory<QueueHubDbContext>
     {
@@ -13,11 +12,21 @@ namespace Grande.Fila.API.Infrastructure.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<QueueHubDbContext>();
             
-            // Use MySQL Database connection string for design-time
-            var connectionString = "Server=localhost;Database=QueueHubDb;User=root;Password=DevPassword123!;Port=3306;CharSet=utf8mb4;SslMode=None;";
-            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            // Use a dummy connection string for design-time only
+            var connectionString = "Server=localhost;Database=QueueHubDb;User=root;Password=dummy;";
             
+            optionsBuilder.UseMySql(
+                connectionString,
+                ServerVersion.Parse("8.0.0"),
+                mySqlOptions =>
+                {
+                    mySqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 3,
+                        maxRetryDelay: TimeSpan.FromSeconds(15),
+                        errorNumbersToAdd: null);
+                });
+
             return new QueueHubDbContext(optionsBuilder.Options);
         }
     }
-} 
+}

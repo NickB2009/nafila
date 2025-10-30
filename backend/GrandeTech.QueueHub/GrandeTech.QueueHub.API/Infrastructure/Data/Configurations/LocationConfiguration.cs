@@ -74,14 +74,7 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.HasIndex(l => l.IsQueueEnabled)
                 .HasDatabaseName("IX_Locations_IsQueueEnabled");
 
-            // Index on Slug for faster lookups
-            builder.HasIndex("Slug")
-                .IsUnique()
-                .HasDatabaseName("IX_Locations_Slug");
-
-            // Index on ContactEmail for searches
-            builder.HasIndex("ContactEmail")
-                .HasDatabaseName("IX_Locations_ContactEmail");
+            // Slug, ContactEmail, ContactPhone ignored - no indexes needed
         }
     }
 } 

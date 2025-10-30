@@ -52,9 +52,9 @@ namespace Grande.Fila.API.Infrastructure.Data.Configurations
             builder.HasIndex("PhoneNumber")
                 .HasDatabaseName("IX_Customers_PhoneNumber");
 
-            // Concurrency token: rely on provider default mapping for byte[]
-            builder.Property(c => c.RowVersion)
-                .IsConcurrencyToken();
+            // RowVersion removed during simplification
+            // builder.Property(c => c.RowVersion)
+            //     .IsConcurrencyToken();
         }
     }
 } 

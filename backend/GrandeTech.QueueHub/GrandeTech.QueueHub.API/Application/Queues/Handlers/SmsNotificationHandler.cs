@@ -112,7 +112,7 @@ namespace Grande.Fila.API.Application.Queues.Handlers
                 if (queueEntry.CustomerId != Guid.Empty)
                 {
                     var customer = await _customerRepository.GetByIdAsync(queueEntry.CustomerId, cancellationToken);
-                    return customer?.PhoneNumber?.Value ?? string.Empty;
+                    return customer?.PhoneNumber ?? string.Empty;
                 }
 
                 // For anonymous entries, we might need to store phone number in QueueEntry

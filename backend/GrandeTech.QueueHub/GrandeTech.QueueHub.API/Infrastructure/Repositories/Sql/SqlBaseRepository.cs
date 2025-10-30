@@ -10,7 +10,7 @@ using Grande.Fila.API.Infrastructure.Data;
 
 namespace Grande.Fila.API.Infrastructure.Repositories.Sql
 {
-    public abstract class SqlBaseRepository<T> : IRepository<T> where T : BaseEntity, IAggregateRoot
+    public abstract class SqlBaseRepository<T> : IRepository<T> where T : BaseEntity
     {
         protected readonly QueueHubDbContext _context;
         protected readonly DbSet<T> _dbSet;
@@ -77,7 +77,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
                 return false;
 
             // Soft delete by default
-            entity.MarkAsDeleted("System"); // TODO: Get actual user context
+            entity.IsDeleted = true;
             _context.Entry(entity).State = EntityState.Modified;
 
             return true;

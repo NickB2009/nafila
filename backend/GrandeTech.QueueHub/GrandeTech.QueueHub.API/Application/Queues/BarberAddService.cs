@@ -146,12 +146,8 @@ namespace Grande.Fila.API.Application.Queues
                         // Update existing customer's name if different
                         if (customer.Name != request.CustomerName.Trim())
                         {
-                            customer.UpdateProfile(
-                                name: request.CustomerName.Trim(),
-                                phoneNumber: customer.PhoneNumber?.Value,
-                                email: customer.Email?.Value,
-                                updatedBy: userId
-                            );
+                            customer.Name = request.CustomerName.Trim();
+                            // UpdateProfile method removed during simplification - direct property assignment
                             await _customerRepository.UpdateAsync(customer, cancellationToken);
                         }
                     }

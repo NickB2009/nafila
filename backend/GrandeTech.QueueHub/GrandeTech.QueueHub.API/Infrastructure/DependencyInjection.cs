@@ -15,9 +15,11 @@ using Grande.Fila.API.Domain.Staff;
 using Grande.Fila.API.Domain.Subscriptions;
 using Grande.Fila.API.Domain.AuditLogs;
 using Grande.Fila.API.Domain.ServicesOffered;
+using Grande.Fila.API.Domain.Promotions;
 using Grande.Fila.API.Infrastructure.Data;
 using Grande.Fila.API.Infrastructure.Repositories.Sql;
 using Grande.Fila.API.Application.Auth;
+using Microsoft.AspNetCore.Identity;
 using Grande.Fila.API.Application.Organizations;
 using Grande.Fila.API.Application.Locations;
 using Grande.Fila.API.Application.SubscriptionPlans;
@@ -70,6 +72,9 @@ namespace Grande.Fila.API.Infrastructure
             
             // Add application services
             AddApplicationServices(services);
+
+            // Security: password hasher for users
+            services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
             
             return services;
         }
@@ -168,6 +173,7 @@ namespace Grande.Fila.API.Infrastructure
             services.AddScoped<IOrganizationRepository, SqlOrganizationRepository>();
             services.AddScoped<IQueueRepository, SqlQueueRepository>();
             services.AddScoped<ILocationRepository, SqlLocationRepository>();
+            services.AddScoped<ICouponRepository, SqlCouponRepository>();
             services.AddScoped<ICustomerRepository, SqlCustomerRepository>();
             services.AddScoped<IUserRepository, SqlUserRepository>();
             services.AddScoped<IStaffMemberRepository, SqlStaffMemberRepository>();

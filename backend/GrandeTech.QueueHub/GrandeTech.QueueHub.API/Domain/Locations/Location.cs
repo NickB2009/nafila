@@ -103,9 +103,7 @@ namespace Grande.Fila.API.Domain.Locations
             IsActive = true;
             AverageServiceTimeInMinutes = 30; // Default average time
             LastAverageTimeReset = DateTime.UtcNow;
-            CreatedBy = createdBy;
-
-            AddDomainEvent(new LocationCreatedEvent(Id, Name, OrganizationId));
+            // AddDomainEvent(new LocationCreatedEvent(Id, Name, OrganizationId));
         }
 
         // Domain behavior methods
@@ -130,8 +128,8 @@ namespace Grande.Fila.API.Domain.Locations
             // Update flattened weekly hours
             SetWeeklyHoursForDays(openingTime, closingTime);
 
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new LocationUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new LocationUpdatedEvent(Id));
         }
 
         public void SetCustomBranding(
@@ -151,8 +149,8 @@ namespace Grande.Fila.API.Domain.Locations
             TagLine = tagLine?.Trim() ?? string.Empty;
             FontFamily = "Arial, sans-serif"; // Default font
 
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new LocationBrandingUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new LocationBrandingUpdatedEvent(Id));
         }
 
         public void ClearCustomBranding(string updatedBy)
@@ -166,8 +164,8 @@ namespace Grande.Fila.API.Domain.Locations
             TagLine = null;
             FontFamily = null;
             
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new LocationBrandingUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new LocationBrandingUpdatedEvent(Id));
         }
 
         public void EnableQueue(string updatedBy)
@@ -175,8 +173,8 @@ namespace Grande.Fila.API.Domain.Locations
             if (!IsQueueEnabled)
             {
                 IsQueueEnabled = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new LocationQueueEnabledEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new LocationQueueEnabledEvent(Id));
             }
         }
 
@@ -185,8 +183,8 @@ namespace Grande.Fila.API.Domain.Locations
             if (IsQueueEnabled)
             {
                 IsQueueEnabled = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new LocationQueueDisabledEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new LocationQueueDisabledEvent(Id));
             }
         }
 
@@ -200,8 +198,8 @@ namespace Grande.Fila.API.Domain.Locations
 
             MaxQueueSize = maxQueueSize;
             LateClientCapTimeInMinutes = lateClientCapTimeInMinutes;
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new LocationQueueSettingsUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new LocationQueueSettingsUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -209,8 +207,8 @@ namespace Grande.Fila.API.Domain.Locations
             if (!IsActive)
             {
                 IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new LocationActivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new LocationActivatedEvent(Id));
             }
         }
 
@@ -219,8 +217,8 @@ namespace Grande.Fila.API.Domain.Locations
             if (IsActive)
             {
                 IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new LocationDeactivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new LocationDeactivatedEvent(Id));
             }
         }
 
@@ -229,7 +227,7 @@ namespace Grande.Fila.API.Domain.Locations
             if (!_staffMemberIds.Contains(staffMemberId))
             {
                 _staffMemberIds.Add(staffMemberId);
-                AddDomainEvent(new StaffMemberAddedToLocationEvent(Id, staffMemberId));
+                // AddDomainEvent(new StaffMemberAddedToLocationEvent(Id, staffMemberId));
             }
         }
 
@@ -238,7 +236,7 @@ namespace Grande.Fila.API.Domain.Locations
             if (_staffMemberIds.Contains(staffMemberId))
             {
                 _staffMemberIds.Remove(staffMemberId);
-                AddDomainEvent(new StaffMemberRemovedFromLocationEvent(Id, staffMemberId));
+                // AddDomainEvent(new StaffMemberRemovedFromLocationEvent(Id, staffMemberId));
             }
         }
 
@@ -247,7 +245,7 @@ namespace Grande.Fila.API.Domain.Locations
             if (!_serviceTypeIds.Contains(serviceTypeId))
             {
                 _serviceTypeIds.Add(serviceTypeId);
-                AddDomainEvent(new ServiceTypeAddedToLocationEvent(Id, serviceTypeId));
+                // AddDomainEvent(new ServiceTypeAddedToLocationEvent(Id, serviceTypeId));
             }
         }
 
@@ -256,7 +254,7 @@ namespace Grande.Fila.API.Domain.Locations
             if (_serviceTypeIds.Contains(serviceTypeId))
             {
                 _serviceTypeIds.Remove(serviceTypeId);
-                AddDomainEvent(new ServiceTypeRemovedFromLocationEvent(Id, serviceTypeId));
+                // AddDomainEvent(new ServiceTypeRemovedFromLocationEvent(Id, serviceTypeId));
             }
         }
 
@@ -265,7 +263,7 @@ namespace Grande.Fila.API.Domain.Locations
             if (!_advertisementIds.Contains(advertisementId))
             {
                 _advertisementIds.Add(advertisementId);
-                AddDomainEvent(new AdvertisementAddedToLocationEvent(Id, advertisementId));
+                // AddDomainEvent(new AdvertisementAddedToLocationEvent(Id, advertisementId));
             }
         }
 
@@ -274,7 +272,7 @@ namespace Grande.Fila.API.Domain.Locations
             if (_advertisementIds.Contains(advertisementId))
             {
                 _advertisementIds.Remove(advertisementId);
-                AddDomainEvent(new AdvertisementRemovedFromLocationEvent(Id, advertisementId));
+                // AddDomainEvent(new AdvertisementRemovedFromLocationEvent(Id, advertisementId));
             }
         }
 
@@ -284,15 +282,15 @@ namespace Grande.Fila.API.Domain.Locations
                 throw new ArgumentException("Average service time cannot be negative", nameof(newAverageTimeInMinutes));
 
             AverageServiceTimeInMinutes = newAverageTimeInMinutes;
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new LocationAverageTimeUpdatedEvent(Id, newAverageTimeInMinutes));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new LocationAverageTimeUpdatedEvent(Id, newAverageTimeInMinutes));
         }
 
         public void ResetAverageServiceTime(string updatedBy)
         {
             LastAverageTimeReset = DateTime.UtcNow;
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new LocationAverageTimeResetEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new LocationAverageTimeResetEvent(Id));
         }
 
         public bool IsOpen()
@@ -352,8 +350,8 @@ namespace Grande.Fila.API.Domain.Locations
             SundayCloseTime = weeklyHours.Sunday.CloseTime;
             SundayIsClosed = !weeklyHours.Sunday.IsOpen;
             
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new LocationUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new LocationUpdatedEvent(Id));
         }
 
         /// <summary>

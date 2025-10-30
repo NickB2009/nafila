@@ -67,9 +67,7 @@ namespace Grande.Fila.API.Domain.Staff
             UserId = userId;
             AverageServiceTimeInMinutes = 30; // Default average time
             CompletedServicesCount = 0;
-            CreatedBy = createdBy;
-
-            AddDomainEvent(new StaffMemberCreatedEvent(Id, Name, LocationId));
+            // AddDomainEvent(new StaffMemberCreatedEvent(Id, Name, LocationId));
         }
 
         // Domain behavior methods
@@ -93,8 +91,8 @@ namespace Grande.Fila.API.Domain.Staff
             ProfilePictureUrl = profilePictureUrl;
             Role = role;
             
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new StaffMemberUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new StaffMemberUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -102,8 +100,8 @@ namespace Grande.Fila.API.Domain.Staff
             if (!IsActive)
             {
                 IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new StaffMemberActivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new StaffMemberActivatedEvent(Id));
             }
         }
 
@@ -112,8 +110,8 @@ namespace Grande.Fila.API.Domain.Staff
             if (IsActive)
             {
                 IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new StaffMemberDeactivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new StaffMemberDeactivatedEvent(Id));
             }
         }
 
@@ -129,8 +127,8 @@ namespace Grande.Fila.API.Domain.Staff
             if (StaffStatus != status)
             {
                 StaffStatus = status;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new StaffMemberStatusChangedEvent(Id, status));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new StaffMemberStatusChangedEvent(Id, status));
             }
         }
 
@@ -143,9 +141,8 @@ namespace Grande.Fila.API.Domain.Staff
             _breaks.Add(staffBreak);
             
             StaffStatus = "on-break";
-            MarkAsModified(updatedBy);
-            
-            AddDomainEvent(new StaffMemberStartedBreakEvent(Id, staffBreak.Id, duration, reason));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new StaffMemberStartedBreakEvent(Id, staffBreak.Id, duration, reason));
             return staffBreak;
         }
 
@@ -158,9 +155,8 @@ namespace Grande.Fila.API.Domain.Staff
 
             staffBreak.End();
             StaffStatus = "available";
-            MarkAsModified(updatedBy);
-            
-            AddDomainEvent(new StaffMemberEndedBreakEvent(Id, staffBreak.Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new StaffMemberEndedBreakEvent(Id, staffBreak.Id));
         }
 
         public void AddSpecialty(Guid serviceTypeId)
@@ -168,7 +164,7 @@ namespace Grande.Fila.API.Domain.Staff
             if (!_specialtyServiceTypeIds.Contains(serviceTypeId))
             {
                 _specialtyServiceTypeIds.Add(serviceTypeId);
-                AddDomainEvent(new StaffMemberSpecialtyAddedEvent(Id, serviceTypeId));
+                // AddDomainEvent(new StaffMemberSpecialtyAddedEvent(Id, serviceTypeId));
             }
         }
 
@@ -177,7 +173,7 @@ namespace Grande.Fila.API.Domain.Staff
             if (_specialtyServiceTypeIds.Contains(serviceTypeId))
             {
                 _specialtyServiceTypeIds.Remove(serviceTypeId);
-                AddDomainEvent(new StaffMemberSpecialtyRemovedEvent(Id, serviceTypeId));
+                // AddDomainEvent(new StaffMemberSpecialtyRemovedEvent(Id, serviceTypeId));
             }
         }
 
@@ -187,8 +183,8 @@ namespace Grande.Fila.API.Domain.Staff
                 throw new ArgumentException("User ID cannot be empty", nameof(userId));
 
             UserId = userId;
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new StaffMemberConnectedToUserEvent(Id, userId));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new StaffMemberConnectedToUserEvent(Id, userId));
         }
 
         public void UpdateServiceStats(int serviceDurationMinutes, string updatedBy)
@@ -200,9 +196,8 @@ namespace Grande.Fila.API.Domain.Staff
             var totalMinutes = AverageServiceTimeInMinutes * CompletedServicesCount;
             CompletedServicesCount++;
             AverageServiceTimeInMinutes = (totalMinutes + serviceDurationMinutes) / CompletedServicesCount;
-            
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new StaffMemberServiceStatsUpdatedEvent(Id, AverageServiceTimeInMinutes, CompletedServicesCount));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new StaffMemberServiceStatsUpdatedEvent(Id, AverageServiceTimeInMinutes, CompletedServicesCount));
         }
 
         public bool IsOnBreak()

@@ -78,7 +78,7 @@ namespace Grande.Fila.API.Application.Promotions
                 }
 
                 // Get customer phone number
-                var phoneNumber = customer.PhoneNumber?.Value;
+                var phoneNumber = customer.PhoneNumber;
                 if (string.IsNullOrWhiteSpace(phoneNumber))
                 {
                     phoneNumber = "+1234567890"; // Mock phone for testing

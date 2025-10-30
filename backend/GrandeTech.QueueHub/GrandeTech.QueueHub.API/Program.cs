@@ -8,7 +8,7 @@ using Grande.Fila.API.Application.Auth;
 
 using Grande.Fila.API.Application.Queues;
 using Grande.Fila.API.Domain.Users;
-using Grande.Fila.API.Infrastructure.Repositories.Bogus;
+// using Grande.Fila.API.Infrastructure.Repositories.Bogus;
 using Grande.Fila.API.Application.ServicesOffered;
 using Grande.Fila.API.Domain.ServicesOffered;
 using Grande.Fila.API.Application.Services;
@@ -249,7 +249,7 @@ builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.CreateOrgan
 builder.Services.AddScoped<Grande.Fila.API.Application.Organizations.OrganizationService>();
 
 // Register repositories
-builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
+// builder.Services.AddScoped<IServicesOfferedRepository, BogusServiceTypeRepository>();
 builder.Services.AddScoped<AddQueueService>();
 builder.Services.AddScoped<JoinQueueService>();
 builder.Services.AddScoped<BarberAddService>();
@@ -271,7 +271,7 @@ builder.Services.AddScoped<CouponNotificationService>();
 builder.Services.AddScoped<Grande.Fila.API.Application.Public.AnonymousJoinService>();
 builder.Services.AddScoped<IQrCodeGenerator, Grande.Fila.API.Infrastructure.MockQrCodeGenerator>();
 builder.Services.AddScoped<ISmsProvider, Grande.Fila.API.Infrastructure.MockSmsProvider>();
-builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
+// builder.Services.AddScoped<ICouponRepository, Grande.Fila.API.Infrastructure.Repositories.Bogus.BogusCouponRepository>();
 
 // Register kiosk services
 builder.Services.AddScoped<Grande.Fila.API.Infrastructure.Services.IKioskNotificationService, Grande.Fila.API.Infrastructure.Services.KioskNotificationService>();
@@ -608,7 +608,7 @@ app.MapGet("/diagnostics/config", (IConfiguration config) =>
         environment = config.GetValue<string>("ASPNETCORE_ENVIRONMENT"),
         useSqlDatabase = config.GetValue<bool>("Database:UseSqlDatabase", true),
         useInMemoryDatabase = config.GetValue<bool>("Database:UseInMemoryDatabase", false),
-        useBogusRepositories = config.GetValue<bool>("Database:UseBogusRepositories", false),
+        useBogusRepositories = false,
         applicationInsightsConfigured = !string.IsNullOrEmpty(config["ApplicationInsights:ConnectionString"])
     };
 }).WithTags("Diagnostics");

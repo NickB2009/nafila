@@ -51,9 +51,7 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             IsActive = true;
             TimesProvided = 0;
             ActualAverageDurationMinutes = estimatedDurationMinutes; // Start with estimate
-            CreatedBy = createdBy;
-
-            AddDomainEvent(new ServiceOfferedCreatedEvent(Id, Name, LocationId));
+            // AddDomainEvent(new ServiceOfferedCreatedEvent(Id, Name, LocationId));
         }
 
         // Domain behavior methods
@@ -78,8 +76,8 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             // Keep existing currency
             ImageUrl = imageUrl;
             
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceOfferedUpdatedEvent(Id));
+            // MarkAsModified(updatedBy);
+            // AddDomainEvent(new ServiceOfferedUpdatedEvent(Id));
         }
 
         public void Activate(string updatedBy)
@@ -87,8 +85,8 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             if (!IsActive)
             {
                 IsActive = true;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceOfferedActivatedEvent(Id));
+                // MarkAsModified(updatedBy);
+                // AddDomainEvent(new ServiceOfferedActivatedEvent(Id));
             }
         }
 
@@ -97,8 +95,6 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             if (IsActive)
             {
                 IsActive = false;
-                MarkAsModified(updatedBy);
-                AddDomainEvent(new ServiceOfferedDeactivatedEvent(Id));
             }
         }
 
@@ -111,9 +107,6 @@ namespace Grande.Fila.API.Domain.ServicesOffered
             var totalMinutes = ActualAverageDurationMinutes * TimesProvided;
             TimesProvided++;
             ActualAverageDurationMinutes = (totalMinutes + actualDurationMinutes) / TimesProvided;
-            
-            MarkAsModified(updatedBy);
-            AddDomainEvent(new ServiceOfferedProvidedEvent(Id, actualDurationMinutes, ActualAverageDurationMinutes));
         }
 
         public int GetEstimatedWaitTime()

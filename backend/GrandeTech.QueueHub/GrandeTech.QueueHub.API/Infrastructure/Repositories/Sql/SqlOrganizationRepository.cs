@@ -208,7 +208,7 @@ namespace Grande.Fila.API.Infrastructure.Repositories.Sql
             {
                 // This would require a domain method to update subscription plan
                 // For now, we'll need to implement this properly with domain logic
-                organization.MarkAsModified("System"); // This needs to be implemented in the domain
+                // MarkAsModified removed during simplification
             }
 
             return organizations.Count;
